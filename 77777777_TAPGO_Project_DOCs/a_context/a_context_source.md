@@ -36,10 +36,10 @@ Partida de ~1 minuto: contra a CPU, contra alguém no mesmo aparelho, ou por lin
 
 ## Estado atual (formato fixo — 1 linha por item, SEM prosa corrida)
 - **Versão:** v2.0.0-dev (a v1 é baseline morto: reescrita total, nenhum código reaproveitado)
-- **Pronto:** nada
+- **Pronto:** nenhum módulo; Fase 0 aprovada pelo dono e commitada (6ef539b)
 - **Em andamento (máx 1):** T-01 — congelar D-01 e D-02 (Fase 1a)
 - **Próximo:** Fase 1b — PLANO com módulos, contratos e milestones
-- **Bloqueado/pendente:** A-01 (criar repositório), A-02 (instalar o hook), Q-03 (lista de países)
+- **Bloqueado/pendente:** A-01 (repositório remoto no GitHub — `git remote` ainda vazio), A-04 (responder Q-01..Q-03)
 - **Questões abertas:** Q-01, Q-02, Q-03
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)

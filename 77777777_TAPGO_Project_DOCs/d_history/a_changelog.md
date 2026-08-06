@@ -10,6 +10,13 @@ status: atual
 ## [Não lançado]
 - Fase 1a pendente: congelar D-01 e D-02 com o dono (T-01)
 
+## [2026-08-06] — Fase 0 aprovada
+- Dono leu o CONTEXT integralmente e aprovou sem ressalva; portão da Fase 0 fechado.
+- Commit 6ef539b com o hook de pre-commit rodando o check.py.
+- A-02 e A-03 concluídas; A-01 (remote no GitHub) e A-04 (Q-01..Q-03) seguem abertas.
+- Lições da sessão registradas em b_process/d_agent_learnings.md.
+- QA-14 registrado no kit (repo project-pipeline-kit): projeto novo reprova o portão antes do git init.
+
 ## [v2.0.0-dev] — 2026-08-06
 - Fase 0 concluída: CONTEXT preenchido a partir da leitura integral da v1 (gustavomot4/TAP-GO) e de pesquisa de licenciamento e de plataformas.
 - Decisões: D-01 (SPA estática sem backend) · D-02 (TypeScript + Vite + Phaser 3) · D-03 (país + bandeira, sem escudo) · D-04 (online P2P sem servidor) · D-05 (GitHub Pages + itch.io)

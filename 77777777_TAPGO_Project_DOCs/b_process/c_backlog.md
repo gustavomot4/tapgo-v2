@@ -8,9 +8,9 @@ status: atual
 > Todo card com portão: como se sabe que terminou.
 
 ## Ações do dono (máquina real)
-- [ ] A-01 — criar o repositório do código no GitHub (vazio, público) · **Portão:** `git remote -v` aponta para ele
-- [ ] A-02 — `git init` + instalar o hook de pre-commit · **Portão:** commit de teste roda `check.py` sozinho
-- [ ] A-03 — ler o CONTEXT inteiro e concordar com cada linha · **Portão:** Fase 0 aprovada, ou devolvida com delta
+- [ ] A-01 — criar o repositório remoto no GitHub e apontar o local para ele · **Portão:** `git remote -v` responde
+- [x] A-02 — `git init` + hook de pre-commit · **Portão:** commit 6ef539b rodou o `check.py` sozinho ✔
+- [x] A-03 — ler o CONTEXT inteiro e concordar com cada linha · **Portão:** aprovado integralmente em 2026-08-06 ✔
 - [ ] A-04 — responder Q-01, Q-02 e Q-03 · **Portão:** linhas do DECISIONS saem de "aberta"
 
 ## A fazer

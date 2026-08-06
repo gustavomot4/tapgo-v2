@@ -25,4 +25,7 @@ status: atual
 - **Honestidade compõe:** reportar fraqueza gera mais confiança do que esconder — e não precisa ser desfeito depois.
 
 ## Deste projeto
-- <data> — <lição em 1 linha>
+- 2026-08-06 — **Resposta do dono pode ser internamente contraditória:** ele pediu "modo online" e "zero servidor" na mesma rodada de perguntas. Cheque coerência ENTRE as respostas antes de escrever o CONTEXT; escrever primeiro e descobrir depois teria congelado uma arquitetura impossível em D-NN.
+- 2026-08-06 — **"É possível?" é pergunta factual, não decisão do dono:** diante da contradição, a saída não era escolher por ele nem devolver a escolha — era medir. O online a custo zero existe (P2P + sinalização pública), com falha de 15-30% sob CGNAT declarada como lacuna e virada em portão.
+- 2026-08-06 — **Registrar QA-NN é obrigação, não pergunta:** perguntei "quer que eu registre o defeito do kit?" quando a regra 4 manda registrar. O que se pergunta ao dono é rumo e regra de negócio; achado se registra e se avisa. Parar antes de escrever em OUTRO repositório continua certo (regra 2) — o erro foi a frase, não o freio.
+- 2026-08-06 — **O bug do baseline morto é argumento de stack, não dívida a herdar:** o `fezGOl` da v1 (typo que virou global silenciosa e corrompeu o placar por meses) foi o que justificou TypeScript em D-02. Defeito de versão anterior não vira QA-NN do projeto novo — vira evidência de decisão.
