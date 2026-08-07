@@ -8,7 +8,18 @@ status: atual
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
 ## [Não lançado]
-- E-1 aberta: T-04 entregue; falta T-05 (esqueleto de build M9) para fechar a etapa
+- E-1 aberta: T-04 e o código de T-05 entregues; falta A-07 (publicar) para fechar a etapa
+
+## [2026-08-07] — T-05: esqueleto de M9 (build e publicação)
+- Adicionado: `vite.config.ts` — `base: '/tapgo-v2/'`, `root: 'src'`, `outDir: '../dist'` (`D-12`), `emptyOutDir` e `manifest` ligados.
+- Adicionado: `src/index.html`, `src/main.ts`, `src/vite-env.d.ts` e `src/assets/base-probe.svg` — a página do esqueleto exibe o veredito do asset a olho nu, sem DevTools, para o teste no celular.
+- Adicionado: `.github/workflows/pages.yml` — `npm ci`, typecheck, suíte, as duas checagens de camada de E-1 e o build; só então publica, e o job de deploy consome o artefato sem recompilar.
+- Adicionado: `src/scripts/bundle-size.mjs` — soma os bytes do manifesto do Vite e sai com erro em 8.000.000 B (gatilho de `D-02`). Medido: **inicial 4.599 B**, `dist/` 4.907 B, 0,06% do teto.
+- Alterado: `package.json` ganhou só o script `build` e `vite@^7` (`D-16`); `npm audit` com 0. `src/README.md` fechou a lacuna "subir a aplicação".
+- Alterado: tabela de custo de `stack.md` ganhou a linha GitHub Pages + Actions — gratuita **com a condição** de repositório público; tabela de procedência de `licenciamento.md` ganhou a linha da sonda.
+- Decisões: D-17 (publicação por Actions com o portão antes do deploy) · D-18 (número do bundle e a sonda forçada a virar arquivo).
+- Aberto: Q-06 (o repositório fica público?) · QA-04 (`tsc --noEmit` não cobre o `vite.config.ts`).
+- Portão no sandbox: `tsc --noEmit` limpo, 16/16 testes, build verde, HTML publicado com `/tapgo-v2/` nos dois `src`, zero `<script>` externo e zero `data:` no HTML. **Não é prova:** o portão de E-1 exige a página no ar (A-07).
 
 ## [2026-08-07] — T-04: M1 (núcleo) implementado
 - Adicionado: `src/core/index.ts` — `Zone`, `Side`, `CountryCode`, `Rng`, `createRng` (mulberry32 escrito à mão, sem dependência nova) e `newSeed`.

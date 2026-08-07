@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>TAP GO v2 — esqueleto de publicação</title>
+    <!--
+      Portão de privacidade de M9: zero <script> e zero folha de estilo de ORIGEM EXTERNA.
+      O estilo abaixo é inline de propósito — nada de CDN, nada de fonte remota, nada de
+      analytics. A pilha de fontes é a do sistema justamente para não buscar nada na rede.
+    -->
+    <style>
+      :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        background: #0f1115;
+        color: #e7e9ee;
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        -webkit-text-size-adjust: 100%;
+      }
+      main { width: 100%; max-width: 320px; text-align: center; }
+      h1 { margin: 0 0 4px; font-size: 1.05rem; letter-spacing: 0.06em; }
+      .sub { margin: 0 0 24px; font-size: 0.75rem; color: #8b93a7; }
+      #sonda { display: block; width: 96px; height: 96px; margin: 0 auto 18px; }
+      #veredito {
+        margin: 0;
+        padding: 10px 12px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        line-height: 1.35;
+        background: #1b1e26;
+        color: #8b93a7;
+      }
+      #veredito[data-status="ok"] { background: #10331f; color: #6ee7a0; }
+      #veredito[data-status="erro"] { background: #3a1417; color: #ff8b93; }
+      dl { margin: 20px 0 0; font-size: 0.7rem; text-align: left; color: #8b93a7; }
+      dt { font-weight: 600; color: #aab2c4; }
+      dd { margin: 2px 0 10px; overflow-wrap: anywhere; font-family: ui-monospace, monospace; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>TAP GO v2</h1>
+      <p class="sub">Esqueleto de publicação · E-1 · M9 — ainda não há jogo</p>
+
+      <!--
+        Asset de teste do portão de E-1. Está num ARQUIVO, e não embutido no HTML, porque o que
+        precisa ser provado é o caminho: o Vite reescreve este `src` com o `base` e com o hash.
+        Se o `base` estiver errado, é ISTO que dá 404 — e só em produção.
+      -->
+      <img id="sonda" src="./assets/base-probe.svg" width="96" height="96"
+           alt="Sonda de asset do build" />
+
+      <p id="veredito">verificando o asset…</p>
+
+      <dl>
+        <dt>URL do asset</dt>
+        <dd id="url">—</dd>
+        <dt>base do build</dt>
+        <dd id="base">—</dd>
+      </dl>
+    </main>
+
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

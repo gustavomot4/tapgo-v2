@@ -1,0 +1,102 @@
+# M9 — publicação no GitHub Pages.
+# Contrato: 77777777_TAPGO_Project_DOCs/a_context/b_plan.md → "M9 — Build e publicação".
+#
+# Este arquivo é a porta de entrada de M9 junto com o vite.config.ts. Ele não constrói nada
+# por conta própria: roda o MESMO portão que o dono roda na máquina dele, e só publica se
+# tudo passar. Publicar sem portão é publicar quebrado com carimbo de verde.
+#
+# PRÉ-REQUISITO DE UMA VEZ, feito à mão pelo dono (nenhum workflow consegue fazer por ele):
+#   Settings → Pages → Build and deployment → Source = "GitHub Actions"
+# Sem isso o passo de deploy falha com "Pages site not found" — e o erro não é deste arquivo.
+
+name: pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # republicar sem precisar de commit vazio
+
+# Permissão mínima para publicar. Nada de `contents: write`: este workflow não escreve no
+# repositório. O único segredo envolvido é o GITHUB_TOKEN, emitido pela própria Action —
+# nenhum segredo é versionado aqui (restrição inegociável do CONTEXT).
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Uma publicação por vez. `cancel-in-progress: false` é deliberado: cancelar um deploy no meio
+# deixa no ar um estado que ninguém pediu.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    # Pinado no major: `ubuntu-latest` faz o build de amanhã diferir do de hoje sem ninguém
+    # mudar uma linha, e aí não se sabe mais o que está no ar.
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Vite 7 exige Node ^20.19 || >=22.12 (D-16).
+          node-version: '22'
+          cache: npm
+
+      # `npm ci`, nunca `npm install`: instala exatamente o package-lock.json versionado.
+      # Se o lock estiver fora de sincronia com o package.json, ele falha aqui — de propósito.
+      - run: npm ci
+
+      # ── O portão, na ordem. Falhou qualquer um, nada é publicado. ────────────────────
+      - name: typecheck
+        run: npx tsc --noEmit
+
+      - name: suíte
+        run: npm test
+
+      - name: checagens de camada (portão de E-1)
+        # São `grep`, não teste: o que elas protegem é a fronteira desenhada por D-01, e
+        # fronteira só é real quando alguém a mede. Os comandos saem dos contratos de M1 e M7.
+        run: |
+          # M1: o gerador nativo pode existir UMA vez, e dentro de M1 (contrato de M1).
+          n=$(grep -rno "Math\.random" src/ | wc -l)
+          echo "Math.random em src/: $n (esperado: 1)"
+          [ "$n" -eq 1 ] || { echo "::error::camada de M1 violada: esperado 1, achado $n"; exit 1; }
+
+          # M7: a tela nunca alcança o motor (contrato de M7). Enquanto src/ui/ não existir o
+          # resultado é zero legitimamente; a checagem passa a morder no dia em que T-10 criar
+          # a pasta. O padrão é largo de propósito — falso positivo é barulho, falso negativo
+          # é uma fronteira rompida em silêncio.
+          if [ -d src/ui ]; then
+            m=$(grep -rnoE "^[[:space:]]*(import|export)[^;]*(engine|cpu|net)" src/ui/ | wc -l)
+          else
+            m=0
+            echo "src/ui/ ainda não existe (M7 chega em T-10)"
+          fi
+          echo "imports de motor em src/ui/: $m (esperado: 0)"
+          [ "$m" -eq 0 ] || { echo "::error::camada de M7 violada: a tela importa o motor"; exit 1; }
+
+      # Imprime o número do bundle lido de dist/ e reprova sozinho no teto de 8 MB (D-02).
+      - name: build
+        run: npm run build
+
+      # ── Publicação ──────────────────────────────────────────────────────────────────
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          # `outDir` do vite.config.ts (D-12: root em src/, saída em ../dist).
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      # Consome o artefato do job anterior. A máquina que publica NÃO recompila:
+      # o que vai ao ar é exatamente o que passou no portão acima.
+      - id: deploy
+        uses: actions/deploy-pages@v4

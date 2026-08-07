@@ -42,6 +42,7 @@ o build publicado alcança.
 |---|---|---|---|---|
 | Trystero (MIT) | biblioteca de sinalização P2P de M6 (`D-04`) | biblioteca, sem conta e sem serviço próprio | Não | https://github.com/dmotz/trystero |
 | Infraestrutura pública de sinalização (BitTorrent trackers · Nostr · MQTT) | os dois navegadores se acharem antes do WebRTC (`D-04`) | pública, de terceiros, sem conta — **é a exceção nominal do portão de privacidade de M9** | Não | [[online_p2p]] |
+| GitHub Pages + GitHub Actions | host canônico do build (`D-05`) e o workflow que publica (`D-17`) | gratuita, **com uma condição:** no plano Free o Pages só publica de repositório **público**, e minuto de Actions só é ilimitado em repositório público — repositório privado exige plano pago e derruba a restrição de custo. Pendente de `Q-06` | Não, se o repositório for público | https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages |
 | Relay TURN | atravessar CGNAT para os 15-30% que não conectam direto | **linha condicional:** só existe se E-4 escolher a saída (a); se escolher a (b), esta linha vira "fora de escopo" com o percentual sem online registrado | a confirmar em E-4 | [[online_p2p]] |
 
 Dependência só de build (compilador, bundler, runner de teste) não vai para esta tabela: ela não roda

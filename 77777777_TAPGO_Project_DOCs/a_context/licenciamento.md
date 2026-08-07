@@ -46,7 +46,7 @@ Todo arquivo em `assets/` tem uma linha nesta tabela antes de entrar no reposit�
 
 | Arquivo | Origem | Licença | Autor |
 |---|---|---|---|
-| _(vazio — preencher a cada asset criado)_ | | | |
+| `src/assets/base-probe.svg` | criado em T-05, sem referência a nenhuma imagem externa: retângulo, círculo e um sinal de conferido | do projeto | projeto TAP GO v2 (agente, sessão T-05) |
 
 ## Sobre publicar mesmo assim
 A itch.io é **reativa**: hospeda e só derruba após DMCA do titular. Isso não é permissão — é a chance de

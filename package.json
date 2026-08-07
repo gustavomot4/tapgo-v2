@@ -8,11 +8,13 @@
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build": "vite build && node src/scripts/bundle-size.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
     "typescript": "^5.7.2",
+    "vite": "^7.0.0",
     "vitest": "^3.2.7"
   }
 }

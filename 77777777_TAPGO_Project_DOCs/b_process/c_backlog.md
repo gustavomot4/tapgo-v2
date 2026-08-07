@@ -14,12 +14,12 @@ status: atual
 - [ ] A-04 — responder Q-03: seleções, formato do chaveamento, nome do torneio e origem das bandeiras · **Portão:** linha Q-03 do DECISIONS sai de "aberta"
 - [ ] A-05 — responder Q-04: o que acontece quando o peer some no meio da disputa · **Portão:** linha Q-04 sai de "aberta"; sem isso **T-13** não começa (T-11 não depende dela — M6 não sabe o que é gol)
 - [ ] A-06 — responder Q-05: o torneio roda também no modo online? · **Portão:** linha Q-05 sai de "aberta"; sem isso o desenho de M8 é suposição
+- [ ] A-07 — publicar: responder `Q-06` (repositório público), pôr **Settings → Pages → Source = "GitHub Actions"** e conferir a página no celular · **Portão:** `https://gustavomot4.github.io/tapgo-v2/` abre com o veredito verde "asset carregado — sem 404". É esta ação, e não o sandbox, que fecha E-1
 
 ## A fazer
 
 > O [[b_plan|PLANO]] está **congelado** (`D-13`). As tarefas abaixo saem dele e seguem a ordem das etapas E-1..E-6. O portão de cada uma é o portão do módulo, e não se repete aqui. Mudança de rumo é `D-NN` novo — não replanejamento.
 
-- [ ] T-05 — esqueleto de build e publicação no Pages · **Módulo:** M9 · **Etapa:** E-1 (portão completo só em E-6) · **Skill:** iac-docker-terraform
 - [ ] T-06 — motor da disputa, com os invariantes como teste · **Módulo:** M2 · **Etapa:** E-2 · **Skill:** backend-domain
 - [ ] T-07 — CPU em 3 níveis, dois histogramas, teto de 70% medido por frequência · **Módulo:** M3 · **Etapa:** E-2 · **Skill:** backend-domain
 - [ ] T-08 — catálogo de seleções (lista de fixação até A-04) · **Módulo:** M4 · **Etapa:** E-3 · **Skill:** backend-domain
@@ -31,7 +31,9 @@ status: atual
 - [ ] T-14 — telas do torneio: chaveamento, próxima disputa e campeão · **Módulo:** M7 · **Etapa:** E-5, bloqueada por A-04 e A-06 · **Skill:** frontend-uiux
 
 ## Em andamento (máx 1 — espelha "Em andamento" do [[a_context_source|CONTEXT]])
-_(vazio — E-1 está aberta; falta T-05 para fechá-la)_
+- [ ] T-05 — esqueleto de build e publicação no Pages · **Módulo:** M9 · **Etapa:** E-1 (portão completo só em E-6) · **Skill:** iac-docker-terraform
+  · código entregue e verde no sandbox: `tsc --noEmit`, 16/16 testes, build com bundle inicial de 4.599 B e as duas checagens de camada (1 `Math.random`, 0 imports de motor)
+  · **falta A-07** — sem a página no ar, o portão de E-1 não está cumprido
 
 ## Feito (mover para cá; detalhe no [[a_changelog|CHANGELOG]])
 - [x] T-00 — Fase 0: CONTEXT, temas de domínio e candidatas a D-NN
