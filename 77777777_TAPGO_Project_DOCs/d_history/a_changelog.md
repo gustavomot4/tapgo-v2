@@ -8,7 +8,15 @@ status: atual
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
 ## [Não lançado]
-- E-1 aberta: T-04 (núcleo M1) e T-05 (esqueleto de build M9) — Fase 2 pode começar
+- E-1 aberta: T-04 entregue; falta T-05 (esqueleto de build M9) para fechar a etapa
+
+## [2026-08-07] — T-04: M1 (núcleo) implementado
+- Adicionado: `src/core/index.ts` — `Zone`, `Side`, `CountryCode`, `Rng`, `createRng` (mulberry32 escrito à mão, sem dependência nova) e `newSeed`.
+- Adicionado: `src/tests/core.test.ts` — 16 testes: determinismo de 1.000 valores, regressão do defeito 3 da v1 (`int(3)` sorteia 0/1/2), bordas de `int` e da semente, e a checagem de camada do gerador nativo.
+- Adicionado: `package.json` + `tsconfig.json` (`strict`, `noUncheckedIndexedAccess`); `npm test` e `npm run typecheck`. `npm run build` fica para T-05.
+- Corrigido antes de commitar: `vitest@2.1.8` trazia 5 advisories transitivas (1 CRÍTICO) por `vite`/`esbuild`; piso subiu para `^3.2.7` → `vite@7.3.6`, `esbuild@0.28.1`, `npm audit` com 0 e suíte inalterada.
+- Decisões: D-14 (quem é dono de `package.json`/`tsconfig.json`) · D-15 (validação e espaço de semente de `createRng`) · D-16 (piso de `vitest`, e `vite@^7` para T-05).
+- Portão de M1 verde no sandbox: `tsc --noEmit` limpo, 16/16 testes em duas execuções idênticas, `grep -rn "Math.random" src/` com 1 ocorrência, dentro de M1.
 
 ## [2026-08-07] — Fase 1 fechada: PLANO congelado em D-13
 - T-02 aprovado pelo dono e T-03 aprovado na passagem 2 (`e_qa/b_artifact_consistency_report_260807_1605.md`): 19/19 achados da passagem 1 fechados, 5/5 restrições inegociáveis com portão, 6/6 critérios de aceite com número ou comando, zero CRÍTICO.

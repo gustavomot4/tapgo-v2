@@ -1,0 +1,18 @@
+{
+  "name": "tapgo-v2",
+  "version": "2.0.0-dev",
+  "private": true,
+  "type": "module",
+  "description": "TAP GO v2 — disputa de penaltis, SPA estatica, sem backend",
+  "license": "SEE LICENSE IN 77777777_TAPGO_Project_DOCs/LICENSE",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2",
+    "vitest": "^3.2.7"
+  }
+}

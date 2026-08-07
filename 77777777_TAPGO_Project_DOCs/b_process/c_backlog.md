@@ -19,7 +19,6 @@ status: atual
 
 > O [[b_plan|PLANO]] está **congelado** (`D-13`). As tarefas abaixo saem dele e seguem a ordem das etapas E-1..E-6. O portão de cada uma é o portão do módulo, e não se repete aqui. Mudança de rumo é `D-NN` novo — não replanejamento.
 
-- [ ] T-04 — núcleo: tipos e gerador com semente · **Módulo:** M1 · **Etapa:** E-1 · **Skill:** backend-domain
 - [ ] T-05 — esqueleto de build e publicação no Pages · **Módulo:** M9 · **Etapa:** E-1 (portão completo só em E-6) · **Skill:** iac-docker-terraform
 - [ ] T-06 — motor da disputa, com os invariantes como teste · **Módulo:** M2 · **Etapa:** E-2 · **Skill:** backend-domain
 - [ ] T-07 — CPU em 3 níveis, dois histogramas, teto de 70% medido por frequência · **Módulo:** M3 · **Etapa:** E-2 · **Skill:** backend-domain
@@ -32,7 +31,7 @@ status: atual
 - [ ] T-14 — telas do torneio: chaveamento, próxima disputa e campeão · **Módulo:** M7 · **Etapa:** E-5, bloqueada por A-04 e A-06 · **Skill:** frontend-uiux
 
 ## Em andamento (máx 1 — espelha "Em andamento" do [[a_context_source|CONTEXT]])
-_(vazio — E-1 está aberta; a próxima sessão pega T-04)_
+_(vazio — E-1 está aberta; falta T-05 para fechá-la)_
 
 ## Feito (mover para cá; detalhe no [[a_changelog|CHANGELOG]])
 - [x] T-00 — Fase 0: CONTEXT, temas de domínio e candidatas a D-NN
@@ -41,6 +40,7 @@ _(vazio — E-1 está aberta; a próxima sessão pega T-04)_
 - [x] T-03 — Fase 1c: consistência entre os quatro artefatos · **Portão:** as 4 linhas passam na passagem 2
   · passagem 1 (15:43) **reprovou** — 19 achados: [[a_artifact_consistency_report_260807_1543|relatório 1]]
   · passagem 2 (16:05) **aprovou** — 19/19 fechados e 7 achados novos `AC-20`..`AC-26`, nenhum CRÍTICO, todos fechados no commit do congelamento: [[b_artifact_consistency_report_260807_1605|relatório 2]]
+- [x] T-04 — núcleo: tipos e gerador com semente · **Módulo:** M1 · **Etapa:** E-1 · **Portão:** 16/16 testes, determinismo de 1.000 valores, `int(3)` com o 0 incluso, 1 ocorrência do gerador nativo em `src/` · `D-14`, `D-15`
 
 ## Ideias (não comprometidas)
 - Ranking global (exige servidor autoritativo — hoje colide com "custo R$ 0"; ver [[online_p2p]])

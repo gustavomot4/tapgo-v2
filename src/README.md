@@ -6,16 +6,17 @@ README técnico. A documentação do projeto (contexto, plano, decisões, roteir
 ## Rodar
 
 ```
-<instalar dependências>
-<rodar os testes>
-<subir a aplicação>
+npm install          # dependências (só dev: TypeScript + Vitest)
+npm test             # suíte, uma vez
+npm run typecheck    # tsc --noEmit
+<subir a aplicação>  # lacuna: chega com T-05 (esqueleto de M9)
 ```
 
 ## Estrutura
 
 ```
 src/
-├── <pacote>/     o código da aplicação
+├── core/         M1 — tipos compartilhados e gerador com semente
 ├── tests/        1 arquivo de teste por módulo
 └── scripts/      utilitários avulsos, rodados à mão
 ```

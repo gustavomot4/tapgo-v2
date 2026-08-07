@@ -35,9 +35,9 @@ Partida de ~1 minuto: contra a CPU, contra alguém no mesmo aparelho, ou por lin
 
 ## Estado atual (formato fixo — 1 linha por item, SEM prosa corrida)
 - **Versão:** v2.0.0-dev (a v1 é baseline morto: reescrita total, nenhum código reaproveitado)
-- **Pronto:** nenhum módulo; Fase 1 fechada — PLANO congelado em D-13 (T-02 aprovado, T-03 aprovado na 2ª passagem), D-11/D-12 congelam runner e layout de build
-- **Em andamento (máx 1):** nenhum — **E-1 aberta**, a próxima sessão pega T-04 (M1)
-- **Próximo:** T-04 — núcleo (M1): tipos e gerador com semente; depois T-05 (M9), que fecha E-1
+- **Pronto:** M1 (T-04) — tipos + `createRng`/`newSeed`; 16 testes verdes, 1 ocorrência do gerador nativo em `src/`. Fase 1 fechada — PLANO congelado em D-13
+- **Em andamento (máx 1):** nenhum — **E-1 aberta**, falta só T-05 (M9) para fechá-la
+- **Próximo:** T-05 — esqueleto de build e publicação no Pages (M9); fecha E-1 e abre E-2
 - **Bloqueado/pendente:** A-04 trava E-5 e as bandeiras de E-3 · A-05 trava só T-13 · A-06 trava o desenho de M8; E-1 e E-2 não dependem de nenhuma
 - **Questões abertas:** Q-03, Q-04, Q-05 · **QA:** QA-01..QA-03 fechados e verificados em 2026-08-07
 
