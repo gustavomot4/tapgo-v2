@@ -53,6 +53,27 @@ D-NN / QA-NN / Q-NN registrados em a_context/c_decisions.md
 Antes de commitar: `python scripts/check.py`. Antes de entregar (Fase 6):
 `python scripts/check.py --historico-completo`.
 
+## Como toda sessão termina (obrigatório)
+
+Depois do que o dono roda na máquina real (regra 7), a resposta final traz, nesta ordem:
+
+1. **Próximo passo** — uma frase: o ID da próxima tarefa (`T-NN` / `A-NN`), o que ela entrega, e o
+   que ainda a trava (ou "nada trava").
+2. **Prompt da próxima sessão** — em bloco de código, pronto para colar, com o nome REAL da skill
+   conferido em `b_process/skills/` (a pasta é o nome; não invente apelido em português).
+
+```
+Sessão de <fase> com a skill `<nome-da-skill>` (`b_process/skills/<pasta>/SKILL.md`).
+<o que fazer, em 1-2 frases, citando os IDs envolvidos e o portão da tarefa>
+```
+
+Duas restrições que fazem isto valer a pena:
+
+- **Não mande abrir sessão nova para o que cabe nesta.** Sessão nova custa releitura de contexto
+  inteira; se o próximo passo é do mesmo papel e do mesmo módulo, diga isso e siga.
+- **Uma skill por prompt.** Se o próximo passo precisar de dois papéis, são duas sessões, e você
+  entrega os dois prompts na ordem — nunca um prompt com duas skills.
+
 ## Limites deste kit (não os contorne em silêncio)
 
 O `a_context/a_context_source.md` tem orçamento de **4.000 caracteres**, cobrado por script. Não coube? O excedente
