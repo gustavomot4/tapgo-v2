@@ -16,5 +16,8 @@
     "typescript": "^5.7.2",
     "vite": "^7.0.0",
     "vitest": "^3.2.7"
+  },
+  "dependencies": {
+    "phaser": "^3.90.0"
   }
 }

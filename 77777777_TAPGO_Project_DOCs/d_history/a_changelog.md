@@ -8,7 +8,32 @@ status: atual
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
 ## [Não lançado]
-- _(nada pendente — E-1 e E-2 fechadas)_
+- **E-3 depende só do dono agora:** todo o código da etapa está em pé; falta a passada no celular real (5 cobranças e alternadas por toque em 360x640, ≥30 fps). Sandbox é indicativo, nunca portão.
+
+## [2026-08-07] — T-10: M7 (telas) nos modos `cpu` e `local`
+- Adicionado: `src/ui/` — porta `bootGame(container)` e quatro telas (início, seleções, cobrança, fim). Módulos puros separados de propósito: `derivacao.ts` (a derivação de `Q-09`), `rotulos.ts` (todo texto e toda formatação), `preferencias.ts` (as **três** preferências que o contrato permite: nível, som, última seleção — nada de disputa, nada que identifique a pessoa).
+- Adicionado: `src/ui/cena.ts` — único arquivo que importa `phaser`, e entra por `import()` dinâmico. Campo, gol, rede e bola são primitivos de `Graphics`: **zero imagem** em `assets/`.
+- Adicionado: `src/assets/audio/{chute,gol,defesa}.wav` e `src/scripts/gen-audio.mjs` que os gera. Determinístico (LCG com semente fixa), então a procedência de [[licenciamento]] se confere por **hash**, não por confiança (`D-28`).
+- Adicionado: `src/tests/ui.test.ts` — 38 testes; suíte **140 → 178**, verde. Dois portões de M7 deixaram de ser prosa e viraram teste: o **de camada** (varre `src/ui/` e reprova import de `engine`/`cpu`/`net`) e o **de licença** (varre `src/assets/` e reprova arquivo sem linha em `licenciamento.md`).
+- **A tela não é Phaser inteira (`D-27`).** `<canvas>` não dá teclado, foco visível nem leitor de tela, e o portão de `frontend-uiux` exige os três; Phaser ficou só na cena da cobrança e a entrada é sempre `<button>`. Efeito medido no bundle inicial: **4.599 B → 80.604 B** (1,01% do teto), com os 1,21 MB de Phaser **fora** dele.
+- **No modo `local` a zona escolhida nunca aparece na tela.** Os dois jogadores olham o mesmo aparelho: destacar o chute enquanto o goleiro escolhe tornaria o modo injogável. A zona fica dentro de M5; a tela só recebe "há escolha pendente" e mostra "passe o aparelho".
+- Trocado: a sonda de M9 saiu de `src/main.ts` e do `index.html`, como o contrato de E-1 previa. O 404 de asset em produção continua coberto — agora pelos assets reais.
+- Aberto: `QA-05` — `src/tests/teams.test.ts` (T-08) escreve por extenso os 6 termos da lista-morta, então o portão de marca de M7 (`grep` zero em `src/`) devolve 6. Arquivo de outro dono: registrado, não consertado (regra 4). T-10 não acrescentou ocorrência.
+- **`Q-09` continua aberta**, e de propósito: T-10 usou a derivação que ela mesma prescreve (notificação com o mesmo `kicks.length` = escolha pendente), isolada em um módulo puro com teste. Resolver de vez é `pending(): Side | null` na porta congelada de M5 — `D-NN` do dono.
+- Decisões: D-27 (DOM + Phaser só na cobrança, por `import()`) · D-28 (áudio sintetizado, determinístico). Evidência em [[m7_tela_notas]].
+- Arquivado: o critério da seção de QA saiu de `c_decisions.md` para `e_qa/decisions_archive.md`. **Mesmo assim o registro fechou em 11.993/12.000 — 7 caracteres de folga.** A próxima sessão que registrar um D-NN não cabe sem uma passada de arquivamento de verdade.
+
+## [2026-08-07] — T-09: M5 (sessão de disputa) nos modos `cpu` e `local`
+- Adicionado: `src/session/index.ts` — `Mode`, `SessionConfig`, `Session`, `createSession`, mais os **três reexports** que o portão exige (`MatchState`, `LinkStatus`, `Level`). Um único caminho até `play`, nenhuma soma de placar, e um teste de fonte que reprova se as palavras `goals`/`taken`/`winner` aparecerem no módulo.
+- Adicionado: `src/net/index.ts` — **só os tipos** de M6 que `D-13` congelou (`LinkStatus`, `Move`, `IceConfig`, `Channel`), zero implementação. Sem ele o portão de M5 era impossível e o de camada de M7 ficaria impossível para `LinkStatus` já em T-10 (`D-24`). `hostRoom`/`joinRoom`, timeout e TURN seguem inteiros em `T-11`.
+- Adicionado: `src/tests/session.test.ts` — 30 testes: `cpu` e `local` produzindo `MatchState` idêntico para a mesma sequência de zonas em 3 níveis × 2 lados × 4 sementes, zona inválida morrendo em M5 **com a mensagem de M5** (a de M2 provaria que o evento chegou lá), a mesma semente 2x, `dispose()` sem assinante vivo e `subscribe()` recusado depois dele.
+- **Dois furos fechados no próprio teste, e não no código:** a igualdade entre modos passaria vazia se a disputa não acontecesse (piso de 6 cobranças e `phase === 'finished'` agora exigidos — a guarda pegou uma disputa de 6 na semente 7, encerrada por morte matemática); e as asserções de `dispose()` não distinguiam "conjunto limpo" de "conjunto cheio e inalcançável", que é vazamento — fechado por conferência de `subscribers.clear()` na fonte.
+- **O modo `online` não entra aqui:** é `T-13`, bloqueada por `A-05`. `createSession` o recusa em voz alta — degradar para `local` calado poria dois aparelhos em partidas separadas, cada um com seu placar (`D-25`).
+- **`Q-08` sai intacta.** T-09 chamou `observe`/`pick` com a semântica que T-07 entregou, sem tocar no índice nem nos testes de isolamento. `D-26` fixa só a ORDEM (a CPU escolhe antes de observar) e o teste que a cobre declara que hoje não a distingue — ele é a armadilha que fecha se `Q-08` for invertida.
+- Aberto: `Q-09` — no modo `local` a porta congelada não diz de quem é a escolha pendente, e M7 precisa disso em T-10. T-09 não mexeu no contrato: M5 notifica a escolha pendente e M7 deriva por `kicks.length`, com teste. Evidência de tudo em [[m5_sessao_notas]].
+- Decisões: D-24 (`src/net` só com tipos) · D-25 (M5 recusa na criação em vez de degradar) · D-26 (`pick` antes de `observe`).
+- Arquivado: íntegra de D-11, D-12 e D-16..D-18 em `e_qa/decisions_archive.md`, com as linhas-resumo mantidas. **Mesmo assim `c_decisions.md` ficou em 11.848/12.000 (98%)** — 152 de folga, menos que uma linha. A próxima sessão que registrar D-NN bate na parede: ver o próximo passo.
+- Portão verde no sandbox: `tsc --noEmit` limpo e **140/140** testes. **Bundle não medido** — `npm run build` falha no sandbox por permissão do mount em `dist/`, e M5 ainda não é importado por `main.ts`. Compilação conferida com `--outDir` fora do mount: 4 módulos, sem erro.
 
 ## [2026-08-07] — T-08: M4 (catálogo de seleções) implementado
 - Adicionado: `src/data/teams.ts` — `Team`, `listTeams`, `findTeam`, mais `FLAG_PENDENTE` e `CATALOG_IS_FIXTURE`. Importa só M1; sem I/O, sem gerador nativo, sem render. Catálogo construído uma vez no carregamento e congelado.

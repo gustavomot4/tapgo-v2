@@ -35,12 +35,12 @@ Partida de ~1 minuto: contra a CPU, contra alguém no mesmo aparelho, ou por lin
 
 ## Estado atual (formato fixo — 1 linha por item, SEM prosa corrida)
 - **Versão:** v2.0.0-dev (a v1 é baseline morto: reescrita total, nenhum código reaproveitado)
-- **Pronto:** M1 (T-04) · M9 esqueleto (T-05) · M2 (T-06) · M3 (T-07) · M4 (T-08) — **E-1 e E-2 fechadas** em 2026-08-07, suíte **110/110** verde; PLANO congelado em D-13
-- **No ar:** `gustavomot4.github.io/tapgo-v2/` — veredito verde, bundle **inicial 4.599 B** de 8 MB lido de `dist/` (D-21)
+- **Pronto:** M1 (T-04) · M9 esqueleto (T-05) · M2 (T-06) · M3 (T-07) · M4 (T-08) · M5 `cpu`/`local` (T-09) · M7 `cpu`/`local` (T-10) — **E-1 e E-2 fechadas**, suíte **178/178** verde; PLANO congelado em D-13
+- **Bundle:** **inicial 80.604 B** (1,01% de 8 MB) lido de `dist/`; Phaser fica fora dele, por `import()` (D-27). No ar em `gustavomot4.github.io/tapgo-v2/` ainda é a sonda de E-1 (D-21) — o jogo sobe no próximo push
 - **Em andamento (máx 1):** nada
-- **Próximo:** T-09 (M5, modos `cpu` e `local`), depois T-10 (M7) — juntos abrem E-3
-- **Bloqueado/pendente:** A-04 trava E-5, as bandeiras de E-3 e a lista real de M4 (hoje fixação, `flag: null` — D-22) · A-05 trava só T-13 · A-06 trava o desenho de M8
-- **Questões abertas:** Q-03, Q-04, Q-05, Q-07, Q-08 · **QA:** QA-01..QA-03 fechados e arquivados · QA-04 aberto
+- **Próximo:** **E-3 só fecha no celular real do dono** — 5 cobranças e alternadas por toque em 360x640, ≥30 fps. Depois, T-11 (M6)
+- **Bloqueado/pendente:** A-04 trava E-5, as bandeiras e a lista real de M4 (hoje fixação, `flag: null` — D-22) · A-05 trava só T-13 · A-06 trava o desenho de M8 · `c_decisions.md` a 7 caracteres do teto: arquivar antes da próxima sessão
+- **Questões abertas:** Q-03, Q-04, Q-05, Q-07, Q-08, Q-09 · **QA:** QA-01..QA-03 fechados e arquivados · QA-04 e QA-05 abertos
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)
 - [[licenciamento]] — ao criar ou alterar asset, nome de seleção, escudo ou texto de marca

@@ -26,6 +26,22 @@ status: arquivado
 | `D-04` | 2026-08-06 | ADOTADO | Online = P2P WebRTC, sinalização por infra pública (Trystero) | Único caminho para online a custo zero; falha para 15-30% sob CGNAT — ver [[online_p2p]] |
 | `D-05` | 2026-08-06 | ADOTADO | Publicação = GitHub Pages (canônico) + itch.io (vitrine) | Ambos gratuitos para build estático; itch.io é reativa a DMCA, então não é a fonte da verdade |
 
+## D-11, D-12, D-16 … D-18 — íntegra como estavam em `c_decisions.md`
+
+As decisões de ferramenta, build e publicação de **E-1**, etapa fechada em 2026-08-07 e no ar.
+Arquivadas em T-09 porque o registro vivo tinha 421 caracteres de folga e as decisões desta sessão
+não caberiam — mesmo motivo das anteriores. O comportamento que elas descrevem não mora mais só
+aqui: está em `package.json`, `vite.config.ts`, `.github/workflows/pages.yml` e
+`src/scripts/bundle-size.mjs`, e o portão de M9 o reconfere a cada build.
+
+| # | Data | Status | Decisão (curta) | Evidência (número-chave + link) |
+|---|---|---|---|---|
+| `D-11` | 2026-08-07 | ADOTADO | Runner de teste = Vitest | Todo portão de módulo do [[b_plan\|PLANO]] depende de suíte, e a suíte não tinha dono; é o runner do próprio Vite (`D-02`), sem configuração extra e sem peso no bundle. Fecha AC-06 |
+| `D-12` | 2026-08-07 | ADOTADO | `index.html` mora em `src/`, com `root: 'src'` e `outDir: '../dist'` no Vite | Mantém a raiz limpa que o padrão do repositório exige sem contrariar a convenção do Vite; é configuração de M9, não exceção ao padrão. Fecha AC-06 |
+| `D-16` | 2026-08-07 | ADOTADO | Piso de `vitest` = `^3.2.7`, que resolve `vite@7`; **T-05 declara `vite@^7`** para não abrir uma segunda árvore | `vitest@2.1.8` trazia 5 advisories (1 CRÍTICO, 1 alto) por `vite`/`esbuild` transitivos; com `^3.2.7`, `npm audit` dá 0 e a suíte passa sem tocar em uma linha de teste. Não altera `D-11` — o runner continua Vitest, muda o piso |
+| `D-17` | 2026-08-07 | ADOTADO | Publicação por GitHub Actions (`.github/workflows/pages.yml`) com `base: '/tapgo-v2/'`; o portão inteiro roda ANTES do deploy e o job que publica não recompila | `base` errado é 404 de todo asset só em produção, a falha que o contrato de M9 manda evitar. O que vai ao ar é o artefato que passou no portão, não um build novo feito em outra máquina |
+| `D-18` | 2026-08-07 | ADOTADO | O número do bundle sai de `src/scripts/bundle-size.mjs`, que soma bytes do manifesto do Vite e sai com erro em 8.000.000 B; a sonda de asset é forçada a virar arquivo por `assetsInlineLimit` | O Vite embute asset < 4 kB como `data:` no HTML, e **asset embutido nunca dá 404** — o portão de E-1 passaria sozinho. Medido em T-05: inicial 4.599 B, 0,06% do teto |
+
 ## QA-01 … QA-03 — íntegra como estavam em `c_decisions.md`
 
 Os três nasceram da passagem 1 de consistência e foram **fechados e verificados** na passagem 2
@@ -49,3 +65,15 @@ e não foram movidos: é lá que a sessão de evolução vai procurá-los, e sã
 Coluna 1 sem crase é lida por `check.py` como *definição* de ID em qualquer tabela do vault
 [Fonte: b_process/d_agent_learnings.md, lição de 2026-08-06]. Aqui a crase é obrigatória: esta
 tabela é cópia, não definição.
+
+## Critério da seção de QA (movido de `c_decisions.md` em T-10, pelo teto de 12.000)
+
+A tabela de QA é preenchida pelas sessões de revisão (`guardrails-review` e
+`artifact-consistency`). Os defeitos da v1 **não** são QA-NN deste projeto: a v1 é baseline
+morto, e eles estão em [[regras_partida]] como entrada de projeto. Evidência completa da
+passagem 1: [[a_artifact_consistency_report_260807_1543|relatório de consistência 2026-08-07]]
+(19 achados `AC-NN`; só os CRÍTICOS viraram QA-NN).
+
+**A coluna `Fechado em` é o que separa "corrigido no papel" de "conferido".** Sem ela, a
+tabela descrevia a correção como fato e o CONTEXT listava o mesmo QA como aberto — as duas
+leituras defensáveis, que é o pior estado possível para um registro (AC-21).

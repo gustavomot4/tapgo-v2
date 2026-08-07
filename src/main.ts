@@ -1,38 +1,25 @@
 /**
- * M9 — sonda do esqueleto de publicação (E-1).
+ * Ponto de entrada da página: liga M7 e sai da frente.
  *
- * Não é jogo e não vira jogo. Existe para que o portão de E-1 — "a página no ar carrega um
- * asset de teste **sem 404**" — seja verificável a olho nu, no celular do dono, sem abrir o
- * DevTools. Sai de cena quando M7 entrar (T-10).
+ * Até T-10 este arquivo era a sonda de M9 que provava o portão de E-1 ("a página no ar carrega um
+ * asset de teste sem 404"). A sonda cumpriu o papel dela e saiu de cena, como o próprio contrato
+ * de E-1 previa. O 404 de asset continua coberto, e melhor: agora quem falha em produção com o
+ * `base` errado são os assets REAIS do jogo — os três efeitos de áudio e o pacote da cena.
  *
- * Portão de privacidade de M9: nenhuma chamada de rede além do próprio asset do build.
+ * Nenhuma regra de tela mora aqui. Este arquivo acha o contêiner e chama a porta de M7; tudo o
+ * mais está em `src/ui/`.
  */
 
-const sonda = document.querySelector<HTMLImageElement>('#sonda');
-const veredito = document.querySelector<HTMLElement>('#veredito');
-const alvoUrl = document.querySelector<HTMLElement>('#url');
-const alvoBase = document.querySelector<HTMLElement>('#base');
+import { bootGame } from './ui/main';
 
-function decidir(carregou: boolean): void {
-  if (!veredito) return;
-  veredito.dataset['status'] = carregou ? 'ok' : 'erro';
-  veredito.textContent = carregou
-    ? 'asset carregado — sem 404'
-    : 'asset NÃO carregou (404): o `base` de vite.config.ts não bate com a URL do Pages';
-}
+const container = document.querySelector<HTMLElement>('#jogo');
 
-if (sonda) {
-  if (alvoUrl) alvoUrl.textContent = sonda.currentSrc || sonda.src;
-  if (alvoBase) alvoBase.textContent = import.meta.env.BASE_URL;
-
-  // O módulo é deferido, mas a imagem pode terminar ANTES dele: sem este ramo o veredito
-  // ficaria preso em "verificando" justamente no caso que passa.
-  if (sonda.complete) {
-    decidir(sonda.naturalWidth > 0);
-  } else {
-    sonda.addEventListener('load', () => decidir(true), { once: true });
-    sonda.addEventListener('error', () => decidir(false), { once: true });
-  }
+if (container === null) {
+  // Não há tela para mostrar o erro — a tela É o que está faltando. O console é o único destino
+  // honesto, e ele fala com o dono, não com quem joga.
+  console.error('TAP GO: #jogo não existe no index.html — a página não tem onde montar o jogo.');
+} else {
+  bootGame(container);
 }
 
 export {};

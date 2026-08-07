@@ -44,9 +44,30 @@ Precisa ser original. `Q-03` decide o nome final. Candidatos que **não** colide
 ## Procedência de asset (portão da Fase 6)
 Todo arquivo em `assets/` tem uma linha nesta tabela antes de entrar no repositório. Sem linha, não entra.
 
+Desde `T-10` a tabela é **cobrada por teste**: `src/tests/ui.test.ts` varre `src/assets/` e reprova
+o arquivo que não tiver linha aqui. Portão que só existe em prosa é portão que ninguém roda.
+
 | Arquivo | Origem | Licença | Autor |
 |---|---|---|---|
 | `src/assets/base-probe.svg` | criado em T-05, sem referência a nenhuma imagem externa: retângulo, círculo e um sinal de conferido | do projeto | projeto TAP GO v2 (agente, sessão T-05) |
+| `src/assets/audio/chute.wav` | **sintetizado** em T-10 por `src/scripts/gen-audio.mjs`: varredura de senoide 190→62 Hz mais rajada de ruído de LCG com semente fixa. Nenhum sample, nenhuma gravação, nenhum download | do projeto | projeto TAP GO v2 (agente, sessão T-10) |
+| `src/assets/audio/gol.wav` | **sintetizado** em T-10 pelo mesmo script: tríade 523/659/784 Hz com envelope exponencial | do projeto | projeto TAP GO v2 (agente, sessão T-10) |
+| `src/assets/audio/defesa.wav` | **sintetizado** em T-10 pelo mesmo script: ruído de LCG com média móvel mais varredura 320→128 Hz | do projeto | projeto TAP GO v2 (agente, sessão T-10) |
+
+### Por que os três áudios são conferíveis, e não só declarados
+`gen-audio.mjs` é determinístico — o ruído sai de um LCG com semente fixa, não de `Math.random()`.
+Rodar `node src/scripts/gen-audio.mjs` reproduz os mesmos bytes, então a origem se confere por hash
+em vez de por confiança. Os de hoje (SHA-256, 16 primeiros dígitos):
+
+| Arquivo | SHA-256 (início) | Bytes |
+|---|---|---|
+| `chute.wav` | `ea097ebf330acf8b` | 7.100 |
+| `gol.wav` | `951c898272861372` | 27.386 |
+| `defesa.wav` | `d2e0636e5d6b7206` | 13.274 |
+
+Nenhuma imagem entrou em T-10: o campo, o gol e a bola são primitivos desenhados em código
+(`src/ui/cena.ts`), e a identidade de seleção é o código ISO num disco de cor derivada do próprio
+código — não é bandeira, não imita nenhuma, e sai quando `A-04` entregar as bandeiras de verdade.
 
 ## Sobre publicar mesmo assim
 A itch.io é **reativa**: hospeda e só derruba após DMCA do titular. Isso não é permissão — é a chance de
