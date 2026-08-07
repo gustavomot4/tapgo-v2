@@ -20,7 +20,6 @@ status: atual
 
 > O [[b_plan|PLANO]] está **congelado** (`D-13`). As tarefas abaixo saem dele e seguem a ordem das etapas E-1..E-6. O portão de cada uma é o portão do módulo, e não se repete aqui. Mudança de rumo é `D-NN` novo — não replanejamento.
 
-- [ ] T-07 — CPU em 3 níveis, dois histogramas, teto de 70% medido por frequência · **Módulo:** M3 · **Etapa:** E-2 · **Skill:** backend-domain
 - [ ] T-08 — catálogo de seleções (lista de fixação até A-04) · **Módulo:** M4 · **Etapa:** E-3 · **Skill:** backend-domain
 - [ ] T-09 — sessão de disputa nos modos `cpu` e `local`, já reexportando os tipos · **Módulo:** M5 · **Etapa:** E-3 · **Skill:** backend-bff
 - [ ] T-10 — telas jogáveis por toque em 360x640, com o portão de licença de `assets/` · **Módulo:** M7 · **Etapa:** E-3 · **Skill:** frontend-uiux
@@ -44,6 +43,8 @@ status: atual
 - [x] T-04 — núcleo: tipos e gerador com semente · **Módulo:** M1 · **Etapa:** E-1 · **Portão:** 16/16 testes, determinismo de 1.000 valores, `int(3)` com o 0 incluso, 1 ocorrência do gerador nativo em `src/` · `D-14`, `D-15`
 - [x] T-06 — motor da disputa, com os invariantes como teste · **Módulo:** M2 · **Etapa:** E-2 · **Portão:** 53/53 testes 2x com o mesmo placar, um teste por invariante de [[regras_partida]], regressão dos defeitos 1/2/4/5, `Number.isInteger` em 1.000 cobranças sorteadas · `D-19`, `Q-07`
   · **entregue antes de E-1 fechar** (M2 depende só de M1); a etapa E-2 só é declarada aberta quando A-07 fechar E-1
+- [x] T-07 — CPU em 3 níveis, dois histogramas, teto de 70% medido por frequência · **Módulo:** M3 · **Etapa:** E-2 · **Portão:** 35 testes (88/88 na suíte) 2x idênticos, teto conferido por igualdade em 3.000 formatos de histograma e por frequência nos dois papéis, uniforme com histórico vazio, isolamento entre papéis, `grep localStorage src/cpu/` = 0 · `D-20`, `Q-08`
+  · **entregue antes de E-1 fechar** (M3 depende só de M1), mesma situação de T-06; com ele o código de E-2 está completo
 
 ## Ideias (não comprometidas)
 - Ranking global (exige servidor autoritativo — hoje colide com "custo R$ 0"; ver [[online_p2p]])

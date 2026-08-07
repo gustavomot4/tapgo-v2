@@ -35,11 +35,11 @@ Partida de ~1 minuto: contra a CPU, contra alguém no mesmo aparelho, ou por lin
 
 ## Estado atual (formato fixo — 1 linha por item, SEM prosa corrida)
 - **Versão:** v2.0.0-dev (a v1 é baseline morto: reescrita total, nenhum código reaproveitado)
-- **Pronto:** M1 (T-04) · M2 (T-06) — motor puro, **53 testes** verdes 2x. Fase 1 fechada — PLANO congelado em D-13
+- **Pronto:** M1 (T-04) · M2 (T-06) · M3 (T-07) — motor puro + CPU, **88 testes** verdes 2x. Fase 1 fechada — PLANO congelado em D-13
 - **Em andamento (máx 1):** T-05 — `vite.config.ts`, workflow do Pages e o número do bundle: **inicial 4.599 B** de 8 MB, lido de `dist/`. Verde no sandbox; **E-1 só fecha com a página no ar**
-- **Próximo:** T-07 — CPU (M3), que fecha E-2; **E-2 só é declarada aberta quando E-1 fechar**
+- **Próximo:** T-08 — catálogo (M4), lista de fixação até A-04. E-2 tem o código completo, mas **só é declarada aberta quando E-1 fechar**
 - **Bloqueado/pendente:** A-07 + Q-06 (repositório público, Pages ligado) travam o fecho de E-1 · A-04 trava E-5 e as bandeiras de E-3 · A-05 trava só T-13 · A-06 trava o desenho de M8
-- **Questões abertas:** Q-03, Q-04, Q-05, Q-06, Q-07 · **QA:** QA-01..QA-03 fechados em 2026-08-07 · QA-04 aberto
+- **Questões abertas:** Q-03, Q-04, Q-05, Q-06, Q-07, Q-08 · **QA:** QA-01..QA-03 fechados em 2026-08-07 · QA-04 aberto
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)
 - [[licenciamento]] — ao criar ou alterar asset, nome de seleção, escudo ou texto de marca

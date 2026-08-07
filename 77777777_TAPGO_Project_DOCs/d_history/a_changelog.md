@@ -8,7 +8,15 @@ status: atual
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
 ## [Não lançado]
-- T-06 entregue **fora da ordem das etapas**: E-2 abre com E-1 fechada, e E-1 espera A-07 (ação do dono, não código). M2 depende só de M1, então o trabalho não estava travado — mas E-2 só é declarada aberta depois de E-1.
+- T-06 e T-07 entregues **fora da ordem das etapas**: E-2 abre com E-1 fechada, e E-1 espera A-07 (ação do dono, não código). M2 e M3 dependem só de M1, então o trabalho não estava travado — mas E-2 só é declarada aberta depois de E-1. Com T-07, E-2 tem o código completo e espera só a publicação.
+
+## [2026-08-07] — T-07: M3 (CPU) implementado
+- Adicionado: `src/cpu/index.ts` — `Level`, `Role`, `Cpu`, `createCpu` e `zoneDistributionPpm`. Importa só M1; sem relógio, sem gerador nativo, sem armazenamento do navegador, sem render.
+- Adicionado: `src/tests/cpu.test.ts` — 35 testes: teto de 70% por igualdade exata **e** medido por frequência nos dois papéis, uniforme com histórico vazio em todos os níveis, isolamento entre os dois histogramas, determinismo por semente e a contagem de sorteios por `pick`.
+- Probabilidade em **ppm inteiro**, não float: é o que deixa o teto de `D-10` ser conferido por igualdade em vez de dentro da tolerância de uma medição.
+- Decisões: D-20 (teto é corte depois da mistura, não peso dela) · Q-08 aberta (`pick(role)` lê o histograma do mesmo papel — confirmar antes de M5 usar).
+- Portão verde no sandbox: `tsc --noEmit` limpo, 88/88 testes em duas execuções idênticas, `grep localStorage src/cpu/` com 0 ocorrências, 1 ocorrência do gerador nativo em `src/`. Bundle inalterado — M3 ainda não é importado por `main.ts`.
+- Teste de mutação: desligar o corte do teto reprova 12 testes, entre eles o que fixa `[700_000, 150_000, 150_000]` contra os 80% da mistura crua.
 
 ## [2026-08-07] — T-06: M2 (motor da disputa) implementado
 - Adicionado: `src/engine/index.ts` — `Phase`, `Kick`, `MatchState`, `createMatch` e `play` pura. Importa só tipos de M1; sem `Date.now()`, sem gerador nativo, sem render.
