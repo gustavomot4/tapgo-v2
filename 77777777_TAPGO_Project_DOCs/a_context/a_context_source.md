@@ -39,7 +39,7 @@ Partida de ~1 minuto: contra a CPU, contra alguém no mesmo aparelho, ou por lin
 - **Pronto:** nenhum módulo; Fase 0 commitada (6ef539b); Fase 1a — D-01 e D-02 congelados com gatilho de revisão, e D-09/D-10 fecham Q-01 e Q-02
 - **Em andamento (máx 1):** nenhum — T-01 fechado
 - **Próximo:** T-02 — Fase 1b: PLANO com módulos, contratos e milestones
-- **Bloqueado/pendente:** A-01 (repositório remoto no GitHub — `git remote` ainda vazio), A-04 parcial (falta só Q-03)
+- **Bloqueado/pendente:** A-04 parcial — falta só Q-03, que trava a Fase 3, não a 2
 - **Questões abertas:** Q-03
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)

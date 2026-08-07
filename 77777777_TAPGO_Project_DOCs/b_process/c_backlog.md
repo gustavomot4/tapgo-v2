@@ -8,7 +8,7 @@ status: atual
 > Todo card com portão: como se sabe que terminou.
 
 ## Ações do dono (máquina real)
-- [ ] A-01 — criar o repositório remoto no GitHub e apontar o local para ele · **Portão:** `git remote -v` responde
+- [x] A-01 — criar o repositório remoto no GitHub e apontar o local para ele · **Portão:** `origin` = gustavomot4/tapgo-v2; `main` rastreia `origin/main`; push 2a34a40 ✔
 - [x] A-02 — `git init` + hook de pre-commit · **Portão:** commit 6ef539b rodou o `check.py` sozinho ✔
 - [x] A-03 — ler o CONTEXT inteiro e concordar com cada linha · **Portão:** aprovado integralmente em 2026-08-06 ✔
 - [ ] A-04 — responder Q-03 (Q-01 e Q-02 respondidas em 2026-08-06 → D-09/D-10) · **Portão:** linhas do DECISIONS saem de "aberta"
