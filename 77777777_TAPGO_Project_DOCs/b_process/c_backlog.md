@@ -11,17 +11,18 @@ status: atual
 - [ ] A-01 — criar o repositório remoto no GitHub e apontar o local para ele · **Portão:** `git remote -v` responde
 - [x] A-02 — `git init` + hook de pre-commit · **Portão:** commit 6ef539b rodou o `check.py` sozinho ✔
 - [x] A-03 — ler o CONTEXT inteiro e concordar com cada linha · **Portão:** aprovado integralmente em 2026-08-06 ✔
-- [ ] A-04 — responder Q-01, Q-02 e Q-03 · **Portão:** linhas do DECISIONS saem de "aberta"
+- [ ] A-04 — responder Q-03 (Q-01 e Q-02 respondidas em 2026-08-06 → D-09/D-10) · **Portão:** linhas do DECISIONS saem de "aberta"
 
 ## A fazer
 - [ ] T-02 — gerar o PLANO com módulos e contratos · **Portão:** outro agente implementa um módulo lendo só o contrato dele · **Skill:** planejador
 - [ ] T-03 — conferir consistência CONTEXT/PLANO/BACKLOG/DECISIONS · **Portão:** zero achados críticos; todo módulo com ao menos uma tarefa · **Skill:** consistencia-artefatos
 
 ## Em andamento (máx 1 — espelha "Em andamento" do [[a_context_source|CONTEXT]])
-- [ ] T-01 — congelar a forma da arquitetura (D-01) e a stack (D-02) · **Portão:** dono aprova D-01 e D-02, e o gatilho que faria cada uma mudar está escrito · **Skill:** arquitetura-monolito
+_(vazio — próxima sessão pega T-02)_
 
 ## Feito (mover para cá; detalhe no [[a_changelog|CHANGELOG]])
 - [x] T-00 — Fase 0: CONTEXT, temas de domínio e candidatas a D-NN
+- [x] T-01 — Fase 1a: D-01 e D-02 congelados com gatilho de revisão; Q-01→D-09 e Q-02→D-10
 
 ## Ideias (não comprometidas)
 - Ranking global (exige servidor autoritativo — hoje colide com "custo R$ 0"; ver [[online_p2p]])

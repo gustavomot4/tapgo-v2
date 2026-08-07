@@ -18,6 +18,8 @@ Mesma zona = defesa. Zonas diferentes = gol. Cobranças alternadas, 5 para cada 
 - Toda cobrança registra exatamente uma zona e exatamente um resultado (gol ou defesa).
 - A disputa termina no instante em que a diferença de gols é maior que as cobranças restantes do adversário — **sem cobranças inúteis depois disso**.
 - Empate após 5 cobranças -> alternadas: a disputa só termina com número **igual** de cobranças dos dois lados.
+- Alternadas (`D-09`): rodada = 1 cobrança de cada lado. O fim de jogo é avaliado **só ao fim da rodada**; se houver diferença de gols, vence quem está à frente. Sem teto de rodadas — não existe critério de desempate fora das cobranças.
+- A morte matemática **não** se aplica dentro de uma rodada alternada: as duas cobranças da rodada sempre acontecem.
 - Reexecutar a mesma sequência de entradas produz o mesmo placar (motor determinístico dada a semente).
 - Nenhum estado de partida vem do cliente adversário sem validação local.
 
@@ -34,13 +36,22 @@ Mesma zona = defesa. Zonas diferentes = gol. Cobranças alternadas, 5 para cada 
 > O defeito 1 é o argumento concreto para TypeScript (D-02): `noImplicitGlobals` + `strict` transformam
 > esse erro de digitação em falha de compilação, não em bug silencioso de placar.
 
-## CPU
+## CPU (`D-10`)
 A v1 sorteava 1/3 puro — sem leitura, sem dificuldade. O jogador não melhora contra ruído.
-Direção pretendida: a CPU pondera o histórico de zonas do jogador na sessão. **Nível de dificuldade e
-fórmula: `Q-02`, decisão do dono.**
+A CPU pondera o histórico de zonas do jogador **na sessão**, em 3 níveis:
+
+| Nível | Peso do histórico | Peso uniforme |
+|---|---|---|
+| Fácil | 0% | 100% (é a v1) |
+| Médio | 50% | 50% |
+| Difícil | 70% | 30% |
+
+Invariantes da CPU (viram teste):
+- **Teto absoluto de 70%.** Nenhum nível, nenhuma progressão e nenhum torneio passam disso: o jogador sempre consegue enganar a CPU.
+- Histórico vive **em memória**, escopo da sessão; zera ao recarregar. Nada em `localStorage` — não é dado do aparelho, é estado de partida.
+- Sorteio usa a semente do motor. Mesma semente + mesmas entradas = mesmas escolhas da CPU.
+- Com histórico vazio (primeira cobrança), a distribuição é uniforme em qualquer nível.
 
 ## Lacunas declaradas (não inventar)
-- `Q-01` — regra exata das alternadas e da morte súbita.
-- `Q-02` — a CPU adapta ao padrão do jogador? Com que teto de dificuldade?
 - `Q-03` — quantas e quais seleções entram, e o nome do torneio.
 - Desconexão no meio da partida online: consequência ainda não definida (ver [[online_p2p]]).
