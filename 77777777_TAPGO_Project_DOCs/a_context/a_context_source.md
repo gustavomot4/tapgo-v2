@@ -37,10 +37,10 @@ Partida de ~1 minuto: contra a CPU, contra alguém no mesmo aparelho, ou por lin
 ## Estado atual (formato fixo — 1 linha por item, SEM prosa corrida)
 - **Versão:** v2.0.0-dev (a v1 é baseline morto: reescrita total, nenhum código reaproveitado)
 - **Pronto:** nenhum módulo; Fase 0 commitada (6ef539b); Fase 1a — D-01 e D-02 congelados com gatilho de revisão, e D-09/D-10 fecham Q-01 e Q-02
-- **Em andamento (máx 1):** nenhum — T-01 fechado
-- **Próximo:** T-02 — Fase 1b: PLANO com módulos, contratos e milestones
-- **Bloqueado/pendente:** A-04 parcial — falta só Q-03, que trava a Fase 3, não a 2
-- **Questões abertas:** Q-03
+- **Em andamento (máx 1):** T-02 — PLANO entregue (M1..M9, etapas E-1..E-6); falta o portão do dono
+- **Próximo:** T-03 — Fase 1c: consistência entre CONTEXT, PLANO, BACKLOG e DECISIONS
+- **Bloqueado/pendente:** A-04 — Q-03 trava a etapa E-5 (torneio) e Q-04 trava a E-4 (online); E-1 a E-3 seguem livres
+- **Questões abertas:** Q-03, Q-04
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)
 - [[licenciamento]] — ao criar ou alterar asset, nome de time, escudo ou texto de marca

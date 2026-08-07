@@ -36,6 +36,7 @@ status: atual
 | Q-01 | ~~Regra exata das alternadas/morte súbita~~ | **RESPONDIDA 2026-08-06 → D-09** |
 | Q-02 | ~~A CPU adapta ao padrão do jogador? Qual o teto de dificuldade?~~ | **RESPONDIDA 2026-08-06 → D-10** |
 | Q-03 | Quantas e quais seleções entram, e qual o nome do torneio (não pode ser "Copa do Mundo") | antes da Fase 3 (define assets e chaveamento) |
+| Q-04 | Peer some no meio da disputa online: quem vence, empata ou a partida é anulada? | antes da etapa E-4 do [[b_plan\|PLANO]] (define o contrato de M5 e M6) |
 
 ## Achados de QA (QA-NN — citados no commit: `fix: QA-NN …`)
 > Preenchido pelas sessões de guardrails-review. Nenhuma passagem executada ainda.
