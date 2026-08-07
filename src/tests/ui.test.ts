@@ -63,17 +63,30 @@ describe('portão de camada de M7 (D-01)', () => {
     expect(arquivos.length).toBeGreaterThan(5);
   });
 
-  it.each(arquivos)('%s não importa engine, cpu nem net', (caminho) => {
-    const fonte = readFileSync(caminho, 'utf8');
-    // Só linhas de import/export de módulo: a palavra "engine" dentro de um comentário que
-    // explica o portão não pode reprovar o portão.
-    const linhas = fonte
-      .split('\n')
-      .filter((l) => /^\s*(import|export)\b.*\bfrom\b/.test(l) || /\bimport\(/.test(l));
+  // O padrão é COPIADO de `.github/workflows/pages.yml`, caractere por caractere, e é largo de
+  // propósito: qualquer linha de `import`/`export` que contenha `engine`, `cpu` ou `net` antes
+  // do `;` reprova, mesmo sem haver import de motor.
+  //
+  // Ele mora aqui porque a primeira versão deste teste usava um padrão MAIS ESTREITO (só o
+  // caminho do módulo entre aspas) e passava verde enquanto o CI reprovava a linha
+  // `export type ModoJogavel` de `derivacao.ts`. Teste mais frouxo que o portão que diz cobrir
+  // não protege nada — ele só adia a descoberta para o CI.
+  const PADRAO_DO_CI = /^[ \t]*(import|export)[^;]*(engine|cpu|net)/;
 
-    for (const linha of linhas) {
-      expect(linha).not.toMatch(/['"][^'"]*\/(engine|cpu|net)(\/index)?['"]/);
-    }
+  it.each(arquivos)('%s passa no padrão de camada do CI', (caminho) => {
+    const infratoras = readFileSync(caminho, 'utf8')
+      .split('\n')
+      .filter((l) => PADRAO_DO_CI.test(l));
+
+    expect(infratoras, `${caminho}: linha de import/export alcançada pelo portão`).toEqual([]);
+  });
+
+  it('o padrão copiado do CI ainda pega o que deve pegar', () => {
+    // Sem esta linha, um erro de digitação no regex acima tornaria o teste anterior vacuamente
+    // verde — que é a mesma classe de falha que deixou o CI descobrir isto antes da suíte.
+    expect(PADRAO_DO_CI.test("export type M = 'c" + "pu' | 'local';")).toBe(true);
+    expect(PADRAO_DO_CI.test("import { play } from '../eng" + "ine/index';")).toBe(true);
+    expect(PADRAO_DO_CI.test("import { createSession } from '../session/index';")).toBe(false);
   });
 
   it('nenhum termo da lista-morta de licenciamento aparece em src/ui/', () => {

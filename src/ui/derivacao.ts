@@ -27,10 +27,18 @@
  */
 
 import type { Side } from '../core/index';
-import type { MatchState } from '../session/index';
+import type { MatchState, Mode } from '../session/index';
 
-/** Os dois modos que M5 aceita hoje. `online` é T-13 e `createSession` o recusa em voz alta. */
-export type ModoJogavel = 'cpu' | 'local';
+/**
+ * Os dois modos que M5 aceita hoje. `online` é T-13 e `createSession` o recusa em voz alta.
+ *
+ * Derivado de `Mode` em vez de reescrito como literal por **dois** motivos. O primeiro é tipo:
+ * o dia em que M5 ganhar um modo, esta linha acompanha sozinha. O segundo é o portão de camada,
+ * que o CI cobra com `grep -rnoE "^\s*(import|export)[^;]*(engine|cpu|net)" src/ui/` — padrão
+ * largo de propósito, e por isso a palavra `cpu` escrita numa linha de `export` reprova a
+ * fronteira mesmo sem haver import nenhum do motor — foi o que o CI pegou em T-10.
+ */
+export type ModoJogavel = Exclude<Mode, 'online'>;
 
 export type Papel = 'chutar' | 'defender';
 
