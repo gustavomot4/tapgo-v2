@@ -10,6 +10,15 @@ status: atual
 ## [Não lançado]
 - _(nada pendente — E-1 e E-2 fechadas)_
 
+## [2026-08-07] — T-08: M4 (catálogo de seleções) implementado
+- Adicionado: `src/data/teams.ts` — `Team`, `listTeams`, `findTeam`, mais `FLAG_PENDENTE` e `CATALOG_IS_FIXTURE`. Importa só M1; sem I/O, sem gerador nativo, sem render. Catálogo construído uma vez no carregamento e congelado.
+- Adicionado: `src/tests/teams.test.ts` — 22 testes: formato ISO alfa-2 e faixas de uso do usuário, `name` conferido contra o ICU **e ausente como literal na fonte**, zero URL, zero termo da lista-morta de [[licenciamento]], imutabilidade do catálogo e `findTeam` sem normalização.
+- **A lista é de fixação e não responde `Q-03`:** 4 códigos arbitrários por construção, todos com `flag: null`. `CATALOG_IS_FIXTURE` é exportada e um teste falha de propósito quando ela virar `false`, forçando a revisitar o portão de licença em `A-04`.
+- `name` **derivado** por `Intl.DisplayNames` em locale fixo `pt-BR`: cumpre "o nome vem do código" sem uma linha de país digitada e sem peso no bundle. Código que não resolve **lança**, em vez de virar uma seleção chamada pelo próprio código.
+- Decisões: D-22 (`Team.flag` passa a `string | null`; muda contrato de M4, por isso `D-NN`) · D-23 (`name` do ICU em locale fixo, **com o limite declarado**: o ICU aceita código retirado como `SU` e reservado como `UK`/`EU`). Evidência das duas em [[m4_catalogo_notas]].
+- Arquivado: íntegra de QA-01..QA-03 (fechados e verificados) em `e_qa/decisions_archive.md`, com as linhas-resumo mantidas em `c_decisions.md`. Liberou 897 caracteres — sem isso as duas decisões desta sessão não caberiam no teto de 12.000.
+- Portão verde no sandbox: `tsc --noEmit` limpo e 110/110 testes. **Bundle não medido nesta sessão** — `npm run build` falha no sandbox por permissão do mount, e M4 ainda não é importado por `main.ts`.
+
 ## [2026-08-07] — A-07: publicação no ar, E-1 e E-2 fechadas
 - `Q-06` respondida: o repositório é **público** (`D-21`), que é a condição do Pages no plano Free — sem ela, "custo R$ 0" e publicação não coexistiam.
 - **E-1 fechada:** `https://gustavomot4.github.io/tapgo-v2/` abre com o veredito verde "asset carregado — sem 404", conferido no celular do dono. `base` resolvido como `/tapgo-v2/` e sonda servida de `assets/base-probe-BWPWGS0k.svg` — **o mesmo hash do build local**, prova de que o deploy consumiu o artefato que passou no portão em vez de recompilar (`D-17`).

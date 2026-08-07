@@ -35,12 +35,12 @@ Partida de ~1 minuto: contra a CPU, contra alguém no mesmo aparelho, ou por lin
 
 ## Estado atual (formato fixo — 1 linha por item, SEM prosa corrida)
 - **Versão:** v2.0.0-dev (a v1 é baseline morto: reescrita total, nenhum código reaproveitado)
-- **Pronto:** M1 (T-04) · M9 esqueleto (T-05) · M2 (T-06) · M3 (T-07) — **E-1 e E-2 fechadas** em 2026-08-07 com suíte **88/88** verde 2x; PLANO congelado em D-13
+- **Pronto:** M1 (T-04) · M9 esqueleto (T-05) · M2 (T-06) · M3 (T-07) · M4 (T-08) — **E-1 e E-2 fechadas** em 2026-08-07, suíte **110/110** verde; PLANO congelado em D-13
 - **No ar:** `gustavomot4.github.io/tapgo-v2/` — veredito verde, bundle **inicial 4.599 B** de 8 MB lido de `dist/` (D-21)
-- **Em andamento (máx 1):** T-08 — M4 no disco (`src/data/teams.ts`), suíte total em **110**; portão de M4 e registros da sessão **ainda não fechados**
-- **Próximo:** fechar T-08 (D-NN, changelog, backlog); depois T-09/T-10, que abrem E-3
-- **Bloqueado/pendente:** A-04 trava E-5 e as bandeiras de E-3 · A-05 trava só T-13 · A-06 trava o desenho de M8
-- **Questões abertas:** Q-03, Q-04, Q-05, Q-07, Q-08 · **QA:** QA-01..QA-03 fechados em 2026-08-07 · QA-04 aberto
+- **Em andamento (máx 1):** nada
+- **Próximo:** T-09 (M5, modos `cpu` e `local`), depois T-10 (M7) — juntos abrem E-3
+- **Bloqueado/pendente:** A-04 trava E-5, as bandeiras de E-3 e a lista real de M4 (hoje fixação, `flag: null` — D-22) · A-05 trava só T-13 · A-06 trava o desenho de M8
+- **Questões abertas:** Q-03, Q-04, Q-05, Q-07, Q-08 · **QA:** QA-01..QA-03 fechados e arquivados · QA-04 aberto
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)
 - [[licenciamento]] — ao criar ou alterar asset, nome de seleção, escudo ou texto de marca
