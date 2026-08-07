@@ -1,14 +1,15 @@
 ---
 tags: [plano]
-status: atual
+status: congelado
 tipo: plano
 data: 2026-08-07
 ---
 # PLANO.md — TAP GO v2
 
 > Gerado na Fase 1b com [[b_process/skills/planner/SKILL|planner]] a partir do [[a_context_source|CONTEXT]].
-> **Revisão de 2026-08-07:** corrigido pelos 19 achados de [[a_artifact_consistency_report_260807_1543|T-03]]. Os três CRÍTICOS viraram `QA-01`, `QA-02` e `QA-03` no [[c_decisions|DECISIONS]].
-> **Ainda não congelado.** Aprovado no portão de T-02 → `status: congelado` e uma linha `D-NN` no DECISIONS. Mudança posterior é `D-NN` novo — nunca replanejar do zero.
+> **CONGELADO em 2026-08-07 por `D-13`.** T-02 aprovado pelo dono; T-03 aprovado na passagem 2 ([[b_artifact_consistency_report_260807_1605|relatório 2]]): 5/5 restrições inegociáveis com portão, 6/6 critérios de aceite com número ou comando, zero CRÍTICO aberto.
+> **Daqui em diante, mudança de rumo é `D-NN` novo — nunca replanejar do zero.** Editar este arquivo sem D-NN é o defeito que o congelamento existe para impedir.
+> Histórico das duas revisões: 19 achados da [[a_artifact_consistency_report_260807_1543|passagem 1]] (os três CRÍTICOS viraram `QA-01`..`QA-03`) e 7 da [[b_artifact_consistency_report_260807_1605|passagem 2]] (`AC-20`..`AC-26`), todos fechados antes do congelamento.
 > Critério de qualidade: outro agente implementa um módulo lendo **só o contrato dele + o CONTEXT**.
 > Estado (o que já está pronto) NÃO mora aqui — mora no CONTEXT.
 > As milestones são `E-1..E-6` (etapa), não `M-1..M-6` do modelo: `M1..M9` já são os módulos, e as duas numerações lado a lado se leem errado.
@@ -149,7 +150,7 @@ Dados/schema (M1, forma de M4) → domínio (M2, M3) → borda (M6, M5) → UI (
 - **Porta de entrada:** `src/cpu/index.ts`
   ```ts
   export type Level = 'easy' | 'medium' | 'hard';   // peso do histórico: 0% · 50% · 70%
-  export type Role  = 'kick' | 'dive';              // cobrando · defendendo
+  export type Role  = 'shooter' | 'keeper';         // cobrando · defendendo
   export interface Cpu {
     observe(role: Role, zone: Zone): void;          // o que o HUMANO escolheu, no papel dele
     pick(role: Role): Zone;                         // o que a CPU escolhe, no papel dela
@@ -158,7 +159,7 @@ Dados/schema (M1, forma de M4) → domínio (M2, M3) → borda (M6, M5) → UI (
   ```
 - **Estado que possui:** **dois** histogramas, um por papel, em memória. A distribuição de zonas de quem cobra não é a mesma de quem defende; um histograma só as leria como uma, e quem implementasse lendo apenas o contrato escolheria sozinho qual dos dois comportamentos vale. O teto de 70% vale para **cada** histograma, separadamente.
 - **Skill responsável:** [[b_process/skills/backend-domain/SKILL|backend-domain]]
-- **Portão:** histórico vazio → distribuição uniforme em qualquer nível · com o jogador repetindo uma zona, a frequência medida com que a CPU acerta essa zona **nunca passa de 70%**, em nível nenhum · **o histórico de um papel não desloca a escolha do outro** (encher `kick` de `'L'` não muda a distribuição de `pick('dive')`) · mesma semente + mesmas entradas = mesmas escolhas · `grep -rn "localStorage" src/cpu/` retorna zero [Fonte: a_context/regras_partida.md#cpu-d-10].
+- **Portão:** histórico vazio → distribuição uniforme em qualquer nível · com o jogador repetindo uma zona, a frequência medida com que a CPU acerta essa zona **nunca passa de 70%**, em nível nenhum · **o histórico de um papel não desloca a escolha do outro** (encher `shooter` de `'L'` não muda a distribuição de `pick('keeper')`) · mesma semente + mesmas entradas = mesmas escolhas · `grep -rn "localStorage" src/cpu/` retorna zero [Fonte: a_context/regras_partida.md#cpu-d-10].
 - **Onde a stack vai doer:** o teto de 70% se fura por acidente na soma dos pesos. "70% na zona mais provável, senão uniforme entre as 3" dá **80%** de acerto efetivo (0,70 + 0,30/3), e viola `D-10` sem que ninguém veja no código. O teste tem de **medir frequência** sobre milhares de sorteios com semente fixa, não conferir a fórmula no olho.
 
 ### M4 — Catálogo de seleções
@@ -185,6 +186,7 @@ Dados/schema (M1, forma de M4) → domínio (M2, M3) → borda (M6, M5) → UI (
   ```ts
   export type { MatchState } from '../engine';   // reexporta: a UI tipa sem importar o motor
   export type { LinkStatus } from '../net';      // idem para o status do canal
+  export type { Level }      from '../cpu';      // idem: é M7 quem guarda o nível e monta o config
 
   export type Mode = 'cpu' | 'local' | 'online';
   export interface SessionConfig {
@@ -201,7 +203,7 @@ Dados/schema (M1, forma de M4) → domínio (M2, M3) → borda (M6, M5) → UI (
   ```
 - **Estado que possui:** modo, lado local, escolha pendente da rodada e nº de sequência do peer. **Não** possui placar — placar é de M2.
 - **Skill responsável:** [[b_process/skills/backend-bff/SKILL|backend-bff]]
-- **Portão:** os três modos produzem o **mesmo** `MatchState` para a mesma sequência de zonas — é o teste que prova que a regra não foi duplicada (`D-01`) · evento remoto fora de ordem, repetido ou com zona inválida é descartado e **nunca chega a M2** [Fonte: a_context/regras_partida.md#invariantes] · `dispose()` fecha o canal e não deixa assinante vivo · `MatchState` e `LinkStatus` são reexportados pela porta (sem isso, o portão de M7 é impossível de cumprir).
+- **Portão:** os três modos produzem o **mesmo** `MatchState` para a mesma sequência de zonas — é o teste que prova que a regra não foi duplicada (`D-01`) · evento remoto fora de ordem, repetido ou com zona inválida é descartado e **nunca chega a M2** [Fonte: a_context/regras_partida.md#invariantes] · `dispose()` fecha o canal e não deixa assinante vivo · **os três tipos de fora que a porta de M5 usa — `MatchState`, `LinkStatus` e `Level` — são reexportados por ela**; a regra é "todo tipo que aparece na assinatura de M5 sai por M5", senão o portão de camada de M7 vira impossível de cumprir para o tipo esquecido.
 - **Onde a stack vai doer:** é aqui que o online contamina o resto se a fronteira vazar. `choose()` resolve na hora no modo local e espera a rede no online — a **assinatura tem de ser a mesma nos três modos**, senão M7 ganha um `if (mode === 'online')` e a tela passa a conhecer rede. `Q-04` bloqueia o comportamento quando o peer some no meio: até responder, o modo online não fecha E-4.
 
 ### M6 — Transporte online P2P
@@ -256,7 +258,7 @@ Dados/schema (M1, forma de M4) → domínio (M2, M3) → borda (M6, M5) → UI (
   }
   export function createTournament(entrants: readonly CountryCode[], rng: Rng): Tournament;
   ```
-- **Estado que possui:** o chaveamento, em memória.
+- **Estado que possui:** o chaveamento, em memória — **[a confirmar em E-5]** se ele sobrevive a um reload; se sobreviver, o estado muda de dono e passa a viver no `localStorage` de M7. Quem implementar M8 lendo só este contrato precisa saber que essa virada é possível, e por isso a ressalva está aqui e na tabela de donos de estado, não só lá.
 - **Skill responsável:** [[b_process/skills/backend-domain/SKILL|backend-domain]]
 - **Bloqueado por `Q-03`** (número de participantes, **formato do chaveamento** e nome do torneio, que não pode colidir com marca [Fonte: a_context/licenciamento.md#nome-do-torneio-no-jogo]) **e por `Q-05`** (se o torneio também roda no modo `online`, M8 passa a depender de M5 no modo online e o chaveamento vira estado compartilhado entre dois aparelhos — isso muda a camada 3).
 - **Portão:** o torneio termina no número de disputas que o formato respondido em `Q-03` prevê, com um campeão e sem par repetido · mesma semente = mesmo chaveamento · a CPU do torneio respeita o teto de 70%: nenhuma progressão de dificuldade passa disso [Fonte: a_context/regras_partida.md#cpu-d-10].
@@ -278,20 +280,24 @@ Dados/schema (M1, forma de M4) → domínio (M2, M3) → borda (M6, M5) → UI (
 
 | Etapa | Abre quando | Portão de saída |
 |---|---|---|
-| **E-1 · Esqueleto que publica** | plano congelado (`D-NN`) | M1 + esqueleto de M9: `npx tsc --noEmit && npm run build` verdes · página no ar pelo Pages carregando um asset de teste **sem 404** · as duas checagens de camada já rodam (uma ocorrência de `Math.random`, zero import de motor na UI) |
+| **E-1 · Esqueleto que publica** | plano congelado (`D-13`) — **aberta desde 2026-08-07** | M1 + esqueleto de M9: `npx tsc --noEmit && npm run build` verdes · página no ar pelo Pages carregando um asset de teste **sem 404** · as duas checagens de camada já rodam (uma ocorrência de `Math.random`, zero import de motor na UI) |
 | **E-2 · Motor sem tela** | E-1 fechada | M2 + M3: um teste por invariante de [[regras_partida]] · regressão dos defeitos **1, 2, 4 e 5** da v1 em M2 e do **3** em M1 — o defeito 6 é de ID de sala e fecha em M6 (E-4) · `Number.isInteger` em toda transição de placar · frequência da CPU medida ≤ 70% em cada papel · suíte roda 2x com o mesmo placar |
 | **E-3 · Jogo local jogável** | E-2 fechada | M4 (lista de fixação) + M5 (`cpu`, `local`) + M7: disputa completa, 5 cobranças e alternadas, jogada **só por toque** em 360x640 no celular real do dono, terminando com o placar correto · todo asset novo com linha de procedência |
-| **E-4 · Online por link** | E-3 fechada **e** `Q-04` respondida | M6 + M5 (`online`): dois aparelhos em **rede móvel real** completam uma disputa · **taxa de conexão medida ≥ 70%** — abaixo disso E-4 não fecha, e o gatilho de revisão de `D-01` abre como efeito separado · decisão de TURN escrita: camada gratuita com linha na tabela de custo, **ou** fora de escopo com o percentual sem online registrado · falha mostra timeout honesto em 20 s e os modos locais seguem intactos |
+| **E-4 · Online por link** | E-3 fechada **e** `Q-04` respondida | M6 + M5 (`online`): dois aparelhos em **rede móvel real** completam uma disputa · **duas medições, não uma:** a taxa **sem TURN** é medida e registrada sempre — é ela que alimenta o gatilho de revisão de `D-01` — e o corte de **≥ 70% é cobrado sobre a configuração que efetivamente vai ao ar**. Se TURN ficar fora de escopo as duas são a mesma medição, e o pior caso declarado em [[online_p2p]] (30% falhando) cai **exatamente** no corte: passa raspando, deixando 30% sem online — é o cenário em que a decisão de TURN tem de estar escrita com percentual, não com adjetivo · decisão de TURN escrita: camada gratuita com linha na tabela de custo, **ou** fora de escopo com o percentual sem online registrado · falha mostra timeout honesto em 20 s e os modos locais seguem intactos |
 | **E-5 · Torneio** | E-3 fechada **e** `Q-03` + `Q-05` respondidas | M8 + tela de torneio (M7) + catálogo real: torneio termina com campeão, jogável de ponta a ponta por toque · **toda** bandeira e todo asset novo com linha de procedência em [[licenciamento]] · nome do torneio fora da lista-morta |
 | **E-6 · Entrega** | E-4 **e** E-5 fechadas | todo o Critério de aceite do [[a_context_source|CONTEXT]] verde · tabela de custo de [[stack]] sem linha em branco · `python scripts/check.py --historico-completo` verde |
 
 E-4 e E-5 são paralelas de propósito: `Q-03` trava o torneio, **não** o online.
 
-## Decisões que este plano pede para congelar
+## Decisões que sustentam este plano
 
-O runner de teste e o local do `index.html` **deixaram de ser propostas**: viraram `D-11` e `D-12` no [[c_decisions|DECISIONS]] nesta revisão, porque todo portão de módulo depende de suíte e a suíte não tinha dono. O que continua pendente é **um** item:
+Nada aqui está pendente — as três decisões que o plano pedia foram congeladas no [[c_decisions|DECISIONS]]:
 
-1. **O plano em si** — módulos, camadas, portas de entrada, donos de estado e portões. É o que T-02 aprova, e vira `D-NN` no congelamento.
+| Decisão | O que ficou decidido |
+|---|---|
+| `D-11` | Runner de teste = Vitest — todo portão de módulo depende de suíte, e ela não tinha dono |
+| `D-12` | `index.html` em `src/`, com `root: 'src'` e `outDir: '../dist'` |
+| `D-13` | **Este plano**: módulos, camadas, portas de entrada, donos de estado e portões |
 
 ## As 3 perguntas que mais mudariam este plano
 

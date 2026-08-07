@@ -8,7 +8,20 @@ status: atual
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
 ## [Não lançado]
-- T-03 passagem 2 pendente: reconferir consistência com o relatório da passagem 1 na mão
+- E-1 aberta: T-04 (núcleo M1) e T-05 (esqueleto de build M9) — Fase 2 pode começar
+
+## [2026-08-07] — Fase 1 fechada: PLANO congelado em D-13
+- T-02 aprovado pelo dono e T-03 aprovado na passagem 2 (`e_qa/b_artifact_consistency_report_260807_1605.md`): 19/19 achados da passagem 1 fechados, 5/5 restrições inegociáveis com portão, 6/6 critérios de aceite com número ou comando, zero CRÍTICO.
+- D-13 congela o PLANO; `b_plan.md` passou a `status: congelado`. Mudança de rumo daqui em diante é D-NN novo.
+- Os 7 achados da passagem 2 (AC-20..AC-26) entraram no mesmo commit, por decisão do dono: congelar com defeito conhecido faria cada conserto custar um D-NN.
+- AC-20: M5 reexporta também `Level`, e o portão de M5 passou a cobrar a regra inteira — todo tipo que aparece na assinatura de M5 sai por M5.
+- AC-22: T-11 (M6) saiu de "bloqueada por A-05". M6 não sabe o que é gol, então Q-04 não muda uma linha dele; só T-13 continua bloqueada.
+- AC-24: o corte de 70% de E-4 passou a dizer qual configuração mede — taxa sem TURN sempre registrada (alimenta o gatilho de D-01), e o corte cobrado sobre o que vai ao ar.
+- AC-25: `Role` virou `'shooter' | 'keeper'`; `'kick'` como papel colidia com `Kick`, que é o evento inteiro. Vocabulário atualizado no glossário.
+- AC-21: tabela de QA ganhou coluna `Fechado em`, e o CONTEXT deixou de listar como aberto o que já estava verificado.
+- AC-23: tabela de custo de `stack.md` preenchida com Trystero e a sinalização pública, que já são endpoint de runtime por D-04; TURN ficou marcado como linha condicional de E-4.
+- AC-26: a ressalva do chaveamento (memória × `localStorage`) passou a aparecer também no contrato de M8, não só na tabela de donos de estado.
+- Os dois relatórios de consistência deixaram de ser notas órfãs: linkados do card de T-03 e do DECISIONS.
 
 ## [2026-08-07] — Fase 1b revisada: os 19 achados de T-03 fechados
 - Passagem 1 de consistência (T-03) reprovou o PLANO: 3 CRÍTICOS, 7 ALTOS, 8 MÉDIOS, 1 BAIXO — `e_qa/a_artifact_consistency_report_260807_1543.md`.

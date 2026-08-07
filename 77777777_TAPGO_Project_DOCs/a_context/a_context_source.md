@@ -35,11 +35,11 @@ Partida de ~1 minuto: contra a CPU, contra alguém no mesmo aparelho, ou por lin
 
 ## Estado atual (formato fixo — 1 linha por item, SEM prosa corrida)
 - **Versão:** v2.0.0-dev (a v1 é baseline morto: reescrita total, nenhum código reaproveitado)
-- **Pronto:** nenhum módulo; Fase 0 commitada (6ef539b); Fase 1a — D-01 e D-02 congelados com gatilho de revisão, e D-09/D-10 fecham Q-01 e Q-02
-- **Em andamento (máx 1):** T-02 — PLANO corrigido pelos 19 achados de T-03; falta o portão do dono
-- **Próximo:** T-03 (2ª passagem) — reconferir consistência com o relatório anterior na mão
-- **Bloqueado/pendente:** A-04/A-05/A-06 — Q-03 trava E-5, Q-04 trava E-4, Q-05 trava o desenho de M8; E-1 a E-3 seguem livres
-- **Questões abertas:** Q-03, Q-04, Q-05 · **QA aberto:** QA-01, QA-02, QA-03
+- **Pronto:** nenhum módulo; Fase 1 fechada — PLANO congelado em D-13 (T-02 aprovado, T-03 aprovado na 2ª passagem), D-11/D-12 congelam runner e layout de build
+- **Em andamento (máx 1):** nenhum — **E-1 aberta**, a próxima sessão pega T-04 (M1)
+- **Próximo:** T-04 — núcleo (M1): tipos e gerador com semente; depois T-05 (M9), que fecha E-1
+- **Bloqueado/pendente:** A-04 trava E-5 e as bandeiras de E-3 · A-05 trava só T-13 · A-06 trava o desenho de M8; E-1 e E-2 não dependem de nenhuma
+- **Questões abertas:** Q-03, Q-04, Q-05 · **QA:** QA-01..QA-03 fechados e verificados em 2026-08-07
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)
 - [[licenciamento]] — ao criar ou alterar asset, nome de seleção, escudo ou texto de marca

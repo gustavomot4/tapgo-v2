@@ -40,7 +40,9 @@ o build publicado alcança.
 
 | Dependência ou endpoint | Para quê | Camada usada | Pede cartão? | Fonte |
 |---|---|---|---|---|
-| _(vazio — preencher a cada entrada; TURN de M6 é a primeira linha esperada)_ | | | | |
+| Trystero (MIT) | biblioteca de sinalização P2P de M6 (`D-04`) | biblioteca, sem conta e sem serviço próprio | Não | https://github.com/dmotz/trystero |
+| Infraestrutura pública de sinalização (BitTorrent trackers · Nostr · MQTT) | os dois navegadores se acharem antes do WebRTC (`D-04`) | pública, de terceiros, sem conta — **é a exceção nominal do portão de privacidade de M9** | Não | [[online_p2p]] |
+| Relay TURN | atravessar CGNAT para os 15-30% que não conectam direto | **linha condicional:** só existe se E-4 escolher a saída (a); se escolher a (b), esta linha vira "fora de escopo" com o percentual sem online registrado | a confirmar em E-4 | [[online_p2p]] |
 
 Dependência só de build (compilador, bundler, runner de teste) não vai para esta tabela: ela não roda
 no navegador do jogador e não cria conta em serviço nenhum.

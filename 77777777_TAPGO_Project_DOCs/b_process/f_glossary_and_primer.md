@@ -291,6 +291,7 @@ topo da árvore, acima de qualquer pasta de código, em qualquer explorador de a
 | O time que o jogador escolhe: país + bandeira, sem escudo | **seleção** | `Team`, `listTeams()` | "time", "clube" |
 | A série de cobranças que decide um confronto (5 + alternadas) | **disputa** | `Match`, `MatchState` | "partida" como termo técnico |
 | Uma cobrança isolada, com a zona de quem chuta e a de quem defende | **cobrança** | `Kick` | "chute", "penalti" |
+| O papel de quem está na cobrança: quem bate × quem defende | **cobrador** × **goleiro** | `Role = 'shooter' \| 'keeper'` | `'kick'` como papel — `Kick` já é o evento inteiro |
 | As três opções de canto | **zona** (esquerda, meio, direita) | `Zone` = `'L' \| 'C' \| 'R'` | "lado", "canto" |
 | A morte súbita depois do 5 a 5 (`D-09`) | **alternadas** | `Phase = 'suddenDeath'` | "prorrogação" |
 
