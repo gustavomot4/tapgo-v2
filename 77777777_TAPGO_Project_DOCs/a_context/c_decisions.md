@@ -29,6 +29,7 @@ status: atual
 | D-16 | 2026-08-07 | ADOTADO | Piso de `vitest` = `^3.2.7`, que resolve `vite@7`; **T-05 declara `vite@^7`** para não abrir uma segunda árvore | `vitest@2.1.8` trazia 5 advisories (1 CRÍTICO, 1 alto) por `vite`/`esbuild` transitivos; com `^3.2.7`, `npm audit` dá 0 e a suíte passa sem tocar em uma linha de teste. Não altera `D-11` — o runner continua Vitest, muda o piso |
 | D-17 | 2026-08-07 | ADOTADO | Publicação por GitHub Actions (`.github/workflows/pages.yml`) com `base: '/tapgo-v2/'`; o portão inteiro roda ANTES do deploy e o job que publica não recompila | `base` errado é 404 de todo asset só em produção, a falha que o contrato de M9 manda evitar. O que vai ao ar é o artefato que passou no portão, não um build novo feito em outra máquina |
 | D-18 | 2026-08-07 | ADOTADO | O número do bundle sai de `src/scripts/bundle-size.mjs`, que soma bytes do manifesto do Vite e sai com erro em 8.000.000 B; a sonda de asset é forçada a virar arquivo por `assetsInlineLimit` | O Vite embute asset < 4 kB como `data:` no HTML, e **asset embutido nunca dá 404** — o portão de E-1 passaria sozinho. Medido em T-05: inicial 4.599 B, 0,06% do teto |
+| D-19 | 2026-08-07 | ADOTADO | `play` reconfere o estado recebido contra o próprio histórico de cobranças e **lança** quando não fecha, em vez de calcular sobre estado torto | `goals`/`taken` deixam de ser um resumo em que se confia e passam a ser total reconferível: é o lugar mais forte disponível sem banco, e cobre o defeito 5 da v1 na raiz. Torna M2 o ponto de validação do estado que chega pela rede em M6 — M5/M6 tratam a exceção, não a duplicam |
 
 ## Gatilhos de revisão (o número que reabre a decisão — "vai escalar" não é gatilho)
 > IDs em crase aqui de propósito: a coluna 1 desta tabela **não** define ID (`check.py` leria como duplicata).
@@ -47,6 +48,7 @@ status: atual
 | Q-04 | Peer some no meio da disputa online: quem vence, empata ou a disputa é anulada? | antes da etapa E-4 do [[b_plan\|PLANO]] (define o contrato de M5 e M6) |
 | Q-05 | O torneio roda também no modo `online`, ou só contra a CPU e no mesmo aparelho? | antes de E-5. Se rodar online, M8 passa a depender de M5 e o chaveamento vira estado compartilhado entre dois aparelhos — muda a camada 3 do PLANO. Fecha AC-07 |
 | Q-06 | O repositório `gustavomot4/tapgo-v2` fica **público**? | antes de fechar E-1. No plano Free o GitHub Pages só publica de repositório **público** — "custo R$ 0" e repositório privado não coexistem, e é a publicação que fecha a etapa. Ver [[stack]] |
+| Q-07 | Nas alternadas, **quem cobra primeiro em cada rodada**? Segue sempre `A` (o que M2 implementou, leitura literal de [[regras_partida]]), ou alterna a ordem entre rodadas para diluir a vantagem de bater primeiro? | antes de E-4. M2 entregou o padrão `A`-primeiro e o marcou: mudar é trocar uma constante e a ordem em `resolve`, com os testes de rodada já no lugar. Vira `D-NN` — não replanejamento |
 
 ## Achados de QA (QA-NN — citados no commit: `fix: QA-NN …`)
 > Preenchido pelas sessões de revisão (guardrails-review e artifact-consistency). Passagens executadas: 1.

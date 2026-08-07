@@ -8,6 +8,15 @@ status: atual
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
 ## [Não lançado]
+- T-06 entregue **fora da ordem das etapas**: E-2 abre com E-1 fechada, e E-1 espera A-07 (ação do dono, não código). M2 depende só de M1, então o trabalho não estava travado — mas E-2 só é declarada aberta depois de E-1.
+
+## [2026-08-07] — T-06: M2 (motor da disputa) implementado
+- Adicionado: `src/engine/index.ts` — `Phase`, `Kick`, `MatchState`, `createMatch` e `play` pura. Importa só tipos de M1; sem `Date.now()`, sem gerador nativo, sem render.
+- Adicionado: `src/tests/engine.test.ts` — 37 testes: um por invariante de `regras_partida.md`, regressão dos defeitos 1, 2, 4 e 5 da v1, `Number.isInteger` sobre 1.000 cobranças sorteadas com semente fixa, e alternadas sem teto de rodadas.
+- `MatchState` congelado em runtime (`Object.freeze`): a imutabilidade do contrato deixa de depender só do tipo.
+- Decisões: D-19 (`play` recusa estado que não fecha com o histórico) · Q-07 aberta (quem cobra primeiro em cada rodada de alternadas).
+- Portão verde no sandbox: `tsc --noEmit` limpo, 53/53 testes em duas execuções idênticas, 1 ocorrência do gerador nativo em `src/`, build com bundle inicial inalterado (4.599 B — M2 não entra na UI).
+
 - E-1 aberta: T-04 e o código de T-05 entregues; falta A-07 (publicar) para fechar a etapa
 
 ## [2026-08-07] — T-05: esqueleto de M9 (build e publicação)

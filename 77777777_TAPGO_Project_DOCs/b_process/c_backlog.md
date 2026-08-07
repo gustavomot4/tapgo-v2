@@ -20,7 +20,6 @@ status: atual
 
 > O [[b_plan|PLANO]] está **congelado** (`D-13`). As tarefas abaixo saem dele e seguem a ordem das etapas E-1..E-6. O portão de cada uma é o portão do módulo, e não se repete aqui. Mudança de rumo é `D-NN` novo — não replanejamento.
 
-- [ ] T-06 — motor da disputa, com os invariantes como teste · **Módulo:** M2 · **Etapa:** E-2 · **Skill:** backend-domain
 - [ ] T-07 — CPU em 3 níveis, dois histogramas, teto de 70% medido por frequência · **Módulo:** M3 · **Etapa:** E-2 · **Skill:** backend-domain
 - [ ] T-08 — catálogo de seleções (lista de fixação até A-04) · **Módulo:** M4 · **Etapa:** E-3 · **Skill:** backend-domain
 - [ ] T-09 — sessão de disputa nos modos `cpu` e `local`, já reexportando os tipos · **Módulo:** M5 · **Etapa:** E-3 · **Skill:** backend-bff
@@ -43,6 +42,8 @@ status: atual
   · passagem 1 (15:43) **reprovou** — 19 achados: [[a_artifact_consistency_report_260807_1543|relatório 1]]
   · passagem 2 (16:05) **aprovou** — 19/19 fechados e 7 achados novos `AC-20`..`AC-26`, nenhum CRÍTICO, todos fechados no commit do congelamento: [[b_artifact_consistency_report_260807_1605|relatório 2]]
 - [x] T-04 — núcleo: tipos e gerador com semente · **Módulo:** M1 · **Etapa:** E-1 · **Portão:** 16/16 testes, determinismo de 1.000 valores, `int(3)` com o 0 incluso, 1 ocorrência do gerador nativo em `src/` · `D-14`, `D-15`
+- [x] T-06 — motor da disputa, com os invariantes como teste · **Módulo:** M2 · **Etapa:** E-2 · **Portão:** 53/53 testes 2x com o mesmo placar, um teste por invariante de [[regras_partida]], regressão dos defeitos 1/2/4/5, `Number.isInteger` em 1.000 cobranças sorteadas · `D-19`, `Q-07`
+  · **entregue antes de E-1 fechar** (M2 depende só de M1); a etapa E-2 só é declarada aberta quando A-07 fechar E-1
 
 ## Ideias (não comprometidas)
 - Ranking global (exige servidor autoritativo — hoje colide com "custo R$ 0"; ver [[online_p2p]])
