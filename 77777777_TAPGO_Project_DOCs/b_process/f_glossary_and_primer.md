@@ -279,6 +279,25 @@ topo da árvore, acima de qualquer pasta de código, em qualquer explorador de a
 
 ---
 
+### Vocabulário do TAP GO v2 — um termo por conceito
+
+> Acrescentado em 2026-08-07 pelo achado `AC-17` da revisão de consistência: a mesma coisa
+> aparecia com três nomes nos artefatos, e vocabulário só é barato de arrumar antes de virar
+> schema, teste e texto de tela. **Termo de domínio em português vive aqui e na tela; identificador
+> de código é sempre a forma em inglês.**
+
+| Conceito | Termo em português (doc e tela) | Identificador em código | Não usar |
+|---|---|---|---|
+| O time que o jogador escolhe: país + bandeira, sem escudo | **seleção** | `Team`, `listTeams()` | "time", "clube" |
+| A série de cobranças que decide um confronto (5 + alternadas) | **disputa** | `Match`, `MatchState` | "partida" como termo técnico |
+| Uma cobrança isolada, com a zona de quem chuta e a de quem defende | **cobrança** | `Kick` | "chute", "penalti" |
+| As três opções de canto | **zona** (esquerda, meio, direita) | `Zone` = `'L' \| 'C' \| 'R'` | "lado", "canto" |
+| A morte súbita depois do 5 a 5 (`D-09`) | **alternadas** | `Phase = 'suddenDeath'` | "prorrogação" |
+
+Duas heranças ficam declaradas em vez de renomeadas, porque renomear custa mais do que rende
+agora: o arquivo `a_context/regras_partida.md` mantém o nome, e o CONTEXT chama a experiência de
+"partida de ~1 minuto" na linha de objetivo — ali "partida" é prosa, não termo de arte.
+
 ## 5. Quem faz o quê
 
 O pipeline separa isso de propósito, porque a maior parte dos acidentes acontece quando as

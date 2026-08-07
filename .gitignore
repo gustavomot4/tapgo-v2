@@ -56,3 +56,8 @@ backups/
 # o estado de sessão, nao: muda a cada abertura e polui todo diff
 .obsidian/workspace.json
 .obsidian/workspace-mobile.json
+
+# --- Ferramenta de IA ---
+# workspace local do agente: o padrão do repositório manda não versionar
+# workspace de editor, e sem esta linha todo `git add .` o arrasta junto
+.claude/

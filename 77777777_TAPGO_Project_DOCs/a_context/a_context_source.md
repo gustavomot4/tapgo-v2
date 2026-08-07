@@ -11,7 +11,7 @@ Partida de ~1 minuto: contra a CPU, contra alguém no mesmo aparelho, ou por lin
 
 ## Restrições inegociáveis (violou = inválido)
 - **Custo R$ 0 permanente:** nenhum servidor próprio, host pago ou serviço que peça cartão. Build estático.
-- **Nenhuma marca de terceiro:** sem escudo de clube ou federação, sem nome/rosto de jogador real, sem "FIFA" nem "Copa do Mundo". Identidade de time = nome de país + bandeira, só. Ver [[licenciamento]].
+- **Nenhuma marca de terceiro:** sem escudo de clube ou federação, sem nome/rosto de jogador real, sem "FIFA" nem "Copa do Mundo". Identidade de seleção = nome de país + bandeira, só. Ver [[licenciamento]].
 - Nenhum segredo versionado. Nenhum dado pessoal coletado (sem conta, sem e-mail, sem analytics de terceiro).
 - Não inventar dado — lacuna declarada fica declarada.
 
@@ -20,11 +20,10 @@ Partida de ~1 minuto: contra a CPU, contra alguém no mesmo aparelho, ou por lin
 - **Frontend:** SPA única · **Borda:** nenhuma · **Auth:** nenhuma (sem conta)
 - **Online:** P2P WebRTC, sinalização sobre infraestrutura pública de terceiros. Ver [[online_p2p]].
 
-## Stack + restrições da stack (D-02)
+## Stack + representações obrigatórias (D-02)
 - **Stack:** TypeScript + Vite + Phaser 3 · Trystero (P2P) · GitHub Pages (host) · itch.io (vitrine)
-- **Restrições:** build 100% estático, sem SSR nem rota de servidor · `localStorage` é do aparelho e não sincroniza · WebRTC exige HTTPS · P2P falha para 15-30% dos jogadores sem relay TURN · cota grátis de TURN é finita · itch.io derruba conteúdo sob DMCA sem aviso prévio.
 - **Representações obrigatórias:** placar e contadores em inteiro (nunca float) · ID de sala opaco e aleatório (nunca sequencial) · datas UTC ISO-8601 · arquivos UTF-8 · país identificado por código ISO-3166 alfa-2, nunca por nome digitado.
-- **Quem roda o quê:** agente = código, testes e build indicativo no sandbox · dono = build oficial, `git push`, publicação no GitHub Pages e no itch.io, e o teste em celular real.
+- **Limites da stack e quem roda o quê:** ver [[stack]].
 
 ## Critério de aceite (o portão)
 - `npx tsc --noEmit && npm run build` verdes na máquina do dono.
@@ -37,15 +36,16 @@ Partida de ~1 minuto: contra a CPU, contra alguém no mesmo aparelho, ou por lin
 ## Estado atual (formato fixo — 1 linha por item, SEM prosa corrida)
 - **Versão:** v2.0.0-dev (a v1 é baseline morto: reescrita total, nenhum código reaproveitado)
 - **Pronto:** nenhum módulo; Fase 0 commitada (6ef539b); Fase 1a — D-01 e D-02 congelados com gatilho de revisão, e D-09/D-10 fecham Q-01 e Q-02
-- **Em andamento (máx 1):** T-02 — PLANO entregue (M1..M9, etapas E-1..E-6); falta o portão do dono
-- **Próximo:** T-03 — Fase 1c: consistência entre CONTEXT, PLANO, BACKLOG e DECISIONS
-- **Bloqueado/pendente:** A-04 — Q-03 trava a etapa E-5 (torneio) e Q-04 trava a E-4 (online); E-1 a E-3 seguem livres
-- **Questões abertas:** Q-03, Q-04
+- **Em andamento (máx 1):** T-02 — PLANO corrigido pelos 19 achados de T-03; falta o portão do dono
+- **Próximo:** T-03 (2ª passagem) — reconferir consistência com o relatório anterior na mão
+- **Bloqueado/pendente:** A-04/A-05/A-06 — Q-03 trava E-5, Q-04 trava E-4, Q-05 trava o desenho de M8; E-1 a E-3 seguem livres
+- **Questões abertas:** Q-03, Q-04, Q-05 · **QA aberto:** QA-01, QA-02, QA-03
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)
-- [[licenciamento]] — ao criar ou alterar asset, nome de time, escudo ou texto de marca
-- [[online_p2p]] — ao tocar o módulo de partida online
+- [[licenciamento]] — ao criar ou alterar asset, nome de seleção, escudo ou texto de marca
+- [[online_p2p]] — ao tocar o módulo de disputa online
 - [[regras_partida]] — ao mexer no motor de regras da disputa ou na CPU
+- [[stack]] — ao escolher biblioteca, mexer no build ou publicar
 
 > Mapa de leitura completo e protocolo do agente: [[CLAUDE]]. Ficam lá, e não aqui, porque a
 > ferramenta os carrega sozinha — dentro deste arquivo custariam 20% do orçamento em toda sessão.

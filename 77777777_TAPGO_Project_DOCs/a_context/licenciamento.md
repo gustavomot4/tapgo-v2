@@ -8,7 +8,7 @@ status: atual
 > **Não é parecer jurídico.** É a base factual que sustenta a restrição inegociável do [[a_context_source|CONTEXT]].
 
 ## A regra de uma linha
-**Identidade de time = nome de país (ISO-3166) + bandeira nacional. Nada além disso.**
+**Identidade de seleção = nome de país (ISO-3166) + bandeira nacional. Nada além disso.**
 
 ## Por que a v1 não podia ser publicada
 A v1 usava São Paulo, Corinthians, Palmeiras, Santos, Ponte Preta, Guarani e Juventus da Mooca, com escudos
