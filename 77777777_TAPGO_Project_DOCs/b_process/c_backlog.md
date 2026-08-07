@@ -14,7 +14,7 @@ status: atual
 - [ ] A-04 — responder Q-03: seleções, formato do chaveamento, nome do torneio e origem das bandeiras · **Portão:** linha Q-03 do DECISIONS sai de "aberta"
 - [ ] A-05 — responder Q-04: o que acontece quando o peer some no meio da disputa · **Portão:** linha Q-04 sai de "aberta"; sem isso **T-13** não começa (T-11 não depende dela — M6 não sabe o que é gol)
 - [ ] A-06 — responder Q-05: o torneio roda também no modo online? · **Portão:** linha Q-05 sai de "aberta"; sem isso o desenho de M8 é suposição
-- [ ] A-07 — publicar: responder `Q-06` (repositório público), pôr **Settings → Pages → Source = "GitHub Actions"** e conferir a página no celular · **Portão:** `https://gustavomot4.github.io/tapgo-v2/` abre com o veredito verde "asset carregado — sem 404". É esta ação, e não o sandbox, que fecha E-1
+- [x] A-07 — publicar: `Q-06` respondida (repositório público, `D-21`), Source = "GitHub Actions" · **Portão:** `https://gustavomot4.github.io/tapgo-v2/` abre com o veredito verde "asset carregado — sem 404", `base` `/tapgo-v2/` e o asset `base-probe-BWPWGS0k.svg` — o mesmo hash do build local. Conferido no celular do dono em 2026-08-07 ✔ **E-1 fechada**
 
 ## A fazer
 
@@ -29,9 +29,9 @@ status: atual
 - [ ] T-14 — telas do torneio: chaveamento, próxima disputa e campeão · **Módulo:** M7 · **Etapa:** E-5, bloqueada por A-04 e A-06 · **Skill:** frontend-uiux
 
 ## Em andamento (máx 1 — espelha "Em andamento" do [[a_context_source|CONTEXT]])
-- [ ] T-05 — esqueleto de build e publicação no Pages · **Módulo:** M9 · **Etapa:** E-1 (portão completo só em E-6) · **Skill:** iac-docker-terraform
-  · código entregue e verde no sandbox: `tsc --noEmit`, 16/16 testes, build com bundle inicial de 4.599 B e as duas checagens de camada (1 `Math.random`, 0 imports de motor)
-  · **falta A-07** — sem a página no ar, o portão de E-1 não está cumprido
+- [ ] T-08 — catálogo de seleções (lista de fixação até A-04) · **Módulo:** M4 · **Etapa:** E-3 · **Skill:** backend-domain
+  · código no disco desde 2026-08-07 18:28 (`src/data/teams.ts`, `src/tests/teams.test.ts`); suíte total 110 verde
+  · **falta o fecho da sessão** — D-NN, linha no CHANGELOG e conferência do portão de M4 (ISO-3166, `name` derivado do código, zero URL em `flag`, zero escudo). Não conferido por T-07
 
 ## Feito (mover para cá; detalhe no [[a_changelog|CHANGELOG]])
 - [x] T-00 — Fase 0: CONTEXT, temas de domínio e candidatas a D-NN
@@ -45,6 +45,7 @@ status: atual
   · **entregue antes de E-1 fechar** (M2 depende só de M1); a etapa E-2 só é declarada aberta quando A-07 fechar E-1
 - [x] T-07 — CPU em 3 níveis, dois histogramas, teto de 70% medido por frequência · **Módulo:** M3 · **Etapa:** E-2 · **Portão:** 35 testes (88/88 na suíte) 2x idênticos, teto conferido por igualdade em 3.000 formatos de histograma e por frequência nos dois papéis, uniforme com histórico vazio, isolamento entre papéis, `grep localStorage src/cpu/` = 0 · `D-20`, `Q-08`
   · **entregue antes de E-1 fechar** (M3 depende só de M1), mesma situação de T-06; com ele o código de E-2 está completo
+- [x] T-05 — esqueleto de build e publicação no Pages · **Módulo:** M9 · **Etapa:** E-1 (portão completo só em E-6) · **Portão:** `tsc --noEmit`, suíte verde, bundle inicial 4.599 B de 8 MB lido de `dist/`, 1 `Math.random` em `src/` e 0 imports de motor; página no ar por A-07 · `D-16`, `D-17`, `D-18`, `QA-04`
 
 ## Ideias (não comprometidas)
 - Ranking global (exige servidor autoritativo — hoje colide com "custo R$ 0"; ver [[online_p2p]])

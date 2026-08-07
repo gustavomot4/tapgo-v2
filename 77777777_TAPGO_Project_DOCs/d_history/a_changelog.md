@@ -8,7 +8,13 @@ status: atual
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
 ## [Não lançado]
-- T-06 e T-07 entregues **fora da ordem das etapas**: E-2 abre com E-1 fechada, e E-1 espera A-07 (ação do dono, não código). M2 e M3 dependem só de M1, então o trabalho não estava travado — mas E-2 só é declarada aberta depois de E-1. Com T-07, E-2 tem o código completo e espera só a publicação.
+- _(nada pendente — E-1 e E-2 fechadas)_
+
+## [2026-08-07] — A-07: publicação no ar, E-1 e E-2 fechadas
+- `Q-06` respondida: o repositório é **público** (`D-21`), que é a condição do Pages no plano Free — sem ela, "custo R$ 0" e publicação não coexistiam.
+- **E-1 fechada:** `https://gustavomot4.github.io/tapgo-v2/` abre com o veredito verde "asset carregado — sem 404", conferido no celular do dono. `base` resolvido como `/tapgo-v2/` e sonda servida de `assets/base-probe-BWPWGS0k.svg` — **o mesmo hash do build local**, prova de que o deploy consumiu o artefato que passou no portão em vez de recompilar (`D-17`).
+- **E-2 fechada na mesma data:** o portão da etapa (um teste por invariante, regressão dos defeitos 1/2/4/5 em M2 e do 3 em M1, `Number.isInteger` em toda transição, frequência da CPU ≤ 70% nos dois papéis, suíte 2x idêntica) já estava verde desde T-07. T-06 e T-07 tinham sido entregues fora da ordem das etapas; a publicação regularizou as duas.
+- Arquivado: íntegra de D-01..D-05 em `e_qa/decisions_archive.md`, com as linhas-resumo mantidas em `c_decisions.md` para os IDs continuarem resolvendo. Liberou 353 caracteres do orçamento — folga de 571 antes de `D-21`.
 
 ## [2026-08-07] — T-07: M3 (CPU) implementado
 - Adicionado: `src/cpu/index.ts` — `Level`, `Role`, `Cpu`, `createCpu` e `zoneDistributionPpm`. Importa só M1; sem relógio, sem gerador nativo, sem armazenamento do navegador, sem render.
