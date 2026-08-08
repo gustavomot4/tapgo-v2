@@ -16,15 +16,25 @@ import {
   CLASSES,
   ROTULO_CLASSE,
   classificarPar,
+  conexaoMorta,
+  conexaoViva,
   contagemZerada,
   criarObservador,
   descreverPar,
   extrairPar,
   faixaDoIp,
   lerPar,
+  lerParInsistindo,
   mascararIp,
 } from '../medicao_par';
-import type { ClassePar, LadoDoPar, TipoCandidato } from '../medicao_par';
+import type {
+  ClassePar,
+  Conexao,
+  LadoDoPar,
+  OrigemDoPar,
+  ParSelecionado,
+  TipoCandidato,
+} from '../medicao_par';
 
 const arquivo = (nome: string): string =>
   readFileSync(fileURLToPath(new URL(nome, import.meta.url)), 'utf8');
@@ -42,6 +52,12 @@ const lado = (p: Partial<LadoDoPar>): LadoDoPar => ({
   viaRelay: null,
   ...p,
 });
+
+const fazPar = (
+  l: Partial<LadoDoPar>,
+  r: Partial<LadoDoPar>,
+  origem: OrigemDoPar = 'transport',
+): ParSelecionado => ({ local: lado(l), remoto: lado(r), origem });
 
 /** Um relatório no formato que o navegador entrega: `Map` de id → objeto de stat. */
 const relatorio = (
@@ -167,7 +183,7 @@ describe('T-16 · extrair o par selecionado do getStats', () => {
 
 describe('T-16 · classificar o par é responder o que a tentativa provou', () => {
   const par = (l: Partial<LadoDoPar>, r: Partial<LadoDoPar>): ClassePar =>
-    classificarPar({ local: lado(l), remoto: lado(r) });
+    classificarPar(fazPar(l, r));
 
   it('srflx↔srflx com IPs públicos DIFERENTES é travessia real de NAT', () => {
     expect(par({ tipo: 'srflx', ip: IP_A }, { tipo: 'srflx', ip: IP_B })).toBe('refl-ips-diferentes');
@@ -319,7 +335,7 @@ describe('T-16 · o texto colável não publica o endereço do dono', () => {
   });
 
   it('descreverPar mascara quando pedido e mostra inteiro quando pedido', () => {
-    const p = { local: lado({ tipo: 'srflx', ip: '189.45.200.31' }), remoto: lado({ tipo: 'srflx', ip: IP_B }) };
+    const p = fazPar({ tipo: 'srflx', ip: '189.45.200.31' }, { tipo: 'srflx', ip: IP_B });
 
     expect(descreverPar(p, false)).toContain('189.45.x.x');
     expect(descreverPar(p, false)).not.toContain('189.45.200.31');
@@ -327,10 +343,22 @@ describe('T-16 · o texto colável não publica o endereço do dono', () => {
   });
 
   it('descreverPar diz a faixa junto do endereço, e diz quando não houve par', () => {
-    const p = { local: lado({ tipo: 'srflx', ip: '100.64.1.2' }), remoto: lado({ tipo: 'srflx', ip: IP_B }) };
+    const p = fazPar({ tipo: 'srflx', ip: '100.64.1.2' }, { tipo: 'srflx', ip: IP_B });
 
     expect(descreverPar(p, true)).toContain('CGNAT');
     expect(descreverPar(null, true)).toBe('par não lido');
+  });
+
+  it('leitura reconstruída se anuncia; a padronizada não polui a linha (QA-13)', () => {
+    // O `host↔host` impossível da 1ª ida a campo veio de uma dessas reconstruções, e a linha não
+    // dizia. Procedência escondida transforma palpite em leitura.
+    const lados: [Partial<LadoDoPar>, Partial<LadoDoPar>] = [
+      { tipo: 'host', ip: '10.0.0.2' },
+      { tipo: 'host', ip: '127.0.0.1' },
+    ];
+
+    expect(descreverPar(fazPar(...lados, 'succeeded'), true)).toContain('não pelo transport');
+    expect(descreverPar(fazPar(...lados, 'transport'), true)).not.toContain('transport');
   });
 });
 
@@ -367,42 +395,154 @@ describe('T-16 · o observador chega ao getStats sem M6 mudar um byte', () => {
     expect(o.Observada.marca()).toBe('estático preservado');
   });
 
-  it('limpar esvazia a lista — cada tentativa vê só as conexões dela', () => {
-    // Sem isto, o par lido poderia ser o da tentativa anterior, que rodou em outra sala e talvez
-    // em outro modo.
+  it('podar tira as fechadas e mantém as vivas', () => {
     const o = criarObservador(Falsa);
-    new o.Observada();
-    o.limpar();
+    const viva = new o.Observada('a');
+    new o.Observada('b');
 
-    expect(o.pcs).toHaveLength(0);
+    o.podar((pc) => pc.cfg === 'b');
+
+    expect(o.pcs).toEqual([viva]);
+  });
+});
+
+/**
+ * `QA-13` — o defeito que a 1ª ida a campo com `T-16` encontrou: 11 de 12 tentativas saíram como
+ * "par não lido", e a que saiu era um `host↔host` impossível entre dois celulares em 5G.
+ *
+ * A causa não era timing. A Trystero guarda um `OfferPool` de 20 conexões **no fecho do módulo** e
+ * o reaproveita entre chamadas de `joinRoom` (`@trystero-p2p/core/dist/strategy.mjs`:
+ * `offerPool ||= new OfferPool(makeOffer)`), então a conexão que fecha a tentativa de hoje foi
+ * construída na de ontem. Esvaziar a lista por tentativa descartava justamente ela.
+ */
+describe('QA-13 · a conexão é escolhida pelo estado, não pela data de nascimento', () => {
+  const conexao = (estado: string, stats: Map<string, Record<string, unknown>>): Conexao => ({
+    connectionState: estado,
+    getStats: (): Promise<Map<string, Record<string, unknown>>> => Promise.resolve(stats),
   });
 
-  it('lerPar devolve o primeiro par encontrado', async () => {
-    const vazia = { getStats: (): Promise<Map<string, Record<string, unknown>>> => Promise.resolve(relatorio([])) };
-    const cheia = { getStats: (): Promise<Map<string, Record<string, unknown>>> => Promise.resolve(parChrome('srflx', IP_A, 'srflx', IP_B)) };
+  const semPar = relatorio([]);
+  const comPar = (t: TipoCandidato, ip: string): Map<string, Record<string, unknown>> =>
+    parChrome(t, ip, 'srflx', IP_B);
 
-    expect((await lerPar([vazia, cheia]))?.local.ip).toBe(IP_A);
+  it('lê a conexão nascida numa tentativa ANTERIOR — é o defeito, em uma linha', () => {
+    // O que o pool faz: a conexão da tentativa 3 já existia na 1. Com a lista esvaziada a cada
+    // tentativa, ela não estava lá para ser lida.
+    const o = criarObservador(class {});
+    new o.Observada();
+    o.podar(() => false);
+
+    expect(o.pcs).toHaveLength(1);
+  });
+
+  it('prefere a conectada, mesmo com outras observadas antes', async () => {
+    const morta = conexao('closed', comPar('relay', IP_A));
+    const viva = conexao('connected', comPar('srflx', '203.0.113.4'));
+
+    const l = await lerPar([morta, viva]);
+
+    expect(l.par?.local.ip).toBe('203.0.113.4');
+    expect(l.vivas).toBe(1);
+    expect(l.observadas).toBe(2);
+  });
+
+  it('entre duas conectadas, lê a mais nova e avisa que havia duas', async () => {
+    // Duas vivas ao mesmo tempo é a sombra de `D-41`: a anterior podendo ser lida no lugar desta.
+    // A escolha é a mais recente, e o aviso impede que a leitura passe por certeza.
+    const velha = conexao('connected', comPar('relay', IP_A));
+    const nova = conexao('connected', comPar('srflx', '203.0.113.4'));
+
+    const l = await lerPar([velha, nova]);
+
+    expect(l.par?.local.ip).toBe('203.0.113.4');
+    expect(l.motivo).toContain('2 conexões vivas');
+  });
+
+  it('sem connectionState, tenta todas em vez de desistir', async () => {
+    // Navegador que não publica o campo não pode custar a leitura inteira.
+    const antiga: Conexao = {
+      getStats: (): Promise<Map<string, Record<string, unknown>>> => Promise.resolve(comPar('srflx', IP_A)),
+    };
+
+    expect((await lerPar([antiga])).par?.local.ip).toBe(IP_A);
+  });
+
+  it('"par não lido" passa a dizer O QUE faltou, nos três casos', async () => {
+    // Ausência sem motivo é o defeito. Onze vezes seguidas em campo sem uma palavra sobre o que
+    // faltou custou uma ida inteira.
+    expect((await lerPar([])).motivo).toBe('nenhuma conexão observada');
+    expect((await lerPar([conexao('failed', semPar)])).motivo).toContain('nenhuma conectada');
+    expect((await lerPar([conexao('connected', semPar)])).motivo).toContain('sem par no relatório');
   });
 
   it('getStats que estoura não derruba a leitura, e não passa calado', async () => {
     // Falha do INSTRUMENTO não pode virar falha de conexão na planilha — seria o viés de `QA-08`
     // por uma terceira porta. Mas erro engolido em silêncio é bug, não resiliência.
     const aviso = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
-    const quebrada = { getStats: (): Promise<never> => Promise.reject(new Error('conexão fechada')) };
-    const boa = { getStats: (): Promise<Map<string, Record<string, unknown>>> => Promise.resolve(parChrome('relay', IP_A, 'srflx', IP_B)) };
+    const quebrada: Conexao = {
+      connectionState: 'connected',
+      getStats: (): Promise<never> => Promise.reject(new Error('conexão fechada')),
+    };
+    const boa = conexao('connected', comPar('relay', IP_A));
 
-    const par = await lerPar([quebrada, boa]);
+    // `boa` primeiro na ordem de criação: a leitura vai da mais nova para a mais velha, então é
+    // `quebrada` que ela encontra antes — que é o caso a exercitar.
+    const l = await lerPar([boa, quebrada]);
 
-    expect(par?.local.tipo).toBe('relay');
+    expect(l.par?.local.tipo).toBe('relay');
     expect(aviso).toHaveBeenCalledOnce();
     aviso.mockRestore();
   });
 
-  it('nenhuma conexão com par devolve null, que é contado como ausente', async () => {
-    const vazia = { getStats: (): Promise<Map<string, Record<string, unknown>>> => Promise.resolve(relatorio([])) };
+  it('sem par em lugar nenhum devolve null, que é contado como ausente', async () => {
+    expect((await lerPar([conexao('connected', semPar)])).par).toBeNull();
+    expect(classificarPar((await lerPar([])).par)).toBe('ausente');
+  });
 
-    expect(await lerPar([vazia])).toBeNull();
-    expect(classificarPar(await lerPar([]))).toBe('ausente');
+  it('insistir alcança o par que só aparece na 3ª volta, sem esperar de verdade', async () => {
+    // O canal de dados abre quando o DTLS fecha, e há navegador em que o par selecionado entra no
+    // relatório alguns milissegundos depois.
+    let voltas = 0;
+    const atrasada: Conexao = {
+      connectionState: 'connected',
+      getStats: (): Promise<Map<string, Record<string, unknown>>> => {
+        voltas += 1;
+        return Promise.resolve(voltas < 3 ? semPar : comPar('srflx', IP_A));
+      },
+    };
+    const semDormir = (): Promise<void> => Promise.resolve();
+
+    const l = await lerParInsistindo([atrasada], semDormir);
+
+    expect(l.par?.local.ip).toBe(IP_A);
+    expect(voltas).toBe(3);
+  });
+
+  it('insistir para assim que encontra, e desiste com um teto', async () => {
+    let voltas = 0;
+    const nunca: Conexao = {
+      connectionState: 'connected',
+      getStats: (): Promise<Map<string, Record<string, unknown>>> => {
+        voltas += 1;
+        return Promise.resolve(semPar);
+      },
+    };
+    const semDormir = (): Promise<void> => Promise.resolve();
+
+    expect((await lerParInsistindo([nunca], semDormir, 4)).par).toBeNull();
+    expect(voltas).toBe(4);
+
+    voltas = 0;
+    await lerParInsistindo([conexao('connected', comPar('srflx', IP_A))], semDormir, 4);
+    expect(voltas).toBe(0);
+  });
+
+  it('conexaoViva e conexaoMorta leem os dois campos de estado', () => {
+    expect(conexaoViva({ connectionState: 'connected' } as Conexao)).toBe(true);
+    expect(conexaoViva({ connectionState: 'connecting' } as Conexao)).toBe(false);
+    expect(conexaoViva({ iceConnectionState: 'completed' } as Conexao)).toBe(true);
+    expect(conexaoMorta({ connectionState: 'closed' } as Conexao)).toBe(true);
+    expect(conexaoMorta({ connectionState: 'connected' } as Conexao)).toBe(false);
   });
 });
 
@@ -444,11 +584,21 @@ describe('T-16 · portões de origem', () => {
     // `ausente` — dado perdido com cara de dado ausente.
     const src = fonteMedicao();
     const corpo = src.slice(src.indexOf('function tentativa('), src.indexOf('async function rodarUma'));
-    const posLeitura = corpo.indexOf('await lerPar(');
+    const posLeitura = corpo.indexOf('await lerParInsistindo(');
     const posFecha = corpo.indexOf('canal.close()');
 
     expect(posLeitura).toBeGreaterThan(-1);
     expect(posFecha).toBeGreaterThan(posLeitura);
+  });
+
+  it('a lista de conexões é podada, nunca esvaziada por tentativa (QA-13)', () => {
+    // A forma exata do defeito de campo: `limpar()` dentro de `tentativa()` descarta a conexão do
+    // pool da Trystero, que é justamente a que vai conectar.
+    const src = fonteMedicao();
+    const corpo = src.slice(src.indexOf('function tentativa('), src.indexOf('async function rodarUma'));
+
+    expect(corpo).toContain('podar(conexaoMorta)');
+    expect(corpo).not.toContain('limpar()');
   });
 
   it('o tempo da tentativa é fechado antes da leitura dos candidatos', () => {
@@ -456,15 +606,23 @@ describe('T-16 · portões de origem', () => {
     const src = fonteMedicao();
     const corpo = src.slice(src.indexOf('function tentativa('), src.indexOf('async function rodarUma'));
 
-    expect(corpo.indexOf('const ms = Math.round')).toBeLessThan(corpo.indexOf('await lerPar('));
+    expect(corpo.indexOf('const ms = Math.round')).toBeLessThan(corpo.indexOf('await lerParInsistindo('));
   });
 
   it('só sucesso é aberto por classe, e a classe sai de classificarPar', () => {
     const src = fonteMedicao();
     const corpo = src.slice(src.indexOf('async function rodarUma'), src.indexOf('const pct ='));
+    const conta = 'c.porClasse[classificarPar(leitura.par)] += 1';
 
-    expect(corpo).toContain('c.porClasse[classificarPar(par)] += 1');
-    expect(corpo.indexOf('c.porClasse[classificarPar(par)] += 1')).toBeGreaterThan(corpo.indexOf('if (ok)'));
+    expect(corpo).toContain(conta);
+    expect(corpo.indexOf(conta)).toBeGreaterThan(corpo.indexOf('if (ok)'));
+  });
+
+  it('a tela e o resumo dizem o motivo quando não houve par (QA-13)', () => {
+    const src = fonteMedicao();
+
+    expect(src).toContain('ultimaLeitura.motivo');
+    expect(src.match(/ultimaLeitura\.motivo/g)?.length).toBeGreaterThan(1);
   });
 
   it('o resumo colável separa relay de srflx↔srflx sem o dono interpretar', () => {
@@ -478,9 +636,9 @@ describe('T-16 · portões de origem', () => {
   it('o resumo mascara o IP por padrão; mostrar inteiro é escolha explícita', () => {
     const src = fonteMedicao();
 
-    expect(src).toContain('descreverPar(ultimoPar, ipInteiro())');
+    expect(src).toContain('descreverPar(ultimoPar(), ipInteiro())');
     // A tela mostra inteiro, porque ela não sai do aparelho.
-    expect(src).toContain('descreverPar(ultimoPar, true)');
+    expect(src).toContain('descreverPar(ultimoPar(), true)');
     // Caixa desmarcada na montagem: `checked` aqui inverteria o padrão sem ninguém notar.
     expect(src).toMatch(/id="ipInteiro"\s*\/>/);
   });

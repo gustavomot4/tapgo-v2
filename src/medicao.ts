@@ -23,12 +23,13 @@ import {
   CLASSES,
   ROTULO_CLASSE,
   classificarPar,
+  conexaoMorta,
   contagemZerada,
   criarObservador,
   descreverPar,
-  lerPar,
+  lerParInsistindo,
 } from './medicao_par';
-import type { ClassePar, ParSelecionado } from './medicao_par';
+import type { ClassePar, LeituraDoPar } from './medicao_par';
 import { idDaTentativa, rotuloDaTentativa } from './medicao_sala';
 import { CONNECT_TIMEOUT_MS, hostRoom, joinRoom } from './net/index';
 import type { Channel, IceConfig, LinkStatus } from './net/index';
@@ -59,9 +60,11 @@ const zerado = (): Contador => ({
 
 const contadores: Record<Modo, Contador> = { semTurn: zerado(), comTurn: zerado() };
 
-/** O par da última tentativa, para a tela. `null` = ainda não houve, ou não foi lido. */
-let ultimoPar: ParSelecionado | null = null;
+/** A leitura da última tentativa, para a tela. `null` = ainda não houve tentativa. */
+let ultimaLeitura: LeituraDoPar | null = null;
 let ultimoParIndice = -1;
+
+const ultimoPar = (): LeituraDoPar['par'] => ultimaLeitura?.par ?? null;
 
 /**
  * Apaga o par exibido. Chamado nos dois eventos que reiniciam a rotação (sala nova e "Zerar"),
@@ -70,9 +73,15 @@ let ultimoParIndice = -1;
  * medição já não tem.
  */
 function esquecerPar(): void {
-  ultimoPar = null;
+  ultimaLeitura = null;
   ultimoParIndice = -1;
 }
+
+/** Espera de verdade — injetada em `lerParInsistindo` para o teste não precisar dormir. */
+const dormir = (ms: number): Promise<void> =>
+  new Promise((r) => {
+    setTimeout(r, ms);
+  });
 
 /**
  * `T-16` — o embrulho do construtor de `RTCPeerConnection`, instalado antes de qualquer canal
@@ -163,15 +172,16 @@ const modoAtual = (): Modo => (iceAtual() === undefined ? 'semTurn' : 'comTurn')
 function tentativa(
   id: string,
   ice: IceConfig | undefined,
-): Promise<{ ok: boolean; ms: number; par: ParSelecionado | null }> {
+): Promise<{ ok: boolean; ms: number; leitura: LeituraDoPar }> {
   return new Promise((resolve) => {
     const t0 = performance.now();
     let canal: Channel;
     let pronto = false;
 
-    // As conexões desta tentativa, e só as dela: sem isto o par lido poderia ser o da tentativa
-    // anterior — que conectou em outra sala e talvez em outro modo.
-    observador?.limpar();
+    // Tira da lista o que já fechou. **Não esvazia:** a conexão que fecha esta tentativa costuma
+    // ter nascido numa anterior, porque a Trystero reaproveita um pool de 20 entre salas. Esvaziar
+    // por tentativa foi `QA-13` — 11 leituras perdidas em 12 na 1ª ida a campo.
+    observador?.podar(conexaoMorta);
 
     const terminar = (ok: boolean): void => {
       if (pronto) return;
@@ -184,9 +194,11 @@ function tentativa(
         // E a leitura vem antes do `close()`, que solta a sala e mata a conexão: lida depois, ela
         // devolveria relatório vazio e o par viraria `ausente` — dado perdido com cara de dado
         // ausente, que é o defeito que `T-16` existe para não repetir.
-        const par = ok ? await lerPar(observador?.pcs ?? []) : null;
+        const leitura = ok
+          ? await lerParInsistindo(observador?.pcs ?? [], dormir)
+          : { par: null, motivo: 'tentativa falhou: não há par para ler', observadas: 0, vivas: 0 };
         canal.close();
-        resolve({ ok, ms, par });
+        resolve({ ok, ms, leitura });
       })();
     };
 
@@ -196,7 +208,11 @@ function tentativa(
       // ID malformado ou contexto inseguro: é falha de configuração, não de rede. Some da
       // medição como falha, mas com o motivo na tela — número sujo é pior que número ausente.
       $('estado').textContent = `erro de configuração: ${String(e)}`;
-      resolve({ ok: false, ms: 0, par: null });
+      resolve({
+        ok: false,
+        ms: 0,
+        leitura: { par: null, motivo: 'canal nunca abriu', observadas: 0, vivas: 0 },
+      });
       return;
     }
 
@@ -217,9 +233,9 @@ async function rodarUma(): Promise<void> {
   const id = idDaTentativa(base, indice);
   $('estado').textContent = `tentativa #${indice} (${modo === 'semTurn' ? 'sem TURN' : 'com TURN'}) — aguardando até ${CONNECT_TIMEOUT_MS / 1000} s…`;
 
-  const { ok, ms, par } = await tentativa(id, iceAtual());
+  const { ok, ms, leitura } = await tentativa(id, iceAtual());
 
-  ultimoPar = par;
+  ultimaLeitura = leitura;
   ultimoParIndice = indice;
 
   // O índice anda sempre, inclusive quando a tentativa falha: os dois aparelhos precisam andar
@@ -232,7 +248,7 @@ async function rodarUma(): Promise<void> {
     // `T-16`: o sucesso é aberto pelo que ele PROVA. Sucesso via `relay` não é sucesso de P2P
     // direto, e `srflx↔srflx` com o mesmo IP público não fala de CGNAT — somados num número só,
     // os três dizem "100%" e nenhum deles responde `A-08`.
-    c.porClasse[classificarPar(par)] += 1;
+    c.porClasse[classificarPar(leitura.par)] += 1;
   } else {
     c.falhas += 1;
   }
@@ -289,7 +305,8 @@ function resumo(): string {
     ...abertura('CONFIG QUE VAI AO AR', contadores.comTurn),
     ultimoParIndice < 0
       ? 'Última tentativa: nenhuma ainda.'
-      : `Última tentativa (#${ultimoParIndice}): ${descreverPar(ultimoPar, ipInteiro())}`,
+      : `Última tentativa (#${ultimoParIndice}): ${descreverPar(ultimoPar(), ipInteiro())}` +
+        (ultimaLeitura === null || ultimaLeitura.motivo === '' ? '' : ` — ${ultimaLeitura.motivo}`),
     ipInteiro()
       ? 'IP INTEIRO ligado — confira antes de colar em repositório público.'
       : 'IP encurtado a 2 octetos aqui; a comparação de endereços acima usou o IP inteiro.',
@@ -330,9 +347,15 @@ function pintar(): void {
   $('par').textContent =
     ultimoParIndice < 0
       ? 'nenhuma tentativa ainda'
-      : `#${ultimoParIndice}: ${descreverPar(ultimoPar, true)}`;
+      : `#${ultimoParIndice}: ${descreverPar(ultimoPar(), true)}`;
+  // O motivo anda junto do veredito por causa de `QA-13`: "par não lido" sozinho não diz se
+  // faltou conexão observada, conexão viva ou par no relatório — e sem isso o defeito só aparece
+  // depois de uma ida a campo inteira.
   $('classe').textContent =
-    ultimoParIndice < 0 ? '' : ROTULO_CLASSE[classificarPar(ultimoPar)];
+    ultimoParIndice < 0
+      ? ''
+      : ROTULO_CLASSE[classificarPar(ultimoPar())] +
+        (ultimaLeitura === null || ultimaLeitura.motivo === '' ? '' : ` · ${ultimaLeitura.motivo}`);
 
   const abre = (rot: string, c: Contador): string =>
     c.sucessos === 0

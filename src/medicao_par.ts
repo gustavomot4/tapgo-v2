@@ -45,9 +45,20 @@ export interface LadoDoPar {
   viaRelay: string | null;
 }
 
+/**
+ * De onde saiu o par, porque nem toda leitura vale o mesmo (`QA-13`).
+ *
+ * `transport` é o caminho padronizado e o único que o navegador afirma ser o par **em uso**; os
+ * outros três são reconstrução a partir de sinais mais velhos, e um relatório pode ter mais de um
+ * par `succeeded`. A 1ª ida a campo devolveu um `host↔host` entre dois celulares em 5G — que é
+ * impossível — e sem esta coluna não havia como saber se aquilo foi leitura ou palpite.
+ */
+export type OrigemDoPar = 'transport' | 'selected' | 'nominated' | 'succeeded';
+
 export interface ParSelecionado {
   local: LadoDoPar;
   remoto: LadoDoPar;
+  origem: OrigemDoPar;
 }
 
 /**
@@ -195,6 +206,7 @@ export function extrairPar(stats: RelatorioDeStats | null | undefined): ParSelec
     id === null ? null : (indice.get(id) ?? null);
 
   let par: Record<string, unknown> | null = null;
+  let origem: OrigemDoPar = 'transport';
   for (const t of todos) {
     if (t['type'] !== 'transport') continue;
     const p = porId(texto(t['selectedCandidatePairId']));
@@ -203,11 +215,21 @@ export function extrairPar(stats: RelatorioDeStats | null | undefined): ParSelec
       break;
     }
   }
-  par ??=
-    pares.find((p) => p['selected'] === true) ??
-    pares.find((p) => p['nominated'] === true && p['state'] === 'succeeded') ??
-    pares.find((p) => p['state'] === 'succeeded') ??
-    null;
+
+  if (par === null) {
+    const alternativas: [OrigemDoPar, Record<string, unknown> | undefined][] = [
+      ['selected', pares.find((p) => p['selected'] === true)],
+      ['nominated', pares.find((p) => p['nominated'] === true && p['state'] === 'succeeded')],
+      ['succeeded', pares.find((p) => p['state'] === 'succeeded')],
+    ];
+    for (const [o, p] of alternativas) {
+      if (p !== undefined) {
+        par = p;
+        origem = o;
+        break;
+      }
+    }
+  }
 
   if (par === null) return null;
 
@@ -222,7 +244,7 @@ export function extrairPar(stats: RelatorioDeStats | null | undefined): ParSelec
     };
   };
 
-  return { local: lado('localCandidateId'), remoto: lado('remoteCandidateId') };
+  return { local: lado('localCandidateId'), remoto: lado('remoteCandidateId'), origem };
 }
 
 /**
@@ -262,9 +284,30 @@ export interface RelatorioDeStats {
   forEach(cb: (valor: unknown, chave: string) => void): void;
 }
 
-/** O que a medição precisa de uma `RTCPeerConnection`, e nada além disso. */
-export interface ComStats {
+/**
+ * O que a medição precisa de uma `RTCPeerConnection`, e nada além disso.
+ *
+ * O estado entra aqui por causa de `QA-13`: é ele, e não o momento em que a conexão nasceu, que
+ * diz qual das conexões observadas é a desta tentativa.
+ */
+export interface Conexao {
+  readonly connectionState?: string;
+  readonly iceConnectionState?: string;
   getStats(): Promise<RelatorioDeStats>;
+}
+
+/** Conexão que está carregando tráfego agora. */
+export function conexaoViva(c: Conexao): boolean {
+  const cs = c.connectionState;
+  if (typeof cs === 'string') return cs === 'connected';
+  const ice = c.iceConnectionState;
+  if (typeof ice === 'string') return ice === 'connected' || ice === 'completed';
+  return false;
+}
+
+/** Conexão que não volta mais — pode sair da lista observada. */
+export function conexaoMorta(c: Conexao): boolean {
+  return c.connectionState === 'closed' || c.iceConnectionState === 'closed';
 }
 
 /** Qualquer construtor. O genérico é o construtor INTEIRO, e não a instância — ver abaixo. */
@@ -280,8 +323,18 @@ export interface Observador<C extends Construtor> {
    * embrulhada.
    */
   Observada: C;
-  /** As instâncias criadas desde o último `limpar()`, na ordem de criação. */
+  /**
+   * As instâncias observadas, na ordem de criação.
+   *
+   * **A lista NÃO é esvaziada por tentativa, e é isso que `QA-13` corrigiu.** A Trystero guarda um
+   * `OfferPool` de 20 conexões no fecho do módulo e o reaproveita entre chamadas de `joinRoom`, de
+   * modo que a conexão que fecha a tentativa de hoje foi construída na de ontem. Filtrar por janela
+   * de criação descartava exatamente a conexão procurada — 11 de 12 tentativas em campo saíram como
+   * "par não lido". Quem diz de quem é a conexão é o **estado**, não a data de nascimento.
+   */
   pcs: readonly InstanceType<C>[];
+  /** Tira da lista o que `morta` reconhecer. Sem isto, 20 conexões por sala se acumulam. */
+  podar(morta: (pc: InstanceType<C>) => boolean): void;
   limpar(): void;
 }
 
@@ -317,6 +370,12 @@ export function criarObservador<C extends Construtor>(Base: C): Observador<C> {
   return {
     Observada,
     pcs,
+    podar: (morta): void => {
+      for (let i = pcs.length - 1; i >= 0; i -= 1) {
+        const pc = pcs[i];
+        if (pc !== undefined && morta(pc)) pcs.splice(i, 1);
+      }
+    },
     limpar: (): void => {
       pcs.length = 0;
     },
@@ -324,23 +383,92 @@ export function criarObservador<C extends Construtor>(Base: C): Observador<C> {
 }
 
 /**
- * Lê o par da primeira conexão que tiver um.
+ * O resultado de uma leitura, com o **motivo** quando não houve par.
  *
- * **Nunca lança e nunca engole calado:** `getStats()` pode falhar (conexão já fechada, navegador
- * sem o campo), e uma falha de leitura do instrumento não pode virar falha de conexão na planilha
- * — seria o viés de `QA-08` por uma terceira porta. O que ela devolve nesse caso é `null`, que a
- * classificação conta como `ausente`, e o motivo vai para o console.
+ * `QA-13` nasceu de "par não lido" onze vezes seguidas sem uma palavra sobre o que faltou: se
+ * nenhuma conexão fora observada, se nenhuma estava conectada, ou se o relatório não trazia par.
+ * Ausência sem motivo é o defeito que este projeto já pagou duas vezes (`QA-08`, `QA-12`) — o
+ * número aparece, é crível, e não se sabe do que ele fala.
  */
-export async function lerPar(pcs: readonly ComStats[]): Promise<ParSelecionado | null> {
-  for (const pc of pcs) {
+export interface LeituraDoPar {
+  par: ParSelecionado | null;
+  /** Vazio quando houve par. */
+  motivo: string;
+  observadas: number;
+  vivas: number;
+}
+
+/**
+ * Lê o par da conexão que está conectada AGORA — a mais nova primeiro.
+ *
+ * **A escolha é por estado, não por data de nascimento (`QA-13`).** A Trystero reaproveita um pool
+ * de conexões entre salas, então a conexão desta tentativa costuma ter nascido numa anterior; e a
+ * anterior, já fechada, some pelo mesmo critério. Da mais nova para a mais velha porque, se duas
+ * estiverem conectadas ao mesmo tempo, a recente é a desta tentativa — e o `motivo` diz que havia
+ * mais de uma, para a leitura não passar por certeza.
+ *
+ * **Nunca lança e nunca engole calado:** `getStats()` pode falhar, e falha de leitura do
+ * instrumento não pode virar falha de conexão na planilha — seria o viés de `QA-08` por uma
+ * terceira porta.
+ */
+export async function lerPar(conexoes: readonly Conexao[]): Promise<LeituraDoPar> {
+  const vivas = conexoes.filter(conexaoViva);
+  const base = { observadas: conexoes.length, vivas: vivas.length };
+
+  if (conexoes.length === 0) {
+    return { par: null, motivo: 'nenhuma conexão observada', ...base };
+  }
+
+  // Sem nenhuma viva, ainda vale tentar todas: há navegador que não publica `connectionState`, e
+  // devolver "não lido" por causa de um campo ausente seria desistir cedo demais.
+  const alvos = (vivas.length > 0 ? vivas : [...conexoes]).reverse();
+  let falhas = 0;
+  let semPar = 0;
+
+  for (const c of alvos) {
     try {
-      const par = extrairPar(await pc.getStats());
-      if (par !== null) return par;
+      const par = extrairPar(await c.getStats());
+      if (par !== null) {
+        const aviso = vivas.length > 1 ? ` (${String(vivas.length)} conexões vivas ao mesmo tempo)` : '';
+        return { par, motivo: aviso, ...base };
+      }
+      semPar += 1;
     } catch (e: unknown) {
+      falhas += 1;
       console.warn(`[T-16] getStats falhou nesta conexão: ${String(e)}`);
     }
   }
-  return null;
+
+  const motivo =
+    vivas.length === 0
+      ? `${String(conexoes.length)} conexões observadas, nenhuma conectada`
+      : `${String(semPar)} conectada(s) sem par no relatório` +
+        (falhas > 0 ? `, ${String(falhas)} com getStats falhando` : '');
+  return { par: null, motivo, ...base };
+}
+
+/**
+ * A mesma leitura, insistindo por um instante.
+ *
+ * O canal de dados abre assim que o DTLS fecha, e há navegador em que o par selecionado só aparece
+ * no relatório alguns milissegundos depois. Uma ida a campo custa uma tarde do dono; insistir por
+ * até um segundo custa nada e **não entra na medição** — o cronômetro da tentativa já foi fechado
+ * antes desta chamada.
+ *
+ * `esperar` é parâmetro para o teste não ter de esperar de verdade.
+ */
+export async function lerParInsistindo(
+  conexoes: readonly Conexao[],
+  esperar: (ms: number) => Promise<void>,
+  voltas = 10,
+  intervaloMs = 100,
+): Promise<LeituraDoPar> {
+  let ultima = await lerPar(conexoes);
+  for (let i = 1; i < voltas && ultima.par === null; i += 1) {
+    await esperar(intervaloMs);
+    ultima = await lerPar(conexoes);
+  }
+  return ultima;
 }
 
 /** Contagem por classe zerada. Existe para "zerar contadores" não esquecer uma classe nova. */
@@ -364,5 +492,9 @@ export function descreverPar(p: ParSelecionado | null, inteiro: boolean): string
   };
 
   const proto = p.local.protocolo ?? p.remoto.protocolo;
-  return `${um(p.local)} ↔ ${um(p.remoto)}${proto === null ? '' : ` · ${proto}`}`;
+  // A procedência só aparece quando NÃO é a padronizada: leitura reconstruída a partir de sinais
+  // mais velhos pode ter escolhido um par `succeeded` que não é o em uso, e foi assim que a 1ª ida
+  // a campo produziu um `host↔host` impossível entre dois celulares em 5G (`QA-13`).
+  const proc = p.origem === 'transport' ? '' : ` · par lido por "${p.origem}", não pelo transport`;
+  return `${um(p.local)} ↔ ${um(p.remoto)}${proto === null ? '' : ` · ${proto}`}${proc}`;
 }

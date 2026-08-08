@@ -27,12 +27,12 @@ Partida de ~1 minuto: contra a CPU, contra alguém no mesmo aparelho, ou por lin
 
 ## Estado atual (formato fixo — 1 linha por item, SEM prosa corrida)
 - **Versão:** v2.0.0-dev (a v1 é baseline morto: reescrita total, nenhum código reaproveitado)
-- **Pronto:** M1 (T-04) · M9 esqueleto (T-05) · M2 (T-06) · M3 (T-07) · M4 (T-08) · M5 (T-09 + `online` T-13, no git em a227db1) · M7 (T-10) · M6 (T-11) · medição (T-15, T-16) — **E-1, E-2 e E-3 fechadas**, suíte **317/317** verde; PLANO em D-13
-- **Bundle:** **96.547 B** (1,2% de 8 MB) lido de `dist/`, **+5.618 B** em T-16 — todos no chunk da medição, os do jogo mantiveram o hash (`QA-06`). Phaser e Trystero fora, por `import()` (D-27)
+- **Pronto:** M1 (T-04) · M9 esqueleto (T-05) · M2 (T-06) · M3 (T-07) · M4 (T-08) · M5 (T-09 + `online` T-13) · M7 (T-10) · M6 (T-11) · medição (T-15, T-16) — **E-1, E-2 e E-3 fechadas**, suíte **327/327** verde; PLANO em D-13
+- **Bundle:** **98.030 B** (1,2% de 8 MB) lido de `dist/`, **+7.101 B** em T-16, todos no chunk da medição (`QA-06`); Phaser e Trystero fora, por `import()` (D-27)
 - **Em andamento (máx 1):** nada
-- **Próximo:** **A-08** — 2ª ida a campo, agora com o tipo do par na tela dos dois aparelhos (D-44): o 5/5 Claro×Claro passa a distinguir travessia de hairpin. "Vai ao ar" segue 0/0
-- **Bloqueado/pendente:** A-04 trava E-5 e a lista real de M4 (hoje fixação, `flag: null` — D-22) · A-06 trava M8 · Q-11 trava a tela do online · registro a **9.986/12.000** — passou o aviso, **A-13 é agora**
-- **Questões abertas:** Q-03, Q-05, Q-07..**Q-11** · Q-04 respondida → D-35 · **QA abertos:** QA-04..QA-07, QA-10 · **`QA-11` sem objeto** (T-13 no git e empurrado) · fechados: QA-08, QA-09, QA-12
+- **Próximo:** **A-08** — 2ª ida a campo. Na 1ª com T-16 o instrumento perdeu 11 de 12 pares (`QA-13`, corrigido): o 12/12 vale como taxa e passa D-42 (77,9%), mas não diz o tipo do par. "Vai ao ar" segue 0/0
+- **Bloqueado/pendente:** A-04 trava E-5 e a lista real de M4 (hoje fixação, `flag: null` — D-22) · A-06 trava M8 · Q-11 trava a tela do online · registro a **10.422/12.000** — passou o aviso, **A-13 é agora**
+- **Questões abertas:** Q-03, Q-05, Q-07..**Q-11** · Q-04 respondida → D-35 · **QA abertos:** QA-04..QA-07, QA-10 · QA-13 fecha na 2ª ida · **QA-11 sem objeto** · fechados: QA-08, QA-09, QA-12
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)
 - [[portao_de_aceite]] — **antes de fechar tarefa, declarar etapa fechada ou entregar**
