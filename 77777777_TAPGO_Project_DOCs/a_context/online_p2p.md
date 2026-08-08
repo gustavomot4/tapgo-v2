@@ -31,6 +31,12 @@ dezenas de bytes por jogada, é efetivamente ilimitado. **Isto é raciocínio de
 **Portão obrigatório (Fase 4):** medir a taxa real de conexão em **rede móvel real**, não em Wi-Fi doméstico.
 Wi-Fi de casa conecta quase sempre e esconde o defeito. Sem esse número, o modo online não é aceito.
 
+**Gatilho de revisão de `D-01`** (mora aqui desde `A-12`, junto do número que o dispara — "vai escalar"
+não é gatilho): a forma "SPA estática, sem backend" reabre quando a conexão P2P medida ficar **< 70% em
+rede móvel real e o fallback exigir TURN próprio**; ou quando o dono aprovar requisito com autoridade de
+servidor (ranking global antifraude, conta). O critério estatístico da medição é `D-42`, tabelado em
+[[m6_transporte_notas]].
+
 ## Riscos que precisam de fallback escrito
 | Risco | Consequência | Fallback exigido |
 |---|---|---|

@@ -342,11 +342,9 @@ describe('M5 — a CPU escolhe antes de observar a escolha da cobrança (D-26, Q
 });
 
 describe('M5 — configuração recusada antes de existir sessão', () => {
-  it("o modo online é recusado em voz alta — é T-13, e depende de A-05", () => {
-    expect(() =>
-      createSession({ mode: 'online', seed: 1, teams: { A: BR, B: AR }, localSide: 'A' }),
-    ).toThrowError(/modo 'online' ainda não existe/);
-  });
+  // O modo `online` NÃO é exercitado neste arquivo: ele abre canal de verdade, e um teste que
+  // não injeta a sinalização falsa acabaria carregando a Trystero real dentro do Node. Ele vive
+  // inteiro em `session_online.test.ts`, que instala o duplo no `beforeEach`.
 
   it('modo cpu sem level é recusado — level ausente é lacuna, não padrão medium', () => {
     expect(() =>
@@ -422,9 +420,35 @@ describe('M5 — a camada não guarda placar (o placar é de M2)', () => {
     expect(codigo.split('play(').length - 1).toBe(1);
   });
 
-  it('M5 não importa rede em runtime — só o TIPO de M6 (T-11 ainda não existe)', () => {
+  /**
+   * Esta asserção MUDOU em `T-13`, e a versão velha está escrita aqui de propósito.
+   *
+   * Até T-11, M5 importava de M6 só o tipo `LinkStatus`, e o teste cobrava isso ("a rede não
+   * existe em runtime"). A premissa era a ausência do modo `online`, não uma regra de camada:
+   * o PLANO sempre disse que M5 depende de M6. Com T-13, M5 abre canal, e importar valor de M6
+   * passou a ser o contrato — apagar o teste esconderia a mudança; trocá-lo pelo que ainda vale
+   * a mantém conferida.
+   *
+   * O que ainda vale: M5 entra em M6 **pela porta**. Se um dia aparecer aqui um import de
+   * `CONNECT_TIMEOUT_MS`, `newRoomId` ou `setSignalingLoader`, é M5 mexendo em relógio, em ID de
+   * sala ou em costura de teste — três coisas que têm dono, e o dono é M6.
+   */
+  it('M5 entra em M6 pela porta: só hostRoom e joinRoom, nada de interno', () => {
     const fonte = readFileSync(FONTE_M5, 'utf8');
-    expect(/^import type \{ LinkStatus \} from '\.\.\/net\/index';$/m.test(fonte)).toBe(true);
-    expect(/^import \{[^}]*\} from '\.\.\/net\/index';$/m.test(fonte)).toBe(false);
+
+    const valor = /^import \{([^}]*)\} from '\.\.\/net\/index';$/m.exec(fonte);
+    expect(valor, 'M5 deixou de importar a porta de M6 — o modo online não abriria canal').not.toBeNull();
+
+    const importados = (valor?.[1] ?? '').split(',').map((s) => s.trim()).filter((s) => s !== '');
+    expect(importados.sort()).toEqual(['hostRoom', 'joinRoom']);
+
+    // Uma só porta de saída para a rede: dois pontos de criação de canal é uma sessão com dois
+    // transportes, e o `dispose()` fecharia um só.
+    const codigo = fonte
+      .split('\n')
+      .filter((l) => !l.trimStart().startsWith('*') && !l.trimStart().startsWith('//'))
+      .join('\n');
+    expect(codigo.split('hostRoom(').length - 1).toBe(1);
+    expect(codigo.split('joinRoom(').length - 1).toBe(1);
   });
 });

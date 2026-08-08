@@ -12,8 +12,20 @@
  * `Level`): é o que deixa M7 tipar sem importar `src/engine`, `src/cpu` ou `src/net`, que é o
  * que "motor isolado do render" (`D-01`) significa em `grep`.
  *
- * **Modo `online` não entra aqui** — é `T-13`, e depende de `A-05` (`Q-04`). `createSession`
- * recusa `mode: 'online'` em voz alta; lacuna declarada fica declarada.
+ * **Modo `online` (`T-13`)** — a outra zona vem do peer pelo canal de M6. Duas coisas que este
+ * módulo faz e que nenhum outro faria por ele:
+ *
+ * 1. **Descartar evento remoto ilegal ANTES de M2.** M6 confere a *forma* do `Move` (`D-32`);
+ *    quem confere se ele é *legal agora* — lado certo, `seq` da cobrança corrente, sem repetição
+ *    — é esta camada, contra o `MatchState` de M2. Nada descartado chega ao motor.
+ * 2. **Traduzir a queda do peer no resultado que `Q-04` definiu** (`D-35`): a disputa morre
+ *    **sem vencedor**. M5 não escreve vencedor nenhum — `winner` é de M2, e "quem fica vence"
+ *    seria regra de disputa escrita na borda.
+ *
+ * **A que este módulo NÃO responde:** como o anfitrião publica o `roomId` que M6 sorteou. A porta
+ * congelada em `D-13` tem quatro métodos e nenhum devolve o ID, e M7 não pode importar `src/net`
+ * (portão de camada). Está declarado como `Q-11` — não contornado com um quinto método por
+ * conta própria.
  */
 
 import type { CountryCode, Side, Zone } from '../core/index';
@@ -22,7 +34,8 @@ import { createMatch, play } from '../engine/index';
 import type { MatchState } from '../engine/index';
 import { createCpu } from '../cpu/index';
 import type { Cpu, Level, Role } from '../cpu/index';
-import type { LinkStatus } from '../net/index';
+import { hostRoom, joinRoom } from '../net/index';
+import type { Channel, LinkStatus, Move } from '../net/index';
 import { findTeam } from '../data/teams';
 
 // ── Os três reexports que o portão de M5 exige ────────────────────────────────────────────
@@ -108,23 +121,22 @@ function assertConfig(cfg: SessionConfig): void {
 /**
  * Cria a sessão.
  *
- * @throws TypeError se a configuração não fecha (ver `assertConfig`).
- * @throws Error se `mode` for `'online'` — é `T-13`, bloqueada por `A-05`.
+ * @throws TypeError se a configuração não fecha (ver `assertConfig`), ou se `roomId` não tem a
+ *   forma que M6 exige — quem recusa é `joinRoom`, e a mensagem dele é melhor que uma cópia.
  */
 export function createSession(cfg: SessionConfig): Session {
   assertConfig(cfg);
 
-  if (cfg.mode === 'online') {
-    // Recusa em voz alta em vez de degradar para `local` calado. Um fallback silencioso aqui
-    // poria dois jogadores em aparelhos diferentes jogando partidas separadas, cada um vendo
-    // um placar próprio — exatamente o defeito que "modo online" existe para não ter.
-    throw new Error(
-      "createSession: modo 'online' ainda não existe — é T-13, e depende de A-05 (Q-04)",
-    );
-  }
-
   const mode = cfg.mode;
   const localSide = cfg.localSide;
+
+  /**
+   * O lado do peer. Existe para o modo `online` conferir o `side` da jogada que chega: peer que
+   * manda jogada assinada com o NOSSO lado é cliente modificado ou versão trocada, e isso morre
+   * aqui. Não é anti-trapaça — [[online_p2p]] declara que P2P sem árbitro não tem como ser —,
+   * é a diferença entre descartar um evento incoerente e deixá-lo virar cobrança.
+   */
+  const remoteSide: Side = localSide === 'A' ? 'B' : 'A';
 
   // O ÚNICO gerador da sessão. Nasce nos dois modos, ainda que `local` não sorteie nada: é a
   // mesma configuração produzindo a mesma validação nos dois, e é o que deixa o teste de
@@ -141,6 +153,28 @@ export function createSession(cfg: SessionConfig): Session {
 
   /** A escolha do chute esperando a defesa da MESMA cobrança. Estado desta camada, não de M2. */
   let pending: Zone | null = null;
+
+  /**
+   * A zona do peer para a cobrança corrente, quando ela chegou antes da nossa (modo `online`).
+   *
+   * Separada de `pending` de propósito: no modo `local` as duas escolhas entram pela mesma porta
+   * e a ordem é a da tela; no `online` elas vêm de fontes diferentes e podem chegar em qualquer
+   * ordem. Uma variável só obrigaria a adivinhar de quem é a zona guardada.
+   */
+  let pendenteRemoto: Zone | null = null;
+
+  /** O canal de M6. `null` fora do modo `online` — não há canal a fechar em `cpu` e `local`. */
+  let canal: Channel | null = null;
+
+  /**
+   * `Q-04` respondida (`D-35`): o peer sumiu e a disputa **terminou sem resultado**.
+   *
+   * Note o que esta variável NÃO faz: ela não escreve vencedor, não fecha `phase` e não toca no
+   * `MatchState`. O `winner` continua `null` porque nenhuma cobrança o produziu — declarar aqui
+   * um vencedor por abandono seria regra de disputa nascendo na borda, e regra de disputa é de
+   * M2. O que ela faz é parar de aceitar escolha: a disputa não continua, e também não termina.
+   */
+  let abandonada = false;
 
   let disposed = false;
 
@@ -188,6 +222,103 @@ export function createSession(cfg: SessionConfig): Session {
     return match.turn === localSide ? 'shooter' : 'keeper';
   }
 
+  /* ─────────────────────────── modo `online` (T-13) ─────────────────────────── */
+
+  /**
+   * Notificação disparada por evento de **rede**, e não por `choose()`.
+   *
+   * Aqui a falha de um assinante é logada e morre; em `choose()` ela sobe. A assimetria é
+   * deliberada e tem uma causa concreta: esta função roda **dentro da pilha de M6** — no meio do
+   * laço de handlers de status ou do `onMessage` da sinalização. Deixar a exceção subir dali
+   * interromperia o laço de M6 e deixaria a máquina de estados do transporte pela metade: um
+   * assinante quebrado da tela passaria a corromper o canal. Já em `choose()` existe um chamador
+   * de verdade (M7) para receber a exceção, e por isso lá ela sobe inteira.
+   *
+   * Não é `catch` silencioso: o erro vai ao console com origem e contexto. O que não existe é
+   * fallback — nada aqui inventa estado para "recuperar".
+   */
+  function notificarDaRede(origem: string): void {
+    try {
+      notify();
+    } catch (e: unknown) {
+      console.error(`[M5 ${origem}] assinante de M7 lançou durante notificação de rede:`, e);
+    }
+  }
+
+  /**
+   * Fecha a cobrança quando as DUAS zonas estão na mão.
+   *
+   * É aqui que os três modos convergem: `match.turn` é de M2 e vale igual nos dois aparelhos,
+   * então os dois montam o mesmo par `(shot, dive)` e chamam o mesmo `play` com os mesmos
+   * argumentos. O `MatchState` coincide **porque a regra é a mesma**, não porque a rede
+   * combinou um resultado — nenhum placar trafega no canal, só zona e `seq`.
+   */
+  function resolverOnline(): void {
+    if (pending === null || pendenteRemoto === null) return;
+    const minha = pending;
+    const dela = pendenteRemoto;
+    pendenteRemoto = null;
+    if (match.turn === localSide) resolver(minha, dela);
+    else resolver(dela, minha);
+  }
+
+  /** Status do canal chegando de M6. Só traduz — não reconecta, não repete, não desiste sozinho. */
+  function aoStatus(s: LinkStatus): void {
+    if (disposed) return;
+    link = s;
+
+    if (s === 'failed') {
+      // `'failed'` é terminal em M6 (`D-31`): a sala já foi solta e nada reconecta. Para M5 isso
+      // é a resposta de `Q-04` — sem resultado. Solta as escolhas represadas: elas pertenciam a
+      // uma cobrança que nunca vai fechar, e guardá-las só as faria vazar para uma sessão futura.
+      abandonada = true;
+      pending = null;
+      pendenteRemoto = null;
+    }
+
+    notificarDaRede('status');
+  }
+
+  /**
+   * Jogada do peer.
+   *
+   * Cada guarda abaixo é um evento que **não pode chegar a M2**, e cada uma existe por um caso
+   * real: `side` errado é cliente modificado; `seq` menor é reenvio da fila de M6 (que é seguro
+   * de repetir justamente porque morre aqui); `seq` maior é jogada de uma cobrança que ainda não
+   * começou; segunda jogada na mesma cobrança é duplicata. Descartar é logar e sair — nunca
+   * corrigir, nunca "aproveitar o que dá".
+   */
+  function aoMove(m: Move): void {
+    if (disposed || abandonada) return;
+
+    const descartar = (motivo: string): void => {
+      console.warn(`[M5] jogada remota descartada — ${motivo}: ${JSON.stringify(m)}`);
+    };
+
+    if (m.side !== remoteSide) return descartar(`lado ${String(m.side)} não é o do peer`);
+    // M6 já conferiu a forma (`D-32`). M5 confere de novo porque o portão é literal: zona
+    // inválida morre em M5. Guarda repetida na fronteira é barata; a que falta, não.
+    if (!isZone(m.zone)) return descartar(`zona inválida ${String(m.zone)}`);
+    if (match.phase === 'finished') return descartar('a disputa já terminou');
+    if (m.seq !== match.kicks.length) {
+      return descartar(`seq ${m.seq} fora de ordem (a cobrança corrente é ${match.kicks.length})`);
+    }
+    if (pendenteRemoto !== null) return descartar('o peer já havia escolhido nesta cobrança');
+
+    pendenteRemoto = m.zone;
+    if (pending !== null) resolverOnline();
+    notificarDaRede('move');
+  }
+
+  if (mode === 'online') {
+    // Sem `roomId` este aparelho é o anfitrião e M6 sorteia o ID; com `roomId`, ele entra na sala
+    // do link. O ID sorteado **fica aqui dentro** — a porta congelada não tem por onde devolvê-lo,
+    // e é exatamente essa a lacuna registrada em `Q-11`. Declarada, não contornada.
+    canal = cfg.roomId === undefined ? hostRoom().channel : joinRoom(cfg.roomId);
+    canal.onStatus(aoStatus);
+    canal.onMove(aoMove);
+  }
+
   return {
     state(): MatchState {
       return match;
@@ -232,6 +363,44 @@ export function createSession(cfg: SessionConfig): Session {
         return;
       }
 
+      if (mode === 'online') {
+        if (canal === null) throw new Error('Session.choose: modo online sem canal — defeito de M5');
+
+        if (abandonada) {
+          // A mensagem diz o que aconteceu com a DISPUTA, não com o socket: "sem resultado" é a
+          // resposta de `Q-04`, e é ela que M7 traduz para a pessoa. Note que não há vencedor a
+          // anunciar — `state().winner` continua `null`, e isso é o fato, não uma omissão.
+          throw new Error(
+            'Session.choose: o oponente saiu e a disputa terminou SEM RESULTADO (Q-04) — nenhuma escolha é aceita',
+          );
+        }
+
+        if (pending !== null) {
+          // No `local` a segunda chamada é a defesa do outro jogador; no `online` o outro jogador
+          // está no outro aparelho, então segunda chamada na mesma cobrança é defeito de M7 —
+          // e defeito de chamador se reporta rápido, em vez de virar jogada trocada.
+          throw new Error(
+            'Session.choose: já há escolha desta cobrança esperando o peer — no modo online cada aparelho escolhe uma vez por cobrança',
+          );
+        }
+
+        pending = zone;
+
+        // `seq` é o índice da cobrança corrente, lido de M2 ANTES de resolver. Cada aparelho manda
+        // exatamente uma jogada por cobrança, então o número do outro lado é conferível sem
+        // combinar nada: é o que deixa o peer descartar reenvio (seq velho) e jogada adiantada
+        // (seq futuro). Sem isso, a fila de reenvio de M6 seria duplicação de cobrança.
+        canal.send({ seq: match.kicks.length, side: localSide, zone });
+
+        // A jogada do peer pode ter chegado primeiro; então esta escolha fecha a cobrança agora.
+        if (pendenteRemoto !== null) resolverOnline();
+
+        // `notify()` cru, e não `notificarDaRede`: aqui existe um chamador (M7) para receber a
+        // exceção de um assinante quebrado, e engoli-la seria esconder defeito de tela.
+        notify();
+        return;
+      }
+
       // ── Modo `local`: os dois jogadores no mesmo aparelho ────────────────────────────────
       // Primeira chamada = o chute de quem cobra (`match.turn`); segunda = a defesa do outro
       // lado. `localSide` não discrimina nada aqui — os dois lados são deste aparelho — e por
@@ -271,14 +440,21 @@ export function createSession(cfg: SessionConfig): Session {
       disposed = true;
       link = 'closed';
       pending = null;
+      pendenteRemoto = null;
 
       // Limpa ANTES de qualquer outra coisa e não notifica ninguém: o portão diz "não deixa
       // assinante vivo", e um último aviso de despedida seria exatamente um assinante vivo
       // depois do `dispose()`. Quem chamou `dispose()` sabe que chamou.
       subscribers.clear();
 
-      // Canal: em `cpu` e `local` não existe canal a fechar. Em `online` (T-13) é aqui que
-      // `Channel.close()` entra — e é por isso que `link` já vira `'closed'` desde já.
+      // Canal: em `cpu` e `local` não há o que fechar. Em `online`, `close()` solta a sala na
+      // sinalização e mata o relógio de 20 s — sem isto, sair da tela deixaria a sala aberta e o
+      // peer conversando com ninguém. Vem DEPOIS do `subscribers.clear()` de propósito: `close()`
+      // devolve `'closed'` por `aoStatus`, e notificar naquele instante seria exatamente o
+      // assinante vivo depois do `dispose()` que o portão proíbe.
+      const c = canal;
+      canal = null;
+      if (c !== null) c.close();
     },
   };
 }

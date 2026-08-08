@@ -21,6 +21,11 @@ data: 2026-08-07
 | Cota grátis de TURN é finita | o online degrada quando a cota estoura; o jogo local não pode degradar junto |
 | itch.io derruba conteúdo sob DMCA sem aviso prévio | a vitrine não é fonte da verdade; o canônico é o GitHub Pages (`D-05`) |
 
+**Gatilho de revisão de `D-02`** (mora aqui desde `A-12`, junto dos limites que ele mede): a stack
+reabre quando o **bundle inicial** chegar a **≥ 8 MB lido da saída do build** — nunca estimado — ou
+quando o fluxo crítico ficar **< 30 fps em viewport 360x640 no celular real do dono**, sem correção
+possível dentro do Phaser. O número vivo do bundle mora no [[a_context_source|CONTEXT]].
+
 ## Quem roda o quê (o sandbox do agente não é portão)
 
 | Quem | O que roda | Vale como |

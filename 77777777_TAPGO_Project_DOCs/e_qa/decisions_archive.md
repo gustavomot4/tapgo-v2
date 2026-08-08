@@ -57,8 +57,11 @@ continua inteiro no `c_decisions.md`.
 
 ## Gatilhos de revisão que acompanham estas decisões
 
-Os gatilhos de `D-01` e `D-02` **continuam em `c_decisions.md`**, na tabela "Gatilhos de revisão",
-e não foram movidos: é lá que a sessão de evolução vai procurá-los, e são curtos.
+~~Os gatilhos de `D-01` e `D-02` **continuam em `c_decisions.md`**, na tabela "Gatilhos de revisão",
+e não foram movidos: é lá que a sessão de evolução vai procurá-los, e são curtos.~~
+**Superado em `A-12` por `D-43`:** a tabela "Gatilhos de revisão" saiu do `c_decisions.md`. O gatilho
+de `D-01` mora em [[online_p2p]] e o de `D-02` em [[stack]] — cada um ao lado do número que o dispara,
+e os dois temas já estão no Mapa do CONTEXT. O `c_decisions.md` guarda a linha-ponteiro.
 
 ## D-14, D-15, D-19, D-20, D-22, D-23, D-26 … D-28 — íntegra como estavam em `c_decisions.md`
 
@@ -200,3 +203,72 @@ todas violando o "teto de 2 frases por linha" que o próprio `c_decisions.md` de
 Encolhê-las é mover justificativa para `e_qa/`, não arquivar: questão aberta continua aberta.
 Fica como `A-10` no BACKLOG, e não foi feito aqui porque `A-09` pede arquivamento de decisão,
 não reescrita de questão viva.
+
+## A-12 — o critério 3 de `A-09` caiu (2026-08-08)
+
+`A-09` previu esta passagem e errou só o prazo: a auditoria de `QA-08` somou 1.998 caracteres e
+`T-15` somou o resto, levando o registro a **11.888/12.000** — 112 da FALHA, com o próximo `D-NN`
+travado. O que `A-09` não previu foi que seu próprio critério 3 (*"fica o que `src/` cita, mesmo
+antigo"*) tornaria o portão **inalcançável**: medido antes de mexer, o corte máximo honrando-o
+dava 10.055, ainda 455 acima do aviso. Não é opinião — é a soma de tudo que sobrava para cortar.
+
+O critério 3 cai, e `D-43` registra por quê. A observação que o matou é que `A-09` **já o havia
+excedido**: retirou `D-33`, que `vite.config.ts` cita. O que substitui: sai da tabela viva quem
+nenhum arquivo **`.md` vivo** cita — que é exatamente a régua do `check.py` (`a_context/`,
+`b_process/`, `c_technical_docs/` e a raiz; `d_history/` e `e_qa/` ficam de fora por serem
+históricos). Citação em `src/` deixa de segurar a linha porque o ID continua resolvendo: o
+cabeçalho do `c_decisions.md` lista os retirados e aponta para cá.
+
+**Retiradas agora — só o ponteiro se moveu, a íntegra já estava aqui desde T-08/T-09/T-13:**
+`D-12` (seção `D-11, D-12, D-16 … D-18`) · `D-14`, `D-19`, `D-20`, `D-26` (seção `D-14 … D-28`) ·
+`D-24`, `D-25` (seção `D-24 e D-25`) · `D-29`, `D-30` (seção `D-06 … D-33`). Nove linhas, 1.129
+caracteres, **nenhum byte de texto novo** — é o arquivamento mais barato que restava.
+
+**Também saíram da tabela:** `QA-01` e `QA-03`, fechados e verificados em 2026-08-07 e com a íntegra
+aqui desde T-08 — a linha viva era ponteiro puro, e a única citação que a segurava era a linha de
+estado do CONTEXT, que esta sessão reescreve. Recebem o mesmo tratamento que `QA-02` teve em `A-09`.
+E a tabela **"Gatilhos de revisão"** inteira, cujos dois gatilhos foram para [[online_p2p]] e [[stack]].
+
+**Ficaram de propósito:** as seis **REJEITADAS** (`D-06`..`D-08`, `D-39`..`D-41`), pelo motivo de
+sempre — são a lista-morta que a sessão de evolução varre, e ela nunca lê `e_qa/`. E `D-42`, que
+é o portão estatístico de `A-08`, a tarefa que o dono roda a seguir: arquivar a evidência da
+decisão que governa a próxima ida a campo seria economizar no lugar errado.
+
+### Íntegra que chega agora — decisões de 2026-08-07/08
+
+A linha viva destas sete perde **só a coluna de evidência** e ganha `ARQUIVADO`; a decisão curta,
+o ID e a data continuam na tabela do `c_decisions.md`. Nenhuma foi revertida.
+
+| # | Data | Status | Decisão (curta) | Evidência (número-chave + link) |
+|---|---|---|---|---|
+| `D-31` | 2026-08-07 | ADOTADO | `'failed'` é **terminal**; peer que sai volta a `waiting` e **rearma** os 20 s; `onStatus` entrega o status atual ao assinar | Peer atrasado ressuscitaria partida já dada como perdida; quem vence segue sendo `Q-04` — [[m6_transporte_notas]] |
+| `D-32` | 2026-08-07 | ADOTADO | M6 valida a **forma** do `Move` e descarta o resto com log; ordem e legalidade seguem de M5. Fila de envio com teto 32 | Senão M6 entregaria `Move` mentiroso na única borda com dado de fora; `seq` torna reenvio seguro — [[m6_transporte_notas]] |
+| `D-35` | 2026-08-08 | ADOTADO | `Q-04`: peer que some no meio = disputa **sem resultado**; M5 para de aceitar escolha e `winner` segue `null` | Vencedor por abandono seria regra de disputa na borda; M2 intacto, T-13 fechou sem tocar `regras_partida` — [[m5_sessao_notas]] |
+| `D-36` | 2026-08-08 | ADOTADO | Notificação vinda da REDE não propaga exceção de assinante (loga); a de `choose()` propaga | Exceção subindo pela pilha de M6 partiria a máquina de estados do canal — [[m5_sessao_notas]] |
+| `D-37` | 2026-08-08 | ADOTADO | Critério de aceite sai do CONTEXT e vira [[portao_de_aceite]], lido sob demanda pelo Mapa | Era o maior bloco movível sem levar estado numérico junto, com o CONTEXT a 17 chars da FALHA de 4.000 (`A-11`) |
+| `D-38` | 2026-08-08 | ADOTADO | `QA-08`: na medição os DOIS lados entram por `joinRoom(idDaTentativa(base,n))`; a porta de `D-13` não muda um byte | `hostRoom` e `joinRoom` caem no mesmo `createChannel`, e rotação passa em `ROOM_ID_RE` (0 recusas em 1,5 M) — [[m6_transporte_notas]] |
+
+### Íntegra que chega agora — os três QA fechados em `T-15`
+
+Fechados **e verificados** em 2026-08-08, com commit citado. Mesmo tratamento que `QA-01`..`QA-03`
+receberam em T-08: achado fechado não ocupa o orçamento do registro vivo, e a linha viva vira
+ponteiro com o "o que quebrava" em uma frase. Os seis QA **abertos** (`QA-04`..`QA-07`, `QA-10`,
+`QA-11`) continuam inteiros no `c_decisions.md` — achado aberto não se arquiva.
+
+| # | Data | Sev. | Onde | O que quebrava | Correção | Fechado em |
+|---|---|---|---|---|---|---|
+| `QA-08` | 2026-08-08 | CRÍTICO | `src/medicao.ts` (`D-33`) | O anfitrião descarta o `id` rotacionado e chama `hostRoom()`, que sorteia sala nova a cada toque: os dois aparelhos nunca se encontram e a medição de `A-08` dá 0% | `D-38`: os dois lados entram por `joinRoom` na sala rotacionada, sem tocar a porta de M6 — é `T-15`, ver [[m6_transporte_notas]] | ✔ `T-15` 2026-08-08 (`bd68d0f`) |
+| `QA-09` | 2026-08-08 | CRÍTICO | `src/medicao.ts` (`D-33`) | Índice da rotação é contador por aparelho (`contadores[modo].tentativas`): um toque a mais dessincroniza as salas e **não ressincroniza**, e os 20 s saem como falha de P2P | A tela mostra índice e 6 chars do ID nos dois aparelhos — dentro de `T-15`, commit separado de `D-38` | ✔ `T-15` 2026-08-08 (`31b39d9`) |
+| `QA-12` | 2026-08-08 | CRÍTICO | `src/medicao.ts` | Sortear sala nova não zerava a rotação — achado em campo, ver [[m6_transporte_notas]] | Índice separado da estatística | ✔ `T-15` 2026-08-08 |
+
+### O que esta passagem NÃO resolveu
+
+O registro voltou para baixo do aviso, mas **a curva não mudou**: `A-09` deu 9.347, `A-10` deu
+8.808, e cinco dias de trabalho comeram os dois. O que ficou barato de arquivar acabou — as nove
+linhas retiradas aqui eram as últimas cujo texto já morava neste arquivo. A próxima passagem vai
+ter de mover texto de verdade, ou mexer na estrutura: hoje o `c_decisions.md` acumula **três**
+registros de ciclo de vida diferente (decisão permanente, questão aberta, achado de QA) num
+orçamento só, e é a seção de QA que cresce mais rápido — 3.374 caracteres em 11 achados, seis
+deles ainda abertos. Separar QA em arquivo próprio foi levantado ao dono nesta sessão e **não
+escolhido**; o custo é que `check.py` crava `DECISOES` como o único arquivo que define ID, e a
+mudança seria no script. Fica registrado aqui como o caminho que sobrou, não como tarefa.

@@ -31,8 +31,8 @@ Partida de ~1 minuto: contra a CPU, contra alguém no mesmo aparelho, ou por lin
 - **Bundle:** **90.929 B** (1,14% de 8 MB) lido de `dist/`, **+609 B** em T-15 (derivação, rótulo e índice); Phaser e Trystero seguem fora, por `import()` (D-27). Soma a página de medição — `QA-06`
 - **Em andamento (máx 1):** nada
 - **Próximo:** **A-08** — campo em 08-08: 4/4, 4/4 e 5/5 **sem TURN**, não fecha ("vai ao ar" 0/0, n pequeno — D-42). Falta **operadora diferente nos dois**; Claro×Claro não fala de CGNAT
-- **Bloqueado/pendente:** A-04 trava E-5 e a lista real de M4 (hoje fixação, `flag: null` — D-22) · A-06 trava M8 · Q-11 trava a tela do online · **registro a 11.888/12.000, 112 da FALHA — A-12 trava o próximo ID**
-- **Questões abertas:** Q-03, Q-05, Q-07..**Q-11** · Q-04 respondida → D-35 · **QA:** QA-01..QA-03, QA-08, QA-09, QA-12 fechados · QA-04..QA-07, QA-10, QA-11 abertos
+- **Bloqueado/pendente:** A-04 trava E-5 e a lista real de M4 (hoje fixação, `flag: null` — D-22) · A-06 trava M8 · Q-11 trava a tela do online · registro a **9.405/12.000** (D-43) — folga de 195, ver A-13
+- **Questões abertas:** Q-03, Q-05, Q-07..**Q-11** · Q-04 respondida → D-35 · **QA abertos:** QA-04..QA-07, QA-10, QA-11 · fechados: QA-08, QA-09, QA-12 (T-15)
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)
 - [[portao_de_aceite]] — **antes de fechar tarefa, declarar etapa fechada ou entregar**

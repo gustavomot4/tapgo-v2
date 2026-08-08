@@ -8,7 +8,7 @@ status: atual
 > **Teto: 2 frases por linha.** Evidência longa vira nota em `e_qa/<slug>.md` ou tema em `a_context/`.
 > **Registre as rejeições.** A lista de rejeitados é o que impede a IA de re-propor o que já morreu.
 > **Linha `ARQUIVADO`:** a íntegra está em [[decisions_archive]]. O ponteiro é este, e por isso não se repete em cada linha.
-> **Retirados da tabela** (íntegra lá, ID preservado, nada revertido): `D-03` `D-05` `D-11` `D-15`..`D-18` `D-21` `D-23` `D-28` `D-33` `D-34` · `Q-06` · `QA-02`.
+> **Retirados da tabela** (íntegra lá, ID preservado, nada revertido): `D-03` `D-05` `D-11` `D-12` `D-14`..`D-21` `D-23`..`D-26` `D-28`..`D-30` `D-33` `D-34` · `Q-06` · `QA-01`..`QA-03`.
 
 ## Decisões
 | # | Data | Status | Decisão (curta) | Evidência (número-chave + link) |
@@ -21,36 +21,22 @@ status: atual
 | D-08 | 2026-08-06 | REJEITADO · ARQUIVADO | Godot 4 como engine |  |
 | D-09 | 2026-08-06 | ADOTADO · ARQUIVADO | Alternadas = morte súbita em rodadas de 1 cobrança por lado, decidida ao FIM da rodada. Responde Q-01 | regra em [[regras_partida]] |
 | D-10 | 2026-08-06 | ADOTADO · ARQUIVADO | CPU em 3 níveis por peso do histórico de zonas: 0% / 50% / 70%, teto absoluto 70%. Responde Q-02 | regra em [[regras_partida]] |
-| D-12 | 2026-08-07 | ADOTADO · ARQUIVADO | `index.html` em `src/`, com `root: 'src'` e `outDir: '../dist'` |  |
 | D-13 | 2026-08-07 | ADOTADO · ARQUIVADO | **PLANO congelado**: M1..M9 com porta única, dono de estado e portão objetivo; etapas E-1..E-6. Mudança de rumo é D-NN novo | o plano em si é o [[b_plan\|PLANO]] |
-| D-14 | 2026-08-07 | ADOTADO · ARQUIVADO | `package.json` e `tsconfig.json` nascem em T-04; build e workflow seguem de M9 |  |
-| D-19 | 2026-08-07 | ADOTADO · ARQUIVADO | `play` reconfere o estado recebido contra o próprio histórico e **lança** quando não fecha |  |
-| D-20 | 2026-08-07 | ADOTADO · ARQUIVADO | Teto de 70% da CPU é corte aplicado DEPOIS da mistura de `D-10`, em ppm inteiro |  |
 | D-22 | 2026-08-07 | ADOTADO · ARQUIVADO | `Team.flag` passa a `string \| null`; `null` = bandeira sem arquivo, até `A-04` |  |
-| D-24 | 2026-08-07 | ADOTADO · ARQUIVADO | `src/net/index.ts` nasce em T-09 com só os tipos de M6 — implementado depois, em T-11 |  |
-| D-25 | 2026-08-07 | ADOTADO · ARQUIVADO | M5 recusa na **criação**: `online`, `level` fora de `cpu`, `roomId` fora de `online`, seleção fora de M4 |  |
-| D-26 | 2026-08-07 | ADOTADO · ARQUIVADO | No modo `cpu`, M5 chama `pick` antes de `observe` na mesma cobrança |  |
 | D-27 | 2026-08-07 | ADOTADO · ARQUIVADO | M7 = DOM no menu/placar/zonas; Phaser só na cobrança, por `import()` |  |
-| D-29 | 2026-08-07 | ADOTADO · ARQUIVADO | Troca de jogadas é assíncrona, não request/response |  |
-| D-30 | 2026-08-07 | ADOTADO · ARQUIVADO | `roomId` = 26 chars Crockford de `crypto`, fora do `Rng` de M1 |  |
-| D-31 | 2026-08-07 | ADOTADO | `'failed'` é **terminal**; peer que sai volta a `waiting` e **rearma** os 20 s; `onStatus` entrega o status atual ao assinar | Peer atrasado ressuscitaria partida já dada como perdida; quem vence segue sendo `Q-04` — [[m6_transporte_notas]] |
-| D-32 | 2026-08-07 | ADOTADO | M6 valida a **forma** do `Move` e descarta o resto com log; ordem e legalidade seguem de M5. Fila de envio com teto 32 | Senão M6 entregaria `Move` mentiroso na única borda com dado de fora; `seq` torna reenvio seguro — [[m6_transporte_notas]] |
-| D-35 | 2026-08-08 | ADOTADO | `Q-04`: peer que some no meio = disputa **sem resultado**; M5 para de aceitar escolha e `winner` segue `null` | Vencedor por abandono seria regra de disputa na borda; M2 intacto, T-13 fechou sem tocar `regras_partida` — [[m5_sessao_notas]] |
-| D-36 | 2026-08-08 | ADOTADO | Notificação vinda da REDE não propaga exceção de assinante (loga); a de `choose()` propaga | Exceção subindo pela pilha de M6 partiria a máquina de estados do canal — [[m5_sessao_notas]] |
-| D-37 | 2026-08-08 | ADOTADO | Critério de aceite sai do CONTEXT e vira [[portao_de_aceite]], lido sob demanda pelo Mapa | Era o maior bloco movível sem levar estado numérico junto, com o CONTEXT a 17 chars da FALHA de 4.000 (`A-11`) |
-| D-38 | 2026-08-08 | ADOTADO | `QA-08`: na medição os DOIS lados entram por `joinRoom(idDaTentativa(base,n))`; a porta de `D-13` não muda um byte | `hostRoom` e `joinRoom` caem no mesmo `createChannel`, e rotação passa em `ROOM_ID_RE` (0 recusas em 1,5 M) — [[m6_transporte_notas]] |
+| D-31 | 2026-08-07 | ADOTADO · ARQUIVADO | `'failed'` é **terminal**; peer que sai volta a `waiting` e **rearma** os 20 s; `onStatus` entrega o status ao assinar |  |
+| D-32 | 2026-08-07 | ADOTADO · ARQUIVADO | M6 valida a **forma** do `Move` e descarta o resto com log; ordem e legalidade seguem de M5. Fila com teto 32 |  |
+| D-35 | 2026-08-08 | ADOTADO · ARQUIVADO | `Q-04`: peer que some no meio = disputa **sem resultado**; M5 para de aceitar escolha e `winner` segue `null` |  |
+| D-36 | 2026-08-08 | ADOTADO · ARQUIVADO | Notificação vinda da REDE não propaga exceção de assinante (loga); a de `choose()` propaga |  |
+| D-37 | 2026-08-08 | ADOTADO · ARQUIVADO | Critério de aceite sai do CONTEXT e vira [[portao_de_aceite]], lido sob demanda pelo Mapa |  |
+| D-38 | 2026-08-08 | ADOTADO · ARQUIVADO | `QA-08`: na medição os DOIS lados entram por `joinRoom(idDaTentativa(base,n))`; a porta de `D-13` não muda um byte |  |
 | D-39 | 2026-08-08 | REJEITADO | `hostRoom(ice?, roomId?)` — saída (a) de `QA-08` | Compra o que `D-38` obtém de graça, pagando com precedente em porta congelada — e `Q-09` e `Q-11` estão parados esperando esse precedente |
 | D-40 | 2026-08-08 | REJEITADO | Exportar `createChannel` — saída (b) de `QA-08` | `createChannel` não valida `roomId`: exportá-lo abre caminho para abrir sala sem a checagem do portão do defeito 6 (`D-30`) |
 | D-41 | 2026-08-08 | REJEITADO | Uma sala para a medição inteira — saída (c) de `QA-08` | `leave()` é assíncrono: peer da tentativa anterior pode virar `'connected'` sem conexão nova, enviesando a taxa PARA CIMA — [[m6_transporte_notas]] |
 | D-42 | 2026-08-08 | ADOTADO | Portão de E-4 é estatístico (limite inferior 95% acima de 70%), não contagem fixa; substitui o piso de 30 de `A-08` | 5/5 garante só 54,9%; tabela e critério em [[m6_transporte_notas]] |
+| D-43 | 2026-08-08 | ADOTADO | Como o registro perde peso: sai da tabela quem nenhum `.md` vivo cita (`src/` **não** segura linha — supersede o critério 3 de `A-09`), e gatilho de revisão vai para o tema que ele mede | Pelo critério 3 o corte máximo dava 10.055, portão de `A-12` inalcançável; `A-09` já o excedera ao retirar `D-33`, citado em `vite.config.ts`. Gatilho longe do número que o dispara não é lido |
 
-## Gatilhos de revisão (o número que reabre a decisão — "vai escalar" não é gatilho)
-> IDs em crase aqui de propósito: a coluna 1 desta tabela **não** define ID (`check.py` leria como duplicata).
-
-| Decisão | Reabre quando, medido |
-|---|---|
-| `D-01` | Conexão P2P medida < 70% em rede móvel real **e** o fallback exigir TURN próprio; ou o dono aprovar requisito com autoridade de servidor (ranking global antifraude, conta) |
-| `D-02` | Bundle inicial ≥ 8 MB lido da saída do build (nunca estimado); ou < 30 fps no fluxo crítico em viewport 360x640 no celular real do dono, sem correção dentro do Phaser |
+> **Gatilhos de revisão** (`D-43`): moram no tema que cada um mede — `D-01` em [[online_p2p]], `D-02` em [[stack]].
 
 ## Questões abertas (Q-NN — decisões do DONO, não do agente)
 | # | Questão | Decidir quando |
@@ -71,14 +57,12 @@ status: atual
 
 | # | Data | Sev. | Onde | O que quebrava | Correção | Fechado em |
 |---|---|---|---|---|---|---|
-| QA-01 | 2026-08-07 | CRÍTICO | [[b_plan\|PLANO]] — M9/M6 | Custo R$ 0 sem portão | Portão de custo em M9 + `IceConfig` em M6 | 2026-08-07 |
-| QA-03 | 2026-08-07 | CRÍTICO | [[b_plan\|PLANO]] — M9 | Analytics de terceiro sem portão | Portão de privacidade em M9 | 2026-08-07 |
 | QA-04 | 2026-08-07 | MÉDIO | `tsconfig.json` (`D-14`) × `vite.config.ts` (T-05) | `include: ["src"]` deixa o `vite.config.ts` fora do `tsc --noEmit`: erro de tipo no build só estoura no `vite build` | Acrescentar `"vite.config.ts"` ao `include` — de outro dono, regra 4; porquê em [[questoes_abertas_notas]] | _(aberto)_ |
 | QA-06 | 2026-08-07 | MÉDIO | `src/scripts/bundle-size.mjs` (M9) | Soma **toda** entrada `isEntry` no "bundle inicial": com `D-33`, o gatilho de `D-02` lê página que o jogador nunca abre | Medir só o grafo de `index.html` — não feito aqui porque é de M9 e muda um portão (regra 4) | _(aberto)_ |
-| QA-08 | 2026-08-08 | CRÍTICO | `src/medicao.ts` (`D-33`) | O anfitrião descarta o `id` rotacionado e chama `hostRoom()`, que sorteia sala nova a cada toque: os dois aparelhos nunca se encontram e a medição de `A-08` dá 0% | `D-38`: os dois lados entram por `joinRoom` na sala rotacionada, sem tocar a porta de M6 — é `T-15`, ver [[m6_transporte_notas]] | ✔ `T-15` 2026-08-08 (`bd68d0f`) |
+| QA-08 | 2026-08-08 | CRÍTICO · ARQUIVADO | `src/medicao.ts` | Anfitrião sorteava sala nova a cada toque: medição de `A-08` daria 0% | `D-38` | ✔ `T-15` 2026-08-08 (`bd68d0f`) |
 | QA-07 | 2026-08-08 | BAIXO | `Q-08` e `Q-09`, no próprio registro | Prazo de decisão vencido com a questão ainda aberta: `Q-08` dizia "antes de E-3" (fechada) e `Q-09` "antes de T-10" (feita) | O dono redata o prazo ou responde a questão — `A-10` não mexe em prazo alheio (regra 6) | _(aberto)_ |
 | QA-11 | 2026-08-08 | CRÍTICO | Árvore de trabalho × git | **T-13 nunca foi commitada:** `src/session/index.ts` tem 208 linhas fora do git e `src/tests/session_online.test.ts` é untracked, mas o CONTEXT lista `online` T-13 como Pronto e a suíte como 220/220 | O dono commita e empurra T-13 (`D-35`/`D-36`), ou diz por que está segurando — `origin/main` é o que o Pages publica |  _(aberto)_ |
-| QA-09 | 2026-08-08 | CRÍTICO | `src/medicao.ts` (`D-33`) | Índice da rotação é contador por aparelho (`contadores[modo].tentativas`): um toque a mais dessincroniza as salas e **não ressincroniza**, e os 20 s saem como falha de P2P | A tela mostra índice e 6 chars do ID nos dois aparelhos — dentro de `T-15`, commit separado de `D-38` | ✔ `T-15` 2026-08-08 (`31b39d9`) |
-| QA-12 | 2026-08-08 | CRÍTICO | `src/medicao.ts` | Sortear sala nova não zerava a rotação — achado em campo, ver [[m6_transporte_notas]] | Índice separado da estatística | ✔ `T-15` 2026-08-08 |
+| QA-09 | 2026-08-08 | CRÍTICO · ARQUIVADO | `src/medicao.ts` | Índice da rotação por aparelho dessincronizava as salas e não ressincronizava | Índice e 6 chars do ID na tela dos dois | ✔ `T-15` 2026-08-08 (`31b39d9`) |
+| QA-12 | 2026-08-08 | CRÍTICO · ARQUIVADO | `src/medicao.ts` | Sortear sala nova não zerava a rotação — achado em campo | Índice separado da estatística | ✔ `T-15` 2026-08-08 |
 | QA-10 | 2026-08-08 | MÉDIO | `src/medicao.ts` (`D-33`) | Erro de configuração soma tentativa **e** falha: erro do operador entra na taxa que decide a revisão de `D-01`, enviesando para baixo | Não contar tentativa quando o canal nunca abriu — muda denominador de portão, logo `D-NN` (regra 4) | _(aberto)_ |
 | QA-05 | 2026-08-07 | MÉDIO | `src/tests/teams.test.ts` | Escreve por extenso os 6 termos da lista-morta: o portão de marca de M7 (`grep` zero em `src/`) devolve 6 | Montar as agulhas em tempo de execução, como `core.test.ts` e `ui.test.ts` — outro dono (regra 4) | _(aberto)_ |
