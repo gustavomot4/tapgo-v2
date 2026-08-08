@@ -39,8 +39,8 @@ Partida de ~1 minuto: contra a CPU, contra alguém no mesmo aparelho, ou por lin
 - **Bundle:** **90.320 B** (1,13% de 8 MB) lido de `dist/`, **+1.432 B** em T-13 (M6 entrou no inicial via M5); Phaser e Trystero seguem fora, por `import()` (D-27). Soma a página de medição — `QA-06`
 - **Em andamento (máx 1):** nada
 - **Próximo:** **E-4 só fecha com as DUAS medições do dono** (A-08) — dois aparelhos, rede de operadora, em `/tapgo-v2/medicao.html`: sem TURN e na que vai ao ar. Responde `Q-10`; a tela do online espera `Q-11`
-- **Bloqueado/pendente:** A-04 trava E-5 e a lista real de M4 (hoje fixação, `flag: null` — D-22) · A-06 trava M8 · A-08 trava E-4 · Q-11 trava a tela do online · **registro a 9.347/12.000 (A-09), 253 do aviso — A-10**
-- **Questões abertas:** Q-03, Q-05, Q-07..**Q-11** · Q-04 respondida → D-35 · **QA:** QA-01..QA-03 fechados · QA-04..QA-06 abertos
+- **Bloqueado/pendente:** A-04 trava E-5 e a lista real de M4 (hoje fixação, `flag: null` — D-22) · A-06 trava M8 · A-08 trava E-4 · Q-11 trava a tela do online · **registro a 8.808/12.000 (A-10), 792 do aviso**
+- **Questões abertas:** Q-03, Q-05, Q-07..**Q-11** · Q-04 respondida → D-35 · **QA:** QA-01..QA-03 fechados · QA-04..QA-07 abertos
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)
 - [[licenciamento]] — ao criar ou alterar asset, nome de seleção, escudo ou texto de marca
