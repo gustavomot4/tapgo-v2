@@ -424,3 +424,63 @@ que **todas** as tentativas do convidado somem como falha de rede sem uma linha 
 exercitada. Não consertado aqui (regra 4): é `medicao.ts`, mas é defeito distinto do `QA-08`, e a
 correção — não contar tentativa quando o canal nunca chegou a abrir — muda o denominador, que é
 um número de portão.
+
+## Campo, 2026-08-08 — primeira medição depois de `T-15`
+
+Três rodadas do dono, todas **sem TURN**, resumo do aparelho anfitrião:
+
+| rodada | obs | mediana | taxa real ≥ (95%) |
+|---|---|---|---|
+| Wi-Fi × Wi-Fi (controle) | 4/4 | 689 ms | 47,3% |
+| Claro 5G × Wi-Fi (misto) | 4/4 | 782 ms | 54,9% ao chegar a 5 |
+| Claro 5G × Claro 5G | 5/5 | 353 ms | 54,9% |
+
+**Nenhuma fecha E-4**, por dois motivos independentes: o contador "config que vai ao ar" está
+`0/0` — e é ele que o corte de 70% cobra —, e nenhuma rodada tem amostra para separar de 70%.
+
+### `D-42` — por que o portão virou estatístico
+
+O piso de 30 de `A-08` foi escrito supondo taxa **ambígua** ("se cair entre 60% e 80%, 30 não
+separa do corte"). Com zero falhas a conta é outra: o limite inferior unilateral 95%
+(Clopper-Pearson) de `n/n` é `0,05^(1/n)`.
+
+| falhas | tentativas para o limite passar de 70% | observado |
+|---|---|---|
+| 0 | **9** | 9/9 = 100% |
+| 1 | 14 | 13/14 = 93% |
+| 2 | 19 | 17/19 = 89% |
+| 3 | 24 | 21/24 = 88% |
+
+Progressão com 0 falhas: n=5 → 54,9% · n=8 → 68,8% · **n=9 → 71,7%** · n=12 → 77,9%.
+
+O portão passa a ser "parar quando o limite inferior passar de 70%", e o piso fixo de 30 sai.
+A régua fica **mais rigorosa** quando há falha (2 falhas exigem 19, não 30 ao acaso) e mais
+barata quando não há.
+
+### A ressalva que o número de hoje não cobre
+
+As duas rodadas móveis foram **Claro falando com Claro**, possivelmente no mesmo pool de NAT. Os
+15-30% de CGNAT de [[online_p2p]] são sobre redes **diversas**: o caso que quebra é Claro × Vivo,
+ou Claro × Wi-Fi de outra casa. Wi-Fi × Wi-Fi é controle e não fala de NAT nenhum — os dois
+aparelhos acham candidatos na própria LAN.
+
+A rodada **mista (5G × Wi-Fi)** é a mais representativa do jogo real (um jogador fora, outro em
+casa), e é dela que vem o fato mais animador do conjunto. Por isso a próxima medição é
+**operadora diferente nos dois aparelhos**, antes de qualquer conclusão sobre `Q-10`.
+
+### `QA-12` — sortear sala nova não reiniciava a rotação
+
+Achado **em campo**, não em teste: o dono sorteou sala nova sem recarregar e nada mais conectou;
+recarregar resolveu. O índice da rotação era `contadores[modo].tentativas`, ou seja, o mesmo
+número servia de estatística e de endereço de sala. Sortear sala nova trocava a base e **não**
+mexia no contador, então o anfitrião pedia `idDaTentativa(salaNova, 4)` enquanto o convidado,
+abrindo o link novo numa página limpa, pedia `idDaTentativa(salaNova, 0)`.
+
+É a raiz de `QA-09` por um caminho **determinístico**, e não por um toque a mais. Consertado em
+`T-15` separando as duas coisas: `indice` endereça a sala e zera ao sortear e ao zerar; os
+contadores só contam. Cai de brinde um viés que `D-41` recusou — com índice por modo, a tentativa
+3 sem TURN e a 3 com TURN caíam na **mesma** sala, e reentrar em sala usada pode virar
+`'connected'` com peer velho.
+
+**Limite que sobra:** a rotação tem 26 salas e o índice agora soma os dois modos. Passando de 26
+tentativas no total, reentra em sala já usada.
