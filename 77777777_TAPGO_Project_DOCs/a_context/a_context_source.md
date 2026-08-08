@@ -35,12 +35,12 @@ Partida de ~1 minuto: contra a CPU, contra alguém no mesmo aparelho, ou por lin
 
 ## Estado atual (formato fixo — 1 linha por item, SEM prosa corrida)
 - **Versão:** v2.0.0-dev (a v1 é baseline morto: reescrita total, nenhum código reaproveitado)
-- **Pronto:** M1 (T-04) · M9 esqueleto (T-05) · M2 (T-06) · M3 (T-07) · M4 (T-08) · M5 `cpu`/`local` (T-09) · M7 (T-10) · **M6 código (T-11)** — **E-1, E-2 e E-3 fechadas**, suíte **207/207** verde em 9 rodadas seguidas; PLANO em D-13
-- **Bundle:** **jogo sozinho 80.748 B** (1,01% de 8 MB) lido de `dist/`; Phaser e Trystero ficam fora dele, por `import()` (D-27, T-11). O medidor soma junto a página de medição (88.888 B) — é `QA-06`
+- **Pronto:** M1 (T-04) · M9 esqueleto (T-05) · M2 (T-06) · M3 (T-07) · M4 (T-08) · M5 (T-09 + **`online` T-13**) · M7 (T-10) · M6 (T-11) — **E-1, E-2 e E-3 fechadas**, suíte **220/220** verde em 5 rodadas; PLANO em D-13
+- **Bundle:** **90.320 B** (1,13% de 8 MB) lido de `dist/`, **+1.432 B** em T-13 (M6 entrou no inicial via M5); Phaser e Trystero seguem fora, por `import()` (D-27). Soma a página de medição — `QA-06`
 - **Em andamento (máx 1):** nada
-- **Próximo:** **E-4 só fecha com as DUAS medições do dono** (A-08) — dois aparelhos, rede de operadora, em `/tapgo-v2/medicao.html`: taxa sem TURN e na config que vai ao ar. O número responde `Q-10`
-- **Bloqueado/pendente:** A-04 trava E-5 e a lista real de M4 (hoje fixação, `flag: null` — D-22) · A-05 trava T-13 · A-06 trava M8 · A-08 trava E-4 · `c_decisions.md` a 57 do teto: arquivar antes da próxima sessão
-- **Questões abertas:** Q-03..Q-05, Q-07..Q-09, **Q-10** · **QA:** QA-01..QA-03 fechados · QA-04, QA-05, **QA-06** abertos
+- **Próximo:** **E-4 só fecha com as DUAS medições do dono** (A-08) — dois aparelhos, rede de operadora, em `/tapgo-v2/medicao.html`: sem TURN e na que vai ao ar. Responde `Q-10`; a tela do online espera `Q-11`
+- **Bloqueado/pendente:** A-04 trava E-5 e a lista real de M4 (hoje fixação, `flag: null` — D-22) · A-06 trava M8 · A-08 trava E-4 · Q-11 trava a tela do online · **registro a 9.347/12.000 (A-09), 253 do aviso — A-10**
+- **Questões abertas:** Q-03, Q-05, Q-07..**Q-11** · Q-04 respondida → D-35 · **QA:** QA-01..QA-03 fechados · QA-04..QA-06 abertos
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)
 - [[licenciamento]] — ao criar ou alterar asset, nome de seleção, escudo ou texto de marca

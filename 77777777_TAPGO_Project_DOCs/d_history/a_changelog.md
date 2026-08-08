@@ -7,6 +7,23 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-08] — A-09: arquivamento do registro de decisões (manutenção, zero código)
+- Retirado de `a_context/c_decisions.md`: **14 linhas** — `D-03`, `D-05`, `D-11`, `D-15`..`D-18`, `D-21`, `D-23`, `D-28`, `D-33` (todas já `ARQUIVADO`, nenhuma citada por arquivo vivo), `D-34`, `Q-06` (respondida) e `QA-02` (fechado). Registro **11.995 → 9.347** caracteres; o `check.py` para de avisar em 9.600. Nada foi revertido nem reescrito: saiu a linha, e o ID continua resolvendo em [[decisions_archive]].
+- Corrigido: o ponteiro `íntegra em [[decisions_archive]]` aparecia **31 vezes** na tabela, sempre idêntico — 716 caracteres para dizer uma frase. Agora é dito uma vez no cabeçalho, válido para toda linha `ARQUIVADO`. Foi a diferença entre passar no portão e ter de retirar decisões que ainda significam alguma coisa.
+- **Ficaram de propósito:** as três REJEITADAS `D-06`..`D-08` (a lista-morta que a sessão de evolução varre — e ela nunca lê `e_qa/`), os 19 `D-NN` que `src/` cita, e `D-35`/`D-36`, de ontem.
+- Aberto: `A-10` (encolher as questões abertas, que é onde sobrou a gordura: `Q-08` tem 613 caracteres) · `A-11` (o CONTEXT está a 17 caracteres do teto de 4.000, que é FALHA, não aviso).
+
+## [2026-08-08] — T-13: M5 no modo `online`, sobre o canal de T-11
+- Adicionado: ramo `online` em `src/session/index.ts`. `roomId` ausente ⇒ este aparelho hospeda (`hostRoom`); presente ⇒ entra na sala (`joinRoom`). Cada aparelho manda **uma** jogada por cobrança, com `seq` = índice da cobrança lido de M2, e os dois montam o mesmo par `(shot, dive)` a partir de `match.turn`: o `MatchState` coincide porque a regra é a mesma, não porque a rede combinou resultado. Nenhum placar trafega no canal.
+- Adicionado: `src/tests/session_online.test.ts` — 14 testes; suíte **207 → 220**, verde em 5 rodadas seguidas. O duplo de sinalização daqui **liga** duas salas pelo `roomId` (o de `net.test.ts` não ligava), que é o que torna possível provar dois aparelhos chegando ao mesmo estado.
+- **`Q-04` respondida pelo dono (`A-05`) → `D-35`: peer que some = disputa SEM RESULTADO.** M5 não escreve vencedor: `winner` segue `null`, `phase` não vai a `finished`, e `choose()` recusa em voz alta. As outras duas saídas ("quem fica vence", "vale o placar do momento") são regra de disputa e exigiriam entrada nova em M2 e linha nova em `regras_partida.md` — uma sessão de `backend-dominio` antes desta. Também evita que queda de 4G vire derrota registrada, com 15-30% do público sob CGNAT.
+- **Evento remoto ilegal morre em M5, nunca em M2 (`D-19`):** lado do próprio aparelho, `seq` fora da cobrança corrente, segunda jogada na mesma cobrança e zona inexistente são descartados com aviso. É o que torna o reenvio da fila de M6 seguro de repetir — a duplicata morre por número, não vira segunda cobrança.
+- Adicionado: `D-36` — notificação nascida da REDE loga a exceção do assinante em vez de propagá-la; a nascida de `choose()` continua propagando. Exceção subindo pela pilha de M6 partiria o laço de handlers e deixaria a máquina de estados do canal pela metade.
+- **Lacuna declarada, não contornada — `Q-11`:** o `roomId` que `hostRoom()` sorteia não tem por onde sair da porta congelada em `D-13`, e M7 não pode importar `src/net`. Sem resposta não há tela de convite. As duas saídas (M5 reexportar `newRoomId`, ou `Session` ganhar `roomId()`) mexem em contrato congelado, logo são `D-NN` do dono.
+- Trocado: `src/tests/session.test.ts` — a asserção "M5 não importa rede em runtime" caducou (era a ausência de T-13, não regra de camada) e foi **substituída**, não apagada: agora cobra que M5 entre em M6 **pela porta** (só `hostRoom` e `joinRoom`, uma ocorrência de cada).
+- Bundle: **88.888 → 90.320 B** (1,13% de 8 MB), +1.432 B — M6 passou a entrar no bundle inicial por import estático de M5. Trystero segue fora, por `import()` (`D-27`). `QA-06` continua somando a página de medição.
+- Arquivado: `D-06`, `D-07`, `D-08`, `D-21`, `D-29`, `D-30` e `D-33` — íntegra em `e_qa/decisions_archive.md`, IDs preservados. `c_decisions.md` estava a 32 caracteres do teto e as decisões desta sessão não caberiam. **Fechou a 5 de folga: arquivar de novo é `A-09`, antes de qualquer `D-NN` novo.**
+
 ## [Não lançado]
 - **E-3 depende só do dono agora:** todo o código da etapa está em pé; falta a passada no celular real (5 cobranças e alternadas por toque em 360x640, ≥30 fps). Sandbox é indicativo, nunca portão.
 

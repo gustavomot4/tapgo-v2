@@ -2,7 +2,7 @@
 tags: [notas, m5]
 status: arquivado
 ---
-# M5 — notas de T-09 (evidência longa de `D-24`, `D-25`, `D-26` e `Q-09`)
+# M5 — notas de T-09 e T-13 (evidência longa de `D-24`..`D-26`, `D-35`, `D-36`, `Q-09` e `Q-11`)
 
 > **Este arquivo não define ID.** As decisões vivem em `a_context/c_decisions.md`; aqui fica só a
 > evidência que não cabe no teto de 2 frases por linha daquele registro. Nenhuma sessão precisa
@@ -35,7 +35,9 @@ não alcança host nenhum e por isso não gera linha de custo.
 
 `createSession` recusa quatro coisas antes de existir sessão:
 
-- **`mode: 'online'`** — é T-13, bloqueada por `A-05` (`Q-04`). A alternativa tentadora era cair
+- **`mode: 'online'`** — ~~é T-13, bloqueada por `A-05` (`Q-04`)~~. **Caducou em T-13** (2026-08-08):
+  o modo existe e a recusa saiu. O resto do parágrafo continua valendo como o motivo de nunca
+  degradar calado. A alternativa tentadora era cair
   para `local` em silêncio; isso poria dois jogadores em aparelhos diferentes jogando partidas
   separadas, cada um vendo um placar próprio. É exatamente o defeito que o modo online existe para
   não ter, e ele apareceria como "o jogo está estranho", nunca como erro.
@@ -84,3 +86,61 @@ escolha fica pendente. M7 deriva o estado comparando `kicks.length` com o que re
 A derivação funciona, mas é indireta, e é a tela que paga por ela. Resolver de vez é acrescentar
 algo como `pending(): Side | null` à interface `Session` — e isso é mudar contrato congelado em
 `D-13`, o que é `D-NN` do dono, não escolha do agente. Decidir antes de T-10.
+
+## `D-35` — o peer some no meio: por que "sem resultado" e não "quem fica vence"
+
+`Q-04` foi respondida pelo dono em 2026-08-08, na abertura de T-13: a disputa **morre sem
+vencedor**. O que isso significa em código é menos do que parece, e é esse o ponto.
+
+M5 **não escreve resultado nenhum**. `winner` continua `null` e `phase` continua onde estava,
+porque nenhuma cobrança os produziu. O que a resposta liga é uma trava: com o canal em `'failed'`,
+`choose()` passa a recusar em voz alta ("terminou SEM RESULTADO"), e as escolhas represadas são
+soltas — elas pertenciam a uma cobrança que nunca vai fechar.
+
+As outras duas saídas custavam uma sessão a mais e mexiam noutro módulo. "Quem fica vence" e
+"vale o placar do momento" são **regra de disputa**: `MatchState` só chega a `finished` por
+cobrança, então M2 precisaria de uma entrada nova (um `forfeit`) e `regras_partida.md` de uma
+linha nova — trabalho de `backend-dominio`, não desta camada. A saída escolhida fecha T-13 sem
+tocar em M2, e é coerente com o escopo que [[online_p2p]] já declarava: jogo casual entre amigos,
+sem ranking e sem prêmio. Com 15-30% dos jogadores atrás de CGNAT, "quem cai perde" também
+transformaria queda de 4G em derrota registrada.
+
+Se um dia existir ranking, isto volta à mesa junto com a decisão de anti-trapaça — e aí é `D-NN`
+novo, porque a escolha some com o argumento "não há nada em jogo".
+
+## `D-36` — notificação de rede não propaga exceção de assinante
+
+`notify()` de M5 chama todos os assinantes mesmo que um exploda, e no fim relança a primeira
+falha: assinante que lança é defeito de M7, e engoli-lo seria `catch` mentiroso.
+
+Isso vale quando existe um chamador para receber a exceção — `choose()`, chamado pela tela. Não
+vale quando a notificação nasce de um evento de rede: ali a pilha é de **M6**, no meio do laço de
+handlers de status ou do `onMessage` da sinalização. Uma exceção subindo dali interrompe o laço e
+deixa a máquina de estados do transporte pela metade — um assinante quebrado da tela passaria a
+corromper o canal.
+
+Então: `choose()` propaga, `aoStatus`/`aoMove` logam com origem e contexto (`console.error`) e
+morrem ali. Não é `catch` silencioso — é o erro chegando ao console em vez de chegar a um lugar
+onde faria estrago. O que não existe em nenhum dos dois caminhos é fallback: nada inventa estado
+para "recuperar".
+
+## `Q-11` — o `roomId` do anfitrião não tem por onde sair de M5
+
+Aparece assim que o online precisa de tela: quem hospeda gera um ID de sala e precisa dele para
+montar o link de convite. Mas a porta de `Session` está congelada em `D-13` com quatro métodos, e
+nenhum devolve o ID; e M7 não pode importar `src/net` — o portão de camada exige `grep` zero.
+Então, hoje, o ID que `hostRoom()` sorteia fica dentro de M5 e ninguém o alcança.
+
+T-13 **não contornou isso**: implementou `roomId` ausente ⇒ este aparelho hospeda, `roomId`
+presente ⇒ entra na sala. Nenhum quinto método apareceu na porta por conta do agente.
+
+Duas saídas, as duas mexendo em contrato congelado e portanto `D-NN` do dono:
+
+1. **M5 reexporta `newRoomId`** — M7 sorteia o ID, monta o link e **sempre** passa `roomId`. A
+   porta `Session` não muda; o que muda é o módulo ganhar um export de valor. O portão de camada
+   de M7 continua verde, porque o import passa a ser de `src/session`.
+2. **`Session` ganha `roomId(): string | null`** — mais direto de usar na tela, mas é o quinto
+   método na interface congelada, e abre precedente para o sexto (`Q-09` já pedia `pending()`).
+
+O teste de T-13 contorna lendo o ID do duplo de sinalização. É recurso de teste, e está comentado
+como tal no arquivo: a tela, em produção, não tem esse caminho.

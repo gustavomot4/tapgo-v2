@@ -130,3 +130,73 @@ passagem 1: [[a_artifact_consistency_report_260807_1543|relatório de consistên
 **A coluna `Fechado em` é o que separa "corrigido no papel" de "conferido".** Sem ela, a
 tabela descrevia a correção como fato e o CONTEXT listava o mesmo QA como aberto — as duas
 leituras defensáveis, que é o pior estado possível para um registro (AC-21).
+
+## D-06 … D-08, D-21, D-29, D-30 e D-33 — íntegra como estavam em `c_decisions.md`
+
+Arquivadas em **T-13**, pelo mesmo motivo das anteriores: o registro vivo tinha 32 caracteres de
+folga e `D-35`, `D-36` e `Q-11` não caberiam. A seleção seguiu o que o `check.py` aponta — as três
+**REJEITADAS** primeiro — e, depois, decisões de etapa já fechada (`D-21`, de E-1, no ar) ou cujo
+racional inteiro já mora em [[m6_transporte_notas]] (`D-29`, `D-30`, `D-33`). Nenhuma foi revertida:
+o que muda é onde o texto longo mora, nunca o que a decisão diz.
+
+| # | Data | Status | Decisão (curta) | Evidência (número-chave + link) |
+|---|---|---|---|---|
+| `D-06` | 2026-08-06 | REJEITADO | Reaproveitar o backend Node/Express/MySQL da v1 | Exigiria host pago e trazia SQL por interpolação e senha em texto puro; conta não é requisito |
+| `D-07` | 2026-08-06 | REJEITADO | Usar clubes reais, ou seleções com escudo de federação | Colide com Lei Pelé art. 87; trocar clube por seleção troca o titular, não remove o risco |
+| `D-08` | 2026-08-06 | REJEITADO | Godot 4 como engine | Payload WASM maior que o teto de 8 MB da Poki sem otimização, e custo de aprender GDScript sem ganho para jogo 2D de UI |
+| `D-21` | 2026-08-07 | ADOTADO | O repositório `gustavomot4/tapgo-v2` é **público** — é o que deixa o Pages publicar no plano Free | Repositório privado e "custo R$ 0" não coexistem (`D-05`). Página no ar com o veredito verde e `base` `/tapgo-v2/` conferidos no celular do dono: fecha E-1. Responde Q-06 |
+| `D-29` | 2026-08-07 | ADOTADO | STEP 0 da skill: troca de jogadas é **assíncrona**, não request/response — confirma a porta de `D-13` | Um salto, sem cadeia; circuit breaker e retry ficam sem objeto — [[m6_transporte_notas]] |
+| `D-30` | 2026-08-07 | ADOTADO | `roomId` = 26 caracteres Crockford (130 bits) de `crypto.getRandomValues`, **fora** do `Rng` de M1 | M1 é determinístico por contrato, e ID previsível é o defeito 6 da v1; portão de M1 segue verde — [[m6_transporte_notas]] |
+| `D-33` | 2026-08-07 | ADOTADO | `src/medicao.html` como **segunda entrada** do build: instrumento das duas medições de E-4, TURN digitado em runtime | Medir em celular exige HTTPS; travessia para M9 **autorizada pelo dono nesta sessão** — [[m6_transporte_notas]] |
+
+## A-09 — as linhas que saíram da tabela viva (2026-08-08)
+
+Até aqui o arquivamento tirava só a **íntegra** e deixava no `c_decisions.md` uma linha
+`ARQUIVADO` com resumo e ponteiro. Quatro passagens depois, essas linhas-ponteiro somavam
+mais que as decisões vivas: o registro fechou T-13 com **5 caracteres** de folga, e o
+`check.py` avisava desde os 9.600. Nesta passagem sai a **linha inteira** das decisões que
+nenhum arquivo vivo cita — `src/` não as nomeia e nenhuma nota fora de `d_history/` e `e_qa/`
+depende delas. O ID continua resolvendo: quem procurar `D-17` acha aqui, na tabela abaixo ou
+nas seções anteriores desta página.
+
+**Critério, na ordem em que foi aplicado** (o mesmo das passagens anteriores, agora escrito):
+
+1. Sai quem **nenhum arquivo vivo cita** — nem `src/`, nem `a_context/`, nem `b_process/`.
+2. **Fica toda REJEITADA** (`D-06`..`D-08`): é a lista-morta que a sessão de evolução varre
+   antes de propor, e ela nunca lê `e_qa/`. Retirá-las era convidar a re-proposta do que morreu.
+3. Fica o que `src/` cita, mesmo antigo (`D-01`, `D-02`, `D-09`, `D-10`, `D-12`, `D-14`, `D-19`,
+   `D-20`, `D-22`, `D-24`..`D-27`, `D-29`..`D-32`, `D-35`) — é o portão declarado de `A-09`.
+4. Fica o mais recente (`D-35`, `D-36`, de 2026-08-08): decisão de ontem não é decisão antiga.
+
+**Íntegra já arquivada em passagem anterior** (a linha-ponteiro é que saiu agora, o texto não
+se moveu): `D-03`, `D-05` (seção `D-01 … D-05`) · `D-11`, `D-16`..`D-18` (seção `D-11, D-12,
+D-16 … D-18`) · `D-15`, `D-23`, `D-28` (seção `D-14 … D-28`) · `D-21`, `D-33` (seção `D-06 …
+D-33`) · `QA-02` (seção `QA-01 … QA-03`).
+
+**Íntegra que chega agora:** `D-34` e `Q-06`, que ainda não tinham passado por aqui.
+
+| # | Data | Status | Decisão (curta) | Evidência (número-chave + link) |
+|---|---|---|---|---|
+| `D-34` | 2026-08-07 | ADOTADO | Sinalização entra em M6 por **injeção** (`setSignalingLoader`); `opened()` expõe a promessa de abertura | Mock de módulo escapava sob carga e a Trystero real caía no teste; verde no Linux, **17 reprovas no Windows do dono**. É costura de teste, não regra: o caminho de produção continua carregando a Trystero por `import()` — [[m6_transporte_notas]] |
+
+| # | Questão | Decidir quando |
+|---|---|---|
+| `Q-06` | ~~O repositório `gustavomot4/tapgo-v2` fica **público**?~~ | **RESPONDIDA 2026-08-07 → `D-21`** — repositório privado e "custo R$ 0" não coexistem no plano Free do Pages |
+
+### O ponteiro deixou de ser linha a linha
+
+`íntegra em [[decisions_archive]]` aparecia **31 vezes** na tabela viva, sempre igual: 716
+caracteres para dizer uma frase. Agora ela é dita uma vez, no cabeçalho do `c_decisions.md`,
+válida para toda linha marcada `ARQUIVADO`. Nenhuma informação saiu — saiu a repetição.
+
+### O que esta passagem NÃO resolveu
+
+O registro passou no portão, mas a folga até o **aviso** dos 9.600 é de pouco mais de uma
+linha de decisão — o número vivo está no [[a_context_source|CONTEXT]], que é onde ele mora.
+Ou seja: a próxima decisão registrada traz o aviso de volta, e o `check.py` volta a apontar
+candidatas que já não são as certas. O que sobrou de gordura não são decisões e sim as
+**questões abertas** — `Q-08` sozinha tem 613 caracteres, `Q-07` 406, `Q-09` 346 e `QA-04` 416,
+todas violando o "teto de 2 frases por linha" que o próprio `c_decisions.md` declara no topo.
+Encolhê-las é mover justificativa para `e_qa/`, não arquivar: questão aberta continua aberta.
+Fica como `A-10` no BACKLOG, e não foi feito aqui porque `A-09` pede arquivamento de decisão,
+não reescrita de questão viva.
