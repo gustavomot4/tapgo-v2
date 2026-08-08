@@ -206,6 +206,16 @@ describe('QA-09 · rótulo de sincronia', () => {
     expect(src).toContain('rotuloDaTentativa(base,');
   });
 
+  it('o rótulo lê o índice da rotação, não o contador de estatística', () => {
+    // Depois de `QA-12` são duas variáveis distintas. Se o rótulo voltasse a ler `tentativas`,
+    // ele mostraria um número e a tentativa usaria outro — um guarda que aponta para a sala errada
+    // é pior que guarda nenhum.
+    const src = fonte();
+
+    expect(src).toContain('rotuloDaTentativa(base, indice)');
+    expect(src).not.toContain('rotuloDaTentativa(base, cSinc');
+  });
+
   it('o rótulo é escrito fora do bloco que separa anfitrião de convidado', () => {
     // `montar()` tem um `if (papel === 'guest') … else …` que pinta caixas diferentes. Se o
     // rótulo morasse lá dentro, um dos aparelhos ficaria sem ele — e um guarda que só aparece de
@@ -215,5 +225,60 @@ describe('QA-09 · rótulo de sincronia', () => {
 
     expect(corpoPintar).toContain("$('sinc').textContent");
     expect(corpoPintar).not.toContain("papel === 'guest'");
+  });
+});
+
+/**
+ * `QA-12` — sortear sala nova sem recarregar não reiniciava a rotação.
+ *
+ * Achado **em campo**, não em teste, e é o tipo de defeito que teste de unidade não pega: as duas
+ * variáveis eram a mesma (`contadores[modo].tentativas`), e uma variável só não tem como zerar em
+ * dois momentos diferentes. O anfitrião ficava no índice 4 com a sala nova; o convidado abria o
+ * link novo numa página limpa, no índice 0. Vinte segundos, e o resultado entrando na planilha
+ * como falha de rede — o viés de `QA-08` por outra porta.
+ *
+ * O estado mora dentro de `medicao.ts`, que é entrada de página e não exporta nada, então o que
+ * dá para cobrar aqui é a **origem**. É de propósito: o defeito era estrutural (um número com dois
+ * donos), e é a estrutura que estes testes prendem.
+ */
+describe('QA-12 · o índice da rotação é separado da estatística', () => {
+  it('existe um índice próprio, e a tentativa endereça a sala por ele', () => {
+    const src = fonte();
+
+    expect(src).toMatch(/^let indice = 0;$/m);
+    expect(src).toContain('idDaTentativa(base, indice)');
+    // A forma exata do defeito: endereçar a sala pelo contador de estatística.
+    expect(src).not.toContain('idDaTentativa(base, c.tentativas)');
+  });
+
+  it('sortear sala nova reinicia a rotação', () => {
+    const src = fonte();
+    const handler = src.slice(src.indexOf("$('abrir').addEventListener"), src.indexOf("$('tentar').addEventListener"));
+
+    expect(handler).toContain('base = r.roomId');
+    expect(handler).toContain('indice = 0');
+  });
+
+  it('zerar contadores reinicia a rotação — é a recuperação que a tela manda fazer', () => {
+    const src = fonte();
+    const handler = src.slice(src.indexOf("$('zerar').addEventListener"), src.indexOf("$('copiar').addEventListener"));
+
+    expect(handler).toContain('indice = 0');
+  });
+
+  it('o índice anda mesmo quando a tentativa falha', () => {
+    // Se só andasse no sucesso, uma falha de um lado só desencontraria os dois — e falha é
+    // justamente o que a medição existe para contar.
+    const src = fonte();
+    const corpo = src.slice(src.indexOf('async function rodarUma'), src.indexOf('const pct ='));
+    const posIncremento = corpo.indexOf('indice += 1');
+    const posCondicional = corpo.indexOf('if (ok)');
+
+    expect(posIncremento).toBeGreaterThan(-1);
+    expect(posIncremento).toBeLessThan(posCondicional);
+  });
+
+  it('o resumo colável traz o índice, para cruzar os dois aparelhos', () => {
+    expect(fonte()).toContain('índice: ${indice}');
   });
 });

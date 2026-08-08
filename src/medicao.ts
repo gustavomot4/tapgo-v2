@@ -43,6 +43,28 @@ let base = '';
 let papel: Papel = 'host';
 let rodando = false;
 
+/**
+ * Índice da rotação: **qual sala** a próxima tentativa usa, e nada mais (`QA-12`).
+ *
+ * Era `contadores[modo].tentativas` — o mesmo número servia de estatística e de endereço. Duas
+ * coisas que precisam zerar em momentos diferentes não cabem numa variável só, e o preço apareceu
+ * em campo: sortear sala nova sem recarregar mantinha o anfitrião no índice 4 enquanto o convidado
+ * abria o link novo no índice 0. Salas diferentes, 20 s, e o resultado entrando na planilha como
+ * falha de rede que nunca houve — o mesmo viés de `QA-08`, por outra porta.
+ *
+ * **Zera em dois eventos, e só nesses dois:** sala nova sorteada, e "Zerar contadores" (que é a
+ * recuperação que a própria tela manda fazer quando os dois aparelhos divergem).
+ *
+ * **É um índice só, não um por modo, e isso é consequência de separá-lo da estatística** — quem é
+ * por modo é a contagem. Sai de graça um defeito a menos: com um índice por modo, a tentativa 3
+ * sem TURN e a 3 com TURN caíam na MESMA sala, e reentrar em sala usada é exatamente o viés para
+ * cima que `D-41` recusou (peer velho vira `'connected'` sem conexão nova).
+ *
+ * **Limite que continua de pé:** a rotação só tem 26 salas (`b.length`), e agora o índice é somado
+ * entre os dois modos. Passou de 26 tentativas no total, reentra em sala já usada.
+ */
+let indice = 0;
+
 const $ = <T extends HTMLElement>(id: string): T => {
   const el = document.getElementById(id);
   if (el === null) throw new Error(`elemento ausente: ${id}`);
@@ -115,11 +137,14 @@ async function rodarUma(): Promise<void> {
 
   const modo = modoAtual();
   const c = contadores[modo];
-  const id = idDaTentativa(base, c.tentativas);
-  $('estado').textContent = `tentativa ${c.tentativas + 1} (${modo === 'semTurn' ? 'sem TURN' : 'com TURN'}) — aguardando até ${CONNECT_TIMEOUT_MS / 1000} s…`;
+  const id = idDaTentativa(base, indice);
+  $('estado').textContent = `tentativa #${indice} (${modo === 'semTurn' ? 'sem TURN' : 'com TURN'}) — aguardando até ${CONNECT_TIMEOUT_MS / 1000} s…`;
 
   const { ok, ms } = await tentativa(id, iceAtual());
 
+  // O índice anda sempre, inclusive quando a tentativa falha: os dois aparelhos precisam andar
+  // juntos, e o outro lado não sabe se esta aqui deu certo.
+  indice += 1;
   c.tentativas += 1;
   if (ok) {
     c.sucessos += 1;
@@ -149,13 +174,14 @@ function resumo(): string {
     `${rot}: ${c.sucessos}/${c.tentativas} = ${pct(c)} · mediana ${mediana(c.temposMs)}`;
   return [
     `Medição E-4 — ${new Date().toISOString()}`,
-    `timeout de M6: ${CONNECT_TIMEOUT_MS} ms · papel deste aparelho: ${papel}`,
+    `timeout de M6: ${CONNECT_TIMEOUT_MS} ms · papel deste aparelho: ${papel} · índice: ${indice}`,
     l('SEM TURN            ', contadores.semTurn),
     l('CONFIG QUE VAI AO AR', contadores.comTurn),
     '',
     'Corte de E-4: >= 70% na configuração que vai ao ar.',
     'A taxa SEM TURN alimenta o gatilho de revisão de D-01 (reabre se < 70%).',
-    'Rede usada: [preencher: operadora, 4G/5G, os dois aparelhos]',
+    'Rede de CADA aparelho: [preencher: operadora + 4G/5G/Wi-Fi, um por aparelho]',
+    'Mesma operadora nos dois? [sim/não] — se sim, o número não fala do caso Claro x Vivo.',
   ].join('\n');
 }
 
@@ -174,11 +200,10 @@ function pintar(): void {
   // comparados a olho antes do toque. O contador é por modo, então a linha também diz o modo —
   // dois aparelhos podem bater no índice e estar em contadores diferentes, e aí a sala coincide
   // mas a configuração medida não.
-  const cSinc = contadores[modoAtual()];
   $('sinc').textContent =
     base === ''
       ? 'sala ainda não sorteada'
-      : `${rodando ? 'agora' : 'próxima'}: ${rotuloDaTentativa(base, cSinc.tentativas)} · ` +
+      : `${rodando ? 'agora' : 'próxima'}: ${rotuloDaTentativa(base, indice)} · ` +
         `${modoAtual() === 'semTurn' ? 'sem TURN' : 'com TURN'}`;
 
   $<HTMLButtonElement>('tentar').disabled = rodando || base === '';
@@ -251,6 +276,10 @@ function montar(): void {
       const r = hostRoom();
       r.channel.close();
       base = r.roomId;
+      // `QA-12`: sala nova recomeça a rotação. O convidado vai abrir o link novo numa página
+      // limpa, logo no índice 0 — sem esta linha o anfitrião continuaria no índice antigo e os
+      // dois nunca se encontrariam. Foi assim que o defeito apareceu em campo.
+      indice = 0;
       const alvo = `${window.location.origin}${window.location.pathname}?m=${base}`;
       $('link').innerHTML =
         `<p>Abra este endereço no OUTRO aparelho:</p><p class="mono">${alvo}</p>`;
@@ -263,6 +292,9 @@ function montar(): void {
     for (const m of ['semTurn', 'comTurn'] as Modo[]) {
       contadores[m] = { tentativas: 0, sucessos: 0, falhas: 0, temposMs: [] };
     }
+    // Zerar é a recuperação que a própria tela manda fazer quando os dois aparelhos divergem
+    // (`QA-09`). Se o índice não voltasse a 0 junto, a recuperação não recuperaria nada.
+    indice = 0;
     pintar();
   });
   $('copiar').addEventListener('click', () => {
