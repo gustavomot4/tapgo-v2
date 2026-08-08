@@ -207,3 +207,53 @@ biblioteca, porque o tipo da costura sai de `typeof import('trystero')`.
   finalmente nomeou o `RTCPeerConnection`.
 - **Sandbox verde não é portão.** Esta suíte passou no Linux e reprovou 17 testes na máquina do
   dono. A regra 7 do contrato do agente existe por causa exatamente disto.
+
+## `QA-08` — o anfitrião da página de medição abre a sala errada
+
+Achado em 2026-08-08, ao escrever o passo a passo de `A-08`. **A página não pode produzir número
+nenhum**, e o número que ela produziria é pior que nenhum: 0%.
+
+O instrumento declara, no próprio comentário de `idDaTentativa`, como os dois aparelhos deveriam se
+encontrar sem trocar mensagem:
+
+> sendo determinístico, os dois aparelhos calculam o MESMO ID a partir da mesma base, sem trocar
+> mensagem nenhuma — o que importa, já que é justamente a troca de mensagens que está sob teste.
+
+`rodarUma()` calcula esse ID e o entrega a `tentativa(id, ice)`. Só que o ramo do anfitrião o joga
+fora:
+
+```ts
+canal = papel === 'host' ? hostRoom(ice).channel : joinRoom(id, ice);
+```
+
+`hostRoom(ice?: IceConfig)` não recebe sala: ele chama `newRoomId()`, 130 bits de `crypto`. O
+convidado entra em `idDaTentativa(base, n)`. As duas salas coincidirem tem probabilidade
+desprezível, então **toda** tentativa vai até os 20 s de `CONNECT_TIMEOUT_MS` e volta `'failed'`.
+
+Por que isso é CRÍTICO e não MÉDIO: a taxa medida seria 0% nos dois contadores, e 0% < 70% aciona
+as duas linhas piores da tabela de `Q-10` — saída (a) obrigatória e E-4 não fechando —, além do
+gatilho de revisão de `D-01`, que reabre a escolha de arquitetura quando a conexão medida fica
+abaixo de 70%. Seria uma decisão de arquitetura tomada sobre um aparelho de medida quebrado, com o
+agravante de o número parecer plausível: "P2P falha sempre em rede de operadora" é exatamente o
+medo que a medição existe para testar.
+
+**Por que nenhum teste pegou:** `medicao.ts` é instrumento, não módulo, e nenhum teste da suíte o
+cita. A suíte de M6 prova que `hostRoom` sorteia ID opaco e não sequencial, e prova que `joinRoom`
+recusa ID malformado — as duas coisas certas, sobre a porta certa. O defeito está em **quem
+chama**, num arquivo que a suíte não olha.
+
+**Não consertado aqui** (regra 4, e regra 2): a correção natural é o anfitrião abrir a sala
+rotacionada, e a porta de M6 não oferece isso — `hostRoom` não aceita `roomId`, e `createChannel`
+não é exportado. Mudar a porta congelada é `D-13`, logo `D-NN` do dono, e a implementação é sessão
+de M6 com a skill `backend-bff`. As saídas aparentes, para a sessão que a pegar avaliar:
+
+- `hostRoom(ice?, roomId?)` — menor mudança de porta, mas acrescenta parâmetro opcional numa
+  interface congelada, que foi exatamente o precedente que `Q-09` já pedia (`pending()`).
+- exportar `createChannel` — dá ao instrumento o que ele precisa sem tocar em `hostRoom`, mas abre
+  a porta de M6 para quem não deveria abrir sala sem passar por `hostRoom`/`joinRoom`.
+- o anfitrião sortear a base e o **convidado** não rotacionar: uma sala por medição inteira, em vez
+  de uma por tentativa. Não mexe na porta, mas muda o desenho da medição — tentativas repetidas na
+  mesma sala não são independentes, e a independência é o que a rotação existia para garantir.
+
+Nenhuma delas é escolha desta sessão. As três precisam do portão escrito antes, e a terceira mexe
+no significado do número.
