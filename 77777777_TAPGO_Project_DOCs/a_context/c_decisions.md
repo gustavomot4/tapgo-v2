@@ -35,6 +35,8 @@ status: atual
 | D-41 | 2026-08-08 | REJEITADO | Uma sala para a medição inteira — saída (c) de `QA-08` | `leave()` é assíncrono: peer da tentativa anterior pode virar `'connected'` sem conexão nova, enviesando a taxa PARA CIMA — [[m6_transporte_notas]] |
 | D-42 | 2026-08-08 | ADOTADO | Portão de E-4 é estatístico (limite inferior 95% acima de 70%), não contagem fixa; substitui o piso de 30 de `A-08` | 5/5 garante só 54,9%; tabela e critério em [[m6_transporte_notas]] |
 | D-43 | 2026-08-08 | ADOTADO | Como o registro perde peso: sai da tabela quem nenhum `.md` vivo cita (`src/` **não** segura linha — supersede o critério 3 de `A-09`), e gatilho de revisão vai para o tema que ele mede | Pelo critério 3 o corte máximo dava 10.055, portão de `A-12` inalcançável; `A-09` já o excedera ao retirar `D-33`, citado em `vite.config.ts`. Gatilho longe do número que o dispara não é lido |
+| D-44 | 2026-08-08 | ADOTADO | `T-16`: a medição chega ao par de candidatos embrulhando o **global** `RTCPeerConnection` (`Proxy` sobre `construct`), e abre os sucessos por tipo de par | M6 intacto, ao contrário de `D-39`/`D-40`; `relay` não é P2P direto e `srflx↔srflx` com o MESMO IP público é hairpin, que não fala de CGNAT |
+| D-45 | 2026-08-08 | ADOTADO | O texto colável da medição leva o IP com 2 octetos; inteiro só com a caixa marcada | Repositório público (`D-21`) e o resumo vira linha de registro; a comparação que decide hairpin usa o IP inteiro, que a tela mostra |
 
 > **Gatilhos de revisão** (`D-43`): moram no tema que cada um mede — `D-01` em [[online_p2p]], `D-02` em [[stack]].
 
