@@ -73,15 +73,19 @@ export type ClassePar =
   | 'refl-ips-diferentes'
   | 'refl-mesmo-ip'
   | 'refl-sem-ip'
+  | 'host-direto'
+  | 'host-cgnat'
   | 'host'
   | 'misto'
   | 'ausente';
 
 /** Ordem fixa de exibição: da evidência mais forte para a mais fraca. */
 export const CLASSES: readonly ClassePar[] = [
+  'host-direto',
   'refl-ips-diferentes',
   'refl-mesmo-ip',
   'refl-sem-ip',
+  'host-cgnat',
   'relay',
   'host',
   'misto',
@@ -89,15 +93,26 @@ export const CLASSES: readonly ClassePar[] = [
 ];
 
 /**
+ * As classes que provam **P2P direto**, que é o que o modo online precisa.
+ *
+ * São duas porque há dois jeitos de chegar lá, e por caminhos opostos: atravessando a NAT
+ * (`refl-ips-diferentes`) ou **não havendo NAT para atravessar** (`host-direto`, o caso do IPv6).
+ * `relay` fica de fora por definição, e as demais ou não provam ou não foram lidas.
+ */
+export const CLASSES_DIRETAS: readonly ClassePar[] = ['host-direto', 'refl-ips-diferentes'];
+
+/**
  * O rótulo já traz a conclusão porque o portão de `T-16` é o dono **não ter de interpretar nada**.
  * Um resumo que diz `srflx↔srflx` e deixa a leitura por conta de quem cola é meio instrumento.
  */
 export const ROTULO_CLASSE: Record<ClassePar, string> = {
+  'host-direto': 'P2P direto entre endereços públicos, SEM NAT no caminho (IPv6)',
   'refl-ips-diferentes': 'travessia real de NAT (srflx↔srflx, IPs públicos diferentes)',
   'refl-mesmo-ip': 'hairpin (srflx↔srflx, MESMO IP público — não fala de CGNAT)',
   'refl-sem-ip': 'srflx↔srflx sem endereço legível (não dá para comparar)',
+  'host-cgnat': 'host↔host dentro do CGNAT da operadora (100.64/10) — não o atravessou',
   relay: 'via relay — NÃO é P2P direto',
-  host: 'host↔host (mesma rede local — não fala de NAT)',
+  host: 'host↔host em endereço não público (mesma rede local — não fala de NAT)',
   misto: 'par misto (ver a linha da última tentativa)',
   ausente: 'par não lido',
 };
@@ -153,6 +168,39 @@ export function faixaDoIp(ip: string | null): FaixaIp {
     return 'publico';
   }
   return 'desconhecido';
+}
+
+/**
+ * Os quatro primeiros grupos de um IPv6 — o prefixo /64, que é o que um enlace recebe.
+ *
+ * Serve para uma pergunta só: dois endereços públicos estão na MESMA rede local? Dois celulares
+ * numa mesma Wi-Fi com IPv6 recebem endereços globais do mesmo /64; em operadoras diferentes, ou
+ * em assinaturas diferentes, os prefixos divergem. Sem esta distinção, "os dois têm endereço
+ * público e são diferentes" confundiria a rede de casa com a internet.
+ *
+ * Devolve `null` para o que não é IPv6 — inclusive o `::ffff:` mapeado, que é IPv4 disfarçado.
+ */
+export function prefixo64(ip: string | null): string | null {
+  if (ip === null || !ip.includes(':') || ip.toLowerCase().includes('::ffff:')) return null;
+
+  const semZona = ip.split('%')[0] ?? '';
+  const partes = semZona.split('::');
+  if (partes.length > 2) return null;
+
+  const naoVazio = (s: string): boolean => s !== '';
+  const esq = (partes[0] ?? '').split(':').filter(naoVazio);
+  const dir = partes.length === 2 ? (partes[1] ?? '').split(':').filter(naoVazio) : [];
+
+  const grupos =
+    partes.length === 2
+      ? [...esq, ...Array<string>(Math.max(0, 8 - esq.length - dir.length)).fill('0'), ...dir]
+      : esq;
+  if (grupos.length !== 8) return null;
+
+  return grupos
+    .slice(0, 4)
+    .map((g) => g.toLowerCase().replace(/^0+(?=.)/, ''))
+    .join(':');
 }
 
 /**
@@ -263,7 +311,26 @@ export function classificarPar(p: ParSelecionado | null): ClassePar {
 
   if (local.tipo === 'relay' || remoto.tipo === 'relay') return 'relay';
   if (local.tipo === null || remoto.tipo === null) return 'misto';
-  if (local.tipo === 'host' && remoto.tipo === 'host') return 'host';
+
+  if (local.tipo === 'host' && remoto.tipo === 'host') {
+    // `QA-14`: `host` NÃO quer dizer rede local — quer dizer "endereço da própria interface". No
+    // IPv6 essa interface tem endereço global e **não há NAT nenhuma no caminho**, então tratar
+    // todo `host↔host` como LAN rotulava o melhor resultado possível como o mais inútil. Quem
+    // decide aqui é a FAIXA do endereço, não o tipo do candidato.
+    const fl = faixaDoIp(local.ip);
+    const fr = faixaDoIp(remoto.ip);
+
+    if (fl === 'cgnat' || fr === 'cgnat') return 'host-cgnat';
+    if (fl !== 'publico' || fr !== 'publico') return 'host';
+    if (local.ip === null || remoto.ip === null || local.ip === remoto.ip) return 'host';
+
+    // Mesmo /64 = mesmo enlace: dois aparelhos na Wi-Fi de casa, com IPv6, caem aqui. É rede
+    // local de verdade, e não fala de NAT.
+    const p = prefixo64(local.ip);
+    if (p !== null && p === prefixo64(remoto.ip)) return 'host';
+
+    return 'host-direto';
+  }
 
   if (REFLEXIVOS.includes(local.tipo) && REFLEXIVOS.includes(remoto.tipo)) {
     if (local.ip === null || remoto.ip === null) return 'refl-sem-ip';
@@ -496,5 +563,16 @@ export function descreverPar(p: ParSelecionado | null, inteiro: boolean): string
   // mais velhos pode ter escolhido um par `succeeded` que não é o em uso, e foi assim que a 1ª ida
   // a campo produziu um `host↔host` impossível entre dois celulares em 5G (`QA-13`).
   const proc = p.origem === 'transport' ? '' : ` · par lido por "${p.origem}", não pelo transport`;
-  return `${um(p.local)} ↔ ${um(p.remoto)}${proto === null ? '' : ` · ${proto}`}${proc}`;
+  // Dois endereços diferentes podem ter a MESMA máscara — dois assinantes do mesmo bloco da
+  // operadora, que foi o caso em campo com IPv6 (`2804:38a:…` dos dois lados). O texto colável
+  // ficaria dizendo "públicos diferentes" ao lado de duas linhas idênticas; dizer que diferem
+  // custa nada e não revela um bit a mais.
+  const iguais =
+    !inteiro &&
+    p.local.ip !== null &&
+    p.remoto.ip !== null &&
+    p.local.ip !== p.remoto.ip &&
+    mascararIp(p.local.ip) === mascararIp(p.remoto.ip);
+  const nota = iguais ? ' · endereços diferentes sob a mesma máscara' : '';
+  return `${um(p.local)} ↔ ${um(p.remoto)}${proto === null ? '' : ` · ${proto}`}${proc}${nota}`;
 }

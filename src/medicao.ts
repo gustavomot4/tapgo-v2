@@ -21,6 +21,7 @@
 
 import {
   CLASSES,
+  CLASSES_DIRETAS,
   ROTULO_CLASSE,
   classificarPar,
   conexaoMorta,
@@ -281,12 +282,17 @@ const ipInteiro = (): boolean => $<HTMLInputElement>('ipInteiro').checked;
  */
 function abertura(rot: string, c: Contador): string[] {
   if (c.sucessos === 0) return [];
+  // `QA-14`: o veredito conta as DUAS formas de chegar a P2P direto — atravessando a NAT, e não
+  // havendo NAT para atravessar (IPv6). Contar só a primeira dizia "0 de 1" para a tentativa que
+  // fechou pelo melhor caminho possível.
+  const diretos = CLASSES_DIRETAS.reduce((s, k) => s + c.porClasse[k], 0);
   return [
     `${rot} — os ${c.sucessos} sucessos, por tipo de par:`,
     ...CLASSES.filter((k) => c.porClasse[k] > 0).map(
       (k) => `    ${String(c.porClasse[k])} · ${ROTULO_CLASSE[k]}`,
     ),
-    `    => travessia real de NAT em ${c.porClasse['refl-ips-diferentes']} de ${c.sucessos}; ` +
+    `    => P2P direto em ${diretos} de ${c.sucessos} ` +
+      `(sem NAT/IPv6: ${c.porClasse['host-direto']} · travessia de NAT: ${c.porClasse['refl-ips-diferentes']}); ` +
       `via relay em ${c.porClasse.relay}.`,
   ];
 }
@@ -315,6 +321,8 @@ function resumo(): string {
     'A taxa SEM TURN alimenta o gatilho de revisão de D-01 (reabre se < 70%).',
     'Sucesso via relay NÃO conta como P2P direto; srflx<->srflx com o MESMO IP público é hairpin',
     'e não fala de CGNAT — as duas leituras estão abertas acima, por contador.',
+    'host<->host com endereços públicos de prefixos diferentes é IPv6 fim-a-fim, SEM NAT: conecta',
+    'sem atravessar nada. Se o corte de 70% aceita isso como sucesso, é Q-12 e o dono decide.',
     'Rede de CADA aparelho: [preencher: operadora + 4G/5G/Wi-Fi, um por aparelho]',
     'Mesma operadora nos dois? [sim/não] — se sim, o número não fala do caso Claro x Vivo.',
   ].join('\n');

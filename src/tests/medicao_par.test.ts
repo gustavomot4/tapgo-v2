@@ -14,6 +14,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import {
   CLASSES,
+  CLASSES_DIRETAS,
   ROTULO_CLASSE,
   classificarPar,
   conexaoMorta,
@@ -26,6 +27,7 @@ import {
   lerPar,
   lerParInsistindo,
   mascararIp,
+  prefixo64,
 } from '../medicao_par';
 import type {
   ClassePar,
@@ -213,7 +215,7 @@ describe('T-16 · classificar o par é responder o que a tentativa provou', () =
     expect(par({ tipo: 'relay', ip: IP_A }, { tipo: 'relay', ip: IP_A })).toBe('relay');
   });
 
-  it('host↔host é mesma rede local, e não fala de NAT', () => {
+  it('host↔host em endereço privado é mesma rede local, e não fala de NAT', () => {
     expect(par({ tipo: 'host', ip: '192.168.0.5' }, { tipo: 'host', ip: '192.168.0.9' })).toBe('host');
   });
 
@@ -234,6 +236,12 @@ describe('T-16 · classificar o par é responder o que a tentativa provou', () =
 
     expect(mascararIp(a)).toBe(mascararIp(b));
     expect(par({ tipo: 'srflx', ip: a }, { tipo: 'srflx', ip: b })).toBe('refl-ips-diferentes');
+  });
+
+  it('toda classe direta prova P2P, e relay nunca entra nelas', () => {
+    expect([...CLASSES_DIRETAS].sort()).toEqual(['host-direto', 'refl-ips-diferentes']);
+    for (const c of CLASSES_DIRETAS) expect(CLASSES).toContain(c);
+    expect(CLASSES_DIRETAS).not.toContain('relay');
   });
 
   it('toda combinação de tipo e IP cai em exatamente uma classe conhecida', () => {
@@ -272,6 +280,87 @@ describe('T-16 · classificar o par é responder o que a tentativa provou', () =
 
     expect(Object.keys(z).sort()).toEqual([...CLASSES].sort());
     for (const c of CLASSES) expect(z[c]).toBe(0);
+  });
+});
+
+/**
+ * `QA-14` — achado na 2ª ida a campo, com o instrumento já lendo.
+ *
+ * A tentativa fechou `host↔host` entre `2804:38a:a0ac:80fa:…` e `2804:38a:a31a:630e:…`, dois
+ * endereços IPv6 globais de prefixos diferentes, e o resumo disse "mesma rede local — não fala de
+ * NAT" e `travessia real de NAT em 0 de 1`. Estava errado nos dois: **no IPv6 não há NAT**, o
+ * candidato `host` já é um endereço global, e aquilo foi o melhor resultado possível — P2P direto
+ * sem nada no meio. O defeito era classificar pelo TIPO do candidato ignorando a FAIXA do endereço.
+ */
+describe('QA-14 · host não quer dizer rede local', () => {
+  const par = (l: Partial<LadoDoPar>, r: Partial<LadoDoPar>): ClassePar => classificarPar(fazPar(l, r));
+
+  // Os endereços exatos da 2ª ida a campo, 2026-08-08 (Claro 5G nos dois aparelhos).
+  const V6_A = '2804:38a:a0ac:80fa:8bef:4072:467c:bdcf';
+  const V6_B = '2804:38a:a31a:630e:0:15:7c2d:8401';
+
+  it('o caso real de campo é P2P direto, não rede local', () => {
+    expect(par({ tipo: 'host', ip: V6_A }, { tipo: 'host', ip: V6_B })).toBe('host-direto');
+  });
+
+  it('e ele conta como P2P direto no veredito', () => {
+    expect(CLASSES_DIRETAS).toContain(par({ tipo: 'host', ip: V6_A }, { tipo: 'host', ip: V6_B }));
+  });
+
+  it('mesmo /64 volta a ser rede local — é a Wi-Fi de casa com IPv6', () => {
+    // Sem esta distinção, dois celulares na mesma Wi-Fi passariam por travessia da internet.
+    const casa1 = '2804:38a:a0ac:80fa:1111:2222:3333:4444';
+    const casa2 = '2804:38a:a0ac:80fa:aaaa:bbbb:cccc:dddd';
+
+    expect(par({ tipo: 'host', ip: casa1 }, { tipo: 'host', ip: casa2 })).toBe('host');
+  });
+
+  it('host em 100.64/10 é CGNAT que NÃO foi atravessado', () => {
+    // Endereço de CGNAT na própria interface é a evidência mais direta que A-08 pode achar.
+    expect(par({ tipo: 'host', ip: '100.64.1.2' }, { tipo: 'host', ip: '100.64.9.9' })).toBe('host-cgnat');
+    expect(par({ tipo: 'host', ip: '100.64.1.2' }, { tipo: 'host', ip: IP_B })).toBe('host-cgnat');
+  });
+
+  it('endereço privado, mDNS ou repetido não vira P2P direto', () => {
+    expect(par({ tipo: 'host', ip: '10.0.0.1' }, { tipo: 'host', ip: V6_B })).toBe('host');
+    expect(par({ tipo: 'host', ip: 'abc.local' }, { tipo: 'host', ip: V6_B })).toBe('host');
+    expect(par({ tipo: 'host', ip: V6_A }, { tipo: 'host', ip: V6_A })).toBe('host');
+    expect(par({ tipo: 'host', ip: null }, { tipo: 'host', ip: V6_B })).toBe('host');
+  });
+
+  it('IPv4 público nos dois lados também é direto — o caso não é exclusivo do IPv6', () => {
+    expect(par({ tipo: 'host', ip: IP_A }, { tipo: 'host', ip: IP_B })).toBe('host-direto');
+  });
+
+  it('prefixo64 expande :: e ignora o que não é IPv6', () => {
+    expect(prefixo64(V6_A)).toBe('2804:38a:a0ac:80fa');
+    expect(prefixo64(V6_B)).toBe('2804:38a:a31a:630e');
+    expect(prefixo64('2804:38a::1')).toBe('2804:38a:0:0');
+    expect(prefixo64('2804:38a:0:0::1')).toBe('2804:38a:0:0');
+    expect(prefixo64('::1')).toBe('0:0:0:0');
+    expect(prefixo64('192.0.2.1')).toBeNull();
+    expect(prefixo64('::ffff:192.0.2.1')).toBeNull();
+    expect(prefixo64(null)).toBeNull();
+    expect(prefixo64('2804::38a::1')).toBeNull();
+  });
+
+  it('máscaras iguais sobre endereços diferentes não passam por endereços iguais', () => {
+    // Foi o que aconteceu em campo: os dois lados saíram como `2804:38a:…` no texto colável, ao
+    // lado de um veredito que dizia "públicos diferentes". Duas linhas idênticas desmentindo a
+    // conclusão é um resumo que o dono tem de interpretar — o oposto do portão de T-16.
+    const p = fazPar({ tipo: 'host', ip: V6_A }, { tipo: 'host', ip: V6_B });
+
+    expect(descreverPar(p, false)).toContain('endereços diferentes sob a mesma máscara');
+    expect(descreverPar(p, true)).not.toContain('mesma máscara');
+    expect(descreverPar(fazPar({ tipo: 'host', ip: V6_A }, { tipo: 'host', ip: V6_A }), false)).not.toContain(
+      'mesma máscara',
+    );
+  });
+
+  it('o mesmo /64 escrito de duas formas continua sendo o mesmo /64', () => {
+    // Zero à esquerda e `::` são a mesma rede escrita diferente; compará-los como texto cru diria
+    // "redes diferentes" e transformaria a Wi-Fi de casa em travessia da internet.
+    expect(prefixo64('2804:038a:0000:0001:0:0:0:1')).toBe(prefixo64('2804:38a:0:1::1'));
   });
 });
 
