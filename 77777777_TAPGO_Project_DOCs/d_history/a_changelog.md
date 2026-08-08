@@ -146,8 +146,9 @@ status: atual
 - **E-3 fechada:** passada no celular real do dono conferida (toque em 360x640 e fps).
 - Adicionado: M6 implementado em `src/net/index.ts` — `hostRoom`/`joinRoom`, ID de sala de 130 bits por `crypto.getRandomValues`, timeout de 20 s com relógio rearmado na saída do peer, validação de forma do `Move`, fila de envio com teto, TURN por `IceConfig`. Trystero 0.25.3 entra por `import()` dinâmico, fora do bundle inicial.
 - Adicionado: `src/medicao.html` + `src/medicao.ts` — instrumento das duas medições de E-4, publicável no Pages; segunda entrada do build.
-- Testes: 27 novos em `src/tests/net.test.ts`; suíte 205/205, verde 2x.
-- Decisões: D-29 (STEP 0: assíncrono) · D-30 (ID fora do `Rng` de M1) · D-31 (máquina de estados, `failed` terminal) · D-32 (M6 confere forma, M5 confere regra) · D-33 (página de medição).
+- Testes: 29 novos em `src/tests/net.test.ts`; suíte 207/207, verde em 9 execuções seguidas.
+- Corrigido: a primeira entrega desta sessão **reprovou 17 testes na máquina do dono** (Windows) tendo passado no sandbox (Linux). Três causas encadeadas, todas no teste: relógio falso total travando o carregador de módulos, espera por giro do event loop, e `vi.mock` de módulo escapando sob carga (a Trystero real caindo no lugar do duplo, intermitente). Ver `D-34`.
+- Decisões: D-29 (STEP 0: assíncrono) · D-30 (ID fora do `Rng` de M1) · D-31 (máquina de estados, `failed` terminal) · D-32 (M6 confere forma, M5 confere regra) · D-33 (página de medição) · D-34 (sinalização por injeção; `opened()`).
 - Aberto: Q-10 (TURN entra ou fica fora de escopo — depende das medições) · QA-06 (`bundle-size.mjs` soma toda entrada no "bundle inicial").
 - Registro: `c_decisions.md` arquivado duas vezes nesta sessão (D-09, D-10, D-13, D-14, D-15, D-19, D-20, D-22, D-23, D-26, D-27, D-28) para caber sob o teto de 12.000.
 - **Não entregue de propósito:** o portão de E-4 continua aberto — as duas taxas em rede móvel são `A-08`, do dono.

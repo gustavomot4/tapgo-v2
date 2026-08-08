@@ -93,6 +93,54 @@ export interface Channel {
  */
 export const CONNECT_TIMEOUT_MS = 20_000;
 
+/**
+ * Promessa do momento em que cada canal **terminou de abrir** — resolve com o primeiro status
+ * que não é `'idle'` (`'waiting'`, `'failed'` ou `'closed'`).
+ *
+ * Existe porque abrir o canal depende de um `import()` dinâmico, e quem precisa observar o
+ * resultado não tem como saber quando ele chegou. A alternativa que eu havia escrito — girar o
+ * event loop até o status mudar — **passou no Linux e reprovou no Windows**: girar `setImmediate`
+ * em laço deixa o carregador de módulos sem vez (3.000 voltas em 30 ms, módulo parado), e o
+ * canal ficava eternamente em `'idle'`. Aguardar uma promessa deixa o processo ocioso, que é
+ * exatamente a condição para o carregador andar.
+ *
+ * **Não altera a porta congelada em `D-13`:** `Channel` continua com os mesmos quatro métodos, e
+ * nada em M5 é obrigado a usar isto.
+ */
+const aberturas = new WeakMap<Channel, Promise<LinkStatus>>();
+
+/** Resolve quando `c` sai de `'idle'`. Canal desconhecido é erro de quem chamou. */
+export function opened(c: Channel): Promise<LinkStatus> {
+  const p = aberturas.get(c);
+  if (p === undefined) throw new TypeError('opened: canal não foi criado por hostRoom/joinRoom');
+  return p;
+}
+
+/**
+ * O pedaço da Trystero que M6 usa. Tipado a partir do módulo REAL, então trocar de versão e
+ * quebrar a assinatura reprova em `tsc` — o duplo de teste não pode divergir da biblioteca.
+ */
+type Sinalizacao = Pick<typeof import('trystero'), 'joinRoom'>;
+
+const CARREGADOR_PADRAO = (): Promise<Sinalizacao> => import('trystero');
+
+let carregarSinalizacao: () => Promise<Sinalizacao> = CARREGADOR_PADRAO;
+
+/**
+ * Troca o carregador da sinalização; `null` devolve o padrão. **Costura de teste** — a porta de
+ * M6 congelada em `D-13` não muda, e nada em produção chama isto.
+ *
+ * Existe porque testar M6 contra a biblioteca real exigia interceptar um `import()` dinâmico com
+ * o mockador de módulos, e esse caminho se mostrou **intermitente**: sob carga o mock escapava,
+ * a Trystero de verdade era carregada, `RTCPeerConnection` estourava em Node e o canal ia a
+ * `'failed'` — falha que aparecia num teste a cada tantas execuções e acusava o código de
+ * produção. Injetando o carregador, o teste não depende do carregador de módulos, e o que sobra
+ * sob teste é M6.
+ */
+export function setSignalingLoader(fn: (() => Promise<Sinalizacao>) | null): void {
+  carregarSinalizacao = fn ?? CARREGADOR_PADRAO;
+}
+
 /** Namespace da sala na infraestrutura pública. Não é segredo e não identifica ninguém. */
 const APP_ID = 'tapgo-v2';
 
@@ -159,8 +207,14 @@ function isMove(m: unknown): m is Move {
  * única ocorrência dele em `src/`) continua verde.
  *
  * `b % 32` não enviesa: 256 é múltiplo exato de 32, então cada símbolo recebe 8 dos 256 valores.
+ *
+ * **Exportada de propósito**, embora `hostRoom` seja quem a usa: o portão do defeito 6 exige
+ * milhares de sorteios, e obtê-los por `hostRoom` significaria abrir milhares de canais — cada
+ * um com seu `import()` de sinalização. Feito assim uma vez, o carregador de módulos saturou e
+ * um `import()` chegou a rejeitar, derrubando um teste que nada tinha a ver com ID. Propriedade
+ * de gerador se testa no gerador.
  */
-function newRoomId(): string {
+export function newRoomId(): string {
   if (typeof crypto === 'undefined' || typeof crypto.getRandomValues !== 'function') {
     // Cair para um gerador fraco aqui seria trocar "sem online" por "online inseguro e
     // previsível", calado. Falha alta é mais barata.
@@ -202,6 +256,17 @@ function createChannel(roomId: string, ice: IceConfig | undefined): Channel {
    */
   const atual = (): LinkStatus => status;
 
+  /** Ver `aberturas`: resolve no primeiro status que não é `'idle'`, uma vez só. */
+  let resolverAbertura: ((s: LinkStatus) => void) | null = null;
+  const abertura = new Promise<LinkStatus>((res) => {
+    resolverAbertura = res;
+  });
+  const abriu = (s: LinkStatus): void => {
+    if (s === 'idle' || resolverAbertura === null) return;
+    resolverAbertura(s);
+    resolverAbertura = null;
+  };
+
   /**
    * Identificador de correlação: os DOIS aparelhos de uma mesma partida escrevem este mesmo
    * prefixo no console. Sem ele, depurar uma falha que só acontece na rede da operadora do
@@ -237,6 +302,7 @@ function createChannel(roomId: string, ice: IceConfig | undefined): Channel {
   function emitir(novo: LinkStatus): void {
     if (status === novo || status === 'closed') return;
     status = novo;
+    abriu(novo);
     for (const fn of [...statusHandlers]) fn(novo);
   }
 
@@ -268,7 +334,7 @@ function createChannel(roomId: string, ice: IceConfig | undefined): Channel {
    * nenhuma falha de carga escapa deste `try`. Mesmo padrão que `D-27` deu ao Phaser.
    */
   async function abrirSala(): Promise<{ leave: () => Promise<void> | void }> {
-    const { joinRoom: entrarNaSala } = await import('trystero');
+    const { joinRoom: entrarNaSala } = await carregarSinalizacao();
 
     // `exactOptionalPropertyTypes` está ligado: montar o objeto condicionalmente em vez de
     // atribuir `undefined` a uma chave opcional.
@@ -364,7 +430,7 @@ function createChannel(roomId: string, ice: IceConfig | undefined): Channel {
     }
   })();
 
-  return {
+  const canal: Channel = {
     send(m: Move): void {
       assertMove(m);
       if (status === 'closed' || status === 'failed') {
@@ -404,12 +470,16 @@ function createChannel(roomId: string, ice: IceConfig | undefined): Channel {
       enviarBruto = null;
       pending.length = 0;
       status = 'closed';
+      abriu('closed');
       const ouvintes = [...statusHandlers];
       moveHandlers.length = 0;
       statusHandlers.length = 0;
       for (const fn of ouvintes) fn('closed');
     },
   };
+
+  aberturas.set(canal, abertura);
+  return canal;
 }
 
 /**

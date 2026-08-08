@@ -7,9 +7,9 @@
  * substitui. O que os testes cobrem é a máquina de estados, o ID de sala e o comportamento na
  * falha; o que a medição cobre é se a falha acontece em 5% ou em 30% dos casos.
  */
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { CONNECT_TIMEOUT_MS, hostRoom, joinRoom } from '../net/index';
+import { CONNECT_TIMEOUT_MS, hostRoom, joinRoom, newRoomId, opened, setSignalingLoader } from '../net/index';
 import type { Channel, IceConfig, LinkStatus, Move } from '../net/index';
 import { createSession } from '../session/index';
 import type { Zone } from '../core/index';
@@ -33,110 +33,94 @@ type SalaFake = {
   onJoinError?: (d: { error: string }) => void;
 };
 
+/** Salas criadas pelo teste corrente, na ordem. */
+const salas: SalaFake[] = [];
+
+/** Quando != null, entrar na sala lança — é a sinalização fora do ar. */
+let falhaAoEntrar: Error | null = null;
+
 /**
- * Estado do duplo, criado por `vi.hoisted`.
+ * Duplo da sinalização, entregue a M6 por `setSignalingLoader`.
  *
- * `vi.mock` é içado para o topo do arquivo, acima de qualquer `let` declarado aqui embaixo — uma
- * fábrica que feche sobre variável comum lê a TDZ e a biblioteca real acaba carregada no lugar do
- * duplo, com a falha aparecendo longe daqui (`RTCPeerConnection is not defined`, vinda de dentro
- * da Trystero). `vi.hoisted` sobe junto e é o único jeito de a fábrica ver este objeto.
+ * **Não usa `vi.mock`, e é de propósito.** Interceptar o `import()` dinâmico de M6 com o
+ * mockador de módulos funcionava quase sempre: sob carga o mock escapava, a Trystero real era
+ * carregada, `RTCPeerConnection` estourava e um teste caía a cada tantas execuções — acusando o
+ * código de produção por um problema do ambiente. Injetando o carregador, o duplo é uma função
+ * comum: determinístico, sem I/O, sem escalonador no meio.
+ *
+ * O objeto de sala é **parcial** de propósito (M6 usa quatro membros de `Room`); o `as unknown`
+ * declara isso em vez de fingir uma implementação inteira. Quem continua conferido contra a
+ * biblioteca real é `joinRoom`, pelo tipo de `setSignalingLoader`.
  */
-const estado = vi.hoisted(() => ({
-  /** Salas criadas pelo teste corrente, na ordem. */
-  salas: [] as unknown[],
-  /** Quando != null, `joinRoom` da biblioteca lança — é a sinalização fora do ar. */
-  falhaAoEntrar: null as Error | null,
-}));
+function sinalizacaoFalsa(): Parameters<typeof setSignalingLoader>[0] {
+  return () =>
+    Promise.resolve({
+      joinRoom: ((cfg: unknown, roomId: string, cbs?: { onJoinError?: (d: { error: string }) => void }) => {
+        if (falhaAoEntrar !== null) throw falhaAoEntrar;
+        const acao: Acao = { send: () => Promise.resolve(), onMessage: null, onReceiveProgress: null };
+        const sala: SalaFake = {
+          cfg: cfg as Record<string, unknown>,
+          roomId,
+          enviadas: [],
+          saiu: false,
+          acao,
+          onPeerJoin: null,
+          onPeerLeave: null,
+        };
+        if (cbs?.onJoinError) sala.onJoinError = cbs.onJoinError;
+        acao.send = (d: unknown) => {
+          sala.enviadas.push(d);
+          return Promise.resolve();
+        };
+        salas.push(sala);
+        return {
+          makeAction: () => acao,
+          leave: () => {
+            sala.saiu = true;
+            return Promise.resolve();
+          },
+          get onPeerJoin() {
+            return sala.onPeerJoin;
+          },
+          set onPeerJoin(fn: ((id: string) => void) | null) {
+            sala.onPeerJoin = fn;
+          },
+          get onPeerLeave() {
+            return sala.onPeerLeave;
+          },
+          set onPeerLeave(fn: ((id: string) => void) | null) {
+            sala.onPeerLeave = fn;
+          },
+        };
+      }) as unknown as Sinalizacao['joinRoom'],
+    });
+}
 
-const salas = estado.salas as SalaFake[];
-
-vi.mock('trystero', () => ({
-  joinRoom: (cfg: Record<string, unknown>, roomId: string, cbs?: { onJoinError?: (d: { error: string }) => void }) => {
-    if (estado.falhaAoEntrar !== null) throw estado.falhaAoEntrar;
-    const acao: Acao = { send: () => Promise.resolve(), onMessage: null, onReceiveProgress: null };
-    const sala: SalaFake = {
-      cfg,
-      roomId,
-      enviadas: [],
-      saiu: false,
-      acao,
-      onPeerJoin: null,
-      onPeerLeave: null,
-    };
-    if (cbs?.onJoinError) sala.onJoinError = cbs.onJoinError;
-    acao.send = (d: unknown) => {
-      sala.enviadas.push(d);
-      return Promise.resolve();
-    };
-    estado.salas.push(sala);
-    return {
-      makeAction: () => acao,
-      leave: () => {
-        sala.saiu = true;
-        return Promise.resolve();
-      },
-      get onPeerJoin() {
-        return sala.onPeerJoin;
-      },
-      set onPeerJoin(fn) {
-        sala.onPeerJoin = fn;
-      },
-      get onPeerLeave() {
-        return sala.onPeerLeave;
-      },
-      set onPeerLeave(fn) {
-        sala.onPeerLeave = fn;
-      },
-    };
-  },
-}));
+type Sinalizacao = Awaited<ReturnType<NonNullable<Parameters<typeof setSignalingLoader>[0]>>>;
 
 /* ─────────────────────────────────── utilidades ─────────────────────────────────── */
 
 /**
- * Espera uma condição virar verdadeira sem deixar o relógio falso andar.
+ * Espera o canal terminar de abrir, **aguardando a promessa que M6 expõe** (`opened`).
  *
- * Duas armadilhas custaram esta função, e as duas dão o MESMO sintoma — canal preso em `'idle'`,
- * todo teste de status lendo estado errado:
- *
- * 1. `await Promise.resolve()` em laço só drena **microtask**. O `import()` dinâmico de M6
- *    precisa do carregador de módulos, que anda em **macrotask/IO**: girar 200 microtasks não
- *    faz o módulo carregar um passo sequer.
- * 2. `vi.advanceTimersByTimeAsync(0)` uma vez só cede ao event loop uma vez — o módulo chega,
- *    mas o `emitir('waiting')` que vem depois dele ainda não rodou quando a espera termina.
- *
- * Daí `setImmediate` de verdade a cada volta, e esperar pela **condição** em vez de por um número
- * fixo de voltas: é o que impede este arquivo de passar por sorte de escalonamento. Para o
- * `setImmediate` continuar real enquanto o `setTimeout` de 20 s é falso, o `beforeEach` abaixo
- * falsifica **só** o relógio que interessa — ver `toFake`.
+ * A primeira versão girava o event loop (`setImmediate` em laço) até o status mudar. Passava no
+ * Linux e **reprovava no Windows**, com 17 testes acusando o código de produção: girar o loop
+ * deixa o carregador de módulos sem vez. Aguardar não depende de quantas voltas o agendador dá —
+ * e, se algo travar, quem reprova é o timeout do Vitest, com o nome do teste, em vez de uma
+ * asserção enganosa sobre `'idle'`.
  */
-const passo = (): Promise<void> => new Promise((r) => setImmediate(r));
-
-async function ate(cond: () => boolean, voltas = 3000): Promise<boolean> {
-  for (let i = 0; i < voltas && !cond(); i += 1) await passo();
-  return cond();
-}
-
-/**
- * Deixa o `import()` dinâmico assentar — e **falha alto** se ele não assentar.
- *
- * Desistir em silêncio devolveria um canal em `'idle'`, e o teste seguinte quebraria com
- * "expected 'idle' to be 'waiting'" — uma mensagem que aponta para o código de produção quando o
- * defeito está na espera do teste. Perdi tempo com exatamente isso; o erro agora se identifica.
- */
-async function assentar(log: LinkStatus[]): Promise<void> {
-  const ok = await ate(() => log.at(-1) !== 'idle');
-  if (!ok) throw new Error('assentar: o canal não saiu de "idle" — a espera do teste desistiu, não o código.');
+async function assentar(canal: Channel): Promise<LinkStatus> {
+  return opened(canal);
 }
 
 /**
  * Todo canal aberto por um teste, para o `afterEach` fechar.
  *
- * Canal que sobrevive ao próprio teste continua com um `import()` em voo e cai no teste
- * seguinte — foi assim que uma sala de um teste apareceu como "a última criada" de outro. Um
- * teste que depende do lixo do anterior não mede nada.
+ * Canal que sobrevive ao próprio teste continua abrindo e aterrissa dentro do seguinte — foi
+ * assim que a sala de um teste apareceu como "a última criada" de outro. Teste que depende do
+ * lixo do anterior não mede nada.
  */
-const abertos: { close: () => void }[] = [];
+const abertos: Channel[] = [];
 
 /** Cria um canal já registrado para limpeza. */
 function novoHost(ice?: IceConfig): { roomId: string; channel: Channel } {
@@ -155,76 +139,94 @@ async function abrirHost(ice?: IceConfig) {
   const { roomId, channel } = novoHost(ice);
   const log: LinkStatus[] = [];
   channel.onStatus((s) => log.push(s));
-  await assentar(log);
-  return { roomId, channel, log, sala: salas.find((s) => s.roomId === roomId) };
+  const status = await assentar(channel);
+  const sala = salas.find((s) => s.roomId === roomId);
+  if (status !== 'waiting' || sala === undefined) {
+    // Falhar AQUI, com o motivo, em vez de devolver `sala: undefined` e deixar a asserção do
+    // teste reprovar com "expected undefined to equal [...]" — mensagem que acusa o código de
+    // produção por um problema de abertura do canal no ambiente de teste.
+    throw new Error(
+      `abrirHost: canal abriu como "${status}" (esperado "waiting"), sala ${sala === undefined ? 'AUSENTE' : 'presente'}. ` +
+        `Avisos de M6: ${JSON.stringify(avisos)}`,
+    );
+  }
+  return { roomId, channel, log, sala };
 }
 
 const MOVE: Move = { seq: 0, side: 'A', zone: 'L' };
 
-beforeAll(async () => {
-  // Tira o custo da primeira carga do módulo de dentro do primeiro teste: daqui em diante todo
-  // `import()` resolve do cache. Não é o que conserta a espera (isso é `ate`), é o que a torna
-  // barata.
-  await import('trystero');
-});
+/** O espião que cala o `console.warn`, guardado para ser restaurado sozinho. */
+let silenciarWarn: ReturnType<typeof vi.spyOn> | null = null;
+
+/** Tudo que M6 avisou no teste corrente. Guardado, e não descartado: é a causa quando algo falha. */
+const avisos: string[] = [];
 
 beforeEach(() => {
-  // **Só** `setTimeout`/`clearTimeout`. Falsificar o relógio inteiro (o padrão) leva junto o
-  // `setImmediate`, e sem ele não há como ceder ao event loop para o `import()` dinâmico
-  // carregar — o canal ficaria eternamente em `'idle'`. O que precisa ser falso aqui é o
-  // relógio de 20 s, e só ele.
+  setSignalingLoader(sinalizacaoFalsa());
+  salas.length = 0;
+  falhaAoEntrar = null;
+  avisos.length = 0;
+  // Falsificar **só** `setTimeout`/`clearTimeout`: o relógio de 20 s é o objeto do teste, e o
+  // resto do agendador não tem por que mentir.
   vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
-  estado.salas.length = 0;
-  estado.falhaAoEntrar = null;
-  vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+  silenciarWarn = vi.spyOn(console, 'warn').mockImplementation((...a: unknown[]) => {
+    avisos.push(a.map(String).join(' '));
+  });
 });
 
 afterEach(async () => {
+  // Esperar cada canal terminar de abrir ANTES de fechá-lo: `close()` não desfaz a abertura já
+  // em voo, e trabalho de um teste que aterrissa dentro do seguinte é a receita do teste que
+  // passa sozinho e reprova em conjunto.
+  await Promise.all(abertos.map((c) => opened(c)));
   for (const c of abertos) c.close();
   abertos.length = 0;
-  // Deixa o que ficou em voo aterrissar ANTES do próximo teste, e não dentro dele. Os testes de
-  // ID abrem centenas de canais; sem esta drenagem, os `import()` deles resolvem no meio do
-  // teste seguinte e comem as voltas que ELE precisava.
-  await ate(() => false, 300);
   vi.useRealTimers();
-  vi.restoreAllMocks();
+  silenciarWarn?.mockRestore();
+  silenciarWarn = null;
+  setSignalingLoader(null);
 });
 
 /* ───────────────────────────────── ID de sala ───────────────────────────────── */
 
 describe('ID de sala — opaco, aleatório, nunca sequencial (defeito 6 da v1)', () => {
+  // Estes quatro chamam `newRoomId` DIRETO, sem abrir canal. Amostrar milhares de IDs por
+  // `hostRoom` abriria milhares de canais, cada um com seu `import()` de sinalização — e foi
+  // assim que o carregador de módulos saturou e um `import()` rejeitou, derrubando um teste de
+  // transporte que nada tinha a ver com ID. Propriedade de gerador se testa no gerador.
   it('tem 26 caracteres do alfabeto Crockford, sem I, L, O nem U', () => {
-    for (let i = 0; i < 100; i += 1) {
-      const { roomId, channel } = novoHost();
-      expect(roomId).toMatch(/^[0-9ABCDEFGHJKMNPQRSTVWXYZ]{26}$/);
-      expect(roomId).not.toMatch(/[ILOU]/);
-      channel.close();
+    for (let i = 0; i < 2000; i += 1) {
+      const id = newRoomId();
+      expect(id).toMatch(/^[0-9ABCDEFGHJKMNPQRSTVWXYZ]{26}$/);
+      expect(id).not.toMatch(/[ILOU]/);
     }
   });
 
-  it('não colide em 1.000 sorteios', () => {
+  it('não colide em 20.000 sorteios', () => {
     const vistos = new Set<string>();
-    for (let i = 0; i < 1000; i += 1) {
-      const { roomId, channel } = novoHost();
-      vistos.add(roomId);
-      channel.close();
-    }
-    expect(vistos.size).toBe(1000);
+    for (let i = 0; i < 20_000; i += 1) vistos.add(newRoomId());
+    expect(vistos.size).toBe(20_000);
   });
 
   it('não é sequencial: a ordem de sorteio não é a ordem alfabética', () => {
-    // Um contador (o defeito 6 da v1) produziria IDs já ordenados. Com 500 sorteios, a chance
-    // de o acaso produzir a ordem crescente é 1/300! — indistinguível de zero.
-    const ids: string[] = [];
-    for (let i = 0; i < 300; i += 1) {
-      const { roomId, channel } = novoHost();
-      ids.push(roomId);
-      channel.close();
-    }
+    // Um contador (o defeito 6 da v1) produziria IDs já ordenados. Com 2.000 sorteios, a chance
+    // de o acaso produzir a ordem crescente é 1/2000! — indistinguível de zero.
+    const ids = Array.from({ length: 2000 }, () => newRoomId());
     expect(ids).not.toEqual([...ids].sort());
     // E nenhum prefixo comum: um contador compartilharia quase tudo menos o fim.
-    const primeiros = new Set(ids.map((s) => s.slice(0, 3)));
-    expect(primeiros.size).toBeGreaterThan(80);
+    expect(new Set(ids.map((s) => s.slice(0, 3))).size).toBeGreaterThan(1000);
+  });
+
+  it('os 32 símbolos do alfabeto aparecem — nenhum é inalcançável por viés de módulo', () => {
+    const vistos = new Set<string>();
+    for (let i = 0; i < 2000; i += 1) for (const c of newRoomId()) vistos.add(c);
+    expect(vistos.size).toBe(32);
+  });
+
+  it('`hostRoom` usa esse gerador: o ID que ele devolve tem o mesmo formato', () => {
+    const { roomId, channel } = novoHost();
+    expect(roomId).toMatch(/^[0-9ABCDEFGHJKMNPQRSTVWXYZ]{26}$/);
+    channel.close();
   });
 
   it('joinRoom recusa ID malformado na hora, em vez de esperar 20 s para falhar', () => {
@@ -327,13 +329,13 @@ describe('status — a falha é um estado nomeado, não uma exceção', () => {
   });
 
   it('sinalização fora do ar vira failed, sem exceção vazando para quem chamou', async () => {
-    estado.falhaAoEntrar = new Error('relay indisponível');
+    falhaAoEntrar = new Error('relay indisponível');
     const { roomId, channel } = novoHost();
     const log: LinkStatus[] = [];
     channel.onStatus((s) => log.push(s));
     expect(roomId).toHaveLength(26);
 
-    await assentar(log);
+    await assentar(channel);
     expect(log.at(-1)).toBe('failed');
     channel.close();
   });
@@ -466,12 +468,12 @@ describe('TURN — é o parâmetro que separa as duas medições de E-4', () => 
 
 describe('invariante — sem sinalização, cpu e local seguem jogáveis', () => {
   it('com a sinalização derrubada, uma disputa contra a CPU vai até o fim', async () => {
-    estado.falhaAoEntrar = new Error('toda a infra pública sumiu');
+    falhaAoEntrar = new Error('toda a infra pública sumiu');
 
     const { channel } = novoHost();
     const log: LinkStatus[] = [];
     channel.onStatus((s) => log.push(s));
-    await assentar(log);
+    await assentar(channel);
     expect(log.at(-1)).toBe('failed');
 
     const s = createSession({ mode: 'cpu', seed: 7, level: 'hard', teams: { A: 'BR', B: 'AR' }, localSide: 'A' });
@@ -486,11 +488,11 @@ describe('invariante — sem sinalização, cpu e local seguem jogáveis', () =>
   });
 
   it('com a sinalização derrubada, o modo local também vai até o fim', async () => {
-    estado.falhaAoEntrar = new Error('toda a infra pública sumiu');
+    falhaAoEntrar = new Error('toda a infra pública sumiu');
     const { channel } = novoHost();
     const log: LinkStatus[] = [];
     channel.onStatus((s) => log.push(s));
-    await assentar(log);
+    await assentar(channel);
     expect(log.at(-1)).toBe('failed');
 
     // Roteiro que DECIDE: no modo local as escolhas alternam cobrador/goleiro, então o padrão

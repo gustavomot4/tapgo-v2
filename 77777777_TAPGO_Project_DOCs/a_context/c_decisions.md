@@ -34,15 +34,16 @@ status: atual
 | D-21 | 2026-08-07 | ADOTADO | O repositório `gustavomot4/tapgo-v2` é **público** — é o que deixa o Pages publicar no plano Free | Repositório privado e "custo R$ 0" não coexistem (`D-05`). Página no ar com o veredito verde e `base` `/tapgo-v2/` conferidos no celular do dono: fecha E-1. Responde Q-06 |
 | D-22 | 2026-08-07 | ADOTADO · ARQUIVADO | `Team.flag` passa a `string \| null`; `null` = bandeira sem arquivo, até `A-04` | íntegra em [[decisions_archive]] |
 | D-23 | 2026-08-07 | ADOTADO · ARQUIVADO | `name` por `Intl.DisplayNames` em locale fixo `pt-BR`; código que não resolve lança | íntegra em [[decisions_archive]] |
-| D-24 | 2026-08-07 | ADOTADO | `src/net/index.ts` nasce em T-09 com **só os tipos** que `D-13` congelou para M6 — zero implementação | Sem `../net`, o portão de M5 e o de camada de M7 eram impossíveis para `LinkStatus`. T-11 segue inteira — ver [[m5_sessao_notas]] |
-| D-25 | 2026-08-07 | ADOTADO | M5 recusa na **criação**: `online`, `level` ausente em `cpu` ou presente fora dele, `roomId` fora de `online`, seleção fora de M4 | Degradar `online` calado poria dois aparelhos em partidas separadas; `level` virando `'medium'` seria dado inventado — ver [[m5_sessao_notas]] |
+| D-24 | 2026-08-07 | ADOTADO · ARQUIVADO | `src/net/index.ts` nasce em T-09 com só os tipos de M6 — implementado depois, em T-11 | íntegra em [[decisions_archive]] |
+| D-25 | 2026-08-07 | ADOTADO · ARQUIVADO | M5 recusa na **criação**: `online`, `level` fora de `cpu`, `roomId` fora de `online`, seleção fora de M4 | íntegra em [[decisions_archive]] |
 | D-26 | 2026-08-07 | ADOTADO · ARQUIVADO | No modo `cpu`, M5 chama `pick` antes de `observe` na mesma cobrança | íntegra em [[decisions_archive]] |
 | D-27 | 2026-08-07 | ADOTADO · ARQUIVADO | M7 = DOM no menu/placar/zonas; Phaser só na cobrança, por `import()` | íntegra em [[decisions_archive]] |
 | D-28 | 2026-08-07 | ADOTADO · ARQUIVADO | Áudio sintetizado por `gen-audio.mjs`, determinístico — zero sample de terceiro | íntegra em [[decisions_archive]] |
-| D-29 | 2026-08-07 | ADOTADO | STEP 0 da skill: troca de jogadas é **assíncrona**, não request/response — confirma a porta de `D-13` | Um salto, sem cadeia e sem ninguém bloqueado; circuit breaker e retry ficam sem objeto — [[m6_transporte_notas]] |
+| D-29 | 2026-08-07 | ADOTADO | STEP 0 da skill: troca de jogadas é **assíncrona**, não request/response — confirma a porta de `D-13` | Um salto, sem cadeia; circuit breaker e retry ficam sem objeto — [[m6_transporte_notas]] |
 | D-30 | 2026-08-07 | ADOTADO | `roomId` = 26 caracteres Crockford (130 bits) de `crypto.getRandomValues`, **fora** do `Rng` de M1 | M1 é determinístico por contrato, e ID previsível é o defeito 6 da v1; portão de M1 segue verde — [[m6_transporte_notas]] |
 | D-31 | 2026-08-07 | ADOTADO | `'failed'` é **terminal**; peer que sai volta a `waiting` e **rearma** os 20 s; `onStatus` entrega o status atual ao assinar | Peer atrasado ressuscitaria partida já dada como perdida; quem vence segue sendo `Q-04` — [[m6_transporte_notas]] |
 | D-32 | 2026-08-07 | ADOTADO | M6 valida a **forma** do `Move` e descarta o resto com log; ordem e legalidade seguem de M5. Fila de envio com teto 32 | Senão M6 entregaria `Move` mentiroso na única borda com dado de fora; `seq` torna reenvio seguro — [[m6_transporte_notas]] |
+| D-34 | 2026-08-07 | ADOTADO | Sinalização entra em M6 por **injeção** (`setSignalingLoader`); `opened()` expõe a promessa de abertura | Mock de módulo escapava sob carga e a Trystero real caía no teste; verde no Linux, 17 reprovas no Windows do dono — [[m6_transporte_notas]] |
 | D-33 | 2026-08-07 | ADOTADO | `src/medicao.html` como **segunda entrada** do build: instrumento das duas medições de E-4, TURN digitado em runtime | Medir em celular exige HTTPS; travessia para M9 **autorizada pelo dono nesta sessão** — [[m6_transporte_notas]] |
 
 ## Gatilhos de revisão (o número que reabre a decisão — "vai escalar" não é gatilho)

@@ -102,6 +102,17 @@ de consistência.
 | `D-10` | 2026-08-06 | ADOTADO | CPU em 3 níveis por peso do histórico de zonas da sessão: 0% / 50% / 70%, teto absoluto 70% | Os 30% uniformes garantem que o jogador sempre pode enganar a CPU; histórico em memória, nada persistido — ver [[regras_partida]]. Responde Q-02 |
 | `D-13` | 2026-08-07 | ADOTADO | **PLANO congelado**: M1..M9 com porta de entrada única, dono de estado declarado e portão objetivo; etapas E-1..E-6 | T-02 aprovado pelo dono e T-03 aprovado na passagem 2 (5/5 restrições com portão, 6/6 critérios com número ou comando) — ver [[b_artifact_consistency_report_260807_1605\|relatório 2]]. Daqui em diante, mudança de rumo é D-NN novo |
 
+## D-24 e D-25 — íntegra como estavam em `c_decisions.md`
+
+As duas decisões que T-09 tomou sobre a borda online. Arquivadas ao fim de T-11, quando `D-24`
+deixou de descrever o presente (`src/net/index.ts` não é mais só-tipos: M6 está implementado) e
+as decisões novas de M6 precisavam do espaço. O detalhe das duas vive em [[m5_sessao_notas]].
+
+| # | Data | Status | Decisão (curta) | Evidência (número-chave + link) |
+|---|---|---|---|---|
+| `D-24` | 2026-08-07 | ADOTADO | `src/net/index.ts` nasce em T-09 com **só os tipos** que `D-13` congelou para M6 — zero implementação | Sem `../net`, o portão de M5 e o de camada de M7 eram impossíveis para `LinkStatus`. T-11 segue inteira — ver [[m5_sessao_notas]] |
+| `D-25` | 2026-08-07 | ADOTADO | M5 recusa na **criação**: `online`, `level` ausente em `cpu` ou presente fora dele, `roomId` fora de `online`, seleção fora de M4 | Degradar `online` calado poria dois aparelhos em partidas separadas; `level` virando `'medium'` seria dado inventado — ver [[m5_sessao_notas]] |
+
 ## Por que os IDs estão em crase nesta página
 
 Coluna 1 sem crase é lida por `check.py` como *definição* de ID em qualquer tabela do vault

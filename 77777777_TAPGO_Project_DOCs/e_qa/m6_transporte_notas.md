@@ -175,14 +175,35 @@ Não prova, e nenhum teste de sandbox provaria: **a taxa de conexão em rede mó
 isso que existe a página de medição, e é por isso que T-11 entrega o portão de E-4 pela metade
 até o dono medir.
 
-## Armadilha de teste que custou tempo (fica registrada)
+## `D-34` — a sinalização entra por injeção, e não por mock de módulo
 
-Com `vi.useFakeTimers()` **total**, o `import()` dinâmico de M6 **nunca resolve**: o carregador
-de módulos do Vitest anda em macrotask, e falsificar o relógio inteiro leva junto o
-`setImmediate` de que ele depende. O canal fica eternamente em `'idle'` e todo teste de status
-falha com uma mensagem que aponta para o código de produção, quando o defeito está na espera do
-teste.
+Três armadilhas encadeadas custaram esta decisão. As três davam o **mesmo** sintoma — canal preso
+em `'idle'` ou em `'failed'`, e a mensagem de erro acusando o código de produção.
 
-Solução: `vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })` — falso só o relógio de
-20 s, que é o objeto do teste — e espera por **condição**, cedendo ao event loop a cada volta.
-A espera falha alto quando desiste, para o erro se identificar em vez de se disfarçar.
+1. **Relógio falso total mata o `import()` dinâmico.** `vi.useFakeTimers()` leva junto o
+   `setImmediate` de que o carregador de módulos do Vitest depende; o módulo nunca chega.
+   Corrigido com `toFake: ['setTimeout', 'clearTimeout']` — falso só o relógio de 20 s, que é o
+   objeto do teste.
+2. **Girar o event loop para esperar é pior que esperar.** A espera por laço de `setImmediate`
+   passava no Linux e **reprovava no Windows do dono**, 17 testes de uma vez: girar o loop deixa
+   o carregador sem vez (3.000 voltas em 30 ms, módulo parado). Corrigido com `opened(channel)`,
+   a promessa de abertura que M6 passou a expor — aguardar deixa o processo ocioso, que é
+   justamente a condição para o carregador andar.
+3. **`vi.mock` de módulo escapava sob carga.** Resolvidos 1 e 2, sobrou uma falha **intermitente**
+   (≈1 em cada 3 execuções da suíte completa): a Trystero **real** era carregada no lugar do
+   duplo, `RTCPeerConnection` estourava em Node, e o canal ia a `'failed'`. Era o mesmo
+   `ReferenceError` que aparecia solto desde o início.
+
+A saída não foi mais uma camada de gambiarra na espera, e sim tirar o carregador de módulos do
+caminho: `setSignalingLoader` injeta a sinalização, o duplo vira função comum, e o teste passa a
+exercitar M6 em vez do Vitest. `joinRoom` continua conferido contra a assinatura real da
+biblioteca, porque o tipo da costura sai de `typeof import('trystero')`.
+
+**Duas regras que ficam do episódio:**
+
+- **Espera de teste tem de falhar alto quando desiste.** Enquanto a minha devolvia em silêncio,
+  o erro aparecia como "expected 'idle' to be 'waiting'" e acusava o módulo errado. Hoje
+  `abrirHost` reprova com o status real e com os avisos que M6 emitiu — foi essa mensagem que
+  finalmente nomeou o `RTCPeerConnection`.
+- **Sandbox verde não é portão.** Esta suíte passou no Linux e reprovou 17 testes na máquina do
+  dono. A regra 7 do contrato do agente existe por causa exatamente disto.
