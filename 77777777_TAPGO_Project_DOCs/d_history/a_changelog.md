@@ -7,6 +7,13 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-08] — A-11: o critério de aceite sai do CONTEXT (manutenção, zero código)
+- Movido para `a_context/portao_de_aceite.md` (arquivo novo): o bloco "Critério de aceite (o portão)" inteiro, os seis critérios verbatim. CONTEXT **3.983 → 3.542**; o `check.py` avisa em 3.600 e **falha** em 4.000, e o arquivo estava a 17 caracteres da falha. Primeira vez que o `check.py` roda sem nenhum aviso.
+- **`D-37`:** a escolha do bloco não foi por tamanho. "Restrições inegociáveis" (528) e "Stack + representações" (446) também cabiam no corte; o critério de aceite ganhou porque é o maior bloco que sai **sem levar estado numérico junto** — limiar (`< 8 MB`) não é medição (`90.320 B`), e a medição fica onde sempre esteve. As "Restrições" ficaram de propósito: são o bloco "violou = inválido", e uma sessão que não as leia pode propor host pago sem saber que invalidou o projeto.
+- **Gatilho largo no Mapa de leitura**, para o portão não virar leitura opcional: "antes de fechar tarefa, declarar etapa fechada ou entregar". Os seis critérios foram conferidos um a um no destino, e o `portao_de_aceite.md` declara no cabeçalho que nenhum número medido mora nele.
+- **Registro subiu de volta para 9.045** com a linha de `D-37` — 45 acima do alvo de `A-10`, que era o portão daquela tarefa e não um limite permanente. O limite que o `check.py` cobra é 9.600, e sobram 555.
+- Aberto: nada trava. Próximo bloco movível, se o CONTEXT voltar a apertar: "Stack + representações" (−408, e `[[stack]]` já está no Mapa).
+
 ## [2026-08-08] — A-10: encolhimento das questões abertas (manutenção, zero código)
 - Movido para `e_qa/questoes_abertas_notas.md` (arquivo novo): a justificativa longa de `Q-03`, `Q-05`, `Q-07`, `Q-08`, `Q-09` e `QA-04`, na íntegra e verbatim. No registro ficou a **pergunta e o prazo**. Registro **9.347 → 8.808** caracteres; o portão de `A-10` pedia abaixo de 9.000, e o `check.py` só avisa em 9.600.
 - **Nenhuma questão saiu de "aberta"** — conferido linha a linha: `Q-03`, `Q-05`, `Q-07`..`Q-11` seguem abertas, `QA-04`..`QA-07` seguem abertos. Encolher não é responder, e responder é do dono.
