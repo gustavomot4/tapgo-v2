@@ -19,6 +19,7 @@
  * tela de jogo.
  */
 
+import { idDaTentativa } from './medicao_sala';
 import { CONNECT_TIMEOUT_MS, hostRoom, joinRoom } from './net/index';
 import type { Channel, IceConfig, LinkStatus } from './net/index';
 
@@ -48,20 +49,6 @@ const $ = <T extends HTMLElement>(id: string): T => {
   return el as T;
 };
 
-/**
- * ID da tentativa `n`, derivado da sala-base por **rotação**.
- *
- * Rotacionar um ID válido devolve um ID válido — mesmo comprimento, mesmo alfabeto —, então
- * `joinRoom` o aceita sem que esta página precise conhecer o alfabeto de M6 (constante duplicada
- * é constante que diverge). E, sendo determinístico, os dois aparelhos calculam o MESMO ID a
- * partir da mesma base, sem trocar mensagem nenhuma — o que importa, já que é justamente a troca
- * de mensagens que está sob teste.
- */
-function idDaTentativa(b: string, n: number): string {
-  const k = n % b.length;
-  return b.slice(k) + b.slice(0, k);
-}
-
 function iceAtual(): IceConfig | undefined {
   if (!$<HTMLInputElement>('usarTurn').checked) return undefined;
   const urls = $<HTMLInputElement>('turnUrls').value.trim();
@@ -78,6 +65,17 @@ const modoAtual = (): Modo => (iceAtual() === undefined ? 'semTurn' : 'comTurn')
  *
  * O veredito é o do próprio M6 — inclusive o timeout de 20 s. Reimplementar o relógio aqui
  * mediria o instrumento, não o módulo.
+ *
+ * **Os dois lados entram por `joinRoom`, e o papel não escolhe porta (`D-38`).** Antes, o
+ * anfitrião abria a sala por `hostRoom`, que sorteia sala NOVA a cada chamada: o `id` rotacionado
+ * era calculado e jogado fora, os dois aparelhos ficavam em salas diferentes e a medição dava 0%
+ * (`QA-08`). Como `hostRoom` e `joinRoom` desembocam no mesmo `createChannel`, e a rotação
+ * devolve um ID que passa em `ROOM_ID_RE`, entrar pelos dois lados custa nada e não pede um byte
+ * de M6 — `D-39` (assinatura nova em `hostRoom`) e `D-40` (exportar `createChannel`) foram
+ * rejeitadas justamente por cobrarem a porta congelada de `D-13` pelo mesmo resultado.
+ *
+ * O `papel` continua existindo: ele decide quem SORTEIA a base e o que a tela mostra. Só não
+ * decide mais por qual função o canal abre.
  */
 function tentativa(id: string, ice: IceConfig | undefined): Promise<{ ok: boolean; ms: number }> {
   return new Promise((resolve) => {
@@ -94,7 +92,7 @@ function tentativa(id: string, ice: IceConfig | undefined): Promise<{ ok: boolea
     };
 
     try {
-      canal = papel === 'host' ? hostRoom(ice).channel : joinRoom(id, ice);
+      canal = joinRoom(id, ice);
     } catch (e) {
       // ID malformado ou contexto inseguro: é falha de configuração, não de rede. Some da
       // medição como falha, mas com o motivo na tela — número sujo é pior que número ausente.
