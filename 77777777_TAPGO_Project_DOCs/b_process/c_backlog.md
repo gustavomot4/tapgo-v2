@@ -14,13 +14,13 @@ status: atual
 - [ ] A-04 — responder Q-03: seleções, formato do chaveamento, nome do torneio e origem das bandeiras · **Portão:** linha Q-03 do DECISIONS sai de "aberta"
 - [ ] A-05 — responder Q-04: o que acontece quando o peer some no meio da disputa · **Portão:** linha Q-04 sai de "aberta"; sem isso **T-13** não começa (T-11 não depende dela — M6 não sabe o que é gol)
 - [ ] A-06 — responder Q-05: o torneio roda também no modo online? · **Portão:** linha Q-05 sai de "aberta"; sem isso o desenho de M8 é suposição
+- [ ] A-08 — **medir a taxa de conexão** em `/tapgo-v2/medicao.html`, dois aparelhos, **rede de operadora** (Wi-Fi desligado nos dois) · **Portão:** as DUAS taxas registradas — sem TURN e na configuração que vai ao ar —, cada uma com o nº de tentativas; `Q-10` sai de "aberta" e E-4 fecha ou não pelo corte de 70%. **Sem este número, T-11 não fecha E-4** — o sandbox do agente não o produz [Fonte: a_context/b_plan.md → M6]
 - [x] A-07 — publicar: `Q-06` respondida (repositório público, `D-21`), Source = "GitHub Actions" · **Portão:** `https://gustavomot4.github.io/tapgo-v2/` abre com o veredito verde "asset carregado — sem 404", `base` `/tapgo-v2/` e o asset `base-probe-BWPWGS0k.svg` — o mesmo hash do build local. Conferido no celular do dono em 2026-08-07 ✔ **E-1 fechada**
 
 ## A fazer
 
 > O [[b_plan|PLANO]] está **congelado** (`D-13`). As tarefas abaixo saem dele e seguem a ordem das etapas E-1..E-6. O portão de cada uma é o portão do módulo, e não se repete aqui. Mudança de rumo é `D-NN` novo — não replanejamento.
 
-- [ ] T-11 — transporte P2P: canal, ID de sala, timeout e decisão de TURN · **Módulo:** M6 · **Etapa:** E-4, depende só de E-3 fechada · **Skill:** microservice-sync
 - [ ] T-13 — modo `online` da sessão, sobre o canal de T-11 · **Módulo:** M5 · **Etapa:** E-4, bloqueada por A-05 · **Skill:** backend-bff
 - [ ] T-12 — torneio e chaveamento · **Módulo:** M8 · **Etapa:** E-5, bloqueada por A-04 e A-06 · **Skill:** backend-domain
 - [ ] T-14 — telas do torneio: chaveamento, próxima disputa e campeão · **Módulo:** M7 · **Etapa:** E-5, bloqueada por A-04 e A-06 · **Skill:** frontend-uiux
@@ -31,7 +31,10 @@ _(vazio)_
 ## Feito (mover para cá; detalhe no [[a_changelog|CHANGELOG]])
 - [x] T-00 — Fase 0: CONTEXT, temas de domínio e candidatas a D-NN
 - [x] T-01 — Fase 1a: D-01 e D-02 congelados com gatilho de revisão; Q-01→D-09 e Q-02→D-10
-- [x] T-10 — M7: telas jogáveis por toque em 360x640 · **Portão:** camada e licença verdes por teste, suíte 178/178, bundle inicial 80.604 B. **Falta a passada no celular real do dono** (toque e fps) para fechar E-3
+- [x] T-11 — transporte P2P: canal, ID de sala, timeout e instrumento da decisão de TURN · **Módulo:** M6 · **Etapa:** E-4 · **Portão:** 27 testes (205/205 na suíte, 2x idêntico) — ID de 130 bits opaco e não sequencial, `joinRoom` recusando ID malformado na hora, timeout disparando **no** valor e não antes, relógio rearmado quando o peer sai, `failed` terminal, payload sem forma de `Move` morrendo em M6, fila com ordem e teto, TURN chegando e não chegando à sinalização, e **disputa `cpu`/`local` completa com a sinalização derrubada** · `D-29`..`D-33`, `QA-06`, `Q-10`
+  · **o portão de E-4 fica aberto de propósito:** as duas medições em rede móvel são `A-08`, do dono — o sandbox não as produz [Fonte: a_context/b_plan.md → M6]. A decisão de TURN é `Q-10`, e o código já aceita as duas saídas por `IceConfig`
+  · **T-13 não foi tocada:** M6 não sabe o que é gol, e o modo `online` de M5 continua bloqueado por `A-05`
+- [x] T-10 — M7: telas jogáveis por toque em 360x640 · **Portão:** camada e licença verdes por teste, suíte 178/178, bundle 80.604 B · **passada no celular real do dono conferida em 2026-08-07: toque e fps OK — E-3 fechada**
 - [x] T-02 — Fase 1b: PLANO com M1..M9 e etapas E-1..E-6 · **Portão:** aprovado pelo dono em 2026-08-07; congelado em `D-13`
 - [x] T-03 — Fase 1c: consistência entre os quatro artefatos · **Portão:** as 4 linhas passam na passagem 2
   · passagem 1 (15:43) **reprovou** — 19 achados: [[a_artifact_consistency_report_260807_1543|relatório 1]]

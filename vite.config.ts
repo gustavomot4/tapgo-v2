@@ -4,6 +4,8 @@
  *
  * Este arquivo possui `base`, `root` e `outDir`. Nenhum estado de runtime mora aqui.
  */
+import { resolve } from 'node:path';
+
 import { defineConfig } from 'vite';
 
 /**
@@ -25,6 +27,23 @@ export default defineConfig({
   root: 'src',
 
   build: {
+    /**
+     * Duas páginas, e a segunda existe por causa de `D-33`: o portão de E-4 exige medir a taxa
+     * de conexão em rede móvel real, e medição em celular precisa de uma página em HTTPS —
+     * que é o que o Pages dá. `medicao.html` é instrumento, não jogo: não é alcançável a partir
+     * do `index.html` e leva `noindex`.
+     *
+     * **Consequência declarada (`QA-06`):** `bundle-size.mjs` soma TODA entrada com `isEntry`
+     * no "bundle inicial", então o número do CONTEXT passa a incluir a página de medição. O
+     * defeito é da definição do medidor, é de M9, e não foi consertado aqui de carona (regra 4).
+     */
+    rollupOptions: {
+      input: {
+        index: resolve(__dirname, 'src/index.html'),
+        medicao: resolve(__dirname, 'src/medicao.html'),
+      },
+    },
+
     // Relativo a `root` — portanto `dist/` na raiz do repositório. Já coberto pelo `.gitignore`.
     outDir: '../dist',
 

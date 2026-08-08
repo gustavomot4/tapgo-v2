@@ -142,6 +142,16 @@ status: atual
 - Lições da sessão registradas em b_process/d_agent_learnings.md.
 - QA-14 registrado no kit (repo project-pipeline-kit): projeto novo reprova o portão antes do git init.
 
+## [v2.0.0-dev] — 2026-08-07 — T-11 (M6, transporte P2P)
+- **E-3 fechada:** passada no celular real do dono conferida (toque em 360x640 e fps).
+- Adicionado: M6 implementado em `src/net/index.ts` — `hostRoom`/`joinRoom`, ID de sala de 130 bits por `crypto.getRandomValues`, timeout de 20 s com relógio rearmado na saída do peer, validação de forma do `Move`, fila de envio com teto, TURN por `IceConfig`. Trystero 0.25.3 entra por `import()` dinâmico, fora do bundle inicial.
+- Adicionado: `src/medicao.html` + `src/medicao.ts` — instrumento das duas medições de E-4, publicável no Pages; segunda entrada do build.
+- Testes: 27 novos em `src/tests/net.test.ts`; suíte 205/205, verde 2x.
+- Decisões: D-29 (STEP 0: assíncrono) · D-30 (ID fora do `Rng` de M1) · D-31 (máquina de estados, `failed` terminal) · D-32 (M6 confere forma, M5 confere regra) · D-33 (página de medição).
+- Aberto: Q-10 (TURN entra ou fica fora de escopo — depende das medições) · QA-06 (`bundle-size.mjs` soma toda entrada no "bundle inicial").
+- Registro: `c_decisions.md` arquivado duas vezes nesta sessão (D-09, D-10, D-13, D-14, D-15, D-19, D-20, D-22, D-23, D-26, D-27, D-28) para caber sob o teto de 12.000.
+- **Não entregue de propósito:** o portão de E-4 continua aberto — as duas taxas em rede móvel são `A-08`, do dono.
+
 ## [v2.0.0-dev] — 2026-08-06
 - Fase 0 concluída: CONTEXT preenchido a partir da leitura integral da v1 (gustavomot4/TAP-GO) e de pesquisa de licenciamento e de plataformas.
 - Decisões: D-01 (SPA estática sem backend) · D-02 (TypeScript + Vite + Phaser 3) · D-03 (país + bandeira, sem escudo) · D-04 (online P2P sem servidor) · D-05 (GitHub Pages + itch.io)

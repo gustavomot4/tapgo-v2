@@ -18,6 +18,7 @@
     "vitest": "^3.2.7"
   },
   "dependencies": {
-    "phaser": "^3.90.0"
+    "phaser": "^3.90.0",
+    "trystero": "^0.25.3"
   }
 }
