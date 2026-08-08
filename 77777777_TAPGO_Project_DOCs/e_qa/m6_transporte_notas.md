@@ -257,3 +257,36 @@ de M6 com a skill `backend-bff`. As saídas aparentes, para a sessão que a pega
 
 Nenhuma delas é escolha desta sessão. As três precisam do portão escrito antes, e a terceira mexe
 no significado do número.
+
+### `QA-08` confirmado em campo (2026-08-08, dono)
+
+O diagnóstico acima foi por leitura de código. O dono rodou a página assim mesmo, e o resultado
+fecha com ele — **e com um controle que a leitura de código não teria produzido**:
+
+| Rede | Papel do aparelho colado | Resultado |
+|---|---|---|
+| Wi-Fi, os dois no mesmo | host | 0/2 no resumo, 3 tentativas na tabela · 0% |
+| Dados móveis, Claro 5G nos dois | host | 0/1 · 0% |
+
+**O run de Wi-Fi é o controle, e é ele que fecha o caso.** Dois aparelhos na mesma rede local
+conectam por P2P praticamente sempre — é o cenário mais fácil que existe, e é justamente por isso
+que o instrumento avisa que Wi-Fi "esconde o defeito". Falhar **também** ali elimina a rede como
+explicação: sobra o que a leitura de código já dizia, que as duas pontas abrem salas diferentes.
+
+**Nenhum destes números é medição de E-4.** Não entram no `Q-10`, não alimentam o gatilho de
+revisão de `D-01` e não aparecem no CONTEXT. Enquanto `T-15` não fechar, a página não distingue
+"P2P falhou" de "as duas pontas nunca se encontraram" — e os dois casos saem como `'failed'` depois
+dos mesmos 20 s.
+
+Dois detalhes para a sessão de `T-15` aproveitar:
+
+- **1 a 3 tentativas não decidiriam nada nem com o instrumento bom.** O piso combinado é 30, e
+  entre 60% e 80% nem 30 basta. Vale checar se a página deveria dizer isso na tela, em vez de
+  depender de o dono lembrar.
+- **O resumo colado divergiu da tabela** (`0/2` no texto, `3` na tabela): o `resumo()` foi copiado
+  entre o fim de uma tentativa e o fim da seguinte. Inofensivo agora, mas é um número saindo do
+  aparelho com contagem diferente da que a tela mostra — e o destino dele é o DECISIONS.
+
+**Rede já escolhida para o re-run, para não se perder:** Claro nos dois aparelhos, 5G nos dois.
+Mesma operadora, então o recorte medido será CGNAT da mesma rede — e, pela regra 8 do auditor,
+não transfere para operadoras diferentes sem medir de novo.
