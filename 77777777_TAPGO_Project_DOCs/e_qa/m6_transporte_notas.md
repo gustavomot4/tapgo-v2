@@ -290,3 +290,137 @@ Dois detalhes para a sessão de `T-15` aproveitar:
 **Rede já escolhida para o re-run, para não se perder:** Claro nos dois aparelhos, 5G nos dois.
 Mesma operadora, então o recorte medido será CGNAT da mesma rede — e, pela regra 8 do auditor,
 não transfere para operadoras diferentes sem medir de novo.
+
+## `T-15` — auditoria das três saídas (2026-08-08, `evolution-auditor`)
+
+Sessão de evolução convocada para escolher entre as três saídas acima. **Nenhuma das três foi
+adotada.** O STEP 0 encontrou uma quarta que as três não consideraram, e que custa menos que
+qualquer uma delas — `D-38`. As três viram `D-39`, `D-40` e `D-41`, REJEITADAS.
+
+### Lista-morta percorrida
+
+Os únicos `REJEITADO` do registro são `D-06` (backend Node/Express/MySQL da v1), `D-07` (clubes
+reais e escudo de federação) e `D-08` (Godot 4 como engine). Nenhum toca porta congelada nem o
+instrumento de medição: **nada nesta sessão é re-proposta de ideia morta.**
+
+Aberto e adjacente — não rejeitado, e por isso citado: `Q-09` (`pending()` na `Session`) e `Q-11`
+(`roomId` saindo de M5) são **dois pedidos de mudança em porta congelada já na fila do dono**, e
+nenhum dos dois foi decidido. Isto pesa contra a saída (a), e é dito abaixo.
+
+### STEP 0 — fatos observados no sistema real, não citados de memória
+
+1. **`hostRoom` e `joinRoom` diferem em duas coisas, e só:** quem sorteia o ID, e a validação de
+   forma. As duas terminam na **mesma** chamada `createChannel(roomId, ice)`
+   (`src/net/index.ts:491-511`). O caminho de conexão é idêntico — e o comentário de
+   `createChannel` já dizia isso desde T-11: *"`host` só muda quem sorteou o ID; o transporte é
+   simétrico"*. A assimetria que o instrumento tentava respeitar **não existe no módulo**.
+2. **Rotação de ID válido é sempre aceita por `joinRoom`:** 0 recusas contra `ROOM_ID_RE` em
+   1.500.000 IDs rotacionados (50.000 bases × 30 tentativas). E 0 bases com rotações repetidas
+   entre si em 200.000 sorteios — base periódica não é risco tratável nesta escala.
+3. ⇒ **Existe uma quarta saída:** o anfitrião chama `joinRoom(idDaTentativa(base, n), ice)`,
+   exatamente como o convidado. Uma linha em `medicao.ts`, porta de `D-13` intacta.
+4. **A saída 4 não deixa nada de M6 sem medir.** `newRoomId` continua exercitado — é ele que
+   sorteia a base no botão "Sortear sala" — e `hostRoom` é `newRoomId()` + `createChannel`. A
+   medição segue cobrindo 100% do caminho de conexão; o que ela deixa de exercitar é o açúcar.
+5. **A rotação só produz 26 IDs distintos** (`k = n % b.length`, e `b.length` = 26): a tentativa
+   27 reentra na sala da tentativa 1. Com o piso combinado de 30, **o desenho atual já perde
+   independência nas 4 últimas, em silêncio.** Isso não salva a saída (c) — ver abaixo —, mas
+   impede de vendê-la como "a única que perde independência".
+6. **`medicao.ts` é intestável hoje:** não exporta nada e chama `montar()` no topo do módulo
+   (`linha 261`), e nenhum teste da suíte o cita. O portão de `T-15` exige um teste provando que
+   os dois lados calculam o mesmo ID — logo **qualquer** das quatro saídas paga primeiro o custo
+   de tornar a derivação do ID importável. Nenhuma das três estimativas da nota original incluía
+   esse custo; declará-lo é a regra 7 do auditor.
+
+### Tabela priorizada — valor × P(passar) ÷ custo
+
+| # | Saída | Valor | P(passar) | Custo declarado | Veredito |
+|---|---|---|---|---|---|
+| **4** | **`joinRoom` nos dois lados** | destrava `A-08`, que destrava E-4 | **0,85** | 1 linha + tornar o ID testável (custo comum) | **`D-38` ADOTADA** |
+| (a) | `hostRoom(ice?, roomId?)` | idem | 0,15 | + muda porta congelada, + precedente para `Q-09`/`Q-11` | `D-39` REJEITADA |
+| (b) | exportar `createChannel` | idem | 0,10 | + superfície de M6 sem a validação de `D-30` | `D-40` REJEITADA |
+| (c) | uma sala por medição inteira | idem | 0,05 | + independência perdida na tentativa 2, com viés PARA CIMA | `D-41` REJEITADA |
+
+P(passar) da saída 4 acima da taxa-base de 20–30% **por evidência apresentada, não por gosto**:
+o mecanismo foi lido no código (fato 1), a aceitação do ID foi conferida em 1,5 M de casos
+(fato 2) e a cobertura preservada foi verificada na definição de `hostRoom` (fato 4). As outras
+três não sobem da taxa-base porque compram o mesmo resultado por um preço maior — e preço maior
+pelo mesmo resultado é a definição de reprovado, não de segunda opção.
+
+### Portões, escritos ANTES de qualquer experimento
+
+**`D-38` (a mudança).** Um teste, em `src/tests/`, prova que anfitrião e convidado derivam o
+**mesmo** ID para a tentativa `n` a partir da mesma base, e que esse ID é aceito por `joinRoom`
+(hoje `n` = 0..29). Não pode regredir: a suíte inteira segue verde; `grep -c 'hostRoom('
+src/medicao.ts` sai de **2 para 1** — sobra a do botão "Sortear sala", nenhuma dentro de
+`tentativa()`; `src/net/index.ts` não muda **nenhum byte**. Uma mudança por vez: o guarda de
+`QA-09` é commit separado, senão nenhum dos dois fica atribuível.
+
+**`QA-09` (o guarda, aprovado pelo dono para dentro de `T-15`).** A página mostra, nos dois
+aparelhos, o índice da próxima tentativa e os 6 primeiros caracteres do ID que ela vai usar. O
+portão é operacional e não automatizável: **o dono confere que os dois aparelhos exibem o mesmo
+par antes de tocar.** Limiar: se divergirem, a tentativa não conta e os contadores são zerados
+nos dois — não se conserta contador dessincronizado por dedução.
+
+**Portão de `A-08`, que nenhuma saída dispensa.** O piso é **30 tentativas por contador**, e
+entre 60% e 80% nem 30 basta para separar do corte de 70% — o intervalo de 30 tentativas a 70%
+é largo demais para um corte em 70%. Se a taxa cair nessa faixa, o número **não decide `Q-10`**,
+e dizer isso é obrigação: evidência insuficiente reprova por falta de dado, não vira
+"provavelmente passa".
+
+### Por que cada uma das três morreu
+
+**(a) `hostRoom(ice?, roomId?)` — morreu no preço de governança.** Compra exatamente o que a
+saída 4 obtém de graça, e paga com uma alteração na porta congelada de `D-13` num momento em que
+`Q-09` e `Q-11` estão os dois parados esperando justamente esse precedente. Aprovar (a) responde
+por acidente duas questões que são do dono, numa sessão que não é sobre elas.
+
+**(b) exportar `createChannel` — morreu na superfície.** `createChannel` não valida o `roomId`;
+quem valida é `joinRoom`. Exportá-lo dá a qualquer chamador futuro um caminho para abrir sala
+sem passar pela checagem que o portão do defeito 6 (`D-30`) existe para garantir. Alargar a porta
+de um módulo para atender **um** instrumento é o pior negócio da lista.
+
+**(c) uma sala por medição inteira — morreu no viés, não só na independência.** O portão do dono
+dizia que ela só passaria se a perda de independência fosse aceitável e declarada. Ela não é, e
+por um motivo pior do que "tentativas correlacionadas": cada tentativa **reentra na sala que a
+anterior acabou de largar**, e `leave()` é assíncrono (`soltarSala`, `src/net/index.ts:317-327`).
+Peer que ainda não saiu do ponto de vista da sinalização pode disparar `onPeerJoin` na tentativa
+seguinte e virar `'connected'` **sem conexão nova** — sucesso contado sem que nada tenha sido
+medido. O viés é **para cima**, e para cima é a direção que faz E-4 fechar indevidamente e o TURN
+sair de escopo com um número que não existe. É o espelho exato do `QA-08`, que enviesava para
+baixo. *(Mecanismo raciocinado a partir do código, não medido — e é por isso que ele reprova a
+saída em vez de virar tarefa de investigação: não se compra risco de viés para economizar uma
+linha.)*
+
+### `QA-09` — o índice da rotação é contador por aparelho, e a tela não o mostra
+
+Achado nesta sessão, e **não coberto por nenhuma das quatro saídas**. O `id` da tentativa sai de
+`idDaTentativa(base, c.tentativas)`, e `c` é `contadores[modo]` — contador **por aparelho e por
+modo** (`src/medicao.ts:118-120`). Host em `n=2` e convidado em `n=1` calculam salas diferentes:
+20 s de timeout, contados como falha de P2P.
+
+Dessincroniza de três maneiras, todas plausíveis com dois celulares na mão:
+
+- **um toque a mais** em qualquer dos dois aparelhos;
+- **erro de configuração**, que resolve `ok:false` e mesmo assim incrementa o contador
+  (`src/medicao.ts:99-103` + `125`) — ver também `QA-10`;
+- **checkbox de TURN diferente** entre os aparelhos: aí não é só o índice, é outro contador.
+
+O que torna isto grave é o modo de falha, idêntico ao do `QA-08`: **a tela não mostra índice nem
+ID**, então a dessincronia sai como `'failed'` depois dos mesmos 20 s e é indistinguível de P2P
+que não conectou. O dono já viu o sintoma da família — o resumo colado divergindo da tabela.
+Aprovado para dentro de `T-15` como commit separado.
+
+### `QA-10` — erro de configuração entra no denominador como falha de rede
+
+`tentativa()` captura a exceção de `joinRoom` (ID malformado) ou de `newRoomId` (contexto não
+seguro) e devolve `{ ok: false, ms: 0 }` (`src/medicao.ts:98-104`); `rodarUma()` então soma **uma
+tentativa e uma falha** (`125-131`). O comentário no código assume isso de propósito, mas a
+consequência não estava declarada: **erro do operador vira falha de P2P na taxa que decide a
+revisão de `D-01`**, e o viés é para baixo — a mesma direção do `QA-08`.
+
+Basta o `?m=` chegar truncado no outro aparelho (link colado à mão, que é o procedimento) para
+que **todas** as tentativas do convidado somem como falha de rede sem uma linha de rede ter sido
+exercitada. Não consertado aqui (regra 4): é `medicao.ts`, mas é defeito distinto do `QA-08`, e a
+correção — não contar tentativa quando o canal nunca chegou a abrir — muda o denominador, que é
+um número de portão.

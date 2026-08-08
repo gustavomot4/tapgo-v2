@@ -30,9 +30,9 @@ Partida de ~1 minuto: contra a CPU, contra alguém no mesmo aparelho, ou por lin
 - **Pronto:** M1 (T-04) · M9 esqueleto (T-05) · M2 (T-06) · M3 (T-07) · M4 (T-08) · M5 (T-09 + **`online` T-13**) · M7 (T-10) · M6 (T-11) — **E-1, E-2 e E-3 fechadas**, suíte **220/220** verde em 5 rodadas; PLANO em D-13
 - **Bundle:** **90.320 B** (1,13% de 8 MB) lido de `dist/`, **+1.432 B** em T-13 (M6 entrou no inicial via M5); Phaser e Trystero seguem fora, por `import()` (D-27). Soma a página de medição — `QA-06`
 - **Em andamento (máx 1):** nada
-- **Próximo:** **E-4 só fecha com as DUAS medições do dono** (A-08) — dois aparelhos, rede de operadora, em `/tapgo-v2/medicao.html`: sem TURN e na que vai ao ar. Responde `Q-10`; a tela do online espera `Q-11`
-- **Bloqueado/pendente:** A-04 trava E-5 e a lista real de M4 (hoje fixação, `flag: null` — D-22) · A-06 trava M8 · **QA-08 trava A-08, que trava E-4** · Q-11 trava a tela do online · **registro a 8.808/12.000 (A-10), 792 do aviso**
-- **Questões abertas:** Q-03, Q-05, Q-07..**Q-11** · Q-04 respondida → D-35 · **QA:** QA-01..QA-03 fechados · QA-04..QA-08 abertos
+- **Próximo:** **T-15** — `D-38` conserta QA-08 (os dois lados por `joinRoom`, porta intacta) e absorve o guarda de QA-09. Destrava **A-08**, as DUAS medições do dono que fecham E-4 e respondem `Q-10`
+- **Bloqueado/pendente:** A-04 trava E-5 e a lista real de M4 (hoje fixação, `flag: null` — D-22) · A-06 trava M8 · **T-15 trava A-08, que trava E-4** · Q-11 trava a tela do online · **registro a 11.038/12.000, 962 da FALHA (A-12)**
+- **Questões abertas:** Q-03, Q-05, Q-07..**Q-11** · Q-04 respondida → D-35 · **QA:** QA-01..QA-03 fechados · QA-04..QA-10 abertos
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)
 - [[portao_de_aceite]] — **antes de fechar tarefa, declarar etapa fechada ou entregar**
