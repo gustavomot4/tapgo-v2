@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
-import { idDaTentativa } from '../medicao_sala';
+import { PREFIXO_VISIVEL, idDaTentativa, rotuloDaTentativa } from '../medicao_sala';
 import { newRoomId } from '../net/index';
 
 const MEDICAO_TS = fileURLToPath(new URL('../medicao.ts', import.meta.url));
@@ -134,7 +134,86 @@ describe('D-38 · portão de origem em src/medicao.ts', () => {
   it('a derivação vem do módulo puro, não de uma cópia local', () => {
     const src = fonte();
 
-    expect(src).toContain("import { idDaTentativa } from './medicao_sala'");
+    expect(src).toContain("from './medicao_sala'");
     expect(src).not.toMatch(/^function idDaTentativa/m);
+  });
+});
+
+/**
+ * `QA-09` — o guarda que torna o desencontro **visível**, já que ele não é evitável.
+ *
+ * O índice da rotação é contador local de cada aparelho. Nada no protocolo os sincroniza, e um
+ * toque a mais de um dos lados produz exatamente o sintoma de um NAT simétrico: 20 s e `'failed'`.
+ * O conserto de verdade mudaria o denominador da medição, que é `D-NN` do dono; o que cabe em
+ * `T-15` é fazer os dois aparelhos mostrarem a mesma linha para o dono comparar.
+ */
+describe('QA-09 · rótulo de sincronia', () => {
+  it('os dois aparelhos escrevem o mesmo rótulo para o mesmo n', () => {
+    const base = newRoomId();
+
+    for (let n = 0; n < N_MAX; n += 1) {
+      expect(rotuloDaTentativa(base, n)).toBe(rotuloDaTentativa(base, n));
+    }
+  });
+
+  it('o rótulo traz o índice e o prefixo do ID daquela tentativa', () => {
+    const base = newRoomId();
+
+    for (let n = 0; n < N_MAX; n += 1) {
+      const esperado = idDaTentativa(base, n).slice(0, PREFIXO_VISIVEL);
+
+      expect(rotuloDaTentativa(base, n)).toBe(`#${n} · ${esperado}`);
+    }
+  });
+
+  it('índices diferentes dão rótulos diferentes — é o que faz o desencontro aparecer', () => {
+    // Precisa valer SEMPRE, e é por isso que o índice está no rótulo: só o prefixo não serve.
+    // Seis caracteres de duas rotações da mesma base podem coincidir, e nesse dia duas telas
+    // dessincronizadas leriam igual — o guarda mentiria exatamente quando fosse necessário.
+    const base = newRoomId();
+    const vistos = new Set<string>();
+
+    for (let n = 0; n < N_MAX; n += 1) vistos.add(rotuloDaTentativa(base, n));
+
+    expect(vistos.size).toBe(N_MAX);
+  });
+
+  it('o rótulo nunca expõe mais que 6 caracteres do ID', () => {
+    // O ID inteiro é a credencial de entrada na sala, e print de tela viaja. Mesmo corte do `tag`
+    // de M6, e o teste existe para que "mostrar o ID para depurar" não cresça sozinho depois.
+    expect(PREFIXO_VISIVEL).toBe(6);
+
+    for (let i = 0; i < 200; i += 1) {
+      const base = newRoomId();
+      for (let n = 0; n < N_MAX; n += 1) {
+        const id = idDaTentativa(base, n);
+        const rotulo = rotuloDaTentativa(base, n);
+
+        expect(rotulo).not.toContain(id);
+        expect(rotulo).toContain(id.slice(0, 6));
+        expect(rotulo).not.toContain(id.slice(0, 7));
+      }
+    }
+  });
+
+  it('a tela de medição pinta o rótulo nos dois papéis', () => {
+    const src = fonte();
+
+    // O elemento existe no HTML montado...
+    expect(src).toContain('id="sinc"');
+    // ...e é `pintar()` quem o escreve, que roda nos dois papéis e a cada troca de modo.
+    expect(src).toMatch(/\$\('sinc'\)\.textContent/);
+    expect(src).toContain('rotuloDaTentativa(base,');
+  });
+
+  it('o rótulo é escrito fora do bloco que separa anfitrião de convidado', () => {
+    // `montar()` tem um `if (papel === 'guest') … else …` que pinta caixas diferentes. Se o
+    // rótulo morasse lá dentro, um dos aparelhos ficaria sem ele — e um guarda que só aparece de
+    // um lado não é comparação, é decoração.
+    const src = fonte();
+    const corpoPintar = src.slice(src.indexOf('function pintar('), src.indexOf('function montar('));
+
+    expect(corpoPintar).toContain("$('sinc').textContent");
+    expect(corpoPintar).not.toContain("papel === 'guest'");
   });
 });

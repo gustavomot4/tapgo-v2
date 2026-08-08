@@ -34,3 +34,32 @@ export function idDaTentativa(b: string, n: number): string {
   const k = n % b.length;
   return b.slice(k) + b.slice(0, k);
 }
+
+/**
+ * Quantos caracteres do ID a tela pode mostrar.
+ *
+ * Seis, o mesmo corte do `tag` de M6 e pelo mesmo motivo: o ID inteiro **é a credencial de entrada
+ * na sala**, e print de tela viaja. Seis bastam para dois humanos compararem duas telas; não
+ * bastam para um terceiro entrar na medição.
+ */
+export const PREFIXO_VISIVEL = 6;
+
+/**
+ * A linha que os dois aparelhos comparam antes de tocar em "Tentativa" — o guarda de `QA-09`.
+ *
+ * **O defeito que ela torna visível:** o índice da rotação é um contador LOCAL de cada aparelho
+ * (`contadores[modo].tentativas`). Um toque a mais de um dos lados desencontra as salas e **não
+ * ressincroniza sozinho** — e o sintoma são 20 s de espera terminando em `'failed'`, idêntico a
+ * um NAT simétrico. Sem esta linha, erro de operador entra na planilha como falha de rede, que é
+ * a mesma direção de viés de `QA-08`: número falso e crível.
+ *
+ * **O índice vai junto do prefixo de propósito.** Só o prefixo não serve: seis caracteres de duas
+ * rotações da mesma base podem coincidir, e aí duas telas dessincronizadas leriam igual. O índice
+ * é o que nunca colide.
+ *
+ * Isto **mostra** o desencontro; não o conserta. Ressincronizar sozinho mudaria o denominador da
+ * medição, e denominador de portão é `D-NN` do dono.
+ */
+export function rotuloDaTentativa(b: string, n: number): string {
+  return `#${n} · ${idDaTentativa(b, n).slice(0, PREFIXO_VISIVEL)}`;
+}

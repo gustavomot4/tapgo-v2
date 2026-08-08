@@ -19,7 +19,7 @@
  * tela de jogo.
  */
 
-import { idDaTentativa } from './medicao_sala';
+import { idDaTentativa, rotuloDaTentativa } from './medicao_sala';
 import { CONNECT_TIMEOUT_MS, hostRoom, joinRoom } from './net/index';
 import type { Channel, IceConfig, LinkStatus } from './net/index';
 
@@ -170,6 +170,17 @@ function pintar(): void {
     linha('sem TURN', contadores.semTurn) +
     linha('vai ao ar', contadores.comTurn);
 
+  // Guarda de `QA-09`: índice e prefixo do ID da PRÓXIMA tentativa, para os dois aparelhos serem
+  // comparados a olho antes do toque. O contador é por modo, então a linha também diz o modo —
+  // dois aparelhos podem bater no índice e estar em contadores diferentes, e aí a sala coincide
+  // mas a configuração medida não.
+  const cSinc = contadores[modoAtual()];
+  $('sinc').textContent =
+    base === ''
+      ? 'sala ainda não sorteada'
+      : `${rodando ? 'agora' : 'próxima'}: ${rotuloDaTentativa(base, cSinc.tentativas)} · ` +
+        `${modoAtual() === 'semTurn' ? 'sem TURN' : 'com TURN'}`;
+
   $<HTMLButtonElement>('tentar').disabled = rodando || base === '';
   $<HTMLTextAreaElement>('resumo').value = resumo();
 }
@@ -205,6 +216,12 @@ function montar(): void {
     <fieldset>
       <legend>3 · medir</legend>
       <div id="estado">pronto</div>
+      <div id="sinc" class="mono"></div>
+      <p class="aviso">
+        Os DOIS aparelhos têm de mostrar a mesma linha acima antes do toque. Diferente = salas
+        diferentes: os 20 s vão expirar e entrar como falha de rede que nunca houve. Se
+        desencontrar, zere os contadores nos dois.
+      </p>
       <button id="tentar">Tentativa</button>
       <p class="aviso">
         Aperte nos dois aparelhos ao mesmo tempo. Uma tentativa por vez, dos dois lados.
