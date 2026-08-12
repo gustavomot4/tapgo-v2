@@ -43,6 +43,13 @@ rede móvel real e o fallback exigir TURN próprio**; ou quando o dono aprovar r
 servidor (ranking global antifraude, conta). O critério estatístico da medição é `D-42`, tabelado em
 [[m6_transporte_notas]].
 
+**Medido em 2026-08-12 (`A-08`, `D-47`): 17/17 no contador `IPv4/com NAT`, limite inferior 95% de 83,8%.**
+O gatilho **não** disparou — a forma "SPA estática, sem backend" está confirmada por medição, não por otimismo.
+Claro nos dois aparelhos, APN forçado a IPv4; todas as 17 por `srflx↔srflx` com IPs públicos diferentes.
+**A lacuna que sobrou** não é mais "15-30% de CGNAT" genérico: é (1) o caso entre operadoras DIFERENTES,
+não exercitado, e (2) os até ~16% que o limite inferior admite — esses recebem o timeout explícito e a
+mensagem honesta da tabela abaixo, e **não** têm relay, porque `D-47` deixou TURN fora de escopo.
+
 **Qual número dispara o gatilho (`D-46`):** o do contador **`IPv4/com NAT`**, não o total nem o de IPv6.
 Uma taxa alta medida com IPv6 nos dois aparelhos não desarma este gatilho — ela mede o caminho em que a
 NAT não existe, que é justamente o que o gatilho não está vigiando. Para produzir o número certo com dois
