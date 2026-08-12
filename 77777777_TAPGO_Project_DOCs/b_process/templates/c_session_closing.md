@@ -2,7 +2,7 @@
 tags: [template]
 status: atual
 ---
-## Fecho de sessão — {{date:YYYY-MM-DD}} · <papel/skill da sessão>
+8## Fecho de sessão — {{date:YYYY-MM-DD}} · <papel/skill da sessão>
 
 **Entregue:** <o que saiu desta sessão, 1 linha>
 **Portão rodado:** <comando + resultado — na SUA máquina, não no sandbox>

@@ -20,6 +20,8 @@ Mesma zona = defesa. Zonas diferentes = gol. Cobranças alternadas, 5 para cada 
 - Empate após 5 cobranças -> alternadas: a disputa só termina com número **igual** de cobranças dos dois lados.
 - Alternadas (`D-09`): rodada = 1 cobrança de cada lado. O fim de jogo é avaliado **só ao fim da rodada**; se houver diferença de gols, vence quem está à frente. Sem teto de rodadas — não existe critério de desempate fora das cobranças.
 - A morte matemática **não** se aplica dentro de uma rodada alternada: as duas cobranças da rodada sempre acontecem.
+- **Ordem de cobrança (`D-48`): quem cobra primeiro é decidido por sorteio no início da disputa, e essa ordem NÃO muda até o fim** — nem entre as 5 regulares, nem nas alternadas. É a regra real: a IFAB responde, com todas as letras, que a primeira cobrança de cada nova rodada é do time que cobrou primeiro na rodada anterior. Alternar a ordem entre rodadas foi **rejeitado** por contrariar a regra do esporte.
+- O sorteio usa o gerador com semente de M1, nunca o nativo: a disputa continua reproduzindo o mesmo placar para a mesma semente, que é critério de aceite do projeto.
 - Reexecutar a mesma sequência de entradas produz o mesmo placar (motor determinístico dada a semente).
 - Nenhum estado de partida vem do cliente adversário sem validação local.
 
