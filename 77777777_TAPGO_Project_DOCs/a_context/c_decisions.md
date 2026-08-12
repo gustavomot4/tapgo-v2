@@ -2,13 +2,14 @@
 tags: [decisoes]
 status: atual
 ---
-# DECISIONS.md — decisões (D-NN), questões abertas (Q-NN) e QA (QA-NN)
+# DECISIONS.md — decisões (D-NN) e questões abertas (Q-NN)
 
 > **Append-only:** decisão nova = linha nova; reversão = linha nova com `SUPERSEDE D-XX`, nunca editar a antiga.
 > **Teto: 2 frases por linha.** Evidência longa vira nota em `e_qa/<slug>.md` ou tema em `a_context/`.
 > **Registre as rejeições.** A lista de rejeitados é o que impede a IA de re-propor o que já morreu.
 > **Linha `ARQUIVADO`:** a íntegra está em [[decisions_archive]]. O ponteiro é este, e por isso não se repete em cada linha.
-> **Retirados da tabela** (íntegra lá, ID preservado, nada revertido): `D-03` `D-05` `D-11` `D-12` `D-14`..`D-21` `D-23`..`D-26` `D-28`..`D-30` `D-33` `D-34` · `Q-06` · `QA-01`..`QA-03`.
+> **Retirados da tabela** (íntegra lá, ID preservado, nada revertido): `D-03` `D-05` `D-11` `D-12` `D-14`..`D-21` `D-23`..`D-26` `D-28`..`D-30` `D-33` `D-34` · `Q-06`.
+> **Achados de QA moram em [[d_qa|QA]]** desde `D-50` — este arquivo não define mais `QA-NN`.
 
 ## Decisões
 | # | Data | Status | Decisão (curta) | Evidência (número-chave + link) |
@@ -40,6 +41,8 @@ status: atual
 | D-46 | 2026-08-08 | ADOTADO | `Q-12`: IPv6 fim-a-fim é sucesso, mas E-4 passa a ter **dois contadores** — `IPv6/sem NAT` e `IPv4/com NAT` — e o corte de 70% é cobrado só contra o de IPv4 | O corte nasceu dos 15-30% de CGNAT, que é de IPv4: medir com IPv6 nos dois lados mede onde o problema não existe. Zero código — forçar APN IPv4 separa as rodadas |
 | D-47 | 2026-08-12 | ADOTADO | `Q-10`: TURN fica **fora de escopo** (saída b); a taxa sem ele já passa o corte, e o fallback é erro honesto | 17/17 em `IPv4/com NAT` (APN forçado, Claro×Claro), limite inferior 95% de **83,8%** contra os 70%. Lacuna: até ~16% pode não conectar e fica sem relay |
 | D-48 | 2026-08-12 | ADOTADO | `Q-07`: a ordem de cobrança **não alterna** — quem cobra primeiro segue primeiro até o fim, inclusive nas alternadas; e quem é o primeiro sai de **sorteio** com o gerador de M1, não da constante `A` (`T-17`) | É a regra do esporte: a IFAB responde que a 1ª cobrança de cada nova rodada é do time que cobrou primeiro na anterior. A não-alternância é o que M2 já faz: zero código |
+| D-49 | 2026-08-12 | ADOTADO · VETÁVEL | `T-17b`: o sorteio é **painel dentro da tela de cobrança**, não a "tela da moeda" que o card pedia | Tela própria custaria o 3º toque num fluxo crítico com portão de **2 toques** (`tela_inicio.ts`); detalhe em [[t17b_sorteio_na_tela]] |
+| D-50 | 2026-08-12 | ADOTADO | `A-13` saída (a): `QA-NN` sai deste registro para [[d_qa\|QA]], com orçamento próprio de 8.000/6.400, e o `check.py` passa a medir os dois **sem o padding** de alinhamento de tabela | Custo: o `check.py` sai do sha do kit (`604fe5f3…` no `.kit-manifest`) e para de receber correção por upgrade — o caminho limpo é release de kit, em outro repositório; 53 IDs, zero perdido, zero duplicado entre os dois. **Folga a 30 dias NÃO alcançada:** 6.222 contra crescimento projetado de 27.285, ou seja ~7 dias corridos — números em [[a13_estrutura_do_registro]] |
 
 > **Gatilhos de revisão** (`D-43`): moram no tema que cada um mede — `D-01` em [[online_p2p]], `D-02` em [[stack]].
 
@@ -58,20 +61,8 @@ status: atual
 | Q-12 | ~~IPv6 fim-a-fim conta para o corte de 70% de E-4?~~ | **RESPONDIDA 2026-08-08 → D-46** |
 | Q-11 | Como M7 recebe o `roomId` do anfitrião, se a porta de M5 (`D-13`) não o devolve e M7 não pode importar `src/net`? | antes da tela de convite — duas saídas em [[m5_sessao_notas]], as duas mexendo em porta congelada, logo `D-NN` do dono |
 
-## Achados de QA (QA-NN — citados no commit: `fix: QA-NN …`)
-> Passagens de revisão: 1. Critério e evidência: [[decisions_archive]].
-
-| # | Data | Sev. | Onde | O que quebrava | Correção | Fechado em |
-|---|---|---|---|---|---|---|
-| QA-04 | 2026-08-07 | MÉDIO | `tsconfig.json` (`D-14`) × `vite.config.ts` (T-05) | `include: ["src"]` deixa o `vite.config.ts` fora do `tsc --noEmit`: erro de tipo no build só estoura no `vite build` | Acrescentar `"vite.config.ts"` ao `include` — de outro dono, regra 4; porquê em [[questoes_abertas_notas]] | _(aberto)_ |
-| QA-06 | 2026-08-07 | MÉDIO | `src/scripts/bundle-size.mjs` (M9) | Soma **toda** entrada `isEntry` no "bundle inicial": com `D-33`, o gatilho de `D-02` lê página que o jogador nunca abre | Medir só o grafo de `index.html` — não feito aqui porque é de M9 e muda um portão (regra 4) | _(aberto)_ |
-| QA-08 | 2026-08-08 | CRÍTICO · ARQUIVADO | `src/medicao.ts` | Anfitrião sorteava sala nova a cada toque: medição de `A-08` daria 0% | `D-38` | ✔ `T-15` 2026-08-08 (`bd68d0f`) |
-| QA-07 | 2026-08-08 | BAIXO | `Q-08` e `Q-09`, no próprio registro | Prazo de decisão vencido com a questão ainda aberta: `Q-08` dizia "antes de E-3" (fechada) e `Q-09` "antes de T-10" (feita) | O dono redata o prazo ou responde a questão — `A-10` não mexe em prazo alheio (regra 6) | _(aberto)_ |
-| QA-11 | 2026-08-08 | CRÍTICO | Árvore de trabalho × git | **T-13 nunca foi commitada:** `src/session/index.ts` tem 208 linhas fora do git e `src/tests/session_online.test.ts` é untracked, mas o CONTEXT lista `online` T-13 como Pronto e a suíte como 220/220 | O dono commita e empurra T-13 (`D-35`/`D-36`), ou diz por que está segurando — `origin/main` é o que o Pages publica | _(aberto)_ |
-| QA-09 | 2026-08-08 | CRÍTICO · ARQUIVADO | `src/medicao.ts` | Índice da rotação por aparelho dessincronizava as salas e não ressincronizava | Índice e 6 chars do ID na tela dos dois | ✔ `T-15` 2026-08-08 (`31b39d9`) |
-| QA-12 | 2026-08-08 | CRÍTICO · ARQUIVADO | `src/medicao.ts` | Sortear sala nova não zerava a rotação — achado em campo | Índice separado da estatística | ✔ `T-15` 2026-08-08 |
-| QA-14 | 2026-08-08 | ALTO | `src/medicao_par.ts` (`D-44`) | `host↔host` era classificado como "mesma rede local" pelo TIPO do candidato, ignorando a FAIXA do endereço: em IPv6 não há NAT e o `host` já é global, então o melhor resultado possível saía rotulado como o mais inútil (`P2P direto em 0 de 1`) | Classificar pela faixa: público × público com prefixos /64 diferentes é `host-direto`; 100.64/10 é `host-cgnat`; privado segue local | ✔ 2026-08-08 |
-| QA-13 | 2026-08-08 | CRÍTICO | `src/medicao.ts` (`D-44`) | A Trystero reaproveita um pool de 20 conexões entre salas, e esvaziar a lista observada por tentativa descartava justamente a que conectava: **11 de 12 pares não lidos** em campo (o 12º era leitura boa: IPv6, ver `QA-14`) | Escolher a conexão pelo **estado vivo**, não pela janela de criação; e "par não lido" passa a dizer o que faltou | ✔ 2026-08-12 (17/17 lidos em campo) |
-| QA-10 | 2026-08-08 | MÉDIO | `src/medicao.ts` (`D-33`) | Erro de configuração soma tentativa **e** falha: erro do operador entra na taxa que decide a revisão de `D-01`, enviesando para baixo | Não contar tentativa quando o canal nunca abriu — muda denominador de portão, logo `D-NN` (regra 4) | _(aberto)_ |
-| QA-05 | 2026-08-07 | MÉDIO | `src/tests/teams.test.ts` | Escreve por extenso os 6 termos da lista-morta: o portão de marca de M7 (`grep` zero em `src/`) devolve 6 | Montar as agulhas em tempo de execução, como `core.test.ts` e `ui.test.ts` — outro dono (regra 4) | _(aberto)_ |
-| QA-15 | 2026-08-12 | MÉDIO | `src/ui/rotas.ts` (M7) | Promete que `A` cobra primeiro; com o sorteio de `T-17` o humano pode começar defendendo e a tela mente | Tela da moeda, metade `frontend-uiux` de `T-17` | _(aberto)_ |
+## Achados de QA (QA-NN)
+> **Mudaram de arquivo em 2026-08-12 (`D-50`, tarefa `A-13`): agora moram em [[d_qa|QA]].**
+> Motivo: decisão permanente, questão do dono e achado de QA têm ciclos de vida diferentes e
+> dividiam um orçamento só — e era o QA que crescia mais rápido, com 6 dos achados abertos
+> (achado aberto não se arquiva). Nenhum ID mudou, nada foi revertido.

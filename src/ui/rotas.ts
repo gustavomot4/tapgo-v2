@@ -48,5 +48,15 @@ export interface Contexto {
 /** Uma tela desenha em `raiz` e devolve o que desfazer quando ela sair. */
 export type Tela = (raiz: HTMLElement, ctx: Contexto) => () => void;
 
-/** O lado do humano no modo `cpu`. `'A'` cobra primeiro (`FIRST` de M2), e é o que a tela promete. */
+/**
+ * O lado do humano no modo `cpu` — o da seleção que ele escolheu como "Sua seleção", e nada além.
+ *
+ * **Não diz quem cobra primeiro** (`QA-15`, `D-48`). Quem cobra primeiro é sorteado por M5 na
+ * criação da sessão e chega às telas em `state().turn`; a versão anterior deste comentário
+ * prometia a ordem, e a promessa virou mentira no dia em que o sorteio entrou. Se alguém precisar
+ * do primeiro cobrador, é de lá que ele sai — não daqui.
+ *
+ * No modo `local` os dois lados são deste aparelho e M5 ignora este valor; ele viaja junto só
+ * porque `createSession` exige `localSide` nos dois modos.
+ */
 export const LADO_DO_HUMANO: Side = 'A';

@@ -67,6 +67,49 @@ aparelhos da mesma operadora, force o APN para IPv4 nos dois (ver `A-08`).
 infraestrutura de terceiros sumir, 1P vs CPU, 2P local e torneio continuam funcionando. O jogo nunca
 depende de rede para ser jogável.
 
+## Escopo adiado: torneio online com sala de 8 (levantado em 2026-08-12)
+
+O dono quer, no futuro, torneio online em **sala de até 8 jogadores**, com as vagas que sobrarem
+preenchidas por bots. **Adiado de propósito, fora de E-5** — não por falta de vontade, mas porque
+reabre o PLANO congelado (`D-13`). Esta seção existe para que a implementação futura comece do
+levantamento, e não do zero.
+
+**O que existe hoje NÃO sustenta a sala de 8.** As duas portas congeladas em `D-13` são
+estritamente 1:1: M6 entrega `hostRoom → { roomId, channel }` e `joinRoom(roomId) → Channel`, com
+`Move { seq, side, zone }` sobre **dois** lados; M5 recebe `teams: Record<Side, CountryCode>` e um
+`localSide`, isto é, **uma** disputa entre dois aparelhos.
+
+**O número que mais pesa, e que ninguém mediu:** `A-08` mediu **um par** (17/17, limite inferior
+95% de 83,8% — `D-47`). Taxa de um enlace não é taxa de N enlaces. Com `p` = 83,8% por enlace, a
+chance de **todos** subirem:
+
+| `p` por enlace | estrela (anfitrião + 7) | malha completa de 8 (28 enlaces) |
+|---|---|---|
+| 83,8% (o medido) | **29,0%** | 0,7% |
+| 90% | 47,8% | 5,2% |
+| 95% | 69,8% | 23,8% |
+| 99% | 93,2% | 75,5% |
+
+Mesmo a topologia mais barata (estrela) fica **abaixo do corte de 70%** com o número que temos
+hoje. Isto não mata a ideia — mas diz que a sala de 8 precisa de **medição própria e de um
+`D-NN` de portão próprio**, e que "funcionou entre dois celulares" não transfere.
+
+**O que precisa ser decidido antes de escrever código (nada foi decidido):**
+
+1. **Topologia** — malha (todos com todos) ou **anfitrião autoritativo** (um peer dono do
+   chaveamento). A tabela acima já sugere que malha completa não é viável.
+2. **Dono do estado e reconciliação** — quem guarda o chaveamento e o que acontece quando um peer
+   cai no meio do torneio. `D-35` responde isso só no recorte de **uma** disputa, e o PLANO diz
+   explicitamente que não transfere para torneio.
+3. **Autoridade do bot** — em qual aparelho o bot roda e em que nível, respeitando o teto de 70%
+   de `D-10`. Bot rodando no aparelho de um jogador é vantagem de informação, não é neutro.
+4. **Extensão das portas de M5/M6** — reabre `D-13`, logo é `D-NN` do dono, não decisão de sessão.
+5. **`Q-11` continua no caminho** — como M7 recebe o `roomId` já trava a tela de convite hoje.
+
+**Invariante que a sala de 8 não pode violar:** o torneio funciona **sem rede nenhuma** (ver
+"Invariante de arquitetura" acima). A sala de 8 é camada opcional sobre o torneio offline —
+nunca uma dependência dele.
+
 ## Anti-trapaça: escopo declarado
 P2P sem autoridade central significa que **não há árbitro**. Um cliente modificado pode mentir sobre a
 jogada. O projeto **aceita isso conscientemente**: é jogo casual entre amigos por link de convite, sem

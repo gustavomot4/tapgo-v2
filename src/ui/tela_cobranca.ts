@@ -14,6 +14,11 @@
  * isso o primeiro toque só produz "passe o aparelho": a zona fica dentro de M5, onde já estava,
  * e esta tela nunca a recebe de volta.
  *
+ * ## Quem cobra primeiro chega pronto (D-48)
+ * Esta tela não sorteia e não guarda lado nenhum: M5 sorteia na criação da sessão, e o resultado
+ * chega em `state().turn` antes da 1ª cobrança. A tela lê e mostra. É o que `QA-15` cobrava — a
+ * versão anterior repetia a constante do motor e teria passado a mentir no dia do sorteio.
+ *
  * ## Os 4 estados
  * - **carregando** — a cena Phaser chegando por `import()`. O campo aparece sem animação e os
  *   botões já funcionam: esperar o cenário para deixar jogar seria trocar jogabilidade por enfeite.
@@ -29,17 +34,20 @@ import type { MatchState, Session, SessionConfig } from '../session/index';
 import { createSession } from '../session/index';
 import type { Cena } from './cena';
 import { criarDerivacao } from './derivacao';
+import type { Vez } from './derivacao';
 import { botao, el, focar, limpar } from './dom';
 import { marca } from './tela_selecoes';
 import {
   ZONAS,
   descricaoFase,
   instrucao,
+  instrucaoDoSorteio,
   nomeSelecao,
   nomeZona,
   placar,
   resultadoUltimaCobranca,
   rotuloZona,
+  sorteioDoPrimeiro,
 } from './rotulos';
 import type { Contexto, Partida, Tela } from './rotas';
 
@@ -112,6 +120,19 @@ export const telaCobranca =
       ladoB,
     ]);
 
+    // ── O sorteio de `D-48`, dito antes da 1ª cobrança ────────────────────────────────────
+    // Sem toque a mais: o painel nasce junto com a tela e sai sozinho quando a disputa começa. O
+    // fluxo crítico de `tela_inicio.ts` continua fechando em 2 toques, que é o portão de UX
+    // declarado lá — um "ok, entendi" aqui seria o terceiro.
+    const sorteioMarca = el('span', { classe: 'sorteio__marca' });
+    const sorteioTexto = el('p', { classe: 'sorteio__texto' });
+    const sorteioSub = el('p', { classe: 'sub' });
+    const sorteio = el('div', { classe: 'sorteio' }, [
+      sorteioMarca,
+      el('div', { classe: 'sorteio__corpo' }, [sorteioTexto, sorteioSub]),
+    ]);
+    sorteio.hidden = true;
+
     const canvasPai = el('div', { classe: 'campo__canvas' });
     const semCanvas = el('p', {
       classe: 'campo__sem-canvas',
@@ -134,12 +155,41 @@ export const telaCobranca =
 
     const sair = botao('Sair da disputa', 'botao botao--discreto', pedirParaSair);
 
-    tela.append(cabecalho, fase, campo, faixa, erro, el('div', { classe: 'empurra' }, [sair]));
+    tela.append(
+      cabecalho,
+      fase,
+      sorteio,
+      campo,
+      faixa,
+      erro,
+      el('div', { classe: 'empurra' }, [sair]),
+    );
 
     // ── Desenho ───────────────────────────────────────────────────────────────────────────
 
     function travarZonas(valor: boolean): void {
       for (const b of botoesZona.values()) b.disabled = valor;
+    }
+
+    /**
+     * O painel do sorteio, enquanto ele ainda é notícia.
+     *
+     * No modo `local` ele sai já no primeiro toque, e não só na 1ª cobrança resolvida: entre o
+     * chute e a defesa o aparelho já trocou de mão, e a frase "quem cobra fica com o aparelho"
+     * estaria dizendo a quem defende para fazer o contrário do que a tela pede.
+     */
+    function anunciarSorteio(vez: Vez): void {
+      const anuncio = sorteioDoPrimeiro(estado, partida.times);
+      if (anuncio === null || vez.pendente) {
+        sorteio.hidden = true;
+        return;
+      }
+
+      limpar(sorteioMarca);
+      sorteioMarca.append(marca(partida.times[anuncio.lado]));
+      sorteioTexto.textContent = `Sorteio: ${anuncio.texto}.`;
+      sorteioSub.textContent = instrucaoDoSorteio(partida.modo, vez.papel);
+      sorteio.hidden = false;
     }
 
     function desenhar(): void {
@@ -148,9 +198,12 @@ export const telaCobranca =
 
       const vez = derivacao.vez(estado);
       if (vez === null) {
+        sorteio.hidden = true;
         travarZonas(true);
         return;
       }
+
+      anunciarSorteio(vez);
 
       // Quem está com o aparelho na mão, em destaque no placar.
       const emFoco: Side = partida.modo === 'cpu' ? partida.ladoLocal : vez.lado;

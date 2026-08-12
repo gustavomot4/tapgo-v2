@@ -14,17 +14,21 @@ FALHAS (código 1)
   2. Registro de decisões inchado       8. Segredo versionado (árvore + histórico)
   3. Fonte única (contexto/plano/dec.)  9. .gitignore sem cobertura mínima de segredo
   4. WIP acima do declarado            10. IDs D-/Q-/QA- citados que não existem
-  5. Cruft óbvio                       11. IDs duplicados no DECISIONS
+  5. Cruft óbvio                       11. IDs duplicados entre os DOIS registros
   6. Skill sem name/description        12. "Em andamento" divergindo entre BACKLOG e CONTEXT
                                        13. Tarefa apontando módulo que não existe no PLANO
                                        14. Skill fora do esquema (Contexto/Limites/Saída)
+                                       15. Registro de QA inchado
 
 AVISOS (não reprovam; com --avisos-reprovam, reprovam)
   frontmatter ausente · placeholders · templates em rascunho · nota órfã ·
   arquivo grande não varrido · varredura de histórico que não rodou ·
   portão automático (pre-commit) não instalado · módulo do PLANO sem tarefa ·
   description de skill sem fronteira negativa · CONTEXT perto do teto ·
-  DECISIONS perto do teto · tema de a_context/ fora do mapa de leitura
+  DECISIONS perto do teto · QA perto do teto · tema de a_context/ fora do mapa de leitura
+
+Os orçamentos são medidos SEM o padding de alinhamento das tabelas (`medida()`, `D-50`):
+teto que conta espaço de alinhamento mede o formatador do editor, não o texto.
 
 O README declara quantos itens de checklist existem e quantos esta máquina julga.
 Esse número é cobrado por `test_check.py` — a frase mais honesta do kit não pode
@@ -119,7 +123,12 @@ TEM_GIT = DIR_HOOKS is not None
 # Os caminhos são relativos à raiz da pasta de documentação (o vault).
 CONTEXTO = "a_context/a_context_source.md"      # a verdade: estado, ≤4.000 chars
 PLANO = "a_context/b_plan.md"                   # plano congelado
-DECISOES = "a_context/c_decisions.md"           # D-NN / Q-NN / QA-NN, append-only
+DECISOES = "a_context/c_decisions.md"           # D-NN / Q-NN, append-only
+# `A-13`/`D-50`: os QA-NN saíram do DECISOES. Motivo medido: três registros de ciclo de vida
+# diferente dividiam um orçamento só, e o de QA crescia 10,8× contra 3,6× do de decisões —
+# com 6 achados ABERTOS, que por definição não se arquivam. Registro separado, orçamento
+# separado; os IDs continuam únicos entre os DOIS arquivos (ver bloco 10/11).
+QA_REG = "a_context/d_qa.md"                    # QA-NN, append-only
 BACKLOG = "b_process/c_backlog.md"              # fonte única de tarefas
 SKILLS = "b_process/skills"                     # os agentes instaláveis
 # Pastas do vault: só nelas "nota órfã" faz sentido. Markdown do próprio app
@@ -169,6 +178,28 @@ def sem_codigo(texto):
     return re.sub(r"`[^`\n]*`", "", texto)
 
 
+def medida(texto):
+    """Tamanho do CONTEÚDO, sem o padding de alinhamento das tabelas (`A-13`/`D-50`).
+
+    Medido em 2026-08-12: ao salvar o `c_decisions.md`, um formatador de Markdown alinhou
+    as colunas e somou **2.048 caracteres de padding puro** — 17% do arquivo, sem uma
+    palavra nova. O arquivo saltou de 11.470 para 13.806 e o portão passou a REPROVAR num
+    commit que só respondia uma questão; foi preciso desalinhar tudo à mão para voltar.
+
+    Orçamento que conta espaço de alinhamento mede o FORMATADOR do editor, não o texto —
+    e some ou volta conforme quem salvou por último. Aqui as células viram `a|b|c` antes
+    de contar, então o mesmo conteúdo mede igual em qualquer editor.
+
+    Só mede; NUNCA reescreve o arquivo. O alinhamento continua livre para quem edita.
+    """
+    linhas = []
+    for linha in texto.split("\n"):
+        if linha.lstrip().startswith("|"):
+            linha = re.sub(r" *\| *", "|", linha.strip())
+        linhas.append(linha)
+    return len("\n".join(linhas))
+
+
 # Notas do repositório inteiro: o padrão deixa CLAUDE.md e README.md fora do vault,
 # e um wikilink para eles não pode contar como link quebrado.
 notas = sorted(visiveis("*.md", topo))
@@ -177,31 +208,49 @@ corpo = {p: p.read_text(encoding="utf-8") for p in notas}
 # 1. Orçamento do contexto-fonte (regra 1)
 ctx = raiz / CONTEXTO
 texto_ctx = corpo.get(ctx, "")
+n_ctx = medida(texto_ctx)
 if not ctx.exists():
     falhas.append(f"{CONTEXTO} não encontrado — é onde o padrão do repositório põe o contexto-fonte.")
-elif len(texto_ctx) > 4000:
+elif n_ctx > 4000:
     falhas.append(
-        f"{CONTEXTO} com {len(texto_ctx)} caracteres (orçamento: 4.000). "
+        f"{CONTEXTO} com {n_ctx} caracteres (orçamento: 4.000). "
         f"Corte: detalhe -> a_context/<tema>.md, decisão -> {DECISOES}, datado -> d_history/a_changelog.md."
     )
-elif len(texto_ctx) > 3600:
+elif n_ctx > 3600:
     # Avisar a 90% em vez de só reprovar a 100%: quando o teto estoura, quem escreve
     # está no meio de uma sessão de trabalho e vai cortar o que estiver à mão — não o
     # que devia sair. O aviso dá a chance de mover um tema com calma, antes da parede.
     avisos.append(
-        f"{CONTEXTO} com {len(texto_ctx)}/4.000 caracteres ({100*len(texto_ctx)//4000}%) — "
+        f"{CONTEXTO} com {n_ctx}/4.000 caracteres ({100*n_ctx//4000}%) — "
         "mova um tema para a_context/<tema>.md agora, não na sessão em que estourar."
     )
 
-# 2. Registro de decisões inchado (projeto longo)
+# 2. Registros inchados (projeto longo). São DOIS desde `D-50`, com tetos separados:
+#    decisão permanente envelhece devagar e arquiva; achado de QA ABERTO não arquiva nunca.
+#    Somar os dois num teto só fazia o segundo comer o orçamento do primeiro.
+qa_reg = raiz / QA_REG
+texto_qa = corpo.get(qa_reg, "")
+n_qa = medida(texto_qa)
+if texto_qa and n_qa > 8000:
+    falhas.append(
+        f"{QA_REG} acima de 8.000 caracteres — feche ou arquive achados em "
+        "e_qa/decisions_archive.md (IDs preservados) e deixe um ponteiro."
+    )
+elif texto_qa and n_qa > 6400:
+    avisos.append(
+        f"{QA_REG} com {n_qa}/8.000 caracteres ({100*n_qa//8000}%) — "
+        "achado FECHADO vira ponteiro; achado aberto fica, e por isso o corte tem de ser nos fechados."
+    )
+
 dec = raiz / DECISOES
 texto_dec = corpo.get(dec, "")
-if texto_dec and len(texto_dec) > 12000:
+n_dec = medida(texto_dec)
+if texto_dec and n_dec > 12000:
     falhas.append(
         f"{DECISOES} acima de 12.000 caracteres — arquive SUPERSEDIDAS/rejeitadas antigas "
         "em e_qa/decisions_archive.md (IDs preservados) e deixe um ponteiro."
     )
-elif texto_dec and len(texto_dec) > 9600:
+elif texto_dec and n_dec > 9600:
     # O README declarava esta fraqueza com todas as letras: "o arquivamento é manual e
     # ninguém lembra". Portão que só roda quando alguém lembra não é portão — foi o
     # argumento do QA-04, e valia contra o próprio kit. O script não arquiva (a decisão
@@ -209,12 +258,12 @@ elif texto_dec and len(texto_dec) > 9600:
     velhas = re.findall(r"^\|\s*(D-\d+)\s*\|[^|]*\|\s*(?:ADOTADO|REJEITADO)", texto_dec, re.M)
     amostra = ", ".join(velhas[:5]) if velhas else "as mais antigas"
     avisos.append(
-        f"{DECISOES} com {len(texto_dec)}/12.000 caracteres ({100*len(texto_dec)//12000}%) — "
+        f"{DECISOES} com {n_dec}/12.000 caracteres ({100*n_dec//12000}%) — "
         f"arquive as antigas em e_qa/decisions_archive.md, preservando os IDs. Candidatas: {amostra}."
     )
 
 # 3. Fonte única (regra 6) — o mesmo nome em dois lugares é estado duplicado
-for nome in (Path(BACKLOG).name, Path(CONTEXTO).name, Path(DECISOES).name):
+for nome in (Path(BACKLOG).name, Path(CONTEXTO).name, Path(DECISOES).name, Path(QA_REG).name):
     achados = visiveis(nome)
     if len(achados) > 1:
         caminhos = ", ".join(str(p.relative_to(raiz)) for p in achados)
@@ -458,24 +507,39 @@ else:
         falhas.append(".gitignore sem cobertura mínima de segredo — faltam: " + ", ".join(faltando))
 
 # 10 e 11. Integridade dos IDs rastreáveis (regra 4).
-if texto_dec:
-    definidos = set(re.findall(r"^\|\s*((?:D|Q|QA)-\d+)\s*\|", texto_dec, re.M))
-    repetidos = [i for i in definidos if len(re.findall(rf"^\|\s*{re.escape(i)}\s*\|", texto_dec, re.M)) > 1]
+# Desde `D-50` os IDs nascem em DOIS arquivos, e a unicidade passa a valer sobre a UNIÃO —
+# não por arquivo. O motivo é o próprio risco da divisão: uma linha copiada para o registro
+# novo e esquecida no antigo define o mesmo ID duas vezes, e sem esta checagem os dois
+# arquivos ficariam individualmente válidos enquanto o par mente.
+REGISTROS = ((DECISOES, dec, texto_dec), (QA_REG, qa_reg, texto_qa))
+if texto_dec or texto_qa:
+    ocorrencias = {}
+    for rotulo, _, texto in REGISTROS:
+        for i in re.findall(r"^\|\s*((?:D|Q|QA)-\d+)\s*\|", texto, re.M):
+            ocorrencias.setdefault(i, []).append(rotulo)
+    definidos = set(ocorrencias)
+    repetidos = sorted(i for i, onde in ocorrencias.items() if len(onde) > 1)
     if repetidos:
-        falhas.append(f"ID duplicado em {DECISOES}: " + ", ".join(sorted(repetidos)) + " — cada ID é único e append-only.")
+        detalhe = ", ".join(f"{i} (em {', '.join(sorted(set(ocorrencias[i])))})" for i in repetidos)
+        falhas.append(
+            f"ID duplicado: {detalhe} — cada ID é único e append-only, "
+            "inclusive ENTRE os dois registros."
+        )
     citados = {}
+    registros_em_disco = {caminho for _, caminho, _ in REGISTROS}
     for nota in notas:
         # d_history/, e_qa/ e as lições herdadas citam IDs de OUTROS projetos:
-        # ficam fora da checagem de existência.
+        # ficam fora da checagem de existência. Os dois registros também: neles o ID é
+        # definido, e um define o do outro (o ponteiro de `D-50`, o cabeçalho do QA).
         rel_nota = nota.relative_to(topo)
-        if nota == dec or PASTAS_HISTORICAS & set(rel_nota.parts) or nota.stem == "d_agent_learnings":
+        if nota in registros_em_disco or PASTAS_HISTORICAS & set(rel_nota.parts) or nota.stem == "d_agent_learnings":
             continue
         for i in set(re.findall(r"\b((?:D|Q|QA)-\d+)\b", sem_codigo(corpo[nota]))):
-            citados.setdefault(i, set()).add(nota.relative_to(topo).as_posix())
+            citados.setdefault(i, set()).add(rel_nota.as_posix())
     fantasmas = {i: v for i, v in citados.items() if i not in definidos and not re.fullmatch(r"(D|Q|QA)-0*(0|NN)", i)}
     if fantasmas:
         detalhe = "; ".join(f"{i} (em {', '.join(sorted(v))})" for i, v in sorted(fantasmas.items())[:6])
-        falhas.append(f"ID citado que não existe em {DECISOES}: {detalhe}")
+        falhas.append(f"ID citado que não existe em {DECISOES} nem em {QA_REG}: {detalhe}")
 
 # 12. "Em andamento" tem de bater entre BACKLOG e CONTEXT (regra 6, fonte única).
 # 13. Cobertura módulo <-> tarefa. Metade FORMAL do que a skill artifact-consistency faz
@@ -533,7 +597,7 @@ if sem_fm:
 # kit — "doc fora do mapa nunca é lido" — e nada a cobrava: o arquivo existia, custava
 # manutenção e ninguém o abria. Aqui a máquina JULGA; escrever o mapa continua sendo do
 # dono, porque o CONTEXT é a verdade dele e script não escreve na verdade de ninguém.
-NUCLEO_CONTEXTO = {"a_context_source", "b_plan", "c_decisions", "README"}
+NUCLEO_CONTEXTO = {"a_context_source", "b_plan", "c_decisions", "d_qa", "README"}
 if texto_ctx:
     fora = sorted(p.stem for p in (raiz / "a_context").glob("*.md")
                   if p.stem not in NUCLEO_CONTEXTO and p.stem not in texto_ctx)
@@ -551,7 +615,7 @@ if placeholders:
         f"{CONTEXTO} ainda tem {len(placeholders)} placeholder(s) (ex.: {amostra}). "
         "Rode a Fase 0 (b_process/skills/context-bootstrap) antes de pedir código."
     )
-for nome in (PLANO, DECISOES, BACKLOG):
+for nome in (PLANO, DECISOES, QA_REG, BACKLOG):
     arq = raiz / nome
     if arq.exists() and re.search(r"^status:\s*rascunho\s*$", arq.read_text(encoding="utf-8"), re.M):
         avisos.append(f"{nome} ainda está em 'status: rascunho' (template não preenchido).")

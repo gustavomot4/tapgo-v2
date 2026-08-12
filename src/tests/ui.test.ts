@@ -16,17 +16,34 @@ import {
   descricaoFase,
   desfecho,
   instrucao,
+  instrucaoDoSorteio,
   marcaSelecao,
   nomeSelecao,
   nomeZona,
   placar,
   resultadoUltimaCobranca,
   rotuloZona,
+  sorteioDoPrimeiro,
 } from '../ui/rotulos';
 import { PADRAO, lerPreferencias, gravarPreferencias, selecaoInicial } from '../ui/preferencias';
 import type { Preferencias } from '../ui/preferencias';
 
 const DIR_UI = fileURLToPath(new URL('../ui', import.meta.url));
+
+/**
+ * Todo arquivo de código de `src/ui/`, recursivo.
+ *
+ * Fora dos `describe` porque DOIS portões de M7 leem o disco: o de camada (`D-01`) e o textual de
+ * `QA-15`. Cada um com a sua varredura sairiam do ar em silêncio no dia em que uma pasta nova
+ * aparecesse em só uma das listas.
+ */
+function arquivosDeUi(dir: string): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((item) => {
+    const alvo = join(dir, item.name);
+    if (item.isDirectory()) return arquivosDeUi(alvo);
+    return /\.(ts|css)$/.test(item.name) ? [alvo] : [];
+  });
+}
 
 const BR = 'BR';
 const AR = 'AR';
@@ -49,14 +66,6 @@ function roteiro(n: number, offset: number): Zone[] {
 // `src/ui/` retorna zero (os tipos vêm de M5)". Um portão que só existe no terminal do dono é
 // um portão que ninguém roda; aqui ele roda em toda suíte.
 describe('portão de camada de M7 (D-01)', () => {
-  function arquivosDeUi(dir: string): string[] {
-    return readdirSync(dir, { withFileTypes: true }).flatMap((item) => {
-      const alvo = join(dir, item.name);
-      if (item.isDirectory()) return arquivosDeUi(alvo);
-      return /\.(ts|css)$/.test(item.name) ? [alvo] : [];
-    });
-  }
-
   const arquivos = arquivosDeUi(DIR_UI);
 
   it('src/ui/ tem arquivo (senão o teste passaria por vazio)', () => {
@@ -298,6 +307,141 @@ describe('rótulos', () => {
 
   it('sem cobrança nenhuma não há resultado a anunciar', () => {
     expect(resultadoUltimaCobranca(estadoFalso({}))).toBeNull();
+  });
+});
+
+// ── D-48 / QA-15: a tela LÊ o sorteio, não o promete ───────────────────────────────────────
+describe('sorteio de quem cobra primeiro (D-48 / QA-15)', () => {
+  /**
+   * A primeira semente, a partir de 1, que faz M5 sortear `lado`.
+   *
+   * Procurada em vez de fixada de propósito: semente escrita à mão neste arquivo viraria uma
+   * segunda cópia do sorteio de M5, e passaria a mentir no dia em que o gerador mudasse. Aqui o
+   * teste pergunta a M5 e usa a resposta.
+   */
+  function sementeQueSorteia(lado: Side): number {
+    for (let semente = 1; semente <= 200; semente += 1) {
+      const s = createSession({ mode: 'local', seed: semente, teams: TIMES, localSide: 'A' });
+      const sorteado = s.state().turn;
+      s.dispose();
+      if (sorteado === lado) return semente;
+    }
+    throw new Error(`nenhuma semente até 200 sorteou ${lado} — o sorteio não é uniforme`);
+  }
+
+  it('o anúncio nomeia o lado sorteado — e os DOIS lados acontecem', () => {
+    for (const lado of ['A', 'B'] as const) {
+      const sessao = createSession({
+        mode: 'local',
+        seed: sementeQueSorteia(lado),
+        teams: TIMES,
+        localSide: 'A',
+      });
+      const anuncio = sorteioDoPrimeiro(sessao.state(), TIMES);
+      sessao.dispose();
+
+      // Se a função voltasse a devolver um lado constante, um dos dois giros reprovaria aqui —
+      // que é a regressão exata que `QA-15` descreve.
+      expect(anuncio?.lado).toBe(lado);
+      expect(anuncio?.texto).toBe(`${nomeSelecao(TIMES[lado])} cobra primeiro`);
+    }
+  });
+
+  it('no modo cpu o anúncio segue o mesmo sorteio, com o mesmo texto', () => {
+    for (const lado of ['A', 'B'] as const) {
+      const semente = sementeQueSorteia(lado);
+      const sessao = createSession({
+        mode: 'cpu',
+        seed: semente,
+        level: 'medium',
+        teams: TIMES,
+        localSide: 'A',
+      });
+      const anuncio = sorteioDoPrimeiro(sessao.state(), TIMES);
+      sessao.dispose();
+
+      expect(anuncio?.lado).toBe(lado);
+    }
+  });
+
+  it('a partir da 1ª cobrança resolvida não há mais o que anunciar', () => {
+    const sessao = createSession({ mode: 'local', seed: 3, teams: TIMES, localSide: 'A' });
+    let estado: MatchState = sessao.state();
+    sessao.subscribe((s) => {
+      estado = s;
+    });
+
+    expect(sorteioDoPrimeiro(estado, TIMES)).not.toBeNull();
+
+    // Modo `local`: chute e defesa da MESMA cobrança. Só o segundo toque resolve o pênalti.
+    sessao.choose('L');
+    expect(estado.kicks).toHaveLength(0);
+    expect(sorteioDoPrimeiro(estado, TIMES)).not.toBeNull();
+
+    sessao.choose('R');
+    expect(estado.kicks).toHaveLength(1);
+    expect(sorteioDoPrimeiro(estado, TIMES)).toBeNull();
+
+    sessao.dispose();
+  });
+
+  it('disputa encerrada não anuncia sorteio nenhum', () => {
+    const encerrada = {
+      kicks: [],
+      goals: { A: 0, B: 0 },
+      taken: { A: 0, B: 0 },
+      phase: 'finished',
+      turn: null,
+      winner: 'A',
+    } as unknown as MatchState;
+
+    expect(sorteioDoPrimeiro(encerrada, TIMES)).toBeNull();
+  });
+
+  it('a frase do sorteio muda com o papel em cpu, e nenhuma delas sai vazia', () => {
+    const amostras = [
+      instrucaoDoSorteio('cpu', 'chutar'),
+      instrucaoDoSorteio('cpu', 'defender'),
+      instrucaoDoSorteio('local', 'chutar'),
+      instrucaoDoSorteio('local', 'defender'),
+    ];
+
+    for (const texto of amostras) {
+      expect(texto.length).toBeGreaterThan(0);
+      expect(texto).not.toMatch(/undefined|NaN|\[object/);
+    }
+
+    // Em `cpu` a frase é sobre a pessoa, e ela precisa distinguir cobrar de defender.
+    expect(amostras[0]).not.toBe(amostras[1]);
+    // Em `local` os dois lados são deste aparelho: a frase é a mesma para os dois papéis.
+    expect(amostras[2]).toBe(amostras[3]);
+  });
+
+  // ── O portão textual de `QA-15`, cobrado por leitura do disco ────────────────────────────
+  // "Nenhuma promessa de ordem fixa sobrando em M7" é um portão sobre TEXTO, e texto some do
+  // radar assim que a sessão fecha. Aqui ele volta a ser cobrado em toda suíte.
+  // O sujeito pode vir cercado de crase e aspas (`'A'`), porque em comentário deste projeto ele
+  // quase sempre vem — foi assim que a promessa de `QA-15` estava escrita.
+  const PROMESSA_DE_ORDEM_FIXA =
+    /\b(?:A|voc[êe]|humano)['"`´]*\s+(?:cobra|come[çc]a|bate)\s+primeir/i;
+  const CONSTANTE_DO_MOTOR = /\bFIRST\b/;
+
+  it('o padrão pega a promessa que existia antes (senão o teste seria verde à toa)', () => {
+    // A frase abaixo é a que estava em `rotas.ts` e em `tela_selecoes.ts` até T-17b.
+    expect(PROMESSA_DE_ORDEM_FIXA.test("`'A'` cobra primeiro (`FIRST` de M2)")).toBe(true);
+    expect(PROMESSA_DE_ORDEM_FIXA.test('Você cobra primeiro. O computador defende.')).toBe(true);
+    expect(CONSTANTE_DO_MOTOR.test("`'A'` cobra primeiro (`FIRST` de M2)")).toBe(true);
+
+    // E não pega o texto correto, que fala de sorteio sem prometer lado.
+    expect(PROMESSA_DE_ORDEM_FIXA.test('Um sorteio decide quem começa.')).toBe(false);
+    expect(PROMESSA_DE_ORDEM_FIXA.test('Sorteio: Brasil cobra primeiro.')).toBe(false);
+    expect(PROMESSA_DE_ORDEM_FIXA.test('Você começa defendendo.')).toBe(false);
+  });
+
+  it.each(arquivosDeUi(DIR_UI))('%s não promete quem cobra primeiro', (caminho) => {
+    const conteudo = readFileSync(caminho, 'utf8');
+    expect(conteudo, `${caminho}: promessa de ordem fixa`).not.toMatch(PROMESSA_DE_ORDEM_FIXA);
+    expect(conteudo, `${caminho}: M7 repetindo a constante de M2`).not.toMatch(CONSTANTE_DO_MOTOR);
   });
 });
 

@@ -134,8 +134,12 @@ export const telaSelecoes =
       });
     }
 
-    const rotuloA = modo === 'cpu' ? 'Sua seleção' : 'Quem cobra primeiro';
-    const rotuloB = modo === 'cpu' ? 'Adversário (computador)' : 'Quem cobra depois';
+    // Em `local` os rótulos dizem ONDE cada seleção aparece, não em que ordem ela cobra: com o
+    // sorteio de `D-48` a ordem só existe depois que a disputa é criada, e esta tela é anterior a
+    // ela. "Quem cobra primeiro" aqui seria uma promessa que a tela seguinte desmentiria em
+    // metade das partidas (`QA-15`). Esquerda e direita são as posições do placar da cobrança.
+    const rotuloA = modo === 'cpu' ? 'Sua seleção' : 'Seleção da esquerda';
+    const rotuloB = modo === 'cpu' ? 'Adversário (computador)' : 'Seleção da direita';
 
     const iniciar = botao('Começar', 'botao botao--principal', comecar);
 
@@ -147,8 +151,8 @@ export const telaSelecoes =
         classe: 'sub',
         texto:
           modo === 'cpu'
-            ? 'Você cobra primeiro. O computador defende e cobra alternando com você.'
-            : 'Os dois jogam neste aparelho, revezando o toque a cada cobrança.',
+            ? 'Um sorteio decide quem começa. Você e o computador se revezam a cada cobrança.'
+            : 'Os dois jogam neste aparelho, revezando o toque. Um sorteio decide quem começa.',
       }),
       grade('A', rotuloA, times.A, (code) => {
         times.A = code;

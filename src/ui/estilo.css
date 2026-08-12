@@ -311,6 +311,48 @@
   color: var(--acento);
 }
 
+/* ── Sorteio de quem cobra primeiro (D-48), só até a 1ª cobrança ────────────────────────── */
+
+.sorteio {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--acento);
+  border-radius: var(--raio);
+  background: var(--acento-escuro);
+}
+
+/* O `hidden` do elemento vem do JS, e sem esta linha a regra de `display` acima o venceria: no
+   cascade, folha do autor ganha da folha do navegador, que é de onde `[hidden]` sai. Ver `QA-16`,
+   que é o mesmo defeito em `.aviso` — aberto, e de propósito não consertado aqui. */
+.sorteio[hidden] {
+  display: none;
+}
+
+.sorteio__marca {
+  display: flex;
+  flex: 0 0 auto;
+}
+
+.sorteio__corpo {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sorteio__texto {
+  margin: 0;
+  color: var(--acento);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.sorteio__corpo .sub {
+  color: var(--texto-apagado);
+}
+
 /* ── Campo: canvas do Phaser com os botões de zona por cima ─────────────────────────────── */
 
 .campo {

@@ -18,7 +18,7 @@ import type { CountryCode, Side, Zone } from '../core/index';
 import type { MatchState } from '../session/index';
 import type { Level } from '../session/index';
 import { findTeam } from '../data/teams';
-import type { Papel } from './derivacao';
+import type { ModoJogavel, Papel } from './derivacao';
 
 /** Cobranças por lado na fase regular. Espelha `REGULAR_KICKS` de M2, que não é exportado. */
 const COBRANCAS_REGULARES = 5;
@@ -105,6 +105,36 @@ export function nomeNivel(nivel: Level): string {
 
 export function nomeLado(lado: Side): string {
   return lado === 'A' ? '1º' : '2º';
+}
+
+/**
+ * O resultado do sorteio de quem cobra primeiro (`D-48`), enquanto ele ainda é notícia.
+ *
+ * A resposta sai de `estado.turn`, e **só** de lá: quem sorteia é M5, na criação da sessão, e
+ * esta camada lê. Nenhum lado literal mora nesta função — era exatamente isso que `QA-15` cobrava
+ * de M7, que até aqui repetia a constante do motor e passava a mentir no dia do sorteio.
+ *
+ * Devolve `null` a partir da 1ª cobrança resolvida: passado esse ponto o placar conta a história
+ * sozinho, e em 360x640 a altura vale mais que o aviso.
+ */
+export function sorteioDoPrimeiro(
+  estado: MatchState,
+  times: Readonly<Record<Side, CountryCode>>,
+): { readonly lado: Side; readonly texto: string } | null {
+  if (estado.kicks.length > 0 || estado.phase === 'finished' || estado.turn === null) return null;
+  return { lado: estado.turn, texto: `${nomeSelecao(times[estado.turn])} cobra primeiro` };
+}
+
+/**
+ * O que o sorteio significa para quem está com o aparelho na mão.
+ *
+ * Em `cpu` o lado do humano é fixo e a frase pode dizer "você". Em `local` os dois lados são deste
+ * mesmo aparelho: dizer "você" obrigaria a escolher um dos dois jogadores, então a frase fala do
+ * aparelho, que é o objeto que muda de mão.
+ */
+export function instrucaoDoSorteio(modo: ModoJogavel, papel: Papel): string {
+  if (modo !== 'cpu') return 'Quem cobra fica com o aparelho.';
+  return papel === 'chutar' ? 'Você começa cobrando.' : 'Você começa defendendo.';
 }
 
 /** O resultado da última cobrança, para o aviso que aparece entre uma e outra. */
