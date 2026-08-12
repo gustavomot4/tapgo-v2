@@ -27,12 +27,12 @@ Partida de ~1 minuto: contra a CPU, contra alguém no mesmo aparelho, ou por lin
 
 ## Estado atual (formato fixo — 1 linha por item, SEM prosa corrida)
 - **Versão:** v2.0.0-dev (a v1 é baseline morto: reescrita total, nenhum código reaproveitado)
-- **Pronto:** M1 (T-04) · M9 esqueleto (T-05) · M2 (T-06) · M3 (T-07) · M4 (T-08) · M5 (T-09 + `online` T-13) · M7 (T-10) · M6 (T-11) · medição (T-15, T-16) · A-08 — **E-1..E-4 fechadas**, suíte **337/337**; PLANO em D-13
-- **Bundle:** **99.442 B** (1,2% de 8 MB) lido de `dist/`, **+8.513 B** em T-16, todos no chunk da medição (`QA-06`); Phaser e Trystero fora, por `import()` (D-27)
+- **Pronto:** M1 (T-04) · M9 esqueleto (T-05) · M2 (T-06) · M3 (T-07) · M4 (T-08) · M5 (T-09 + `online` T-13) · M7 (T-10) · M6 (T-11) · medição (T-15, T-16) · A-08 · **T-17 em `cpu`/`local`** — **E-1..E-4 fechadas**, suíte **351/351**; PLANO em D-13
+- **Bundle:** **99.590 B** (1,2% de 8 MB) lido de `dist/`, **+148 B** em T-17; medição toda no chunk dela (`QA-06`); Phaser e Trystero fora, por `import()` (D-27)
 - **Em andamento (máx 1):** nada
-- **Próximo:** **T-17** — sorteio de quem cobra primeiro (`D-48`); a ordem não alterna, e é o que M2 já faz. Roda em `cpu`/`local`; no `online` depende de `Q-11`, que já trava a tela de convite
-- **Bloqueado/pendente:** A-04 trava E-5 e a lista real de M4 (fixação, `flag: null` — D-22) · A-06 trava M8 · Q-11 trava a tela do online · registro a **11.470/12.000** — **530 até a FALHA; `A-13` trava a próxima**
-- **Questões abertas:** Q-03, Q-05, Q-08, Q-09, Q-11 · respondidas: Q-04→D-35, Q-07→D-48, Q-10→D-47, Q-12→D-46 · **QA abertos:** QA-04..QA-07, QA-10 · **QA-11 sem objeto** · fechados: QA-08, QA-09, QA-12..QA-14
+- **Próximo:** **tela da moeda de T-17** (`frontend-uiux`, `QA-15`) — `cpu`/`local` já sorteiam quem cobra primeiro em M5, mas M7 ainda promete que `A` começa. O `online` de T-17 segue travado por `Q-11`
+- **Bloqueado/pendente:** A-04 trava E-5 e a lista real de M4 (fixação, `flag: null` — D-22) · A-06 trava M8 · Q-11 trava a tela do online **e o sorteio online** · registro a **11.981/12.000** — **19 até a FALHA; `A-13` é urgente**
+- **Questões abertas:** Q-03, Q-05, Q-08, Q-09, Q-11 · respondidas: Q-04→D-35, Q-07→D-48, Q-10→D-47, Q-12→D-46 · **QA abertos:** QA-04..QA-07, QA-10, QA-15 · **QA-11 sem objeto** · fechados: QA-08, QA-09, QA-12..QA-14
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)
 - [[portao_de_aceite]] — **antes de fechar tarefa, declarar etapa fechada ou entregar**

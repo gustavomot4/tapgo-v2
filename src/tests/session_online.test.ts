@@ -231,7 +231,14 @@ afterEach(async () => {
 
 describe('T-13 — o modo online produz o MESMO MatchState que cpu e local', () => {
   it('a disputa inteira coincide, cobrança a cobrança, nos dois aparelhos', async () => {
-    for (const seed of [0, 7, 12345]) {
+    // As três sementes têm uma condição a mais desde `T-17`: precisam ser sementes cujo sorteio de
+    // quem cobra primeiro dê `'A'` no modo `local`. O motivo é a lacuna `Q-11`: `local` sorteia
+    // (`D-48`) e `online` ainda não pode, porque os dois aparelhos não compartilham semente, então
+    // `online` segue começando em `'A'`. Com uma semente que sorteasse `'B'`, a referência e os
+    // dois aparelhos divergiriam na 1ª cobrança — e a divergência seria a lacuna, não um defeito
+    // do transporte, que é justamente o que este teste existe para medir. `12345` sorteia `'B'` e
+    // por isso saiu; `99991` entrou no lugar. Quando `Q-11` for respondida, esta restrição cai.
+    for (const seed of [0, 7, 99_991]) {
       salas.length = 0;
 
       // 1) A disputa de referência, jogada no modo `local` (mesma regra, zero rede).
@@ -259,6 +266,13 @@ describe('T-13 — o modo online produz o MESMO MatchState que cpu e local', () 
       expect(esperado.phase, `seed ${seed}: a referência não terminou`).toBe('finished');
       expect(esperado.kicks.length, `seed ${seed}: disputa curta demais`).toBeGreaterThanOrEqual(6);
 
+      // A condição da semente, cobrada em voz alta: se um dia ela deixar de valer, a mensagem
+      // aponta a lacuna certa em vez de deixar a divergência parecer defeito do transporte.
+      expect(
+        esperado.kicks[0]?.side,
+        `seed ${seed}: o sorteio de local deu 'B', e online ainda não sorteia (Q-11) — troque a semente ou responda Q-11`,
+      ).toBe('A');
+
       // 2) A MESMA sequência de zonas, agora com os dois lados em aparelhos diferentes.
       const { a, b } = await doisAparelhos(seed);
       for (const k of esperado.kicks) {
@@ -270,6 +284,27 @@ describe('T-13 — o modo online produz o MESMO MatchState que cpu e local', () 
       expect(b.state(), `seed ${seed}: convidado divergiu`).toEqual(esperado);
       expect(a.state().winner).toBe(esperado.winner);
       expect(b.state().winner).toBe(esperado.winner);
+    }
+  });
+
+  it('T-17: o modo online NÃO sorteia quem cobra primeiro — lacuna de Q-11, conferida', async () => {
+    // Protege a lacuna dos DOIS lados. Fazer `online` sortear com `cfg.seed` reprovaria aqui, e
+    // com razão: as sementes dos dois aparelhos são independentes (cada tela chama `createSession`
+    // com a sua), então cada um começaria com um cobrador diferente e as duas disputas divergiriam
+    // na 1ª cobrança — trocar um lado fixo por uma disputa quebrada. Enquanto `Q-11` estiver
+    // aberta, `'A'` começa, e é o mesmo comportamento que `T-13` entregou.
+    for (const seed of [0, 1, 7, 12_345]) {
+      salas.length = 0;
+      const { a, b } = await doisAparelhos(seed);
+
+      expect(a.state().turn, `semente ${seed}: o anfitrião sorteou no modo online`).toBe('A');
+      expect(b.state().turn, `semente ${seed}: o convidado sorteou no modo online`).toBe('A');
+
+      // O que a lacuna garante e o sorteio ainda não pode garantir: os dois aparelhos concordam.
+      expect(a.state().turn).toBe(b.state().turn);
+      a.dispose();
+      b.dispose();
+      await respirar();
     }
   });
 

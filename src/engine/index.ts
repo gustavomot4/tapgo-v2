@@ -7,6 +7,10 @@
  * Este módulo é a **verdade do placar** — ninguém mais calcula placar. Ele não conhece
  * jogador, CPU, rede nem tela, e importa apenas tipos de M1. Sem `Date.now()`, sem gerador
  * nativo, sem I/O: `play` é pura, e é isso que sustenta "roda 2x com o mesmo resultado".
+ *
+ * **Ordem de cobrança (`D-48`, `T-17`):** quem cobra primeiro entra por `createMatch(first)` e
+ * **não alterna** até o fim — nem entre as 5 regulares, nem nas alternadas. M2 recebe o resultado
+ * do sorteio; sortear é de M5, porque gerador dentro deste módulo derrubaria `play` pura.
  */
 
 import type { Side, Zone } from '../core/index';
@@ -37,9 +41,6 @@ const REGULAR_KICKS = 5;
 const ZONES: readonly Zone[] = ['L', 'C', 'R'];
 const SIDES: readonly Side[] = ['A', 'B'];
 
-/** Quem inicia cada rodada — regular e alternadas. */
-const FIRST: Side = 'A';
-
 function other(side: Side): Side {
   return side === 'A' ? 'B' : 'A';
 }
@@ -56,13 +57,37 @@ function freeze(state: MatchState): MatchState {
   return Object.freeze(state);
 }
 
-export function createMatch(): MatchState {
+/**
+ * Cria a disputa com quem cobra primeiro JÁ decidido.
+ *
+ * `first` é obrigatório de propósito (`D-48`, autorizado por `T-17`). Um valor padrão `'A'`
+ * devolveria em silêncio exatamente o defeito que esta tarefa remove — um lado cobrando primeiro
+ * sempre — e o chamador que esquecesse o argumento não ouviria nada. Sem padrão, quem esquece é
+ * reprovado pelo `tsc`, que é o lugar mais forte possível para esta regra.
+ *
+ * **M2 não sorteia.** Este módulo não conhece gerador — nem o de M1, nem o nativo. Quem sorteia é
+ * M5, com o `Rng` semeado da sessão; aqui só entra o resultado. É o que mantém `play` pura e o
+ * aceite "roda 2x com o mesmo resultado" verdadeiro.
+ *
+ * **A ordem não alterna** (`D-48`): quem cobra primeiro segue primeiro em toda rodada, inclusive
+ * nas alternadas. Isso não custa código — `resolve` alterna a vez a cada cobrança e uma rodada
+ * tem exatamente duas, então o primeiro de cada rodada é sempre `first`. Zero linha a mais.
+ *
+ * @throws RangeError se `first` não for `'A' | 'B'`.
+ */
+export function createMatch(first: Side): MatchState {
+  if (!(SIDES as readonly unknown[]).includes(first)) {
+    throw new RangeError(
+      `createMatch: quem cobra primeiro deve ser 'A' | 'B'; recebido ${String(first)}`,
+    );
+  }
+
   return freeze({
     kicks: [],
     goals: { A: 0, B: 0 },
     taken: { A: 0, B: 0 },
     phase: 'regular',
-    turn: FIRST,
+    turn: first,
     winner: null,
   });
 }

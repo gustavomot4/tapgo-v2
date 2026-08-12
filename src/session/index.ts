@@ -22,10 +22,15 @@
  *    **sem vencedor**. M5 não escreve vencedor nenhum — `winner` é de M2, e "quem fica vence"
  *    seria regra de disputa escrita na borda.
  *
+ * **Quem cobra primeiro (`T-17` / `D-48`)** — esta camada sorteia, com o `Rng` semeado de M1, e
+ * passa o resultado a `createMatch(first)`. M2 não sorteia (ficaria impura) e M7 não sorteia (a
+ * tela não é fonte de acaso). Vale em `cpu` e `local`; em `online` a lacuna é `Q-11` — ver a
+ * justificativa completa na declaração de `first`, dentro de `createSession`.
+ *
  * **A que este módulo NÃO responde:** como o anfitrião publica o `roomId` que M6 sorteou. A porta
  * congelada em `D-13` tem quatro métodos e nenhum devolve o ID, e M7 não pode importar `src/net`
  * (portão de camada). Está declarado como `Q-11` — não contornado com um quinto método por
- * conta própria.
+ * conta própria. É a mesma lacuna que impede o sorteio no modo `online`: uma resposta serve às duas.
  */
 
 import type { CountryCode, Side, Zone } from '../core/index';
@@ -138,14 +143,40 @@ export function createSession(cfg: SessionConfig): Session {
    */
   const remoteSide: Side = localSide === 'A' ? 'B' : 'A';
 
-  // O ÚNICO gerador da sessão. Nasce nos dois modos, ainda que `local` não sorteie nada: é a
-  // mesma configuração produzindo a mesma validação nos dois, e é o que deixa o teste de
-  // equivalência entre modos comparar sessões criadas do mesmo jeito.
+  // O ÚNICO gerador da sessão, e a única fonte de acaso desta camada. Nasce nos três modos: em
+  // `cpu` e `local` ele sorteia quem cobra primeiro (`D-48`, abaixo) e em `cpu` ainda alimenta a
+  // CPU; em `online` nasce sem ser lido, para que a mesma configuração produza a mesma validação
+  // nos três e o teste de equivalência compare sessões criadas do mesmo jeito.
   const rng = createRng(cfg.seed);
+
+  /**
+   * Quem cobra primeiro (`D-48` / `T-17`) — sorteio, não mais a constante `'A'` de M2.
+   *
+   * Três coisas que esta linha decide e que valem estar escritas:
+   *
+   * 1. **O gerador é o `Rng` de M1, nunca o nativo do JS.** O nativo aqui derrubaria de uma vez o
+   *    portão de M1 (uma única chamada nativa em todo o `src/`, conferida por teste que varre os
+   *    arquivos) e o aceite "roda 2x com o mesmo resultado": a mesma semente passaria a produzir
+   *    disputas diferentes. Note que o nome da função nativa não está escrito em lugar nenhum
+   *    deste arquivo de propósito — a varredura conta ocorrências no texto, comentário incluído.
+   * 2. **É a PRIMEIRA leitura do gerador da sessão**, antes de qualquer `pick` da CPU. Por isso
+   *    `cpu` e `local` tiram o MESMO primeiro cobrador para a mesma semente, que é o que deixa o
+   *    teste de equivalência entre modos continuar comparando disputas comparáveis. Mover esta
+   *    linha para depois do primeiro `pick` quebraria a equivalência sem quebrar nenhum tipo.
+   * 3. **O modo `online` não sorteia, e isso é lacuna declarada, não esquecimento.** Os dois
+   *    aparelhos precisariam tirar o MESMO lado, e hoje não têm semente em comum: `cfg.seed` é de
+   *    quem chama, um por aparelho. O valor que os dois já compartilham é o `roomId`, que M5 não
+   *    recebe do anfitrião — é exatamente `Q-11`, aberta. Sortear com sementes independentes faria
+   *    os dois aparelhos começarem com cobradores diferentes e divergirem na primeira cobrança:
+   *    seria trocar um lado fixo por uma disputa quebrada. Até `Q-11` ser respondida, `online`
+   *    segue com `'A'` — o mesmo comportamento que `T-13` já entregou e testou.
+   */
+  const first: Side = mode === 'online' ? 'A' : rng.int(2) === 0 ? 'A' : 'B';
+
   const cpu: Cpu | null =
     mode === 'cpu' && cfg.level !== undefined ? createCpu(cfg.level, rng) : null;
 
-  let match: MatchState = createMatch();
+  let match: MatchState = createMatch(first);
 
   // Sem canal, o status é `'idle'` nos dois modos, e vira `'closed'` no `dispose()`. Não é
   // enfeite: M7 lê o mesmo campo nos três modos e não ganha um `if (mode === 'online')`.

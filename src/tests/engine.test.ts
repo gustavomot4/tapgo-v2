@@ -11,7 +11,7 @@ const GOL: readonly [Zone, Zone] = ['L', 'R'];
 const DEFESA: readonly [Zone, Zone] = ['L', 'L'];
 
 /** Joga uma sequência de resultados: `true` = gol, `false` = defesa. */
-function jogar(resultados: readonly boolean[], inicial = createMatch()): MatchState {
+function jogar(resultados: readonly boolean[], inicial = createMatch('A')): MatchState {
   return resultados.reduce<MatchState>((estado, fezGol) => {
     const [shot, dive] = fezGol ? GOL : DEFESA;
     return play(estado, shot, dive);
@@ -19,8 +19,8 @@ function jogar(resultados: readonly boolean[], inicial = createMatch()): MatchSt
 }
 
 /** Todos os estados intermediários, do inicial ao final. */
-function trilha(resultados: readonly boolean[]): MatchState[] {
-  const estados = [createMatch()];
+function trilha(resultados: readonly boolean[], primeiro: Side = 'A'): MatchState[] {
+  const estados = [createMatch(primeiro)];
   for (const fezGol of resultados) {
     const anterior = estados[estados.length - 1]!;
     if (anterior.phase === 'finished') break;
@@ -35,8 +35,8 @@ function zonaSorteada(rng: Rng): Zone {
 }
 
 /** Disputa inteira com entradas sorteadas; devolve todos os estados até o fim. */
-function disputaSorteada(rng: Rng, tetoDeCobrancas = 200): MatchState[] {
-  const estados = [createMatch()];
+function disputaSorteada(rng: Rng, tetoDeCobrancas = 200, primeiro: Side = 'A'): MatchState[] {
+  const estados = [createMatch(primeiro)];
   while (estados[estados.length - 1]!.phase !== 'finished' && estados.length <= tetoDeCobrancas) {
     const atual = estados[estados.length - 1]!;
     estados.push(play(atual, zonaSorteada(rng), zonaSorteada(rng)));
@@ -93,9 +93,9 @@ describe('M2 · invariante: toda cobrança registra uma zona e um resultado', ()
 
   it('mesma zona é defesa; zonas diferentes são gol', () => {
     for (const z of ZONES) {
-      expect(play(createMatch(), z, z).goals.A).toBe(0);
+      expect(play(createMatch('A'), z, z).goals.A).toBe(0);
     }
-    expect(play(createMatch(), 'L', 'C').goals.A).toBe(1);
+    expect(play(createMatch('A'), 'L', 'C').goals.A).toBe(1);
   });
 });
 
@@ -257,8 +257,8 @@ describe('M2 · invariante: nenhum estado entra sem validação local', () => {
   });
 
   it('recusa zona inválida', () => {
-    expect(() => play(createMatch(), 'X' as Zone, 'L')).toThrow(RangeError);
-    expect(() => play(createMatch(), 'L', '' as Zone)).toThrow(RangeError);
+    expect(() => play(createMatch('A'), 'X' as Zone, 'L')).toThrow(RangeError);
+    expect(() => play(createMatch('A'), 'L', '' as Zone)).toThrow(RangeError);
   });
 });
 
@@ -350,7 +350,7 @@ describe('M2 · regressão do defeito 1 — resultado da jogada ANTERIOR vazando
 
 describe('M2 · regressão do defeito 2 — mesmo resultado escrito nos dois marcadores', () => {
   it('gol de A não mexe no marcador de B', () => {
-    const depois = play(createMatch(), ...GOL);
+    const depois = play(createMatch('A'), ...GOL);
 
     expect(depois.goals).toEqual({ A: 1, B: 0 });
     expect(depois.taken).toEqual({ A: 1, B: 0 });
@@ -428,5 +428,121 @@ describe('M2 · regressão do defeito 5 — fim de jogo decidido sobre estado in
         );
       }
     }
+  });
+});
+
+/* ───────────── T-17 / D-48 — quem cobra primeiro entra pela porta, e a ordem não alterna ───────────── */
+
+describe('M2 · T-17 — createMatch recebe quem cobra primeiro (D-48)', () => {
+  it('a vez inicial é o lado recebido, nos dois casos', () => {
+    for (const primeiro of SIDES) {
+      const inicial = createMatch(primeiro);
+      expect(inicial.turn, `primeiro=${primeiro}`).toBe(primeiro);
+
+      // O resto da abertura não muda com o sorteio: nada de placar ou histórico pré-carregado.
+      expect(inicial.kicks).toHaveLength(0);
+      expect(inicial.goals).toEqual({ A: 0, B: 0 });
+      expect(inicial.taken).toEqual({ A: 0, B: 0 });
+      expect(inicial.phase).toBe('regular');
+      expect(inicial.winner).toBeNull();
+    }
+  });
+
+  it('lado inválido é recusado em voz alta — não corrigido para "A"', () => {
+    // A recusa é o que impede um `first` torto (bug de M5, valor de rede, `undefined` de chamador
+    // JS sem tipos) de virar em silêncio uma disputa que começa em `'A'`. Cair no padrão antigo
+    // seria justamente o defeito que `T-17` remove, agora sem ninguém sabendo.
+    const invalidos: readonly unknown[] = ['a', 'b', 'C', '', 'AB', 0, 1, null, undefined, {}, ['A']];
+    for (const ruim of invalidos) {
+      expect(() => createMatch(ruim as Side), `first=${String(ruim)}`).toThrow(RangeError);
+      expect(() => createMatch(ruim as Side)).toThrow(/quem cobra primeiro/);
+    }
+  });
+
+  it('M2 não sorteia: a mesma entrada devolve a mesma abertura, 2x', () => {
+    // Se um gerador tivesse vazado para dentro de M2, duas aberturas iguais divergiriam aqui.
+    for (const primeiro of SIDES) {
+      expect(createMatch(primeiro)).toEqual(createMatch(primeiro));
+    }
+    expect(createMatch('A')).not.toEqual(createMatch('B'));
+  });
+});
+
+describe('M2 · T-17 — a ordem de cobrança NÃO alterna até o fim (D-48)', () => {
+  /**
+   * O portão, escrito como frase verificável: numa disputa completa, a cobrança de índice PAR é
+   * sempre de quem foi sorteado, e a ímpar sempre do outro. Vale nas 5 regulares e nas alternadas,
+   * porque uma rodada tem exatamente duas cobranças e a vez alterna a cada uma.
+   */
+  function conferirOrdemConstante(estado: MatchState, primeiro: Side): void {
+    const outro: Side = primeiro === 'A' ? 'B' : 'A';
+    estado.kicks.forEach((k, i) => {
+      expect(k.side, `cobrança ${i} (primeiro=${primeiro})`).toBe(i % 2 === 0 ? primeiro : outro);
+    });
+  }
+
+  it('numa disputa completa que chega às alternadas, o primeiro de cada rodada é sempre o sorteado', () => {
+    for (const primeiro of SIDES) {
+      // 10 defesas = 0x0 depois das 5 regulares: o caminho garantido até as alternadas. Depois,
+      // gol de um lado e defesa do outro fecha a primeira rodada alternada com vencedor.
+      const estado = trilha([...Array<boolean>(10).fill(false), true, false], primeiro).at(-1);
+      expect(estado).toBeDefined();
+      if (estado === undefined) return;
+
+      expect(estado.kicks.length, `primeiro=${primeiro}`).toBe(12);
+      expect(estado.phase).toBe('finished');
+      expect(estado.winner).toBe(primeiro); // quem cobrou primeiro na alternada é quem fez o gol
+      conferirOrdemConstante(estado, primeiro);
+    }
+  });
+
+  it('a fase alternada COMEÇA com o sorteado, e não com quem cobrou por último na regular', () => {
+    for (const primeiro of SIDES) {
+      const naVirada = trilha(Array<boolean>(10).fill(false), primeiro).at(-1);
+      expect(naVirada).toBeDefined();
+      if (naVirada === undefined) return;
+
+      expect(naVirada.phase, `primeiro=${primeiro}`).toBe('suddenDeath');
+      expect(naVirada.turn).toBe(primeiro);
+    }
+  });
+
+  it('em disputas sorteadas e longas, a ordem nunca vira — com qualquer dos dois começando', () => {
+    for (const primeiro of SIDES) {
+      for (let seed = 0; seed < 120; seed += 1) {
+        const estados = disputaSorteada(createRng(seed), 200, primeiro);
+        const ultimo = estados.at(-1);
+        expect(ultimo).toBeDefined();
+        if (ultimo === undefined) return;
+
+        conferirOrdemConstante(ultimo, primeiro);
+
+        // Enquanto a disputa não terminou, a vez é do sorteado exatamente nas cobranças pares.
+        for (const e of estados) {
+          if (e.phase === 'finished') continue;
+          expect(e.turn, `seed ${seed} · primeiro=${primeiro}`).toBe(
+            e.kicks.length % 2 === 0 ? primeiro : primeiro === 'A' ? 'B' : 'A',
+          );
+        }
+      }
+    }
+  });
+
+  it('trocar o primeiro cobrador espelha a disputa: mesmos pares de zonas, lados invertidos', () => {
+    // Prova que `first` não muda a REGRA, só quem começa: as mesmas entradas produzem o mesmo
+    // roteiro de gols, com os papéis trocados. Se `createMatch` tivesse mexido em mais alguma
+    // coisa, os dois placares deixariam de ser espelho um do outro.
+    const resultados = [true, false, true, true, false, false, true, false, true, true];
+    const comA = trilha(resultados, 'A').at(-1);
+    const comB = trilha(resultados, 'B').at(-1);
+    expect(comA).toBeDefined();
+    expect(comB).toBeDefined();
+    if (comA === undefined || comB === undefined) return;
+
+    expect(comB.goals).toEqual({ A: comA.goals.B, B: comA.goals.A });
+    expect(comB.taken).toEqual({ A: comA.taken.B, B: comA.taken.A });
+    expect(comB.kicks.length).toBe(comA.kicks.length);
+    expect(comB.phase).toBe(comA.phase);
+    expect(comB.winner).toBe(comA.winner === null ? null : comA.winner === 'A' ? 'B' : 'A');
   });
 });

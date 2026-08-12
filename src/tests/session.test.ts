@@ -121,6 +121,122 @@ describe('M5 — os modos produzem o MESMO MatchState para a mesma sequência de
   });
 });
 
+/* ───────────── T-17 / D-48 — o sorteio de quem cobra primeiro ───────────── */
+
+describe('M5 · T-17 — quem cobra primeiro sai de sorteio com o Rng de M1 (D-48)', () => {
+  /** O primeiro cobrador de uma sessão recém-criada. É `match.turn` antes de qualquer escolha. */
+  function primeiroCobrador(cfg: SessionConfig): Side {
+    const s = createSession(cfg);
+    const turn = s.state().turn;
+    s.dispose();
+    if (turn === null) throw new Error('sessão nova com turn nulo — defeito de M2 ou de M5');
+    return turn;
+  }
+
+  it('o sorteio é uniforme sobre milhares de sementes — nenhum lado é o padrão disfarçado', () => {
+    // 4.000 sementes consecutivas. O teto e o piso são a faixa de ±5% em torno de 2.000; com o
+    // mulberry32 de M1 a contagem medida é A=1.998 · B=2.002, e é determinística, então este
+    // teste não é estatístico de verdade: ele reprova a REGRESSÃO de alguém devolver uma
+    // constante. `const first = 'A'` daria 4.000 e 0, que a faixa recusa em qualquer dos lados.
+    const N = 4000;
+    const contagem: Record<Side, number> = { A: 0, B: 0 };
+    for (let seed = 0; seed < N; seed += 1) contagem[primeiroCobrador(cfgLocal(seed))] += 1;
+
+    expect(contagem.A + contagem.B).toBe(N);
+    for (const lado of LADOS) {
+      expect(contagem[lado], `lado ${lado} fora da faixa uniforme: ${contagem[lado]} de ${N}`)
+        .toBeGreaterThan(N * 0.45);
+      expect(contagem[lado]).toBeLessThan(N * 0.55);
+    }
+  });
+
+  it('mesma semente = mesmo primeiro cobrador (o critério "roda 2x com o mesmo resultado")', () => {
+    for (const seed of [0, 1, 7, 31, 4242, 12345, 999_983]) {
+      const primeira = primeiroCobrador(cfgLocal(seed));
+      const segunda = primeiroCobrador(cfgLocal(seed));
+      expect(segunda, `semente ${seed} sorteou lados diferentes em duas criações`).toBe(primeira);
+    }
+  });
+
+  it('sementes diferentes chegam aos DOIS lados — o sorteio não é decorativo', () => {
+    const vistos = new Set<Side>();
+    for (let seed = 0; seed < 50; seed += 1) vistos.add(primeiroCobrador(cfgLocal(seed)));
+    expect([...vistos].sort()).toEqual(['A', 'B']);
+  });
+
+  it('`cpu` e `local` sorteiam o MESMO lado para a mesma semente', () => {
+    // O sorteio é a primeira leitura do gerador da sessão nos dois modos. Se algum dia ele passar
+    // a acontecer depois do primeiro `pick` da CPU, os dois modos divergem aqui — e a equivalência
+    // entre modos, que é portão de T-09, cairia junto sem que nenhum tipo reclamasse.
+    for (const seed of [0, 1, 7, 31, 555, 4242, 12345]) {
+      for (const level of NIVEIS) {
+        for (const localSide of LADOS) {
+          expect(
+            primeiroCobrador(cfgCpu(seed, level, localSide)),
+            `semente ${seed} · ${level} · lado ${localSide}`,
+          ).toBe(primeiroCobrador(cfgLocal(seed)));
+        }
+      }
+    }
+  });
+
+  it('o lado local NÃO decide quem cobra primeiro — quem decide é a semente', () => {
+    // Sem esta linha, "sorteio" poderia significar na prática "o humano sempre começa", que é o
+    // defeito de T-17 com outra roupa.
+    for (const seed of [0, 1, 7, 31, 555, 4242, 12345, 999_983]) {
+      expect(primeiroCobrador(cfgCpu(seed, 'hard', 'A'))).toBe(
+        primeiroCobrador(cfgCpu(seed, 'hard', 'B')),
+      );
+    }
+  });
+
+  it('a ordem é constante numa disputa completa com alternadas, pelos dois modos', () => {
+    // A não-alternância é regra de M2 (`D-48`), e este teste a confere pelo caminho que a tela
+    // usa: sessão de verdade, escolha por escolha, até o fim.
+    //
+    // No modo `local` uma cobrança custa DUAS chamadas de `choose` (o chute e a defesa), e é por
+    // isso que o roteiro é escrito cobrança a cobrança em vez de zona a zona: contar as duas como
+    // uma faria a disputa terminar na metade do roteiro, com o teste acusando o código.
+    for (const seed of [0, 7, 31, 12345]) {
+      const sessao = createSession(cfgLocal(seed));
+      const primeiro = sessao.state().turn;
+      expect(primeiro).not.toBeNull();
+      if (primeiro === null) return;
+      const outro: Side = primeiro === 'A' ? 'B' : 'A';
+
+      /** Uma cobrança: mesma zona = defesa, zonas diferentes = gol. */
+      const cobrar = (gol: boolean): void => {
+        sessao.choose('L');
+        sessao.choose(gol ? 'R' : 'L');
+      };
+
+      // 10 defesas = 0x0 ao fim da fase regular: o caminho garantido até as alternadas, sem sorte.
+      for (let k = 0; k < 10; k += 1) cobrar(false);
+      expect(sessao.state().phase, `semente ${seed}`).toBe('suddenDeath');
+      // O que a alternância teria quebrado: a fase alternada começa com o MESMO lado sorteado.
+      expect(sessao.state().turn, `semente ${seed}: a alternada não começou com o sorteado`).toBe(primeiro);
+
+      // Primeira rodada alternada: gol de quem cobra primeiro, defesa do outro → decide.
+      cobrar(true);
+      cobrar(false);
+
+      const fim = sessao.state();
+      expect(fim.phase, `semente ${seed}`).toBe('finished');
+      expect(fim.kicks.length, `semente ${seed}`).toBe(12);
+      expect(fim.winner, `semente ${seed}`).toBe(primeiro);
+
+      fim.kicks.forEach((k, i) => {
+        expect(k.side, `semente ${seed}, cobrança ${i}`).toBe(i % 2 === 0 ? primeiro : outro);
+      });
+
+      sessao.dispose();
+    }
+  });
+
+  // O modo `online` NÃO sorteia (lacuna de `Q-11`), e isso é conferido em
+  // `session_online.test.ts`: criar sessão `online` exige a sinalização falsa, que mora lá.
+});
+
 describe('M5 — evento inválido nunca chega a M2', () => {
   const invalidas: readonly unknown[] = ['X', 'l', '', 0, 1, null, undefined, {}, ['L']];
 
@@ -311,10 +427,16 @@ describe('M5 — a CPU escolhe antes de observar a escolha da cobrança (D-26, Q
       const daCpu = new Set<Zone>();
       for (const humano of ZONAS) {
         const s = createSession(cfgCpu(777, level, 'A'));
+
+        // De qual campo sair a zona da CPU depende de quem cobra a 1ª — e isso passou a ser
+        // sorteio em `T-17`/`D-48`, não mais a constante `'A'`. Lido do estado em vez de
+        // presumido: com a semente 777 quem começa é `'B'`, ou seja a CPU, e ler `dive` fixo
+        // devolveria a zona do HUMANO, fazendo este teste medir a variação da própria entrada.
+        const cobrador = s.state().turn;
         s.choose(humano);
         const k = s.state().kicks[0];
         if (k === undefined) throw new Error('cobrança ausente');
-        daCpu.add(k.dive); // humano cobra (lado A), CPU defende
+        daCpu.add(cobrador === 'A' ? k.dive : k.shot); // o humano é o lado A
       }
       // Três escolhas diferentes do humano, uma única zona da CPU: ela não leu a cobrança
       // corrente.

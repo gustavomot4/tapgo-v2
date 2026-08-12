@@ -496,11 +496,18 @@ describe('invariante — sem sinalização, cpu e local seguem jogáveis', () =>
     expect(log.at(-1)).toBe('failed');
 
     // Roteiro que DECIDE: no modo local as escolhas alternam cobrador/goleiro, então o padrão
-    // de período 4 abaixo dá gol a `A` (chute L, defesa C) e defende o de `B` (chute L, defesa
-    // L). Zona única para os dois lados empataria 0x0 e giraria nas alternadas para sempre —
-    // o teste passaria pelo guarda, não pelo fim da disputa.
+    // de período 4 abaixo dá gol a quem cobra primeiro (chute L, defesa C) e defende o do outro
+    // lado (chute L, defesa L). Zona única para os dois lados empataria 0x0 e giraria nas
+    // alternadas para sempre — o teste passaria pelo guarda, não pelo fim da disputa.
     const padrao: Zone[] = ['L', 'C', 'L', 'L'];
     const s = createSession({ mode: 'local', seed: 3, teams: { A: 'BR', B: 'AR' }, localSide: 'A' });
+
+    // Quem cobra primeiro é sorteio desde `T-17`/`D-48` — com a semente 3 é `'B'`. O vencedor é
+    // lido daqui em vez de fixado em `'A'`: o que este teste prova é que a disputa **termina** sem
+    // sinalização, e amarrá-lo a um lado o faria reprovar por causa do sorteio, não da rede.
+    const primeiro = s.state().turn;
+    expect(primeiro).not.toBeNull();
+
     let guarda = 0;
     while (s.state().phase !== 'finished' && guarda < 200) {
       const z = padrao[guarda % 4];
@@ -509,7 +516,7 @@ describe('invariante — sem sinalização, cpu e local seguem jogáveis', () =>
       guarda += 1;
     }
     expect(s.state().phase).toBe('finished');
-    expect(s.state().winner).toBe('A');
+    expect(s.state().winner).toBe(primeiro);
     channel.close();
   });
 
