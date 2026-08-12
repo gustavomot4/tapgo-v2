@@ -27,11 +27,11 @@ Partida de ~1 minuto: contra a CPU, contra alguém no mesmo aparelho, ou por lin
 
 ## Estado atual (formato fixo — 1 linha por item, SEM prosa corrida)
 - **Versão:** v2.0.0-dev (a v1 é baseline morto: reescrita total, nenhum código reaproveitado)
-- **Pronto:** M1 (T-04) · M9 esqueleto (T-05) · M2 (T-06) · M3 (T-07) · M4 (T-08) · M5 (T-09 + `online` T-13) · M7 (T-10 + sorteio na tela T-17b) · M6 (T-11) · medição (T-15, T-16) · A-08 · **T-17 em `cpu`/`local`** — **E-1..E-4 fechadas**, suíte **370/370**; PLANO em D-13 (M4 e M8 alterados por D-51..D-58)
+- **Pronto:** M1 (T-04) · M9 esqueleto (T-05) · M2 (T-06) · M3 (T-07) · M4 (T-08) · M5 (T-09 + `online` T-13) · M7 (T-10 + sorteio na tela T-17b) · M6 (T-11) · medição (T-15, T-16) · A-08 · **T-17 em `cpu`/`local`** — **E-1..E-4 fechadas**, suíte **370/370**; PLANO em D-13 (M4 e M8 alterados por D-51..D-59)
 - **Bundle:** **100.735 B** (1,3% de 8 MB) lido de `dist/`, **+1.145 B** em T-17b; medição toda no chunk dela (`QA-06`); Phaser e Trystero fora, por `import()` (D-27)
 - **Em andamento (máx 1):** nada
 - **Próximo:** **E-5 aberta** — T-12 (M8), T-18 (as 32 no catálogo) e T-19 (bandeiras + licença). Depois: A-14, a passada de T-17b no celular real (sandbox não tem navegador; tela de M7 não é coberta por teste)
-- **Bloqueado/pendente:** registro **9.542/12.000** e QA **5.331/8.000** (`D-50`), folga somada **5.127** contra 27.285 projetados em 30 — a divisão não resolve, e esta sessão comeu 945 · T-19 trava o fecho de E-5 (`flag: null` até lá — D-22) · Q-11 trava o online
+- **Bloqueado/pendente:** registro **9.824/12.000** (acima do aviso de 9.600 — `A-15`) e QA **5.331/8.000**, folga somada **4.845**; esta sessão comeu 1.227 · T-19 trava o fecho de E-5 (`flag: null` até lá — D-22) · Q-11 trava o online
 - **Questões abertas:** Q-08, Q-09, Q-11 · respondidas: Q-03, Q-04, Q-05, Q-07, Q-10, Q-12 (o D-NN de cada uma está na linha dela) · **QA abertos:** QA-04..QA-07, QA-10, QA-16, QA-17 · **QA-11 sem objeto** · fechados: QA-08, QA-09, QA-12..QA-15
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)

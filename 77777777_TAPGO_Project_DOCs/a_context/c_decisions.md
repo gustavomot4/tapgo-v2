@@ -51,6 +51,8 @@ status: atual
 
 | D-58 | 2026-08-12 | ADOTADO | O dono confirmou as duas vetáveis: o `GB-ENG` de `D-52` fica, e a porta de M8 recebe `seed`, não `Rng` | Sem semente própria M8 não conhece o cursor do gerador, e o torneio restaurado divergiria com o teste de determinismo passando. Cursor em M1 foi a saída **rejeitada**: porta mais dependida do projeto por necessidade de um módulo só |
 
+| D-59 | 2026-08-12 | ADOTADO | O sorteio dos grupos é **cego**: as 32 caem nos 8 grupos direto pelo `Rng`, sem potes nem cabeça de chave | Escolha de variância, com o custo medido: **50,2%** das sementes põem ao menos duas das quatro primeiras no mesmo grupo, e 9,7% juntam a 1ª com a 2ª |
+
 > **Gatilhos de revisão** (`D-43`): moram no tema que cada um mede — `D-01` em [[online_p2p]], `D-02` em [[stack]].
 
 ## Questões abertas (Q-NN — decisões do DONO, não do agente)
