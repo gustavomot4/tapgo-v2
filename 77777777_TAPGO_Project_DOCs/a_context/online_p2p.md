@@ -28,6 +28,12 @@ preciso um **relay TURN**, que não é gratuito por natureza.
 com 100 conexões simultâneas). Para vídeo, 20 GB/mês acaba em horas; para um jogo por turnos que troca
 dezenas de bytes por jogada, é efetivamente ilimitado. **Isto é raciocínio de ordem de grandeza, não medição.**
 
+**O IPv6 desvia da lacuna, e só de parte dela (`D-46`).** Onde os dois jogadores têm IPv6, o candidato `host`
+já é endereço global: não há NAT no caminho e os 15-30% acima não se aplicam. Mas o caminho IPv6 exige os
+**dois** lados — um peer só-IPv4 derruba a conexão inteira para IPv4 —, então a fração de pares que o
+alcança é aproximadamente `p²`. Com o Brasil perto de 50% de adoção, isso é cerca de **um quarto dos pares**;
+os outros três quartos encontram a CGNAT. Por isso a medição tem dois contadores e o corte cobra o de IPv4.
+
 **Portão obrigatório (Fase 4):** medir a taxa real de conexão em **rede móvel real**, não em Wi-Fi doméstico.
 Wi-Fi de casa conecta quase sempre e esconde o defeito. Sem esse número, o modo online não é aceito.
 
@@ -36,6 +42,11 @@ não é gatilho): a forma "SPA estática, sem backend" reabre quando a conexão 
 rede móvel real e o fallback exigir TURN próprio**; ou quando o dono aprovar requisito com autoridade de
 servidor (ranking global antifraude, conta). O critério estatístico da medição é `D-42`, tabelado em
 [[m6_transporte_notas]].
+
+**Qual número dispara o gatilho (`D-46`):** o do contador **`IPv4/com NAT`**, não o total nem o de IPv6.
+Uma taxa alta medida com IPv6 nos dois aparelhos não desarma este gatilho — ela mede o caminho em que a
+NAT não existe, que é justamente o que o gatilho não está vigiando. Para produzir o número certo com dois
+aparelhos da mesma operadora, force o APN para IPv4 nos dois (ver `A-08`).
 
 ## Riscos que precisam de fallback escrito
 | Risco | Consequência | Fallback exigido |

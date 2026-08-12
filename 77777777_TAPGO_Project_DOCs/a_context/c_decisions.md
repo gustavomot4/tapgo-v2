@@ -37,6 +37,7 @@ status: atual
 | D-43 | 2026-08-08 | ADOTADO | Como o registro perde peso: sai da tabela quem nenhum `.md` vivo cita (`src/` **não** segura linha — supersede o critério 3 de `A-09`), e gatilho de revisão vai para o tema que ele mede | Pelo critério 3 o corte máximo dava 10.055, portão de `A-12` inalcançável; `A-09` já o excedera ao retirar `D-33`, citado em `vite.config.ts`. Gatilho longe do número que o dispara não é lido |
 | D-44 | 2026-08-08 | ADOTADO | `T-16`: a medição chega ao par de candidatos embrulhando o **global** `RTCPeerConnection` (`Proxy` sobre `construct`), e abre os sucessos por tipo de par | M6 intacto, ao contrário de `D-39`/`D-40`; `relay` não é P2P direto e `srflx↔srflx` com o MESMO IP público é hairpin, que não fala de CGNAT |
 | D-45 | 2026-08-08 | ADOTADO | O texto colável da medição leva o IP com 2 octetos; inteiro só com a caixa marcada | Repositório público (`D-21`) e o resumo vira linha de registro; a comparação que decide hairpin usa o IP inteiro, que a tela mostra |
+| D-46 | 2026-08-08 | ADOTADO | `Q-12`: IPv6 fim-a-fim é sucesso, mas E-4 passa a ter **dois contadores** — `IPv6/sem NAT` e `IPv4/com NAT` — e o corte de 70% é cobrado só contra o de IPv4 | O corte nasceu dos 15-30% de CGNAT, que é de IPv4: medir com IPv6 nos dois lados mede onde o problema não existe. Zero código — forçar APN IPv4 separa as rodadas |
 
 > **Gatilhos de revisão** (`D-43`): moram no tema que cada um mede — `D-01` em [[online_p2p]], `D-02` em [[stack]].
 
@@ -52,7 +53,7 @@ status: atual
 | Q-09 | No modo `local`, de quem é a escolha pendente, se a porta congelada de M5 não a expõe? | antes de T-10 (**prazo vencido — `QA-07`**); hoje M7 deriva de `kicks.length` e a saída definitiva está em [[questoes_abertas_notas]] |
 | Q-10 | TURN entra como camada gratuita (saída **a**) ou fica fora de escopo com o percentual sem online registrado (saída **b**)? | depois das DUAS medições de E-4 — o agente não inventa o número, e o critério com os três cortes já está em [[m6_transporte_notas]] |
 | Q-08 | `pick(role)` lê o histograma do **mesmo** papel — é essa a intenção, ou quem defende deveria ler o histograma `shooter` do humano? | antes de E-3 (**prazo vencido — `QA-07`**); as duas leituras e o custo de inverter em [[questoes_abertas_notas]] |
-| Q-12 | Conexão **IPv6 fim-a-fim, sem NAT no caminho**, conta para o corte de 70% de E-4 — e o que a taxa medida com IPv6 nos dois aparelhos diz sobre o usuário que só tem IPv4 atrás de CGNAT? | antes de fechar E-4 e antes de `Q-10`; nasceu da 2ª ida a campo (`QA-14`), e muda o significado do número, não o código |
+| Q-12 | ~~IPv6 fim-a-fim conta para o corte de 70% de E-4?~~ | **RESPONDIDA 2026-08-08 → D-46** |
 | Q-11 | Como M7 recebe o `roomId` do anfitrião, se a porta de M5 (`D-13`) não o devolve e M7 não pode importar `src/net`? | antes da tela de convite — duas saídas em [[m5_sessao_notas]], as duas mexendo em porta congelada, logo `D-NN` do dono |
 
 ## Achados de QA (QA-NN — citados no commit: `fix: QA-NN …`)
