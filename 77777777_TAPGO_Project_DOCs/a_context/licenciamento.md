@@ -38,8 +38,10 @@ Trocar de clube para seleção troca o dono do direito, não sai do problema.
 - Hotlink de imagem de terceiro (a v1 fazia isso com a Wikipédia): além do direito, quebra o jogo offline.
 
 ## Nome do torneio no jogo
-Precisa ser original. `Q-03` decide o nome final. Candidatos que **não** colidem com marca conhecida:
-"Copa TAP GO", "Torneio das Nações", "TAP GO Cup".
+**Decidido em 2026-08-12 (`D-55`): TAP GO Cup.** Os outros dois candidatos levantados aqui — "Copa TAP GO"
+e "Torneio das Nações" — não foram escolhidos e ficam registrados como as alternativas que existiam.
+O nome é cobrado pelo mesmo `grep` da lista-morta que E-5 varre: original não é o que parece original, é o
+que passa na varredura.
 
 ## Procedência de asset (portão da Fase 6)
 Todo arquivo em `assets/` tem uma linha nesta tabela antes de entrar no repositório. Sem linha, não entra.
@@ -53,6 +55,20 @@ o arquivo que não tiver linha aqui. Portão que só existe em prosa é portão 
 | `src/assets/audio/chute.wav` | **sintetizado** em T-10 por `src/scripts/gen-audio.mjs`: varredura de senoide 190→62 Hz mais rajada de ruído de LCG com semente fixa. Nenhum sample, nenhuma gravação, nenhum download | do projeto | projeto TAP GO v2 (agente, sessão T-10) |
 | `src/assets/audio/gol.wav` | **sintetizado** em T-10 pelo mesmo script: tríade 523/659/784 Hz com envelope exponencial | do projeto | projeto TAP GO v2 (agente, sessão T-10) |
 | `src/assets/audio/defesa.wav` | **sintetizado** em T-10 pelo mesmo script: ruído de LCG com média móvel mais varredura 320→128 Hz | do projeto | projeto TAP GO v2 (agente, sessão T-10) |
+
+### Bandeiras: fonte escolhida, arquivos ainda não
+`D-54` escolheu o **flag-icons** — SVG, licença **MIT**, `Copyright (c) 2013 Panayiotis Lipiridis`. Nenhum arquivo
+entrou ainda: `T-19` traz os 32 SVGs das seleções de `D-51`, e cada um ganha sua linha na tabela acima.
+
+Duas condições, e as duas são portão de `T-19`, não recomendação:
+- **O texto da licença entra ANTES do primeiro SVG.** A MIT é permissiva mas exige manter o aviso de copyright;
+  arquivo primeiro e licença depois é exatamente a janela em que a regra desta página é violada.
+- **Nada de hotlink nem de CDN.** É a mesma linha que a v1 quebrou com a Wikipédia, e vale igual para uma fonte
+  com licença boa: além do direito, hotlink quebra o jogo offline.
+
+A Inglaterra é o caso que obrigou `D-52`: ela não tem código ISO-3166-1, e entra como `GB-ENG`. Isso é **código de
+subdivisão**, não bandeira de federação — a `GB-ENG` é a cruz de São Jorge, símbolo territorial, e continua dentro
+da regra de uma linha desta página.
 
 ### Por que os três áudios são conferíveis, e não só declarados
 `gen-audio.mjs` é determinístico — o ruído sai de um LCG com semente fixa, não de `Math.random()`.

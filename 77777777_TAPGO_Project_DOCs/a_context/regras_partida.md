@@ -54,6 +54,14 @@ Invariantes da CPU (viram teste):
 - Sorteio usa a semente do motor. Mesma semente + mesmas entradas = mesmas escolhas da CPU.
 - Com histórico vazio (primeira cobrança), a distribuição é uniforme em qualquer nível.
 
+## Torneio (`D-53`) — a regra fica aqui, o desenho fica no PLANO
+Não é regra do motor: M2 não sabe o que é torneio. O que M8 acrescenta e vira teste:
+- Classifica-se por **vitórias**, não por pontos — a disputa nunca empata, então não há empate a distribuir.
+- Desempate, **nesta ordem**: confronto direto → saldo de gols → gols marcados → **sorteio com o `Rng` de M1**.
+  O sorteio é o último critério e só é alcançado quando os três anteriores empatam; nunca o `Math.random` nativo.
+- As disputas sem o jogador são **simuladas pelo motor** (M2 com duas CPUs de M3) e obedecem ao mesmo teto de 70%.
+
 ## Lacunas declaradas (não inventar)
-- `Q-03` — quantas e quais seleções entram, e o nome do torneio.
+- ~~`Q-03` — quantas e quais seleções entram, e o nome do torneio.~~ **Respondida em 2026-08-12:** 32 seleções
+  (`D-51`) e **TAP GO Cup** (`D-55`). A lista curada está em [[m4_lista_das_32]] — não se digita de memória.
 - Desconexão no meio da partida online: consequência ainda não definida (ver [[online_p2p]]).

@@ -9,6 +9,7 @@ data: 2026-08-07
 > Gerado na Fase 1b com [[b_process/skills/planner/SKILL|planner]] a partir do [[a_context_source|CONTEXT]].
 > **CONGELADO em 2026-08-07 por `D-13`.** T-02 aprovado pelo dono; T-03 aprovado na passagem 2 ([[b_artifact_consistency_report_260807_1605|relatório 2]]): 5/5 restrições inegociáveis com portão, 6/6 critérios de aceite com número ou comando, zero CRÍTICO aberto.
 > **Daqui em diante, mudança de rumo é `D-NN` novo — nunca replanejar do zero.** Editar este arquivo sem D-NN é o defeito que o congelamento existe para impedir.
+> **Alterado em 2026-08-12 por `D-51`..`D-57`** (respostas de `Q-03` e `Q-05`): mudam **M4**, **M8**, a tabela de donos de estado, a ordem de build e **E-5**. Nada foi replanejado — cada mudança tem a linha de decisão que a autoriza, e o resto do plano é o de `D-13`.
 > Histórico das duas revisões: 19 achados da [[a_artifact_consistency_report_260807_1543|passagem 1]] (os três CRÍTICOS viraram `QA-01`..`QA-03`) e 7 da [[b_artifact_consistency_report_260807_1605|passagem 2]] (`AC-20`..`AC-26`), todos fechados antes do congelamento.
 > Critério de qualidade: outro agente implementa um módulo lendo **só o contrato dele + o CONTEXT**.
 > Estado (o que já está pronto) NÃO mora aqui — mora no CONTEXT.
@@ -34,9 +35,11 @@ Como as camadas são estritamente crescentes, não existe ciclo por construção
 | M4 | Catálogo de seleções | 1 | M1 | 2 |
 | M6 | Transporte online P2P | 1 | M1 | 3 |
 | M5 | Sessão de disputa | 2 | M1 M2 M3 M4 M6 | 3 |
-| M8 | Torneio | 3 | M1 M4 M5 | 3 |
+| M8 | Torneio | 3 | M1 M2 M3 M4 (`D-57`) | 3 |
 | M7 | Tela (Phaser) | 4 | M1 M4 M5 M8 | 3 |
 | M9 | Build e publicação | — | ninguém importa, e ele não importa ninguém | 5 |
+
+**M8 não importa M5** (`D-57`). A disputa do jogador é conduzida por M7 **através** de M5 e volta para M8 por `report()`; as disputas sem o jogador M8 simula sozinho com M2 + M3. O motivo é o contrato de M5: `choose()` é a escolha **deste aparelho**, então uma sessão de M5 nunca anda sem alguém escolhendo — e num torneio de 64 disputas a maioria não tem ninguém. A camada continua 3 porque a regra é "a seta só aponta para baixo", e M8 passou a apontar só para as camadas 0 e 1.
 
 Duas consequências viram checagem objetiva (portão de E-1, e valem para sempre):
 
@@ -59,9 +62,12 @@ Cada linha tem **um** dono. Ninguém mais escreve nela; quem precisa, lê pela p
 | Catálogo de seleções (imutável) | M4 | bundle | nunca (resolve em build) |
 | Modo, lado local, escolha pendente, nº de sequência | M5 | memória | recarrega a página |
 | Conexão, ID de sala, relógio de timeout | M6 | memória | desconecta ou recarrega |
-| Chaveamento do torneio | M8 | memória — **[a confirmar em E-5]** se sobrevive a reload; se sim, muda de dono e vai para `localStorage` de M7 | recarrega a página |
+| Chaveamento do torneio, **vivo** | M8 | memória | o jogador abandona o torneio, ou recarrega |
 | Cena e animação | M7 | memória | troca de cena |
 | Preferências do aparelho (nível, som, última seleção) | M7 | `localStorage` | o usuário limpa o navegador |
+| **Cópia salva** do chaveamento (`D-57`) | M7 | `localStorage` | o usuário limpa o navegador |
+
+**As duas linhas do torneio são dois estados, não um estado com dois donos** (`D-57`, que fecha a ressalva "a confirmar em E-5" de `D-13`). O chaveamento vivo é de M8 e mora na memória; a cópia salva é o retrato que `toJSON()` produz, e é de M7 — M8 não a lê nem a escreve, e ao recarregar quem reconstrói o vivo a partir dela é M7, chamando `restoreTournament`. Sem essa separação, o mesmo dado teria dois donos e a regra acima cairia.
 
 ### As 5 restrições inegociáveis × o portão que verifica cada uma
 
@@ -70,7 +76,7 @@ Esta tabela existe porque a primeira versão do plano deixou três delas sem che
 | Restrição do [[a_context_source|CONTEXT]] | Portão que a verifica |
 |---|---|
 | Custo R$ 0 permanente; build estático | M9: tabela de custo de [[stack]] completa, toda linha "não pede cartão" · M6: TURN com dono e com linha nessa tabela |
-| Nenhuma marca de terceiro | M4 (bandeira e código ISO) · **M7 (uniforme, jogador, texto de tela, `assets/` inteiro)** · E-5 (nome do torneio) |
+| Nenhuma marca de terceiro | M4 (bandeira e código ISO) · **M7 (uniforme, jogador, texto de tela, `assets/` inteiro)** · E-5 (nome do torneio = **TAP GO Cup**, `D-55`) |
 | Nenhum segredo versionado | M9 + `scripts/check.py` |
 | Nenhum dado pessoal coletado | "sem conta" é estrutural (`D-01`, sem backend) · **M9: zero script externo, zero endpoint externo fora da sinalização de M6** · M3 e M7: o que pode ir para `localStorage` |
 | Não inventar dado; lacuna declarada fica declarada | nenhum `[a confirmar]` dentro de portão (só em prosa e na tabela de estado) · toda lacuna que trava etapa é `Q-NN` no DECISIONS |
@@ -81,18 +87,20 @@ Esta tabela existe porque a primeira versão do plano deixou três delas sem che
 |---|---|
 | Placar e contadores em inteiro, nunca float | portão de M2 (`Number.isInteger` em toda transição) |
 | ID de sala opaco e aleatório, nunca sequencial | portão de M6 |
-| País por código ISO-3166 alfa-2, nunca nome digitado | portão de M4 |
+| País por código ISO-3166 alfa-2, nunca nome digitado | portão de M4 — **ampliado por `D-52`**: alfa-2, e alfa-2+subdivisão (`GB-ENG`) só onde a alfa-2 não existe. A parte que não afrouxou é a que importa: continua sendo **código**, nunca nome digitado |
 | Datas UTC ISO-8601 | **não-aplicável declarado:** o v2 não produz nem persiste data em runtime. O único relógio é o timeout de M6, que compara instantes e não guarda nenhum. Se algum módulo passar a persistir data, esta linha vira portão |
 | Arquivos UTF-8 | garantido fora do código, pelo `.gitattributes` (LF) e pelo padrão do repositório — nenhum módulo escreve arquivo |
 
 ## Ordem de build
 
-Dados/schema (M1, forma de M4) → domínio (M2, M3) → borda (M6, M5) → UI (M7, M8) → infra (M9).
+Dados/schema (M1, forma de M4) → domínio (M2, M3, **M8**) → borda (M6, M5) → UI (M7) → infra (M9).
+
+> **M8 estava em "UI" e voltou para "domínio" em 2026-08-12** (`D-57`). Não é reclassificação cosmética: M8 virou consumidor de M2 e M3, não da tela.
 
 **Dois desvios, ambos justificados:**
 
 1. **O esqueleto de M9 vem primeiro (E-1), não por último.** O GitHub Pages serve o site num subcaminho, e o build padrão gera caminhos que só quebram *em produção*; e o teto de 8 MB é "número lido da saída do build", não estimativa. Descobrir isso no dia 1 custa uma sessão; no dia da entrega, custa a entrega. O **portão** de M9 continua no fim (E-6) — o que antecipa é só o esqueleto.
-2. **M8 (torneio) vem depois de M7, fora da ordem de camada.** Não é preferência: `Q-03` trava o conteúdo dele, e escrever M8 antes da resposta é escrever contra suposição. A **tela** do torneio (M7 em E-5) segue o mesmo atraso, e tem tarefa própria.
+2. ~~**M8 (torneio) vem depois de M7, fora da ordem de camada.**~~ **O desvio acabou em 2026-08-12:** `Q-03` e `Q-05` foram respondidas (`D-51`..`D-56`), e M8 volta para a ordem normal de camada — domínio antes da UI. A **tela** do torneio (M7 em E-5) continua depois de M8, agora por dependência real e não por espera: ela lê o chaveamento pela porta de M8.
 
 ## Módulos e contratos
 
@@ -106,7 +114,8 @@ Dados/schema (M1, forma de M4) → domínio (M2, M3) → borda (M6, M5) → UI (
   ```ts
   export type Zone = 'L' | 'C' | 'R';        // esquerda · meio · direita
   export type Side = 'A' | 'B';
-  export type CountryCode = string;          // ISO-3166 alfa-2, 2 letras maiúsculas
+  export type CountryCode = string;          // ISO-3166: alfa-2, ou alfa-2+subdivisão (GB-ENG) onde
+                                             // a alfa-2 não existe — ampliado por D-52; quem valida é M4
   export interface Rng { int(maxExclusive: number): number; }   // inteiro em [0, max)
   export function createRng(seed: number): Rng;
   export function newSeed(): number;         // a ÚNICA chamada a Math.random do projeto
@@ -168,15 +177,17 @@ Dados/schema (M1, forma de M4) → domínio (M2, M3) → borda (M6, M5) → UI (
 - **Entrega:** a lista de seleções jogáveis e a busca por código.
 - **Porta de entrada:** `src/data/teams.ts`
   ```ts
-  export interface Team { code: CountryCode; name: string; flag: string; }  // flag = caminho local, nunca URL
+  export interface Team { code: CountryCode; name: string; flag: string | null; }  // caminho LOCAL, nunca URL;
+  // `null` = seleção ainda sem arquivo de bandeira (D-22); deixa de existir quando T-19 trouxer os 32 SVGs
   export function listTeams(): readonly Team[];
   export function findTeam(code: CountryCode): Team | undefined;
   ```
 - **Estado que possui:** o catálogo (imutável, resolvido em build).
 - **Skill responsável:** [[b_process/skills/backend-domain/SKILL|backend-domain]]
-- **Bloqueado por `Q-03`:** quantas e quais seleções entram, e **de onde vêm as bandeiras**. Contrato e testes podem ser feitos **agora**, com uma lista de fixação; a lista real só entra depois de `A-04`. Não inventar seleção [Fonte: a_context/regras_partida.md#lacunas-declaradas].
-- **Portão:** todo `code` é ISO-3166 alfa-2 válido, e o `name` vem do código — nunca texto digitado livre · todo arquivo em `flag` é local (zero URL, zero hotlink) e tem uma linha na tabela de procedência [Fonte: a_context/licenciamento.md#procedência-de-asset] · zero escudo de clube ou federação [Fonte: a_context/licenciamento.md#o-que-é-proibido-no-projeto].
-- **Onde a stack vai doer:** bandeira é o único asset que multiplica por N. N × SVG cabe folgado no teto de 8 MB; N × PNG grande, não — e o número sai da saída do build, não de estimativa. A licença da fonte das bandeiras tem de existir **antes** de o arquivo entrar no repositório, e por isso ela faz parte de `Q-03`, não de uma decisão de implementação.
+- **`Q-03` respondida em 2026-08-12 — o que era lacuna virou número:** são **32 seleções**, as 32 primeiras do snapshot de ranking de 20/07/2026 (`D-51`); os 32 códigos, as duas fontes e a data de leitura estão em [[m4_lista_das_32]], e é de lá que a lista sai — não da memória de quem implementa [Fonte: a_context/c_decisions.md#decisões]. As bandeiras vêm do **flag-icons** (MIT, `D-54`).
+- **`code` deixou de ser só alfa-2 (`D-52`, confirmado pelo dono em 2026-08-12 — `D-58`).** A 4ª colocada é a Inglaterra, que **não tem** código ISO-3166-1 — a alfa-2 `GB` é o Reino Unido inteiro. Ela entra como `GB-ENG` (ISO 3166-2), e nenhuma outra das 32 precisa da ampliação: as outras 31 são alfa-2 válidas.
+- **Portão:** exatamente **32** entradas, sem código repetido · todo `code` é alfa-2 válido **ou** o `GB-ENG` de `D-52`, e um teste falha se aparecer um segundo código fora da alfa-2 sem `D-NN` novo · o `name` vem do código pelo ICU, com **uma** exceção nomeada em teste (a de `GB-ENG`) — nunca texto digitado livre · todo arquivo em `flag` é local (zero URL, zero hotlink) e tem linha na tabela de procedência, e o texto da licença do flag-icons está no repositório [Fonte: a_context/licenciamento.md#procedência-de-asset] · zero escudo de clube ou federação [Fonte: a_context/licenciamento.md#o-que-é-proibido-no-projeto] · `CATALOG_IS_FIXTURE` vira `false` e o teste que hoje falha de propósito passa a cobrar o catálogo real.
+- **Onde a stack vai doer:** **o portão "nome vem do código" não sobrevive inteiro a `GB-ENG`.** Medido no Node 22: `new Intl.DisplayNames(['pt'],{type:'region'}).of('GB-ENG')` lança `RangeError` — o ICU resolve região, não subdivisão. Ou seja, o nome da Inglaterra é o **único** literal do catálogo, e o teste de `D-23` precisa de uma exceção **nomeada** (uma lista de exceções de tamanho 1), não de um afrouxamento geral: afrouxar devolve o buraco que o portão fechou. Bandeira também é o único asset que multiplica por N — 32 × SVG cabe folgado no teto de 8 MB; 32 × PNG grande, não, e o número sai da saída do build.
 
 ### M5 — Sessão de disputa (o único caminho da tela até o motor)
 
@@ -235,10 +246,11 @@ Dados/schema (M1, forma de M4) → domínio (M2, M3) → borda (M6, M5) → UI (
 - **Recebe:** `MatchState` e `LinkStatus` pela porta de M5 (que os reexporta); as seleções por M4; o chaveamento por M8.
 - **Entrega:** as cenas jogáveis por toque, com os 4 estados por tela, e a leitura/escrita das preferências do aparelho.
 - **Porta de entrada:** `src/ui/main.ts` → `export function bootGame(container: HTMLElement): void`
-- **Estado que possui:** cena/animação (memória) e **as preferências do aparelho** em `localStorage` — nível da CPU, som, última seleção. Só isso: `localStorage` não guarda disputa, histórico de zonas nem nada que identifique a pessoa.
+- **Estado que possui:** cena/animação (memória) e, em `localStorage`, **as preferências do aparelho** (nível da CPU, som, última seleção) **e o torneio salvo** — o `TournamentState` que M8 devolve por `toJSON()` (`D-57`). Só isso: `localStorage` não guarda disputa em andamento, histórico de zonas nem nada que identifique a pessoa. O torneio salvo cabe nessa regra porque é código de país e inteiro, e nada mais — o portão abaixo cobra isso por teste, não por promessa.
 - **Skill responsável:** [[b_process/skills/frontend-uiux/SKILL|frontend-uiux]]
 - **Portão — jogabilidade:** fluxo crítico completo por toque em viewport 360x640 · ≥30 fps no celular real do dono (abaixo disso abre o gatilho de `D-02`) · nenhum texto técnico vazando na tela ("ICE failed" não é mensagem de jogo).
-- **Portão — camada:** `grep` por import de `src/engine`, `src/cpu` ou `src/net` dentro de `src/ui/` retorna zero (os tipos vêm de M5).
+- **Portão — camada:** `grep` por import de `src/engine`, `src/cpu` ou `src/net` dentro de `src/ui/` retorna zero (os tipos vêm de M5 e de M8).
+- **Portão — o que M7 grava:** o que vai para `localStorage` é conferido por teste contra uma lista fechada de chaves, e o torneio salvo só contém código de país e número — zero texto livre, zero data, zero identificador de aparelho. **Torneio salvo que não desserializa é descartado em silêncio e o jogo abre no menu**, nunca numa tela quebrada: o dado vem do navegador do jogador, que pode ter sido editado à mão ou ficado de uma versão anterior.
 - **Portão — licença (M7 é quem desenha, e por isso é aqui que a restrição morde):**
   - **todo** arquivo em `assets/` — não só bandeira — tem linha na tabela de procedência de [[licenciamento]]; sem linha, não entra no repositório [Fonte: a_context/licenciamento.md#procedência-de-asset];
   - zero uniforme oficial identificável de clube ou seleção; zero nome, apelido, rosto ou número de jogador real [Fonte: a_context/licenciamento.md#o-que-é-proibido-no-projeto];
@@ -247,22 +259,44 @@ Dados/schema (M1, forma de M4) → domínio (M2, M3) → borda (M6, M5) → UI (
 
 ### M8 — Torneio
 
-- **Recebe:** as seleções participantes e o `Rng`; depois, o resultado de cada disputa.
-- **Entrega:** o par da vez, a rodada, e o campeão ao fim.
+> **Alterado por `D-57`**, que supersede `D-13` **só no que M8 exige**: cai o portão "sem par repetido", a porta passa a serializar, e M8 importa M2/M3. O resto de `D-13` segue de pé.
+
+- **Recebe:** as 32 participantes, **qual delas é a do jogador**, o nível da CPU e a semente. Depois, só o vencedor de cada disputa **do jogador**.
+- **Entrega:** a próxima disputa do jogador, a rodada, a classificação, o campeão — e a **forma serializada** do chaveamento, para M7 gravar.
 - **Porta de entrada:** `src/tournament/index.ts`
   ```ts
-  export interface Tournament {
-    current(): { teams: Record<Side, CountryCode>; round: number } | null;
-    report(winner: Side): void;
-    champion(): CountryCode | null;
+  export type { Level } from '../cpu';   // reexporta: M7 monta o config sem importar M3
+
+  export type Stage = 'groups' | 'r16' | 'quarter' | 'semi' | 'third' | 'final';
+  export interface TournamentConfig {
+    entrants: readonly CountryCode[];    // 32 (D-51)
+    human: CountryCode;                  // a do jogador; as outras disputas são simuladas
+    level: Level;                        // dificuldade das simuladas — teto de 70% (D-10)
+    seed: number;
   }
-  export function createTournament(entrants: readonly CountryCode[], rng: Rng): Tournament;
+  export interface Standing {                        // linha da tabela de um grupo
+    code: CountryCode; wins: number; goalsFor: number; goalsAgainst: number;
+  }
+  export interface TournamentState { /* opaco para quem lê; estável para quem grava */ }
+  export interface Tournament {
+    current(): { teams: Record<Side, CountryCode>; stage: Stage; round: number } | null;
+    report(winner: Side): void;          // só a disputa DO JOGADOR entra por aqui
+    group(code: CountryCode): readonly Standing[];    // a tabela do grupo de `code`
+    champion(): CountryCode | null;
+    toJSON(): TournamentState;           // quem PERSISTE é M7 (D-57)
+  }
+  export function createTournament(cfg: TournamentConfig): Tournament;
+  export function restoreTournament(state: TournamentState): Tournament;
   ```
-- **Estado que possui:** o chaveamento, em memória — **[a confirmar em E-5]** se ele sobrevive a um reload; se sobreviver, o estado muda de dono e passa a viver no `localStorage` de M7. Quem implementar M8 lendo só este contrato precisa saber que essa virada é possível, e por isso a ressalva está aqui e na tabela de donos de estado, não só lá.
+- **A assinatura mudou, e a mudança é o ponto** (aprovada pelo dono em `D-58`). `D-13` tinha `createTournament(entrants, rng)`; agora M8 recebe a **semente**, não um `Rng` pronto. É o que torna `D-57` possível: um `Rng` que veio de fora tem cursor que M8 não controla nem sabe serializar, e o torneio restaurado sortearia de um estado diferente. `report()` continua recebendo só o vencedor, e `current()` ganhou `stage` porque "rodada 4" não diz se é oitavas ou terceira rodada de grupo.
+- **Estado que possui:** o chaveamento e o cursor do próprio gerador. A **cópia salva** é de M7 (tabela de donos de estado) — M8 não conhece `localStorage`, e um `grep -rn "localStorage" src/tournament/` no portão prova isso.
 - **Skill responsável:** [[b_process/skills/backend-domain/SKILL|backend-domain]]
-- **Bloqueado por `Q-03`** (número de participantes, **formato do chaveamento** e nome do torneio, que não pode colidir com marca [Fonte: a_context/licenciamento.md#nome-do-torneio-no-jogo]) **e por `Q-05`** (se o torneio também roda no modo `online`, M8 passa a depender de M5 no modo online e o chaveamento vira estado compartilhado entre dois aparelhos — isso muda a camada 3).
-- **Portão:** o torneio termina no número de disputas que o formato respondido em `Q-03` prevê, com um campeão e sem par repetido · mesma semente = mesmo chaveamento · a CPU do torneio respeita o teto de 70%: nenhuma progressão de dificuldade passa disso [Fonte: a_context/regras_partida.md#cpu-d-10].
-- **Onde a stack vai doer:** nada técnico. O custo aqui é conteúdo, e ele está em `Q-03` e `Q-05` — enquanto as duas estiverem abertas, escrever M8 é escrever contra suposição.
+- **O formato, em número (`D-53`):** 8 grupos de 4 = **48** disputas de grupo · mata-mata de 16 = 8 + 4 + 2 + 1 = **15** · disputa de 3º lugar = **1**. Total **64**. Classifica-se por **vitórias** — a disputa nunca empata (`D-09`), então não há ponto de empate a distribuir —, e o desempate é, nesta ordem: **confronto direto → saldo → gols → sorteio** com o `Rng` (`D-53`).
+- **Quem joga o quê:** a disputa do jogador sai por `current()`, é conduzida por M7 **através de M5** e volta por `report(winner)`. Todas as outras M8 simula sozinho, chamando M2 com duas CPUs de M3 — **é por isso que M8 passou a importar M2 e M3** (`D-57`). M5 não serve para isso: `choose()` é a escolha *deste aparelho*, e uma sessão de M5 fica parada esperando alguém que, nas disputas dos outros, não existe. **A conta:** o jogador disputa de **3 a 7** das 64 — 3 na fase de grupos, mais até 4 no mata-mata (oitavas, quartas, semi, e final **ou** 3º lugar) —, então M8 simula entre **57 e 61**.
+- **O jogador eliminado não encerra o torneio.** Sai da conta: 64 disputas com um campeão é o portão, e um torneio que para na eliminação entrega menos que 64. No `report()` que elimina o jogador, M8 simula tudo o que falta de uma vez; a partir daí `current()` devolve `null` e `champion()` devolve o vencedor.
+- **Portão:** o torneio termina em **exatamente 64 disputas** com **um** campeão, contadas por instrumentação e não por inspeção · a mesma semente com a mesma seleção do jogador dá o mesmo chaveamento e o mesmo campeão, **duas execuções seguidas** · **`toJSON()` no meio e `restoreTournament()` reproduzem exatamente a mesma linha do tempo até o campeão** que a execução sem recarregar — é o teste que prova a sobrevivência ao reload, e sem ele "serializa" é só uma assinatura · um teste por critério de desempate, **na ordem**, e o sorteio só é alcançado quando os três anteriores empatam · dentro da fase de grupos **nenhum par se repete** (as 48 são as 6 combinações de cada grupo) · `current()` sempre devolve um par que contém a seleção do jogador · todo participante existe em M4 · a CPU das simuladas respeita o teto de 70% [Fonte: a_context/regras_partida.md#cpu-d-10] · `grep -rn "Math.random" src/` continua em 1 e `grep -rn "localStorage" src/tournament/` em 0.
+- **O portão "sem par repetido" de `D-13` foi retirado (`D-57`), não esquecido.** Ele era verdadeiro num mata-mata puro e é **falso** neste formato: duas seleções do mesmo grupo se reencontram no mata-mata por construção, e um portão que reprova o comportamento correto seria removido no primeiro teste vermelho — melhor removê-lo aqui, com a linha de decisão que explica por quê. O que sobrou dele é a versão verdadeira: sem par repetido **dentro da fase de grupos**.
+- **Onde a stack vai doer:** **restaurar o chaveamento não restaura o gerador.** A porta de M1 (`Rng`) expõe `int()` e mais nada — não há cursor para ler nem para escrever —, então um torneio restaurado continuaria sorteando de um estado diferente e as simuladas divergiriam, com o teste de determinismo passando (ele não recarrega) e o jogo mentindo em campo. A saída que **não** toca porta congelada: `TournamentState` guarda a semente e **quantos sorteios foram consumidos**, e `restoreTournament` refaz o `Rng` descartando essa quantidade — alguns milhares de `int()`, custo irrelevante. A outra saída seria dar um cursor a M1, e isso é porta congelada por `D-13`: exigiria `D-NN` próprio. O segundo lugar onde dói é o volume: 64 disputas × ~12 cobranças é o dobro do que o motor já roda num teste, e o teste de determinismo roda tudo **duas vezes** — se M2 ou M3 tiverem alocação por cobrança, é aqui que a suíte fica lenta, não em E-2.
 
 ### M9 — Build e publicação
 
@@ -284,10 +318,10 @@ Dados/schema (M1, forma de M4) → domínio (M2, M3) → borda (M6, M5) → UI (
 | **E-2 · Motor sem tela** | E-1 fechada | M2 + M3: um teste por invariante de [[regras_partida]] · regressão dos defeitos **1, 2, 4 e 5** da v1 em M2 e do **3** em M1 — o defeito 6 é de ID de sala e fecha em M6 (E-4) · `Number.isInteger` em toda transição de placar · frequência da CPU medida ≤ 70% em cada papel · suíte roda 2x com o mesmo placar |
 | **E-3 · Jogo local jogável** | E-2 fechada | M4 (lista de fixação) + M5 (`cpu`, `local`) + M7: disputa completa, 5 cobranças e alternadas, jogada **só por toque** em 360x640 no celular real do dono, terminando com o placar correto · todo asset novo com linha de procedência |
 | **E-4 · Online por link** | E-3 fechada **e** `Q-04` respondida | M6 + M5 (`online`): dois aparelhos em **rede móvel real** completam uma disputa · **duas medições, não uma:** a taxa **sem TURN** é medida e registrada sempre — é ela que alimenta o gatilho de revisão de `D-01` — e o corte de **≥ 70% é cobrado sobre a configuração que efetivamente vai ao ar**. Se TURN ficar fora de escopo as duas são a mesma medição, e o pior caso declarado em [[online_p2p]] (30% falhando) cai **exatamente** no corte: passa raspando, deixando 30% sem online — é o cenário em que a decisão de TURN tem de estar escrita com percentual, não com adjetivo · decisão de TURN escrita: camada gratuita com linha na tabela de custo, **ou** fora de escopo com o percentual sem online registrado · falha mostra timeout honesto em 20 s e os modos locais seguem intactos |
-| **E-5 · Torneio** | E-3 fechada **e** `Q-03` + `Q-05` respondidas | M8 + tela de torneio (M7) + catálogo real: torneio termina com campeão, jogável de ponta a ponta por toque · **toda** bandeira e todo asset novo com linha de procedência em [[licenciamento]] · nome do torneio fora da lista-morta |
+| **E-5 · Torneio** | **ABERTA em 2026-08-12:** E-3 fechada, `Q-03` respondida (`D-51`, `D-53`, `D-54`, `D-55`) e `Q-05` respondida (`D-56`) | M8 + tela de torneio (M7) + catálogo real: o torneio termina com campeão em **exatamente 64 disputas**, jogável de ponta a ponta por toque · **o torneio sobrevive a um reload no meio** — fechar e reabrir o navegador continua de onde parou (`D-57`) · **toda** bandeira e todo asset novo com linha de procedência em [[licenciamento]], mais o texto da licença do flag-icons · o nome **TAP GO Cup** passa no `grep` da lista-morta |
 | **E-6 · Entrega** | E-4 **e** E-5 fechadas | todo o Critério de aceite do [[a_context_source|CONTEXT]] verde · tabela de custo de [[stack]] sem linha em branco · `python scripts/check.py --historico-completo` verde |
 
-E-4 e E-5 são paralelas de propósito: `Q-03` trava o torneio, **não** o online.
+E-4 e E-5 são paralelas de propósito: `Q-03` travava o torneio, **não** o online — e desde 2026-08-12 não trava mais nenhum dos dois. O que sobra de bloqueio em E-5 não é decisão, é arquivo: as bandeiras de `T-19` (`D-54`), que não podem entrar sem a licença junto.
 
 ## Decisões que sustentam este plano
 
@@ -301,6 +335,8 @@ Nada aqui está pendente — as três decisões que o plano pedia foram congelad
 
 ## As 3 perguntas que mais mudariam este plano
 
-1. **`Q-03` — quantas e quais seleções, qual o formato do chaveamento, qual o nome do torneio e de onde vêm as bandeiras.** Define o conteúdo de M4, o portão de M8 e o peso do bundle. Trava E-5.
-2. **`Q-05` — o torneio roda também no modo online?** Se sim, M8 passa a depender de M5 no modo `online` e o chaveamento vira estado compartilhado entre dois aparelhos: muda a camada 3 do plano, não um detalhe de implementação.
-3. **`Q-04` — o que acontece com a disputa quando o peer some no meio.** Define o contrato de M5 e M6, e trava E-4 [Fonte: a_context/online_p2p.md#riscos-que-precisam-de-fallback-escrito].
+> Reescritas em 2026-08-12: as duas primeiras da lista de `D-13` (`Q-03` e `Q-05`) foram respondidas, e `Q-04` também (`D-35`). Estas são as três de agora.
+
+1. **O sorteio dos grupos é cego ou tem cabeça de chave?** `D-53` fixou o formato (8 grupos de 4) e o desempate, mas **não** disse como as 32 caem nos grupos. Sorteio puro põe as quatro primeiras no mesmo grupo com probabilidade não desprezível e mata o torneio na 1ª fase; sorteio com potes por posição no ranking é o que todo torneio real faz, e custa ~15 linhas em M8. Nenhuma das duas é mais "certa" — mas escolher em silêncio, na hora de implementar `T-12`, é o que este plano existe para impedir.
+2. **`Q-11` — como M7 recebe o `roomId` do anfitrião.** Continua travando a tela de convite e, por tabela, o sorteio de quem cobra primeiro no `online` (`T-17` segue em `'A'` lá). É a última porta congelada com duas saídas escritas e nenhuma escolhida.
+3. **`Q-08` — `pick(role)` lê o histograma do mesmo papel?** Prazo vencido (`QA-07`), e agora com peso maior: com `D-57`, a CPU deixa de jogar só a disputa do jogador e passa a jogar **57 a 61 disputas simuladas** por torneio. Um viés que hoje aparece em 1 disputa passa a aparecer em quase todas as 64.

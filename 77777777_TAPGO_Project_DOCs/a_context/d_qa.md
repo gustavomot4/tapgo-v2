@@ -6,9 +6,10 @@ status: atual
 
 > **Saiu do [[c_decisions|DECISIONS]] em 2026-08-12 por `D-50` (`A-13`).** Motivo: os três registros
 > tinham ciclo de vida diferente e um orçamento só, e era esta seção que crescia mais rápido —
-> 6 dos achados estão abertos, e achado aberto não se arquiva.
+> eram 6 os achados abertos, e achado aberto não se arquiva.
 > **Decisão permanente e questão do dono continuam no [[c_decisions|DECISIONS]]**; aqui fica só QA.
 > **Append-only**, mesma regra de lá: achado novo = linha nova, e o ID nunca é reciclado.
+> **Retirados da tabela** (íntegra em [[decisions_archive]], ID preservado, nada revertido): `QA-01`..`QA-03`.
 > **Teto: 2 frases por linha** (colunas de prosa: "O que quebrava" e "Correção"). Evidência longa
 > vira nota em `e_qa/<slug>.md` linkada aqui.
 > **Orçamento: 8.000 caracteres**, aviso em 6.400, cobrado por `scripts/check.py` — medido **sem** o
@@ -30,4 +31,5 @@ status: atual
 | QA-10 | 2026-08-08 | MÉDIO | `src/medicao.ts` (`D-33`) | Erro de configuração soma tentativa **e** falha: erro do operador entra na taxa que decide a revisão de `D-01`, enviesando para baixo | Não contar tentativa quando o canal nunca abriu — muda denominador de portão, logo `D-NN` (regra 4) | _(aberto)_ |
 | QA-05 | 2026-08-07 | MÉDIO | `src/tests/teams.test.ts` | Escreve por extenso os 6 termos da lista-morta: o portão de marca de M7 (`grep` zero em `src/`) devolve 6 | Montar as agulhas em tempo de execução, como `core.test.ts` e `ui.test.ts` — outro dono (regra 4) | _(aberto)_ |
 | QA-15 | 2026-08-12 | MÉDIO | `src/ui/rotas.ts` (M7) | Promete que `A` cobra primeiro; com o sorteio de `T-17` o humano pode começar defendendo e a tela mente | Tela da moeda, metade `frontend-uiux` de `T-17` | ✔ `T-17b` 2026-08-12 (3 promessas, não 1) |
+| QA-17 | 2026-08-12 | BAIXO | `b_process/templates/c_session_closing.md` | O template manda registrar `QA-NN` em [[c_decisions\|DECISIONS]], que desde `D-50` não define mais `QA-NN`, e mandar a reprodução para `dev/`, pasta que o padrão do repositório não tem | Apontar as duas linhas para [[d_qa\|QA]] e `e_qa/` — template do kit vendorizado, de outro dono (regra 4) | _(aberto)_ |
 | QA-16 | 2026-08-12 | MÉDIO | `src/ui/estilo.css` (M7, desde `T-10`) | `.aviso { display: flex }` é regra de autor e vence o `[hidden]` do navegador: a caixa de erro **vazia** fica visível nas 3 telas que a usam | `.aviso[hidden] { display: none }` — de outra sessão (regra 4), ver [[t17b_sorteio_na_tela]] | _(aberto)_ |
