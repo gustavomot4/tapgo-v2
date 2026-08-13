@@ -268,16 +268,25 @@ if texto_dec and n_dec > 12000:
         f"{DECISOES} acima de 12.000 caracteres — arquive SUPERSEDIDAS/rejeitadas antigas "
         "em e_qa/decisions_archive.md (IDs preservados) e deixe um ponteiro."
     )
-elif texto_dec and n_dec > 9600:
+elif texto_dec and n_dec > 10800:
     # O README declarava esta fraqueza com todas as letras: "o arquivamento é manual e
     # ninguém lembra". Portão que só roda quando alguém lembra não é portão — foi o
     # argumento do QA-04, e valia contra o próprio kit. O script não arquiva (a decisão
     # é do dono); ele avisa antes da parede e já aponta os candidatos.
-    velhas = re.findall(r"^\|\s*(D-\d+)\s*\|[^|]*\|\s*(?:ADOTADO|REJEITADO)", texto_dec, re.M)
-    amostra = ", ".join(velhas[:5]) if velhas else "as mais antigas"
+    # `D-63`: as candidatas saem do critério de `D-43` — sai da tabela quem NENHUM `.md` vivo
+    # cita. Listar "as mais antigas" mandava arquivar linha que `D-43` proíbe retirar: o aviso
+    # ensinava a violar a regra que ele deveria proteger, e quem obedecesse reprovaria depois.
+    vivos = "\n".join(txt for cam, txt in corpo.items()
+                      if cam.name not in (Path(DECISOES).name, Path(ARQUIVO_MORTO).name)
+                      and "d_history" not in cam.parts)
+    velhas = [i for i in re.findall(r"^\|\s*(D-\d+)\s*\|", texto_dec, re.M)
+              if not re.search(rf"\b{i}\b", vivos)]
+    amostra = ", ".join(velhas[:5]) if velhas else (
+        "NENHUMA — todo D-NN vivo é citado por algum .md, então o corte de `D-43` está esgotado "
+        "e o que resta é rever o teto")
     avisos.append(
         f"{DECISOES} com {n_dec}/12.000 caracteres ({100*n_dec//12000}%) — "
-        f"arquive as antigas em e_qa/decisions_archive.md, preservando os IDs. Candidatas: {amostra}."
+        f"arquive o que `D-43` libera em e_qa/decisions_archive.md, preservando os IDs. Candidatas: {amostra}."
     )
 
 # 3. Fonte única (regra 6) — o mesmo nome em dois lugares é estado duplicado

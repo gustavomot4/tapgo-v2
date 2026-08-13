@@ -272,3 +272,21 @@ orçamento só, e é a seção de QA que cresce mais rápido — 3.374 caractere
 deles ainda abertos. Separar QA em arquivo próprio foi levantado ao dono nesta sessão e **não
 escolhido**; o custo é que `check.py` crava `DECISOES` como o único arquivo que define ID, e a
 mudança seria no script. Fica registrado aqui como o caminho que sobrou, não como tarefa.
+
+
+## A-15 — as questões RESPONDIDAS saem da tabela viva (2026-08-13)
+
+Saída (c) de `A-15`, decidida em `D-63`: a resposta de cada uma já vive na linha do `D-NN` que a
+respondeu, **com a mesma data**, então a tabela viva guardava o fato duas vezes. IDs preservados e
+íntegra abaixo; a fila do dono no `c_decisions.md` passa a mostrar só o que ainda espera resposta.
+
+| # | Questão | Decidir quando |
+|---|---|---|
+| Q-01 | ~~Regra exata das alternadas/morte súbita~~ | **RESPONDIDA 2026-08-06 → D-09** |
+| Q-02 | ~~A CPU adapta ao padrão do jogador? Qual o teto de dificuldade?~~ | **RESPONDIDA 2026-08-06 → D-10** |
+| Q-03 | ~~Seleções, formato do chaveamento, nome do torneio e origem das bandeiras~~ | **RESPONDIDA 2026-08-12 → D-51, D-53, D-54, D-55** |
+| Q-04 | ~~Peer some no meio da disputa online: quem vence, empata ou anula?~~ | **RESPONDIDA 2026-08-08 → D-35** |
+| Q-05 | ~~O torneio roda também no modo `online`?~~ | **RESPONDIDA 2026-08-12 → D-56** |
+| Q-07 | ~~Nas alternadas, a ordem de cobrança alterna entre rodadas?~~ | **RESPONDIDA 2026-08-12 → D-48** |
+| Q-10 | ~~TURN entra como camada gratuita ou fica fora de escopo?~~ | **RESPONDIDA 2026-08-12 → D-47** |
+| Q-12 | ~~IPv6 fim-a-fim conta para o corte de 70% de E-4?~~ | **RESPONDIDA 2026-08-08 → D-46** |

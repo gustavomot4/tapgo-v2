@@ -8,7 +8,7 @@ status: atual
 > **Teto: 2 frases por linha.** Evidência longa vira nota em `e_qa/<slug>.md` ou tema em `a_context/`.
 > **Registre as rejeições.** A lista de rejeitados é o que impede a IA de re-propor o que já morreu.
 > **`ARQUIVADO`:** íntegra em [[decisions_archive]] — o ponteiro é este, e não se repete por linha.
-> **Retirados da tabela** (ID preservado, nada revertido): `D-03` `D-05` `D-11` `D-12` `D-14`..`D-21` `D-23`..`D-26` `D-28`..`D-34` · `Q-06`.
+> **Retirados da tabela** (ID preservado, nada revertido): `D-03` `D-05` `D-11` `D-12` `D-14`..`D-21` `D-23`..`D-26` `D-28`..`D-34` · `Q-01`..`Q-07` `Q-10` `Q-12`.
 > **Achados de QA moram em [[d_qa|QA]]** desde `D-50` — este arquivo não define mais `QA-NN`.
 
 ## Decisões
@@ -48,30 +48,18 @@ status: atual
 | D-55 | 2026-08-12 | ADOTADO | `Q-03`: o torneio é a **TAP GO Cup** | Candidato de [[licenciamento]], fora da lista-morta que E-5 varre |
 | D-56 | 2026-08-12 | ADOTADO | `Q-05`: torneio só em `cpu` e `local`; sala de 8 **adiada** (ideia, não compromisso) | O chaveamento não vira estado compartilhado entre aparelhos, e a camada 3 do PLANO não muda |
 | D-57 | 2026-08-12 | ADOTADO · SUPERSEDE D-13 no que M8 exige | Cai o portão "sem par repetido", a porta de M8 **serializa**, e M8 importa **M2/M3** para simular disputa sem o jogador | Grupo e mata-mata reencontram o par; M5 espera a escolha do lado local e não simula CPU×CPU; 64 disputas não cabem numa sessão — desenho no [[b_plan\|PLANO]] |
-
 | D-58 | 2026-08-12 | ADOTADO | O dono confirmou as duas vetáveis: o `GB-ENG` de `D-52` fica, e a porta de M8 recebe `seed`, não `Rng` | Sem semente própria M8 não conhece o cursor do gerador, e o torneio restaurado divergiria com o teste de determinismo passando. Cursor em M1 foi a saída **rejeitada**: porta mais dependida do projeto por necessidade de um módulo só |
-
 | D-59 | 2026-08-12 | ADOTADO | O sorteio dos grupos é **cego**: as 32 caem nos 8 grupos direto pelo `Rng`, sem potes nem cabeça de chave | Escolha de variância, com o custo medido: **50,2%** das sementes põem ao menos duas das quatro primeiras no mesmo grupo, e 9,7% juntam a 1ª com a 2ª |
-
 | D-60 | 2026-08-12 | ADOTADO | **Não há progressão de dificuldade**: o torneio inteiro roda no nível escolhido no início, do grupo à final | `D-13` dizia "nenhuma **progressão** passa dos 70%" sem que houvesse decisão de que existisse uma; `TournamentConfig.level` segue **um** valor, agora por escolha e não por omissão |
-
 | D-61 | 2026-08-12 | ADOTADO | `T-18`: a exceção de `D-52` é **lista fechada de tamanho 1** (`NAME_EXCEPTIONS`), e M4 exporta junto o validador que a aplica (`assertCatalogCode`) | Só com o validador exportado o portão "um segundo código fora da alfa-2 reprova" é cobrado na via mais baixa: inspecionar a lista pronta prova a lista de hoje, não a próxima linha errada. Nenhuma assinatura de `D-13` muda |
-
 | D-62 | 2026-08-12 | ADOTADO | `T-19`: `flag` sai de `import.meta.glob` eager com `?no-inline` sobre `src/assets/flags/`, e seleção sem arquivo **derruba o carregamento** — `buildCatalog` exportado pelo motivo de `D-61` | O caminho passa a vir do arquivo versionado, não de uma segunda lista digitada ao lado de `CODES`. Sem `no-inline`, 24 dos 32 SVGs virariam `data:` e `flag` teria dois formatos — e a suíte NÃO veria, porque roda em modo dev, onde nada é embutido |
+| D-63 | 2026-08-13 | ADOTADO | `A-15` (c)+(b): as 8 questões RESPONDIDAS saem para [[decisions_archive]] com o ID preservado, e o aviso do registro sobe de 9.600 para **10.800** | (c) sozinha para em 10.204 e nem a saída (a) inteira ficava 500 abaixo de 9.600: o aviso media um registro que não existe mais. Sobra folga de ~3 decisões (362 caracteres cada) até o teto — a sessão de M8 precisa de outro corte |
 
 > **Gatilhos de revisão** (`D-43`): moram no tema que cada um mede — `D-01` em [[online_p2p]], `D-02` em [[stack]].
 
 ## Questões abertas (Q-NN — decisões do DONO, não do agente)
 | # | Questão | Decidir quando |
 |---|---|---|
-| Q-01 | ~~Regra exata das alternadas/morte súbita~~ | **RESPONDIDA 2026-08-06 → D-09** |
-| Q-02 | ~~A CPU adapta ao padrão do jogador? Qual o teto de dificuldade?~~ | **RESPONDIDA 2026-08-06 → D-10** |
-| Q-03 | ~~Seleções, formato do chaveamento, nome do torneio e origem das bandeiras~~ | **RESPONDIDA 2026-08-12 → D-51, D-53, D-54, D-55** |
-| Q-04 | ~~Peer some no meio da disputa online: quem vence, empata ou anula?~~ | **RESPONDIDA 2026-08-08 → D-35** |
-| Q-05 | ~~O torneio roda também no modo `online`?~~ | **RESPONDIDA 2026-08-12 → D-56** |
-| Q-07 | ~~Nas alternadas, a ordem de cobrança alterna entre rodadas?~~ | **RESPONDIDA 2026-08-12 → D-48** |
 | Q-09 | No modo `local`, de quem é a escolha pendente, se a porta congelada de M5 não a expõe? | antes de T-10 (**prazo vencido — `QA-07`**); hoje M7 deriva de `kicks.length` e a saída definitiva está em [[questoes_abertas_notas]] |
-| Q-10 | ~~TURN entra como camada gratuita ou fica fora de escopo?~~ | **RESPONDIDA 2026-08-12 → D-47** |
 | Q-08 | `pick(role)` lê o histograma do **mesmo** papel — é essa a intenção, ou quem defende deveria ler o histograma `shooter` do humano? | antes de E-3 (**prazo vencido — `QA-07`**); as duas leituras e o custo de inverter em [[questoes_abertas_notas]] |
-| Q-12 | ~~IPv6 fim-a-fim conta para o corte de 70% de E-4?~~ | **RESPONDIDA 2026-08-08 → D-46** |
 | Q-11 | Como M7 recebe o `roomId` do anfitrião, se a porta de M5 (`D-13`) não o devolve e M7 não pode importar `src/net`? | antes da tela de convite — duas saídas em [[m5_sessao_notas]], as duas mexendo em porta congelada, logo `D-NN` do dono |
