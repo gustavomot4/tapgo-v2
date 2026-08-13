@@ -262,10 +262,17 @@ describe('rótulos', () => {
     expect(nomeSelecao('ZZ')).toBe('ZZ');
   });
 
-  it('a marca é o código ISO enquanto flag for null (A-04)', () => {
+  it('a marca já sabe que existe bandeira — quem ainda não sabe é a tela (QA-19)', () => {
+    // O teste antigo cobrava `ehBandeira === false` e `texto === código`, condição de quando
+    // `flag` era `null` para as 32 (`D-22`). `T-19` entregou os SVGs e a condição caiu; ela foi
+    // REDIRECIONADA, não apagada, porque o que ela vigiava continua de pé pela metade:
+    // `marcaSelecao` já vira a chave, e `marca()` em `tela_selecoes.ts` ainda escreve `texto`
+    // como TEXTO — hoje o caminho do arquivo dentro do disco de 34px. Isso é `QA-19`, é de M7 e
+    // não foi consertado nesta sessão (regra 4). No dia em que a tela pintar `<img>`, é este
+    // teste que tem de ser revisitado.
     const m = marcaSelecao(BR);
-    expect(m.ehBandeira).toBe(false);
-    expect(m.texto).toBe(BR);
+    expect(m.ehBandeira).toBe(true);
+    expect(m.texto).toMatch(/\.svg$/);
     expect(Number.isInteger(m.matiz)).toBe(true);
     expect(m.matiz).toBeGreaterThanOrEqual(0);
     expect(m.matiz).toBeLessThan(360);

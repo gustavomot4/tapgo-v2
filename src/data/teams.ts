@@ -6,8 +6,8 @@
  * de carregado. Depende só de M1 (`CountryCode`).
  *
  * **A lista aqui é a real** (`D-51`): 32 seleções, com o critério e a data de corte congelados
- * naquela decisão. `Q-03` está respondida. O que continua pendente é só a bandeira — `flag` segue
- * `null` em todo o catálogo até `T-19` (`D-22`).
+ * naquela decisão. `Q-03` está respondida. Desde `T-19` a bandeira também é real: os 32 SVGs de
+ * `D-54` estão em `src/assets/flags/`, com a licença versionada antes deles.
  */
 
 import type { CountryCode } from '../core/index';
@@ -15,9 +15,12 @@ import type { CountryCode } from '../core/index';
 /**
  * Uma seleção jogável.
  *
- * `flag` é `null` enquanto o asset não existir (`T-19`) — ver `FLAG_PENDENTE`. Quando existir,
- * é **caminho local**, nunca URL: hotlink quebra o jogo offline e foi o defeito de licença da v1
- * [Fonte: a_context/licenciamento.md#o-que-é-proibido-no-projeto].
+ * `flag` é **caminho local resolvido no build**, nunca URL: hotlink quebra o jogo offline e foi o
+ * defeito de licença da v1 [Fonte: a_context/licenciamento.md#o-que-é-proibido-no-projeto].
+ *
+ * O tipo continua admitindo `null` porque a porta é a de `D-13`/`D-22` e mudar assinatura de porta
+ * congelada é `D-NN`, não efeito colateral de uma tarefa de asset. **Hoje nenhuma das 32 é `null`**
+ * — o catálogo recusa seleção sem arquivo no carregamento, e é o teste que cobra isso.
  */
 export interface Team {
   readonly code: CountryCode;
@@ -47,8 +50,52 @@ const REGION_NAMES = new Intl.DisplayNames([CATALOG_LOCALE], {
   fallback: 'none',
 });
 
-/** `flag` de seleção cujo arquivo de bandeira ainda não existe. Resolve em `T-19` (`D-22`). */
+/**
+ * `flag` de seleção cujo arquivo de bandeira não existe (`D-22`).
+ *
+ * Continua exportada e continua sendo `null`: é o valor que a porta promete para o caso "sem
+ * arquivo", e `T-19` não o revogou — só esvaziou o conjunto de seleções que caem nele. Trocar por
+ * `''` ou por um caminho inventado seria o "ausente ≠ zero" da skill, e a tela mostraria um ícone
+ * quebrado no lugar de uma ausência declarada.
+ */
 export const FLAG_PENDENTE = null;
+
+/**
+ * Os arquivos de bandeira que **existem no disco**, com o caminho que o build vai emitir.
+ *
+ * `import.meta.glob` eager resolve na hora do build, que é o que o PLANO exige do catálogo
+ * ("imutável, resolve em build") [Fonte: a_context/b_plan.md#quem-é-dono-de-qual-estado]: nenhuma
+ * leitura em runtime, nenhum `fetch`, e o SVG entra no bundle como asset com hash. É também o que
+ * torna "zero URL, zero hotlink" verificável em vez de prometido — o valor não é digitado por
+ * ninguém, ele sai do arquivo que está versionado.
+ *
+ * `?no-inline` é obrigatório, e não estilo: 22 dos 32 SVGs estão abaixo do limite de inline do
+ * Vite (4 kB) e virariam `data:` dentro do JS. Isso deixaria `flag` ora caminho, ora um blob de
+ * 3 kB — dois formatos no mesmo campo, e o campo é declarado "caminho local".
+ */
+const ARQUIVOS_DE_BANDEIRA: Readonly<Record<string, string>> = import.meta.glob(
+  '../assets/flags/*.svg',
+  { eager: true, query: '?no-inline', import: 'default' },
+);
+
+/**
+ * O caminho da bandeira de um código, ou `FLAG_PENDENTE` se o arquivo não existir.
+ *
+ * O nome do arquivo é **derivado** do código (`GB-ENG` → `gb-eng.svg`), nunca uma segunda lista
+ * digitada ao lado de `CODES`: duas listas para a mesma verdade divergem no dia em que alguém
+ * edita uma só.
+ */
+function bandeiraDe(code: string): string | null {
+  const bruto = ARQUIVOS_DE_BANDEIRA[`../assets/flags/${code.toLowerCase()}.svg`];
+  if (bruto === undefined) return FLAG_PENDENTE;
+
+  // No build o caminho já vem limpo (`/tapgo-v2/assets/br-<hash>.svg`); no `vite dev` e sob o
+  // vitest ele vem com o `?no-inline` pendurado. O `?` é marca da ferramenta, não do domínio:
+  // deixá-lo passar faria o MESMO campo ter dois formatos conforme quem rodou, e o primeiro
+  // `flag.endsWith('.svg')` de quem consumir isto seria um bug que só aparece em produção.
+  const semQuery = bruto.split('?')[0];
+  return semQuery === undefined || semQuery === '' ? FLAG_PENDENTE : semQuery;
+}
 
 /**
  * `false` desde `T-18`: o que `listTeams()` devolve é dado curado, não mais andaime.
@@ -148,18 +195,20 @@ function assertExceptions(): void {
 function makeTeam(code: string): Team {
   assertCatalogCode(code);
 
+  const flag = bandeiraDe(code);
+
   // A exceção vem antes do ICU, e não como reserva depois dele: `REGION_NAMES.of` LANÇA em
   // subdivisão, então consultá-lo primeiro derrubaria o carregamento do módulo.
   const excecao = NAME_EXCEPTIONS.get(code);
   if (excecao !== undefined) {
-    return Object.freeze({ code, name: excecao, flag: FLAG_PENDENTE });
+    return Object.freeze({ code, name: excecao, flag });
   }
 
   const name = REGION_NAMES.of(code);
   if (name === undefined) {
     throw new RangeError(`teams: ${code} passou na validação mas não tem nome — ICU incompleto`);
   }
-  return Object.freeze({ code, name, flag: FLAG_PENDENTE });
+  return Object.freeze({ code, name, flag });
 }
 
 /**
@@ -177,8 +226,19 @@ const CODES: readonly string[] = [
   'EC', 'NG', 'TR', 'AU', 'DZ', 'CA', 'CI', 'KR',
 ];
 
-/** Constrói o catálogo uma vez, no carregamento do módulo, e o congela. */
-function buildCatalog(codes: readonly string[]): readonly Team[] {
+/**
+ * Constrói o catálogo uma vez, no carregamento do módulo, e o congela.
+ *
+ * **Exportada pelo mesmo motivo de `assertCatalogCode` (`D-61`):** os dois invariantes que moram
+ * aqui — nenhum código repetido, e nenhuma seleção sem arquivo de bandeira — só são cobráveis na
+ * via mais baixa se o teste puder tentar a violação onde ela seria cometida. Conferir a lista
+ * pronta prova que a de hoje está certa; não prova que a próxima linha errada é recusada.
+ *
+ * Seleção sem arquivo **derruba o carregamento**, e é de propósito: `T-19` entregou as 32
+ * bandeiras, então bandeira faltando aqui não é lacuna declarada, é arquivo perdido no caminho —
+ * e um build sem SVG passaria calado, com o jogo mostrando código onde devia mostrar bandeira.
+ */
+export function buildCatalog(codes: readonly string[]): readonly Team[] {
   assertExceptions();
   const vistos = new Set<string>();
   const teams = codes.map((code) => {
@@ -186,7 +246,14 @@ function buildCatalog(codes: readonly string[]): readonly Team[] {
       throw new RangeError(`teams: código repetido no catálogo: ${code}`);
     }
     vistos.add(code);
-    return makeTeam(code);
+    const team = makeTeam(code);
+    if (team.flag === FLAG_PENDENTE) {
+      throw new RangeError(
+        `teams: ${code} sem arquivo de bandeira — esperado src/assets/flags/${code.toLowerCase()}.svg ` +
+          '(e a linha dele na tabela de procedência de licenciamento.md)',
+      );
+    }
+    return team;
   });
   return Object.freeze(teams);
 }

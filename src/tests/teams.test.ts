@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -8,6 +8,7 @@ import {
   FLAG_PENDENTE,
   NAME_EXCEPTIONS,
   assertCatalogCode,
+  buildCatalog,
   findTeam,
   listTeams,
   type Team,
@@ -15,6 +16,15 @@ import {
 
 const AQUI = resolve(fileURLToPath(import.meta.url), '..');
 const FONTE_M4 = resolve(AQUI, '..', 'data', 'teams.ts');
+const DIR_BANDEIRAS = resolve(AQUI, '..', 'assets', 'flags');
+const LICENCIAMENTO = resolve(
+  AQUI,
+  '..',
+  '..',
+  '77777777_TAPGO_Project_DOCs',
+  'a_context',
+  'licenciamento.md',
+);
 
 /**
  * O único nome digitado que o catálogo tem direito de conter (`D-52`).
@@ -159,21 +169,95 @@ describe('M4 · portão — licença: zero URL, zero escudo', () => {
   });
 });
 
-describe('M4 · lacuna declarada — bandeiras travadas em T-19', () => {
-  it('sem arquivo de bandeira, toda flag é nula — nunca "" nem caminho inventado', () => {
+describe('M4 · portão — as 32 bandeiras de D-54', () => {
+  it('nenhuma seleção ficou sem bandeira: 32 caminhos, zero nulos', () => {
+    const comBandeira = listTeams().filter((t) => t.flag !== FLAG_PENDENTE);
+    expect(comBandeira).toHaveLength(TOTAL);
+  });
+
+  it('a flag é caminho de arquivo, não "" nem query de ferramenta de build', () => {
     for (const team of listTeams()) {
-      expect(team.flag).toBe(FLAG_PENDENTE);
       expect(team.flag).not.toBe('');
+      expect(team.flag).toMatch(/\.svg$/);
+      expect(team.flag).not.toContain('?');
     }
   });
 
-  it('T-19 derruba este teste de propósito: bandeira exige linha de procedência', () => {
-    // Guarda de entrega herdada de `T-08` e REDIRECIONADA em `T-18`: a condição original era
-    // `CATALOG_IS_FIXTURE`, que existia para forçar revisitar o portão de licença em `A-04`.
-    // `A-04` fechou e a resposta é `D-54`, então a guarda passou a vigiar o que ainda não
-    // aconteceu: no dia em que uma `flag` deixar de ser nula, este teste falha e obriga a passar
-    // pela tabela de procedência de licenciamento. Quem cumpre isso é `T-19`.
-    expect(listTeams().every((t) => t.flag === null)).toBe(true);
+  it('o nome do arquivo é DERIVADO do código, não uma segunda lista digitada', () => {
+    for (const team of listTeams()) {
+      expect(team.flag).toContain(`${team.code.toLowerCase()}.svg`);
+    }
+    // Inclusive a exceção de `D-52`: `GB-ENG` → `gb-eng.svg`, sem caso especial.
+    expect(findTeam('GB-ENG')?.flag).toContain('gb-eng.svg');
+  });
+
+  it('todo arquivo apontado EXISTE em src/assets/flags/', () => {
+    for (const team of listTeams()) {
+      const arquivo = resolve(DIR_BANDEIRAS, `${team.code.toLowerCase()}.svg`);
+      expect(existsSync(arquivo), `${team.code}: ${arquivo} não existe`).toBe(true);
+    }
+  });
+
+  it('a guarda de T-18, REDIRECIONADA: bandeira exige linha de procedência', () => {
+    // Guarda de entrega herdada de `T-08`, redirecionada uma vez em `T-18` (`CATALOG_IS_FIXTURE`
+    // → `flag`) e agora outra vez. A condição original vigiava o que ainda não tinha acontecido;
+    // `T-19` a fez acontecer, e apagá-la devolveria o buraco que ela fecha. Ela passa a vigiar o
+    // que ainda pode acontecer: uma seleção 33ª entrar com bandeira e SEM procedência.
+    const tabela = readFileSync(LICENCIAMENTO, 'utf8');
+    for (const team of listTeams()) {
+      const caminho = `src/assets/flags/${team.code.toLowerCase()}.svg`;
+      expect(tabela, `${caminho} não tem linha na tabela de procedência`).toContain(caminho);
+    }
+  });
+
+  it('o texto da licença está versionado, com o aviso de copyright que a MIT exige (D-54)', () => {
+    const licenca = readFileSync(resolve(DIR_BANDEIRAS, 'LICENSE.txt'), 'utf8');
+    expect(licenca).toContain('MIT License');
+    expect(licenca).toContain('Copyright (c) 2013 Panayiotis Lipiridis');
+    expect(licenca).toContain('The above copyright notice and this permission notice shall be');
+    expect(readFileSync(LICENCIAMENTO, 'utf8')).toContain('src/assets/flags/LICENSE.txt');
+  });
+
+  it('a pasta de bandeiras não tem arquivo além dos 32 e da licença', () => {
+    // Asset órfão é asset sem dono: entra no bundle, custa bytes e não tem quem responda por ele.
+    const esperados = new Set(listTeams().map((t) => `${t.code.toLowerCase()}.svg`));
+    esperados.add('LICENSE.txt');
+    expect(new Set(readdirSync(DIR_BANDEIRAS))).toEqual(esperados);
+  });
+
+  it('nenhum SVG referencia recurso externo — hotlink dentro do arquivo também é hotlink', () => {
+    // A v1 quebrou a regra pelo `src` da tela; um `<image href="http…">` dentro do SVG a quebra
+    // igual, e ainda deixa o jogo dependente da rede para pintar uma bandeira.
+    for (const arquivo of readdirSync(DIR_BANDEIRAS).filter((n) => n.endsWith('.svg'))) {
+      const svg = readFileSync(resolve(DIR_BANDEIRAS, arquivo), 'utf8');
+
+      // Sobra só o que NÃO é declaração de namespace XML — namespace é identificador, não busca.
+      const externas = [...svg.matchAll(/https?:\/\/[^"' )]*/g)]
+        .map((m) => m[0])
+        .filter((u) => !u.startsWith('http://www.w3.org/'));
+      expect(externas, `${arquivo}: referência externa`).toEqual([]);
+
+      for (const href of [...svg.matchAll(/href="([^"]*)"/g)].map((m) => m[1] ?? '')) {
+        expect(href.startsWith('#'), `${arquivo}: href "${href}" sai do arquivo`).toBe(true);
+      }
+      expect(svg).not.toMatch(/<(image|script|foreignObject)\b/i);
+    }
+  });
+
+  it('seleção sem arquivo de bandeira DERRUBA o carregamento — não vira null calado', () => {
+    // A via mais baixa possível, como em `assertCatalogCode` (`D-61`): `ZW` é alfa-2 válida e o
+    // ICU a resolve, então ela passa por toda a validação de código e morre exatamente onde tem
+    // de morrer — na ausência do arquivo. É o que separa "lacuna declarada" de "SVG perdido no
+    // caminho": depois de `T-19`, bandeira faltando é a segunda coisa, e ela não pode ser calada.
+    expect(() => buildCatalog(['ZW'])).toThrow(/sem arquivo de bandeira/);
+    expect(() => buildCatalog(['BR'])).not.toThrow();
+  });
+
+  it('o campo continua com UM formato só: o `no-inline` da fonte não pode sumir', () => {
+    // Sem ele, 22 dos 32 SVGs entram no JS como `data:` e `flag` passa a ser ora caminho, ora
+    // blob — e isso NÃO aparece na suíte, que roda em modo dev, onde nada é embutido. O portão
+    // possível aqui é a fonte; o outro é a saída do `npm run build`, e é do dono.
+    expect(readFileSync(FONTE_M4, 'utf8')).toContain('no-inline');
   });
 });
 

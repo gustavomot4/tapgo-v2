@@ -78,6 +78,57 @@ A Inglaterra é o caso que obrigou `D-52`: ela não tem código ISO-3166-1, e en
 subdivisão**, não bandeira de federação — a `GB-ENG` é a cruz de São Jorge, símbolo territorial, e continua dentro
 da regra de uma linha desta página.
 
+#### As 32, arquivo a arquivo (`T-19`, 2026-08-12)
+
+**Origem de todas:** pacote npm **flag-icons 7.5.0**, pasta `flags/4x3/`, cópia **byte a byte** — nenhum SVG foi
+editado, otimizado ou redesenhado. **Licença:** MIT, `Copyright (c) 2013 Panayiotis Lipiridis`, texto íntegro em
+`src/assets/flags/LICENSE.txt`. O que muda de linha para linha é só o que está abaixo, e o SHA-256 é o que torna a
+procedência **conferível** em vez de declarada — mesmo raciocínio dos três áudios de `T-10`.
+
+O nome do arquivo é o código em minúscula, e o catálogo o **deriva** (`M4`): não existe segunda lista para divergir.
+Nenhum dos 32 referencia recurso externo — as únicas ocorrências de `http` são declarações de namespace XML do W3C,
+e todo `href` interno aponta para um `#id` do próprio arquivo. Cobrado por teste em `src/tests/teams.test.ts`.
+
+| Arquivo | Origem no pacote | SHA-256 (início) | Bytes |
+|---|---|---|---|
+| `src/assets/flags/es.svg` | `flags/4x3/es.svg` | `f9cfaff858e95f83` | 80.958 |
+| `src/assets/flags/ar.svg` | `flags/4x3/ar.svg` | `da39bfbe83fd35fa` | 3.461 |
+| `src/assets/flags/fr.svg` | `flags/4x3/fr.svg` | `8cdacc8d79bcf210` | 231 |
+| `src/assets/flags/gb-eng.svg` | `flags/4x3/gb-eng.svg` | `53797ba9e2dd9b18` | 239 |
+| `src/assets/flags/br.svg` | `flags/4x3/br.svg` | `b0a912826c3ffd72` | 7.140 |
+| `src/assets/flags/ma.svg` | `flags/4x3/ma.svg` | `28cfcdecf9675b0a` | 247 |
+| `src/assets/flags/pt.svg` | `flags/4x3/pt.svg` | `a7a2cf0b44aaaaf4` | 8.001 |
+| `src/assets/flags/be.svg` | `flags/4x3/be.svg` | `d6aff6fa4c913404` | 302 |
+| `src/assets/flags/nl.svg` | `flags/4x3/nl.svg` | `8f691f17fe708945` | 225 |
+| `src/assets/flags/mx.svg` | `flags/4x3/mx.svg` | `9dbc8ad8b35e52ce` | 84.753 |
+| `src/assets/flags/co.svg` | `flags/4x3/co.svg` | `6bab3c96c1657510` | 286 |
+| `src/assets/flags/de.svg` | `flags/4x3/de.svg` | `efd480af5a154a76` | 221 |
+| `src/assets/flags/hr.svg` | `flags/4x3/hr.svg` | `3c98eae5ee93f0d7` | 30.732 |
+| `src/assets/flags/ch.svg` | `flags/4x3/ch.svg` | `ac676cd39d703298` | 290 |
+| `src/assets/flags/it.svg` | `flags/4x3/it.svg` | `9fa88118818d9b64` | 289 |
+| `src/assets/flags/us.svg` | `flags/4x3/us.svg` | `e7be4240cf579879` | 648 |
+| `src/assets/flags/jp.svg` | `flags/4x3/jp.svg` | `bfea80baf9989383` | 470 |
+| `src/assets/flags/sn.svg` | `flags/4x3/sn.svg` | `6437db13c13fa5cc` | 421 |
+| `src/assets/flags/no.svg` | `flags/4x3/no.svg` | `ceea17af051dceef` | 318 |
+| `src/assets/flags/uy.svg` | `flags/4x3/uy.svg` | `47656c0bf4961a1f` | 1.724 |
+| `src/assets/flags/dk.svg` | `flags/4x3/dk.svg` | `d2847c0bd7a1fb97` | 236 |
+| `src/assets/flags/ir.svg` | `flags/4x3/ir.svg` | `cb363e09bafbff6d` | 15.397 |
+| `src/assets/flags/at.svg` | `flags/4x3/at.svg` | `c0e5cb3c1d59fd00` | 195 |
+| `src/assets/flags/eg.svg` | `flags/4x3/eg.svg` | `3f85d1d2bdb03692` | 8.726 |
+| `src/assets/flags/ec.svg` | `flags/4x3/ec.svg` | `4472b0618e2f5e31` | 28.777 |
+| `src/assets/flags/ng.svg` | `flags/4x3/ng.svg` | `b7a2a45a6499095e` | 257 |
+| `src/assets/flags/tr.svg` | `flags/4x3/tr.svg` | `256a1d6afbedb9f7` | 549 |
+| `src/assets/flags/au.svg` | `flags/4x3/au.svg` | `cbb2206c5e59a25d` | 1.296 |
+| `src/assets/flags/dz.svg` | `flags/4x3/dz.svg` | `9ea0cf93222ab7b5` | 294 |
+| `src/assets/flags/ca.svg` | `flags/4x3/ca.svg` | `345ec9dac057e203` | 625 |
+| `src/assets/flags/ci.svg` | `flags/4x3/ci.svg` | `4ecfea70e4e0860f` | 277 |
+| `src/assets/flags/kr.svg` | `flags/4x3/kr.svg` | `7a6cd5b51d0e2841` | 1.061 |
+
+**Soma: 278.646 B** nos 32, na ordem de `D-51`. Cinco arquivos (`mx`, `es`, `hr`, `ec`, `ir`) respondem por **88%**
+disso — são as bandeiras com brasão de Estado desenhado em vetor. Brasão **de Estado** é símbolo nacional e está na
+linha "Bandeira nacional" da tabela do topo; a lista-morta desta página proíbe brasão de **clube e de federação**,
+que é outra coisa e não entrou aqui.
+
 ### Por que os três áudios são conferíveis, e não só declarados
 `gen-audio.mjs` é determinístico — o ruído sai de um LCG com semente fixa, não de `Math.random()`.
 Rodar `node src/scripts/gen-audio.mjs` reproduz os mesmos bytes, então a origem se confere por hash
@@ -91,7 +142,11 @@ em vez de por confiança. Os de hoje (SHA-256, 16 primeiros dígitos):
 
 Nenhuma imagem entrou em T-10: o campo, o gol e a bola são primitivos desenhados em código
 (`src/ui/cena.ts`), e a identidade de seleção é o código ISO num disco de cor derivada do próprio
-código — não é bandeira, não imita nenhuma, e sai quando `A-04` entregar as bandeiras de verdade.
+código — não é bandeira e não imita nenhuma.
+
+**O disco continua na tela depois de `T-19`** (`QA-19`): M4 já entrega o caminho do SVG, mas quem desenha é M7, e
+`marca()` põe o valor de `flag` como **texto** dentro do disco. Nada de licença muda com isso — o que está no ar é
+um caminho, não imagem de terceiro —, mas a bandeira só aparece quando a sessão de M7 trocar o texto por `<img>`.
 
 ## Sobre publicar mesmo assim
 A itch.io é **reativa**: hospeda e só derruba após DMCA do titular. Isso não é permissão — é a chance de

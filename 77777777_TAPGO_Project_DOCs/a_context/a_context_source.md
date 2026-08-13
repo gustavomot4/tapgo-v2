@@ -27,12 +27,12 @@ Partida de ~1 minuto: contra a CPU, contra alguém no mesmo aparelho, ou por lin
 
 ## Estado atual (formato fixo — 1 linha por item, SEM prosa corrida)
 - **Versão:** v2.0.0-dev (a v1 é baseline morto: reescrita total, nenhum código reaproveitado)
-- **Pronto:** M1 (T-04) · M9 esqueleto (T-05) · M2 (T-06) · M3 (T-07) · M4 (T-08 + as 32 em T-18) · M5 (T-09 + `online` T-13) · M7 (T-10 + sorteio na tela T-17b) · M6 (T-11) · medição (T-15, T-16) · A-08 · **T-17 em `cpu`/`local`** — **E-1..E-4 fechadas**, suíte **377/377**; PLANO em D-13 (M4 e M8 alterados por D-51..D-61)
-- **Bundle:** **101.256 B** (1,3% de 8 MB) lido de `dist/`, **+521 B** em T-18; medição toda no chunk dela (`QA-06`); Phaser e Trystero fora, por `import()` (D-27)
+- **Pronto:** M1 (T-04) · M9 esqueleto (T-05) · M2 (T-06) · M3 (T-07) · **M4 fechado (T-08 + 32 seleções T-18 + 32 bandeiras T-19)** · M5 (T-09 + `online` T-13) · M7 (T-10 + sorteio na tela T-17b) · M6 (T-11) · medição (T-15, T-16) · A-08 · **T-17 em `cpu`/`local`** — **E-1..E-4 fechadas**, suíte **385/385**; PLANO em D-13 (M4 e M8 alterados por D-51..D-62)
+- **Bundle:** **382.402 B** (4,8% de 8 MB) lido de `dist/`, **+281.146 B** em T-19 — 278.646 B são os 32 SVGs, asset do chunk de M4 (`QA-06`); Phaser e Trystero fora, por `import()` (D-27)
 - **Em andamento (máx 1):** nada
-- **Próximo:** **E-5 aberta** — T-12 (M8) e T-19 (bandeiras + licença). Depois: A-14, a passada de T-17b no celular real (sandbox não tem navegador; tela de M7 não é coberta por teste)
-- **Bloqueado/pendente:** registro **10.536/12.000** (acima do aviso de 9.600 — `A-15`) e QA **5.758/8.000**, folga somada **3.706**; esta sessão comeu 824 · T-19 trava o fecho de E-5 (`flag: null` até lá — D-22) · Q-11 trava o online
-- **Questões abertas:** Q-08, Q-09, Q-11 · respondidas: Q-03, Q-04, Q-05, Q-07, Q-10, Q-12 (o D-NN de cada uma está na linha dela) · **QA abertos:** QA-04..QA-07, QA-10, QA-16..QA-18 · **QA-11 sem objeto** · fechados: QA-08, QA-09, QA-12..QA-15
+- **Próximo:** **E-5** — T-12 (M8), depois T-14. Fora de E-5: A-14, a passada de T-17b no celular real (sandbox não tem navegador; tela de M7 não é coberta por teste)
+- **Bloqueado/pendente:** registro **10.998/12.000** (acima do aviso de 9.600 — `A-15`) e QA **6.228/8.000**, folga somada **2.774**; esta sessão comeu 932 · Q-11 trava o online · a bandeira existe mas **não aparece na tela** até M7 (`QA-19`)
+- **Questões abertas:** Q-08, Q-09, Q-11 · respondidas: Q-03, Q-04, Q-05, Q-07, Q-10, Q-12 (o D-NN de cada uma está na linha dela) · **QA abertos:** QA-04..QA-07, QA-10, QA-16..QA-19 · **QA-11 sem objeto** · fechados: QA-08, QA-09, QA-12..QA-15
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)
 - [[portao_de_aceite]] — **antes de fechar tarefa, declarar etapa fechada ou entregar**
