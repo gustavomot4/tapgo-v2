@@ -57,7 +57,7 @@ status: atual
 
 | D-61 | 2026-08-12 | ADOTADO | `T-18`: a exceção de `D-52` é **lista fechada de tamanho 1** (`NAME_EXCEPTIONS`), e M4 exporta junto o validador que a aplica (`assertCatalogCode`) | Só com o validador exportado o portão "um segundo código fora da alfa-2 reprova" é cobrado na via mais baixa: inspecionar a lista pronta prova a lista de hoje, não a próxima linha errada. Nenhuma assinatura de `D-13` muda |
 
-| D-62 | 2026-08-12 | ADOTADO | `T-19`: `flag` sai de `import.meta.glob` eager com `?no-inline` sobre `src/assets/flags/`, e seleção sem arquivo **derruba o carregamento** — `buildCatalog` exportado pelo motivo de `D-61` | O caminho passa a vir do arquivo versionado, não de uma segunda lista digitada ao lado de `CODES`. Sem `no-inline`, 22 dos 32 SVGs virariam `data:` e `flag` teria dois formatos — e a suíte NÃO veria, porque roda em modo dev, onde nada é embutido |
+| D-62 | 2026-08-12 | ADOTADO | `T-19`: `flag` sai de `import.meta.glob` eager com `?no-inline` sobre `src/assets/flags/`, e seleção sem arquivo **derruba o carregamento** — `buildCatalog` exportado pelo motivo de `D-61` | O caminho passa a vir do arquivo versionado, não de uma segunda lista digitada ao lado de `CODES`. Sem `no-inline`, 24 dos 32 SVGs virariam `data:` e `flag` teria dois formatos — e a suíte NÃO veria, porque roda em modo dev, onde nada é embutido |
 
 > **Gatilhos de revisão** (`D-43`): moram no tema que cada um mede — `D-01` em [[online_p2p]], `D-02` em [[stack]].
 

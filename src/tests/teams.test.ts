@@ -254,7 +254,7 @@ describe('M4 · portão — as 32 bandeiras de D-54', () => {
   });
 
   it('o campo continua com UM formato só: o `no-inline` da fonte não pode sumir', () => {
-    // Sem ele, 22 dos 32 SVGs entram no JS como `data:` e `flag` passa a ser ora caminho, ora
+    // Sem ele, 24 dos 32 SVGs entram no JS como `data:` e `flag` passa a ser ora caminho, ora
     // blob — e isso NÃO aparece na suíte, que roda em modo dev, onde nada é embutido. O portão
     // possível aqui é a fonte; o outro é a saída do `npm run build`, e é do dono.
     expect(readFileSync(FONTE_M4, 'utf8')).toContain('no-inline');

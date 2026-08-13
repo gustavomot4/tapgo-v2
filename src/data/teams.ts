@@ -69,7 +69,7 @@ export const FLAG_PENDENTE = null;
  * torna "zero URL, zero hotlink" verificável em vez de prometido — o valor não é digitado por
  * ninguém, ele sai do arquivo que está versionado.
  *
- * `?no-inline` é obrigatório, e não estilo: 22 dos 32 SVGs estão abaixo do limite de inline do
+ * `?no-inline` é obrigatório, e não estilo: 24 dos 32 SVGs estão abaixo do limite de inline do
  * Vite (4 kB) e virariam `data:` dentro do JS. Isso deixaria `flag` ora caminho, ora um blob de
  * 3 kB — dois formatos no mesmo campo, e o campo é declarado "caminho local".
  */
