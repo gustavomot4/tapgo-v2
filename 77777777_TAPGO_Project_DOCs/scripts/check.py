@@ -25,7 +25,9 @@ AVISOS (não reprovam; com --avisos-reprovam, reprovam)
   arquivo grande não varrido · varredura de histórico que não rodou ·
   portão automático (pre-commit) não instalado · módulo do PLANO sem tarefa ·
   description de skill sem fronteira negativa · CONTEXT perto do teto ·
-  DECISIONS perto do teto · QA perto do teto · tema de a_context/ fora do mapa de leitura
+  DECISIONS perto do teto · QA perto do teto · tema de a_context/ fora do mapa de leitura ·
+  sessão sem skill declarada no changelog · ocupação declarada divergindo do arquivo ·
+  questão do dono ausente do CONTEXT · achado grave aberto há mais de 14 dias
 
 Os orçamentos são medidos SEM o padding de alinhamento das tabelas (`medida()`, `D-50`):
 teto que conta espaço de alinhamento mede o formatador do editor, não o texto.
@@ -40,6 +42,7 @@ Marque uma linha com `checar:ignore` para isentá-la da varredura de segredo
 import re
 import subprocess
 import sys
+from datetime import date
 from pathlib import Path
 
 # O git emite caminhos em UTF-8. `text=True` SOZINHO decodifica com o encoding do
@@ -130,6 +133,8 @@ DECISOES = "a_context/c_decisions.md"           # D-NN / Q-NN, append-only
 # separado; os IDs continuam únicos entre os DOIS arquivos (ver bloco 10/11).
 QA_REG = "a_context/d_qa.md"                    # QA-NN, append-only
 BACKLOG = "b_process/c_backlog.md"              # fonte única de tarefas
+CHANGELOG = "d_history/a_changelog.md"          # histórico datado; nenhuma sessão carrega
+ARQUIVO_MORTO = "e_qa/decisions_archive.md"     # íntegra das linhas retiradas da tabela
 SKILLS = "b_process/skills"                     # os agentes instaláveis
 # Pastas do vault: só nelas "nota órfã" faz sentido. Markdown do próprio app
 # (content/, docs de pacote, README de módulo) não é nota e não bloqueia commit.
@@ -176,6 +181,19 @@ def alvos_de_varredura():
 def sem_codigo(texto):
     texto = re.sub(r"```.*?```", "", texto, flags=re.S)
     return re.sub(r"`[^`\n]*`", "", texto)
+
+
+def sem_bloco_de_codigo(texto):
+    """Só o bloco cercado. É o filtro certo para a checagem de ID (10).
+
+    `sem_codigo` também apaga a crase SIMPLES, e para wikilink isso está certo: `[[x]]`
+    dentro de crase é exemplo, não link. Para ID é o contrário — medido: 300 de 341
+    citações de ID estavam ENTRE CRASES, porque a casa escreve `D-13`, não D-13.
+    Filtrando por `sem_codigo`, a checagem enxergava 12% das citações e imprimia verde
+    sobre os outros 88%: portão que não olha é pior que portão que não existe, porque
+    o verde continua saindo.
+    """
+    return re.sub(r"```.*?```", "", texto, flags=re.S)
 
 
 def medida(texto):
@@ -501,7 +519,11 @@ gi = topo / ".gitignore"
 if not gi.exists():
     falhas.append(".gitignore ausente — o kit assume que ele existe antes do primeiro commit.")
 else:
-    texto_gi = gi.read_text(encoding="utf-8")
+    # QA-15: só as linhas EFETIVAS. Um .gitignore que apenas COMENTA os padrões
+    # ("# nunca commite .env, *.pem…") satisfazia a checagem por substring sem ignorar
+    # nada — o arquivo passava no portão explicando o que deveria fazer.
+    texto_gi = "\n".join(l for l in gi.read_text(encoding="utf-8").splitlines()
+                         if l.strip() and not l.lstrip().startswith("#"))
     faltando = [p for p in (".env", "*.pem", "*.key", "id_rsa", "credentials.json", "*.p12") if p not in texto_gi]
     if faltando:
         falhas.append(".gitignore sem cobertura mínima de segredo — faltam: " + ", ".join(faltando))
@@ -518,6 +540,17 @@ if texto_dec or texto_qa:
         for i in re.findall(r"^\|\s*((?:D|Q|QA)-\d+)\s*\|", texto, re.M):
             ocorrencias.setdefault(i, []).append(rotulo)
     definidos = set(ocorrencias)
+    # QA-16: o ID que saiu da tabela para o ARQUIVO MORTO continua EXISTINDO — `D-43`
+    # tira a linha da tabela e a íntegra vai para lá, com o ID preservado. Sem isto, a
+    # convenção de arquivamento do próprio kit fabrica "ID inexistente" a cada corte de
+    # orçamento: medido, 22 fantasmas legitimamente arquivados reprovando todo commit.
+    #
+    # `arquivados` NÃO entra em `definidos`, de propósito: a checagem 11 (ID duplicado)
+    # tem de continuar olhando só as tabelas VIVAS — senão a convenção `ADOTADO ·
+    # ARQUIVADO`, que deixa a linha na tabela com a íntegra no arquivo morto, vira
+    # duplicata falsa e reprova o repositório por estar correto.
+    morto = raiz / ARQUIVO_MORTO
+    arquivados = set(re.findall(r"\b((?:D|Q|QA)-\d+)\b", corpo.get(morto, ""))) if morto.exists() else set()
     repetidos = sorted(i for i, onde in ocorrencias.items() if len(onde) > 1)
     if repetidos:
         detalhe = ", ".join(f"{i} (em {', '.join(sorted(set(ocorrencias[i])))})" for i in repetidos)
@@ -534,12 +567,16 @@ if texto_dec or texto_qa:
         rel_nota = nota.relative_to(topo)
         if nota in registros_em_disco or PASTAS_HISTORICAS & set(rel_nota.parts) or nota.stem == "d_agent_learnings":
             continue
-        for i in set(re.findall(r"\b((?:D|Q|QA)-\d+)\b", sem_codigo(corpo[nota]))):
+        # QA-14: aqui o filtro é `sem_bloco_de_codigo`, não `sem_codigo`. A casa cita ID
+        # ENTRE CRASES (`D-13`), e a crase simples apagava 88% das citações antes de olhar.
+        for i in set(re.findall(r"\b((?:D|Q|QA)-\d+)\b", sem_bloco_de_codigo(corpo[nota]))):
             citados.setdefault(i, set()).add(rel_nota.as_posix())
-    fantasmas = {i: v for i, v in citados.items() if i not in definidos and not re.fullmatch(r"(D|Q|QA)-0*(0|NN)", i)}
+    fantasmas = {i: v for i, v in citados.items()
+                 if i not in definidos and i not in arquivados
+                 and not re.fullmatch(r"(D|Q|QA)-0*(0|NN)", i)}
     if fantasmas:
         detalhe = "; ".join(f"{i} (em {', '.join(sorted(v))})" for i, v in sorted(fantasmas.items())[:6])
-        falhas.append(f"ID citado que não existe em {DECISOES} nem em {QA_REG}: {detalhe}")
+        falhas.append(f"ID citado que não existe em {DECISOES}, {QA_REG} nem em {ARQUIVO_MORTO}: {detalhe}")
 
 # 12. "Em andamento" tem de bater entre BACKLOG e CONTEXT (regra 6, fonte única).
 # 13. Cobertura módulo <-> tarefa. Metade FORMAL do que a skill artifact-consistency faz
@@ -606,6 +643,142 @@ if texto_ctx:
             "Tema em a_context/ fora do Mapa de leitura do CONTEXT: " + ", ".join(fora)
             + " — doc fora do mapa nunca é lido; ou entra no mapa com a condição que "
             "justifica lê-lo, ou sai do repositório."
+        )
+
+# --- Coerência: o que o CONTEXT DECLARA × o que os arquivos SÃO ---------------------
+# Os três avisos abaixo cobram o que nenhuma checagem anterior olhava: o CONTEXT pode
+# estar internamente perfeito e mentir sobre o disco. Nenhum reprova — o dono pode estar
+# no meio da escrita — e todos só LEEM: a verdade continua sendo dele.
+
+# 1. Ocupação declarada × arquivo. Medido em 12/08: o CONTEXT declarava o registro em
+# 8.926 e o arquivo media 9.076 — a linha de estado ficou atrás de uma escrita posterior
+# e só apareceu numa conferência manual, por acaso. Quem abre a sessão decide o que
+# cortar por ESSE número; número velho manda cortar cedo demais ou tarde demais.
+# A chave do dicionário é o ORÇAMENTO, não o nome do arquivo: é o denominador que diz
+# de qual registro a linha fala, sem depender de como ela foi escrita.
+ORCAMENTOS = {4000: (CONTEXTO, texto_ctx), 12000: (DECISOES, texto_dec), 8000: (QA_REG, texto_qa)}
+if texto_ctx:
+    ja_avisado = set()
+    # `**10.998**/12.000` e `10.998/12.000` são a mesma frase: o negrito sai antes de contar.
+    for bruto_dec, bruto_teto in re.findall(r"(\d[\d.]*)\s*/\s*(\d[\d.]*)", texto_ctx.replace("*", "")):
+        teto = int(bruto_teto.replace(".", ""))
+        if teto not in ORCAMENTOS or teto in ja_avisado:
+            continue  # "suíte 385/385" não é orçamento: o denominador é que qualifica
+        nome_alvo, texto_alvo = ORCAMENTOS[teto]
+        if not texto_alvo:
+            continue
+        # `medida()`, NUNCA `len()`: o teto deste projeto ignora o padding de alinhamento
+        # das tabelas (`D-50`), e comparar com `len()` acusaria divergência em arquivo
+        # correto — aviso falso ensina a ignorar aviso.
+        real = medida(texto_alvo)
+        declarado = int(bruto_dec.replace(".", ""))
+        if declarado != real:
+            ja_avisado.add(teto)
+            avisos.append(
+                f"{CONTEXTO} declara {nome_alvo} em {declarado}/{teto}, mas o arquivo mede "
+                f"{real} ({real - declarado:+d}) — quem lê o CONTEXT decide o corte por este "
+                "número; corrija a linha de estado (o disco é a verdade)."
+            )
+
+# 2. Questão do dono aberta que o CONTEXT não lista. A fila de decisões do DONO mora no
+# DECISIONS, e quem abre a sessão lê o CONTEXT: questão que não aparece lá não é
+# perguntada, e o projeto espera meses por uma resposta que ninguém pediu — sem nenhum
+# sintoma, porque a questão CONTINUA registrada, no arquivo que a sessão não carrega.
+# As `Q-NN` não se mudaram em `D-50`: este bloco lê o DECISIONS, e é o único dos três
+# que lê (ver o de achado grave, que teve de mudar de arquivo).
+if texto_dec and texto_ctx:
+    mudas = []
+    for linha in texto_dec.splitlines():
+        m = re.match(r"^\|\s*(Q-\d+)\s*\|", linha)
+        # Fora da fila se a linha diz RESPONDIDA ou se a questão está riscada (`~~…~~`) —
+        # as duas convenções vivas no registro, e as duas significam a mesma coisa.
+        if not m or re.search(r"RESPONDIDA|~~", linha, re.I):
+            continue
+        if m.group(1) not in texto_ctx:
+            mudas.append(m.group(1))
+    if mudas:
+        avisos.append(
+            "Questão do dono aberta e AUSENTE do CONTEXT: " + ", ".join(dict.fromkeys(mudas))
+            + f" — ela mora em {DECISOES}, que a sessão não abre por conta própria; fora da "
+            "linha 'Questões abertas' do CONTEXT, ninguém a pergunta ao dono."
+        )
+
+# 3. Achado grave ABERTO há mais de 14 dias. `CRÍTICO`/`ALTO` que ninguém fecha vira
+# paisagem: continua no registro, para de ser lido, e o portão segue verde porque achado
+# aberto é estado legítimo. O prazo é o que torna "legítimo" uma coisa datada.
+# Este bloco lê o QA_REG, não o DECISIONS: desde `D-50` é lá que os `QA-NN` moram, e
+# procurar a tabela no arquivo errado faria a checagem reclamar para sempre.
+PRAZO_ACHADO = 14
+GRAVE = ("CRÍTICO", "CRITICO", "ALTO")
+
+
+def celulas_md(linha):
+    """Células de uma linha de tabela. Separa por barra NÃO escapada: a célula pode
+    conter `\\|` (wikilink com apelido, `[[d_qa\\|QA]]`), e um `split("|")` cru
+    desalinharia as colunas justamente nas linhas mais bem documentadas."""
+    return [c.strip() for c in re.split(r"(?<!\\)\|", linha.strip())[1:-1]]
+
+
+if texto_qa:
+    linhas_qa = texto_qa.splitlines()
+    cabecalho = next((celulas_md(l) for l in linhas_qa if re.match(r"^\|\s*#\s*\|", l)), [])
+    # As colunas vêm do CABEÇALHO, não de posição fixa: acrescentar uma coluna à tabela
+    # é edição legítima, e uma posição cravada faria a checagem ler a coluna errada em
+    # silêncio — que é o defeito, não a coluna a mais.
+    i_data, i_sev, i_fech = (
+        next((i for i, c in enumerate(cabecalho) if chave in c.lower()), None)
+        for chave in ("data", "sev", "fechado")
+    )
+    if None in (i_data, i_sev, i_fech):
+        avisos.append(
+            f"{QA_REG}: tabela sem a coluna Data, Sev. ou 'Fechado em' — o aviso de achado "
+            "grave vencido NÃO rodou. Checagem que emudece é pior que checagem ausente, "
+            "porque o verde continua saindo."
+        )
+    else:
+        vencidos = []
+        for linha in linhas_qa:
+            if not re.match(r"^\|\s*QA-\d+\s*\|", linha):
+                continue
+            cel = celulas_md(linha)
+            if len(cel) <= max(i_data, i_sev, i_fech):
+                continue
+            fechado = cel[i_fech].strip("_* ")
+            if fechado and "aberto" not in fechado.lower():
+                continue  # `✔ T-15 2026-08-08` é linha fechada; `_(aberto)_` e vazio, não
+            if not any(g in cel[i_sev].upper() for g in GRAVE):
+                continue
+            m = re.search(r"\d{4}-\d{2}-\d{2}", cel[i_data])
+            if not m:
+                continue
+            try:
+                dias = (date.today() - date.fromisoformat(m.group(0))).days
+            except ValueError:
+                continue
+            if dias > PRAZO_ACHADO:
+                vencidos.append(f"{cel[0]} ({cel[i_sev].split('·')[0].strip()}, {dias} dias)")
+        if vencidos:
+            avisos.append(
+                f"Achado grave aberto há mais de {PRAZO_ACHADO} dias: " + ", ".join(vencidos)
+                + " — feche, rebaixe a severidade com o motivo, ou vire tarefa no BACKLOG. "
+                "Severidade que não expira deixa de significar urgência."
+            )
+
+# 4. Sessão sem skill declarada no changelog. Qual agente conduziu a sessão é o dado que
+# torna o histórico auditável: sem ele, "o que essa sessão seguiu?" só se responde
+# relendo o diff, e a retrospectiva não consegue comparar sessão com sessão. Campo NOVO —
+# as entradas antigas vão falar, e a resposta certa é adotá-lo da próxima em diante,
+# nunca reescrever o histórico para calar o aviso.
+ENTRADAS_CONFERIDAS = 3
+texto_cl = corpo.get(raiz / CHANGELOG, "")
+if texto_cl:
+    entradas = re.split(r"^## ", texto_cl, flags=re.M)[1:ENTRADAS_CONFERIDAS + 1]
+    sem_skill = [e.splitlines()[0].strip()[:44] for e in entradas if not re.search(r"\*\*Skill", e)]
+    if sem_skill:
+        avisos.append(
+            f"{len(sem_skill)} das {len(entradas)} entradas mais recentes de {CHANGELOG} sem "
+            "`- **Skill:** <nome>`: " + " · ".join(sem_skill)
+            + " — adote o campo a partir da próxima entrada; não reescreva o histórico."
         )
 
 placeholders = re.findall(r"<[A-Za-zÀ-ú][^<>\n]{2,60}>", texto_ctx)
