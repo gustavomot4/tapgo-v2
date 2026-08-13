@@ -53,6 +53,10 @@ status: atual
 
 | D-59 | 2026-08-12 | ADOTADO | O sorteio dos grupos é **cego**: as 32 caem nos 8 grupos direto pelo `Rng`, sem potes nem cabeça de chave | Escolha de variância, com o custo medido: **50,2%** das sementes põem ao menos duas das quatro primeiras no mesmo grupo, e 9,7% juntam a 1ª com a 2ª |
 
+| D-60 | 2026-08-12 | ADOTADO | **Não há progressão de dificuldade**: o torneio inteiro roda no nível escolhido no início, do grupo à final | `D-13` dizia "nenhuma **progressão** passa dos 70%" sem que houvesse decisão de que existisse uma; `TournamentConfig.level` segue **um** valor, agora por escolha e não por omissão |
+
+| D-61 | 2026-08-12 | ADOTADO | `T-18`: a exceção de `D-52` é **lista fechada de tamanho 1** (`NAME_EXCEPTIONS`), e M4 exporta junto o validador que a aplica (`assertCatalogCode`) | Só com o validador exportado o portão "um segundo código fora da alfa-2 reprova" é cobrado na via mais baixa: inspecionar a lista pronta prova a lista de hoje, não a próxima linha errada. Nenhuma assinatura de `D-13` muda |
+
 > **Gatilhos de revisão** (`D-43`): moram no tema que cada um mede — `D-01` em [[online_p2p]], `D-02` em [[stack]].
 
 ## Questões abertas (Q-NN — decisões do DONO, não do agente)

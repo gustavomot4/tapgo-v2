@@ -5,9 +5,9 @@
  * Dado curado que entra no bundle: não recebe nada em runtime, não faz I/O, não muda depois
  * de carregado. Depende só de M1 (`CountryCode`).
  *
- * **O catálogo aqui é LISTA DE FIXAÇÃO.** `Q-03` (quantas e quais seleções entram, e de onde
- * vêm as bandeiras) segue aberta e só se resolve em `A-04`. O contrato e o portão são reais e
- * valem desde já; a lista não é resposta a `Q-03` e não deve ser lida como tal.
+ * **A lista aqui é a real** (`D-51`): 32 seleções, com o critério e a data de corte congelados
+ * naquela decisão. `Q-03` está respondida. O que continua pendente é só a bandeira — `flag` segue
+ * `null` em todo o catálogo até `T-19` (`D-22`).
  */
 
 import type { CountryCode } from '../core/index';
@@ -15,7 +15,7 @@ import type { CountryCode } from '../core/index';
 /**
  * Uma seleção jogável.
  *
- * `flag` é `null` enquanto o asset não existir (`A-04`) — ver `FLAG_PENDENTE`. Quando existir,
+ * `flag` é `null` enquanto o asset não existir (`T-19`) — ver `FLAG_PENDENTE`. Quando existir,
  * é **caminho local**, nunca URL: hotlink quebra o jogo offline e foi o defeito de licença da v1
  * [Fonte: a_context/licenciamento.md#o-que-é-proibido-no-projeto].
  */
@@ -47,16 +47,32 @@ const REGION_NAMES = new Intl.DisplayNames([CATALOG_LOCALE], {
   fallback: 'none',
 });
 
-/** `flag` de seleção cujo arquivo de bandeira ainda não existe. Resolve em `A-04`. */
+/** `flag` de seleção cujo arquivo de bandeira ainda não existe. Resolve em `T-19` (`D-22`). */
 export const FLAG_PENDENTE = null;
 
 /**
- * `true` enquanto `listTeams()` devolver a lista de fixação.
+ * `false` desde `T-18`: o que `listTeams()` devolve é dado curado, não mais andaime.
  *
- * Existe para que a lacuna seja estrutural e não uma nota de rodapé: vira `false` em `A-04`,
- * junto com a lista real, e o teste que trava a entrega lê esta constante.
+ * Continua exportada porque é a constante que o portão de M4 nomeia — era ela que segurava a
+ * entrega enquanto a lista fosse de fixação, e é ela que diz, para quem lê de fora, se o catálogo
+ * é resposta a `D-51` ou lista arbitrária.
  */
-export const CATALOG_IS_FIXTURE = true;
+export const CATALOG_IS_FIXTURE = false;
+
+/**
+ * Os nomes que o ICU **não** resolve — lista fechada, hoje de tamanho 1.
+ *
+ * `D-52` admite `alfa-2 + subdivisão` onde a alfa-2 não existe, e entre as 32 há um único caso: a
+ * alfa-2 disponível nomeia um território maior, que não é a seleção listada. `Intl.DisplayNames`
+ * com `type: 'region'` resolve *região* e lança `RangeError` em *subdivisão*, então esta é a única
+ * entrada do catálogo cujo nome é texto digitado.
+ *
+ * É exceção **nomeada**, não afrouxamento do portão de `D-23`: código fora da alfa-2 que não
+ * esteja aqui é recusado no carregamento (`assertCatalogCode`), e o teste cobra o tamanho desta
+ * lista e qual é o literal. Trocar isto por "aceita subdivisão" devolveria o buraco que `D-23`
+ * fechou — nome digitado sem ninguém para conferi-lo.
+ */
+export const NAME_EXCEPTIONS: ReadonlyMap<CountryCode, string> = new Map([['GB-ENG', 'Inglaterra']]);
 
 /**
  * Códigos que o ISO 3166-1 reserva para uso do usuário e que, portanto, NUNCA identificam um
@@ -79,8 +95,9 @@ function isUserAssigned(code: string): boolean {
  *
  * **Limite declarado:** o ICU resolve códigos *retirados* e *excepcionalmente reservados* como se
  * fossem países — `SU` devolve "Rússia", `UK` e `EU` devolvem nome — e esta função os aceita.
- * Fechar esse buraco exige a lista oficial da norma, que é dado curado e entra com a lista real
- * em `A-04`; inventá-la aqui seria inventar fonte.
+ * Fechar esse buraco exige a lista oficial da norma, que o projeto não tem; `D-51` trouxe as 32
+ * seleções, não a norma, então o limite de `D-23` **segue declarado**. Inventá-la seria inventar
+ * fonte.
  */
 function assertAlpha2(code: string): void {
   if (!/^[A-Z]{2}$/.test(code)) {
@@ -96,9 +113,48 @@ function assertAlpha2(code: string): void {
   }
 }
 
-/** Monta uma seleção a partir do código. O `name` vem do código; ninguém o digita. */
-function makeTeam(code: string): Team {
+/**
+ * Recusa qualquer código que o catálogo não possa conter: alfa-2 válida, ou uma das exceções
+ * nomeadas de `D-52`.
+ *
+ * **Exportada de propósito.** O portão diz que "um segundo código fora da alfa-2 reprova", e isso
+ * só é verificável se o teste puder tentar a violação na via mais baixa — aqui, onde o catálogo é
+ * construído. Conferir a lista pronta prova que a lista de hoje está certa; não prova que a
+ * próxima linha errada será recusada.
+ */
+export function assertCatalogCode(code: string): void {
+  if (NAME_EXCEPTIONS.has(code)) return;
   assertAlpha2(code);
+}
+
+/**
+ * A lista de exceções só é legítima enquanto cada entrada for um código que o ICU não resolve.
+ *
+ * Uma alfa-2 aqui dentro seria nome digitado onde havia nome derivado — o buraco que `D-23`
+ * fechou —, e passaria calada, porque a exceção tem precedência sobre o ICU em `makeTeam`.
+ */
+function assertExceptions(): void {
+  for (const [code, name] of NAME_EXCEPTIONS) {
+    if (/^[A-Z]{2}$/.test(code)) {
+      throw new RangeError(`teams: ${code} é alfa-2 e tem nome no ICU — não pode ser exceção`);
+    }
+    if (name.trim() === '') {
+      throw new RangeError(`teams: exceção ${code} sem nome`);
+    }
+  }
+}
+
+/** Monta uma seleção. O `name` vem do código, salvo a exceção nomeada — ninguém mais o digita. */
+function makeTeam(code: string): Team {
+  assertCatalogCode(code);
+
+  // A exceção vem antes do ICU, e não como reserva depois dele: `REGION_NAMES.of` LANÇA em
+  // subdivisão, então consultá-lo primeiro derrubaria o carregamento do módulo.
+  const excecao = NAME_EXCEPTIONS.get(code);
+  if (excecao !== undefined) {
+    return Object.freeze({ code, name: excecao, flag: FLAG_PENDENTE });
+  }
+
   const name = REGION_NAMES.of(code);
   if (name === undefined) {
     throw new RangeError(`teams: ${code} passou na validação mas não tem nome — ICU incompleto`);
@@ -107,16 +163,23 @@ function makeTeam(code: string): Team {
 }
 
 /**
- * **LISTA DE FIXAÇÃO — não é resposta a `Q-03`.**
+ * Os 32 códigos do catálogo, na ordem congelada por `D-51`.
  *
- * Existe só para o contrato e o portão terem o que exercitar antes de `A-04`, e é arbitrária por
- * construção. Quem decide quantas e quais seleções entram é o dono, em `Q-03`
- * [Fonte: a_context/b_plan.md#m4--catálogo-de-seleções].
+ * **A procedência não mora aqui.** Critério, data de leitura, fontes e a conferência código a
+ * código estão na nota `e_qa/m4_lista_das_32.md`, e é de lá que esta lista sai — não de memória.
+ * Dentro de `src/` a origem se cita como `D-51` e como ponteiro para a nota, **nunca por extenso**:
+ * quem publica a lista é marca de terceiro, e o portão de M7 varre `src/` atrás dela.
  */
-const FIXTURE_CODES: readonly string[] = ['BR', 'AR', 'DE', 'JP'];
+const CODES: readonly string[] = [
+  'ES', 'AR', 'FR', 'GB-ENG', 'BR', 'MA', 'PT', 'BE',
+  'NL', 'MX', 'CO', 'DE', 'HR', 'CH', 'IT', 'US',
+  'JP', 'SN', 'NO', 'UY', 'DK', 'IR', 'AT', 'EG',
+  'EC', 'NG', 'TR', 'AU', 'DZ', 'CA', 'CI', 'KR',
+];
 
 /** Constrói o catálogo uma vez, no carregamento do módulo, e o congela. */
 function buildCatalog(codes: readonly string[]): readonly Team[] {
+  assertExceptions();
   const vistos = new Set<string>();
   const teams = codes.map((code) => {
     if (vistos.has(code)) {
@@ -128,7 +191,7 @@ function buildCatalog(codes: readonly string[]): readonly Team[] {
   return Object.freeze(teams);
 }
 
-const CATALOG: readonly Team[] = buildCatalog(FIXTURE_CODES);
+const CATALOG: readonly Team[] = buildCatalog(CODES);
 
 const BY_CODE: ReadonlyMap<string, Team> = new Map(CATALOG.map((team) => [team.code, team]));
 
@@ -141,8 +204,8 @@ export function listTeams(): readonly Team[] {
  * Busca por código exato.
  *
  * **Não normaliza:** código em minúscula devolve `undefined`, e não a seleção correspondente.
- * As representações obrigatórias dizem que país é identificado por código ISO-3166 alfa-2,
- * nunca por texto digitado
+ * As representações obrigatórias dizem que país é identificado por código ISO-3166 — alfa-2, ou
+ * alfa-2 + subdivisão onde ela não existe (`D-52`) —, nunca por texto digitado
  * [Fonte: a_context/a_context_source.md]; aceitar variação aqui seria aceitar o texto digitado
  * pela porta dos fundos e esconder o bug de quem chamou.
  *

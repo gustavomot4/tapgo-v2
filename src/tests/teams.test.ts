@@ -6,6 +6,8 @@ import { describe, expect, it } from 'vitest';
 import {
   CATALOG_IS_FIXTURE,
   FLAG_PENDENTE,
+  NAME_EXCEPTIONS,
+  assertCatalogCode,
   findTeam,
   listTeams,
   type Team,
@@ -14,11 +16,53 @@ import {
 const AQUI = resolve(fileURLToPath(import.meta.url), '..');
 const FONTE_M4 = resolve(AQUI, '..', 'data', 'teams.ts');
 
-describe('M4 · portão — todo code é ISO-3166 alfa-2 válido', () => {
-  it('todo código do catálogo tem exatamente 2 letras maiúsculas', () => {
+/**
+ * O único nome digitado que o catálogo tem direito de conter (`D-52`).
+ *
+ * Escrito aqui por extenso de propósito: "o teste diz qual" é o portão. Lê-lo do próprio módulo
+ * faria o teste concordar com qualquer literal que alguém acrescentasse lá.
+ */
+const LITERAL_ESPERADO = { code: 'GB-ENG', name: 'Inglaterra' } as const;
+
+/** O corte de `D-51`. Número, não "uns 30": mudar o corte é `D-NN` novo, não edição de lista. */
+const TOTAL = 32;
+
+describe('M4 · portão — as 32 seleções de D-51', () => {
+  it(`o catálogo tem exatamente ${TOTAL} entradas`, () => {
+    expect(listTeams()).toHaveLength(TOTAL);
+  });
+
+  it('o catálogo não é mais lista de fixação: CATALOG_IS_FIXTURE = false', () => {
+    expect(CATALOG_IS_FIXTURE).toBe(false);
+  });
+});
+
+describe('M4 · portão — todo code é ISO-3166 alfa-2 válido, com UMA exceção (D-52)', () => {
+  it('todo código tem 2 letras maiúsculas, ou é a exceção nomeada', () => {
     for (const team of listTeams()) {
+      if (NAME_EXCEPTIONS.has(team.code)) continue;
       expect(team.code).toMatch(/^[A-Z]{2}$/);
     }
+  });
+
+  it('a lista de exceções tem tamanho 1, e o teste diz qual é', () => {
+    expect([...NAME_EXCEPTIONS.keys()]).toEqual([LITERAL_ESPERADO.code]);
+  });
+
+  it('exatamente um código do catálogo está fora da alfa-2, e é ele', () => {
+    const fora = listTeams()
+      .map((t) => t.code)
+      .filter((code) => !/^[A-Z]{2}$/.test(code));
+    expect(fora).toEqual([LITERAL_ESPERADO.code]);
+  });
+
+  it('um SEGUNDO código fora da alfa-2 reprova — a exceção é lista fechada, não regra', () => {
+    // A via mais baixa possível: tentar a violação onde o catálogo é construído. Conferir a
+    // lista pronta prova que a de hoje está certa, não que a próxima linha errada é recusada.
+    for (const intruso of ['GB-SCT', 'GB-WLS', 'FR-COR', 'BR-SP', 'gb-eng', 'GB-ENG-X']) {
+      expect(() => assertCatalogCode(intruso)).toThrow(RangeError);
+    }
+    expect(() => assertCatalogCode(LITERAL_ESPERADO.code)).not.toThrow();
   });
 
   it('nenhum código está na faixa de uso do usuário do ISO 3166-1', () => {
@@ -35,9 +79,6 @@ describe('M4 · portão — todo code é ISO-3166 alfa-2 válido', () => {
     expect(new Set(codes).size).toBe(codes.length);
   });
 
-  it('o catálogo não está vazio — porta de entrada sem dado é lacuna, não contrato', () => {
-    expect(listTeams().length).toBeGreaterThan(0);
-  });
 });
 
 describe('M4 · portão — o name vem do código, nunca de texto digitado', () => {
@@ -48,19 +89,35 @@ describe('M4 · portão — o name vem do código, nunca de texto digitado', () 
     }
   });
 
-  it('o nome é o que o ISO-3166 resolve em pt-BR, e não o que alguém escreveu', () => {
+  it('o nome das 31 vem do ICU em pt-BR, e não do que alguém escreveu', () => {
     const esperado = new Intl.DisplayNames(['pt-BR'], { type: 'region', fallback: 'none' });
-    for (const team of listTeams()) {
+    const derivadas = listTeams().filter((t) => !NAME_EXCEPTIONS.has(t.code));
+    expect(derivadas).toHaveLength(TOTAL - 1);
+    for (const team of derivadas) {
       expect(team.name).toBe(esperado.of(team.code));
     }
   });
 
-  it('nenhum nome de país aparece digitado no código-fonte de M4', () => {
+  it('a exceção existe porque o ICU RECUSA o código — não por conveniência de quem digitou', () => {
+    // O dia em que isto parar de lançar, a exceção deixou de se justificar e sai do catálogo.
+    const icu = new Intl.DisplayNames(['pt-BR'], { type: 'region', fallback: 'none' });
+    expect(() => icu.of(LITERAL_ESPERADO.code)).toThrow(RangeError);
+    expect(findTeam(LITERAL_ESPERADO.code)?.name).toBe(LITERAL_ESPERADO.name);
+  });
+
+  it('a alfa-2 do território maior NÃO entra no lugar da subdivisão', () => {
+    // Trocar `GB-ENG` por `GB` faria o ICU resolver, e o nome seria de outra coisa. É o atalho
+    // que a exceção existe para não precisar tomar.
+    expect(findTeam('GB')).toBeUndefined();
+  });
+
+  it('EXATAMENTE um nome de país aparece digitado na fonte de M4, e é o da exceção', () => {
     const fonte = readFileSync(FONTE_M4, 'utf8');
     // Se um nome fosse digitado, ele estaria aqui como literal — é o defeito que o portão proíbe.
-    for (const team of listTeams()) {
-      expect(fonte).not.toContain(team.name);
-    }
+    const digitados = listTeams()
+      .map((t) => t.name)
+      .filter((name) => fonte.includes(name));
+    expect(digitados).toEqual([LITERAL_ESPERADO.name]);
   });
 
   it('o nome não depende do locale do aparelho: é fixo em pt-BR', () => {
@@ -102,19 +159,21 @@ describe('M4 · portão — licença: zero URL, zero escudo', () => {
   });
 });
 
-describe('M4 · lacuna declarada — bandeiras travadas em A-04', () => {
-  it('enquanto for lista de fixação, toda flag é nula — nunca "" nem caminho inventado', () => {
-    expect(CATALOG_IS_FIXTURE).toBe(true);
+describe('M4 · lacuna declarada — bandeiras travadas em T-19', () => {
+  it('sem arquivo de bandeira, toda flag é nula — nunca "" nem caminho inventado', () => {
     for (const team of listTeams()) {
       expect(team.flag).toBe(FLAG_PENDENTE);
       expect(team.flag).not.toBe('');
     }
   });
 
-  it('A-04 derruba este teste de propósito: lista real entra com CATALOG_IS_FIXTURE = false', () => {
-    // Guarda de entrega. Quando a lista real chegar, `CATALOG_IS_FIXTURE` vira `false`, este
-    // teste falha e obriga a revisitar o portão de licença com os arquivos de bandeira na mão.
-    expect(CATALOG_IS_FIXTURE).toBe(true);
+  it('T-19 derruba este teste de propósito: bandeira exige linha de procedência', () => {
+    // Guarda de entrega herdada de `T-08` e REDIRECIONADA em `T-18`: a condição original era
+    // `CATALOG_IS_FIXTURE`, que existia para forçar revisitar o portão de licença em `A-04`.
+    // `A-04` fechou e a resposta é `D-54`, então a guarda passou a vigiar o que ainda não
+    // aconteceu: no dia em que uma `flag` deixar de ser nula, este teste falha e obriga a passar
+    // pela tabela de procedência de licenciamento. Quem cumpre isso é `T-19`.
+    expect(listTeams().every((t) => t.flag === null)).toBe(true);
   });
 });
 
@@ -126,6 +185,12 @@ describe('M4 · findTeam', () => {
 
   it('devolve undefined para código ausente do catálogo', () => {
     expect(findTeam('ZW')).toBeUndefined();
+  });
+
+  it('acha a exceção pelo código com subdivisão', () => {
+    const excecao = findTeam(LITERAL_ESPERADO.code);
+    expect(excecao?.code).toBe(LITERAL_ESPERADO.code);
+    expect(excecao?.name).toBe(LITERAL_ESPERADO.name);
   });
 
   it('NÃO normaliza: minúscula não acha', () => {
