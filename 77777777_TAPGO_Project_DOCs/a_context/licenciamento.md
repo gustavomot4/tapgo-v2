@@ -49,22 +49,30 @@ Todo arquivo em `assets/` tem uma linha nesta tabela antes de entrar no reposit�
 Desde `T-10` a tabela é **cobrada por teste**: `src/tests/ui.test.ts` varre `src/assets/` e reprova
 o arquivo que não tiver linha aqui. Portão que só existe em prosa é portão que ninguém roda.
 
+As 32 bandeiras têm linha **na tabela da seção "Bandeiras"**, e não nesta: repetir a mesma licença e o
+mesmo autor 32 vezes esconderia o que muda de arquivo para arquivo. O portão não muda — o teste varre a
+página inteira atrás do caminho, não uma tabela específica.
+
 | Arquivo | Origem | Licença | Autor |
 |---|---|---|---|
 | `src/assets/base-probe.svg` | criado em T-05, sem referência a nenhuma imagem externa: retângulo, círculo e um sinal de conferido | do projeto | projeto TAP GO v2 (agente, sessão T-05) |
 | `src/assets/audio/chute.wav` | **sintetizado** em T-10 por `src/scripts/gen-audio.mjs`: varredura de senoide 190→62 Hz mais rajada de ruído de LCG com semente fixa. Nenhum sample, nenhuma gravação, nenhum download | do projeto | projeto TAP GO v2 (agente, sessão T-10) |
 | `src/assets/audio/gol.wav` | **sintetizado** em T-10 pelo mesmo script: tríade 523/659/784 Hz com envelope exponencial | do projeto | projeto TAP GO v2 (agente, sessão T-10) |
 | `src/assets/audio/defesa.wav` | **sintetizado** em T-10 pelo mesmo script: ruído de LCG com média móvel mais varredura 320→128 Hz | do projeto | projeto TAP GO v2 (agente, sessão T-10) |
+| `src/assets/flags/LICENSE.txt` | cópia do `LICENSE` do pacote **flag-icons 7.5.0** (npm), com um cabeçalho do projeto dizendo o que ele cobre; o aviso da MIT está íntegro e verbatim abaixo do traço | MIT | Panayiotis Lipiridis |
 
-### Bandeiras: fonte escolhida, arquivos ainda não
-`D-54` escolheu o **flag-icons** — SVG, licença **MIT**, `Copyright (c) 2013 Panayiotis Lipiridis`. Nenhum arquivo
-entrou ainda: `T-19` traz os 32 SVGs das seleções de `D-51`, e cada um ganha sua linha na tabela acima.
+### Bandeiras: a licença entrou primeiro
+`D-54` escolheu o **flag-icons** — SVG, licença **MIT**, `Copyright (c) 2013 Panayiotis Lipiridis`.
 
 Duas condições, e as duas são portão de `T-19`, não recomendação:
 - **O texto da licença entra ANTES do primeiro SVG.** A MIT é permissiva mas exige manter o aviso de copyright;
   arquivo primeiro e licença depois é exatamente a janela em que a regra desta página é violada.
 - **Nada de hotlink nem de CDN.** É a mesma linha que a v1 quebrou com a Wikipédia, e vale igual para uma fonte
   com licença boa: além do direito, hotlink quebra o jogo offline.
+
+A primeira condição foi cumprida **na ordem, e a ordem está no histórico do git**: o commit que trouxe
+`src/assets/flags/LICENSE.txt` é anterior ao que trouxe os SVGs. Ordem declarada em prosa é ordem que
+ninguém confere.
 
 A Inglaterra é o caso que obrigou `D-52`: ela não tem código ISO-3166-1, e entra como `GB-ENG`. Isso é **código de
 subdivisão**, não bandeira de federação — a `GB-ENG` é a cruz de São Jorge, símbolo territorial, e continua dentro
