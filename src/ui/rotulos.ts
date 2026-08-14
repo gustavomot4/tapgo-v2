@@ -36,14 +36,20 @@ export function nomeSelecao(code: CountryCode): string {
 }
 
 /**
- * A marca visual da seleção enquanto `A-04` não entrega as bandeiras.
+ * A marca visual da seleção: a bandeira quando existe arquivo, o código ISO quando não.
  *
- * Hoje `flag` é `null` para todo o catálogo (`D-22`), então a tela mostra o **código ISO** num
- * disco colorido. Não é bandeira e não finge ser: é o identificador que as representações
- * obrigatórias já exigem, e some no dia em que `flag` deixar de ser `null`.
+ * Desde `T-19` as 32 têm arquivo (`D-62`), então na prática o resultado é sempre bandeira. O ramo
+ * do código continua escrito porque `flag` segue `string | null` no tipo (`D-22`) e a porta ainda
+ * promete o caso "sem arquivo" — não porque hoje alguma seleção caia nele.
+ *
+ * **`texto` carrega dois formatos, e `ehBandeira` é o campo que diz qual:** caminho local do SVG
+ * quando `true`, código ISO quando `false`. Ler `texto` sem ler `ehBandeira` era `QA-19` — a tela
+ * escrevia o caminho do arquivo como TEXTO dentro do disco de 34px, nos 32 cartões de cada lado.
+ * Quem consome isto decide pelo `ehBandeira`, nunca farejando o valor.
  *
  * O matiz sai do próprio código, por soma de caracteres — arbitrário e estável, para que duas
- * seleções não abram com a mesma cor. Não representa cor nacional nenhuma.
+ * seleções não abram com a mesma cor. Não representa cor nacional nenhuma, e o ramo da bandeira
+ * não o usa: cor inventada por cima de bandeira real é o que a restrição de identidade proíbe.
  */
 export function marcaSelecao(code: CountryCode): { texto: string; matiz: number; ehBandeira: boolean } {
   const time = findTeam(code);

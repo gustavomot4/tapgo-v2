@@ -9,6 +9,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createSession } from '../session/index';
 import type { Level, MatchState, Session } from '../session/index';
 import type { Side, Zone } from '../core/index';
+import { listTeams } from '../data/teams';
 
 import { criarDerivacao, outroLado } from '../ui/derivacao';
 import type { Vez } from '../ui/derivacao';
@@ -262,20 +263,44 @@ describe('rótulos', () => {
     expect(nomeSelecao('ZZ')).toBe('ZZ');
   });
 
-  it('a marca já sabe que existe bandeira — quem ainda não sabe é a tela (QA-19)', () => {
-    // O teste antigo cobrava `ehBandeira === false` e `texto === código`, condição de quando
-    // `flag` era `null` para as 32 (`D-22`). `T-19` entregou os SVGs e a condição caiu; ela foi
-    // REDIRECIONADA, não apagada, porque o que ela vigiava continua de pé pela metade:
-    // `marcaSelecao` já vira a chave, e `marca()` em `tela_selecoes.ts` ainda escreve `texto`
-    // como TEXTO — hoje o caminho do arquivo dentro do disco de 34px. Isso é `QA-19`, é de M7 e
-    // não foi consertado nesta sessão (regra 4). No dia em que a tela pintar `<img>`, é este
-    // teste que tem de ser revisitado.
+  it('a marca é bandeira, e o caminho dela é local — nunca URL (QA-19)', () => {
+    // Terceira condição deste mesmo teste, e o teste nunca foi apagado. Cobrava `ehBandeira ===
+    // false` e `texto === código`, condição de quando `flag` era `null` para as 32 (`D-22`);
+    // `T-19` derrubou isso e ela virou `texto` casando `/\.svg$/`, com a tela ainda escrevendo o
+    // caminho como texto. Agora `marca()` lê `ehBandeira` e pinta `<img>`, então o que sobra a
+    // vigiar é o CONTEÚDO do campo: que ele seja caminho de arquivo local, e não URL — `D-62` diz
+    // que hotlink foi o defeito de licença da v1. Quem cobra a leitura da tela é a varredura de
+    // fonte mais abaixo, porque `vitest` roda sem DOM e `marca()` não é chamável aqui.
     const m = marcaSelecao(BR);
     expect(m.ehBandeira).toBe(true);
     expect(m.texto).toMatch(/\.svg$/);
+    expect(m.texto).not.toMatch(/^(?:https?:)?\/\//);
     expect(Number.isInteger(m.matiz)).toBe(true);
     expect(m.matiz).toBeGreaterThanOrEqual(0);
     expect(m.matiz).toBeLessThan(360);
+  });
+
+  it('nenhuma das 32 cai no ramo do código — inclusive GB-ENG, de 6 caracteres (QA-18)', () => {
+    // `QA-18` é o disco de 34px estourado pelo código de 6 caracteres de `D-52`. Ele deixa de
+    // acontecer por dois motivos independentes, e os dois são cobrados: nenhuma seleção usa o ramo
+    // do código (aqui), e o ramo do código não estoura mais o disco quando for usado (a varredura
+    // do CSS, mais abaixo). Um só dos dois seria promessa: o tipo de `flag` ainda admite `null`.
+    const times = listTeams();
+    expect(times).toHaveLength(32);
+
+    const noRamoDoCodigo = times.filter((t) => !marcaSelecao(t.code).ehBandeira);
+    expect(noRamoDoCodigo.map((t) => t.code)).toEqual([]);
+
+    // O caso caro, nomeado: é o único código do catálogo com mais de 2 caracteres.
+    const longos = times.filter((t) => t.code.length > 2).map((t) => t.code);
+    expect(longos).toEqual(['GB-ENG']);
+    expect(marcaSelecao('GB-ENG').ehBandeira).toBe(true);
+
+    for (const time of times) {
+      const m = marcaSelecao(time.code);
+      expect(m.texto, time.code).toMatch(/\.svg$/);
+      expect(m.texto, time.code).not.toMatch(/^(?:https?:)?\/\//);
+    }
   });
 
   it('duas seleções diferentes não abrem com o mesmo matiz', () => {
@@ -551,6 +576,125 @@ describe('preferências do aparelho', () => {
 });
 
 // ── Assets: o portão de licença de M7 ──────────────────────────────────────────────────────
+// ── QA-19 / QA-18 / QA-16: o que só a fonte prova, porque vitest roda sem DOM ──────────────
+//
+// Nenhuma tela de M7 é montável aqui: `vitest` roda em Node, `document` não existe e `marca()`
+// não é chamável. O que dá para cobrar é (1) a função pura, acima, e (2) a fonte — que é o que
+// este bloco faz. A terceira passada é a do dono no aparelho real (`A-14`), e ela não é
+// substituível por nada daqui: estes testes provam que a regra está escrita, não que ela pinta.
+describe('a tela lê a bandeira, e o hidden esconde (QA-19 / QA-18 / QA-16)', () => {
+  const FOLHA = fileURLToPath(new URL('../ui/estilo.css', import.meta.url));
+
+  /** A folha sem comentário: senão o texto que EXPLICA um defeito passa por ele. */
+  function folha(): string {
+    return readFileSync(FOLHA, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  }
+
+  /** Regras `seletor { corpo }` da folha. Regra dentro de `@media` sai como regra normal. */
+  function regras(): { seletor: string; corpo: string }[] {
+    const out: { seletor: string; corpo: string }[] = [];
+    for (const m of folha().matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+      out.push({ seletor: (m[1] ?? '').trim(), corpo: (m[2] ?? '').trim() });
+    }
+    return out;
+  }
+
+  // ── QA-19: a marca é decidida por `ehBandeira`, não pelo formato do valor ────────────────
+  //
+  // O padrão é a FORMA EXATA do defeito: `texto` de `marcaSelecao` caindo no `texto:` de um
+  // elemento. Não é uma paráfrase do defeito, é a linha que estava em `tela_selecoes.ts`.
+  const MARCA_PINTADA_COMO_TEXTO = /texto:\s*\w+\.texto\b/;
+
+  it('o padrão pega a linha que existia antes (senão o teste seria verde à toa)', () => {
+    expect(MARCA_PINTADA_COMO_TEXTO.test('    texto: m.texto,')).toBe(true);
+    expect(MARCA_PINTADA_COMO_TEXTO.test('texto: marca.texto')).toBe(true);
+
+    // E não pega o que é legítimo: texto vindo de outro campo, ou o valor usado como `src`.
+    expect(MARCA_PINTADA_COMO_TEXTO.test('texto: nomeSelecao(code)')).toBe(false);
+    expect(MARCA_PINTADA_COMO_TEXTO.test('attrs: { src: m.texto, alt: \'\' }')).toBe(false);
+  });
+
+  it.each(arquivosDeUi(DIR_UI).filter((c) => c.endsWith('.ts')))(
+    '%s não escreve o caminho da bandeira como texto',
+    (caminho) => {
+      expect(readFileSync(caminho, 'utf8'), `${caminho}: QA-19 de volta`).not.toMatch(
+        MARCA_PINTADA_COMO_TEXTO,
+      );
+    },
+  );
+
+  it('quem monta a marca lê ehBandeira e pinta img com alt vazio', () => {
+    // `ehBandeira` deixou de ser campo exportado sem leitor: quem o lê é `marca()`. Se este
+    // teste cair, ou a decisão sumiu da tela ou ela mudou de casa — e as duas pedem revisita.
+    const fonte = readFileSync(join(DIR_UI, 'tela_selecoes.ts'), 'utf8');
+    expect(fonte).toMatch(/\bm\.ehBandeira\b/);
+    expect(fonte).toMatch(/src:\s*m\.texto/);
+    // Decoração continua decoração: o nome da seleção já está escrito ao lado.
+    expect(fonte).toMatch(/alt:\s*''/);
+    expect(fonte).toMatch(/'aria-hidden':\s*'true'/);
+  });
+
+  it('nenhuma marca aponta para fora do repositório — zero URL na folha e nas telas', () => {
+    // `D-62`: `flag` é caminho local resolvido no build. Hotlink foi o defeito de licença da v1,
+    // e ele voltaria por um `src` digitado à mão tão fácil quanto por um `url()` no CSS.
+    const externo = /(?:https?:)?\/\/[a-z0-9-]+\.[a-z]/i;
+    for (const caminho of arquivosDeUi(DIR_UI)) {
+      const linhas = readFileSync(caminho, 'utf8')
+        .split('\n')
+        .filter((l) => externo.test(l) && !/^\s*(?:\*|\/\/|\/\*)/.test(l));
+      expect(linhas, `${caminho}: endereço externo fora de comentário`).toEqual([]);
+    }
+  });
+
+  // ── QA-18: o ramo do código não estoura o disco ──────────────────────────────────────────
+  it('o disco da marca não tem largura fixa e corta o que sobrar', () => {
+    const base = regras().find((r) => r.seletor === '.marca');
+    expect(base, 'a regra `.marca` sumiu da folha — este portão ficaria verde por vazio').toBeDefined();
+
+    const corpo = base?.corpo ?? '';
+    // Largura MÍNIMA, não fixa: `GB-ENG` são 6 caracteres num disco desenhado para 2 (`D-52`).
+    expect(corpo, '`.marca` voltou a ter largura fixa (QA-18)').not.toMatch(/(^|;)\s*width\s*:/);
+    expect(corpo, '`.marca` sem min-width').toMatch(/min-width\s*:/);
+    expect(corpo, '`.marca` sem overflow — o código longo volta a invadir o nome').toMatch(
+      /overflow\s*:\s*hidden/,
+    );
+  });
+
+  it('a bandeira é que tem largura fixa — o cartão não muda de largura com o arquivo', () => {
+    const bandeira = regras().find((r) => r.seletor === '.marca--bandeira');
+    expect(bandeira?.corpo, '.marca--bandeira sem largura fixa').toMatch(/(^|;)\s*width\s*:/);
+  });
+
+  // ── QA-16: `[hidden]` volta a vencer a folha do autor ────────────────────────────────────
+  it('hidden esconde, e é uma regra só que garante isso', () => {
+    const comImportante = regras().filter((r) => /display\s*:[^;]*!important/.test(r.corpo));
+
+    // Uma, e exatamente uma: a lista de `[hidden]` por classe é o que `QA-16` provou que ninguém
+    // mantém. Se aparecer uma segunda, ela pode vencer esta pela ordem e o defeito volta.
+    expect(comImportante.map((r) => r.seletor)).toEqual(['[hidden]']);
+    expect(comImportante[0]?.corpo).toMatch(/display\s*:\s*none\s*!important/);
+  });
+
+  it('as classes que o JS esconde estão cobertas — inclusive as que declaram display', () => {
+    // As três que o defeito alcançava, nomeadas para que a regra acima não vire abstração solta:
+    // `.aviso` (caixa de erro vazia em 3 telas), `.campo__sem-canvas` (durante a disputa) e
+    // `.sorteio` (que trazia a própria linha `[hidden]` em `T-17b`, hoje redundante).
+    const declaram = ['.aviso', '.campo__sem-canvas', '.sorteio'];
+    const todas = regras();
+
+    for (const seletor of declaram) {
+      const regra = todas.find((r) => r.seletor === seletor);
+      expect(regra, `${seletor} sumiu da folha`).toBeDefined();
+      expect(regra?.corpo, `${seletor} deixou de declarar display`).toMatch(/display\s*:/);
+      // Nenhuma delas precisa mais da própria linha `[hidden]`: a global cobre. Ter uma não é
+      // erro, mas ter uma COM `!important` disputaria com a global — e isso o teste acima pega.
+      expect(regra?.corpo, `${seletor} com display !important vence a global`).not.toMatch(
+        /display\s*:[^;]*!important/,
+      );
+    }
+  });
+});
+
 describe('portão de licença de assets (M7)', () => {
   const DIR_ASSETS = fileURLToPath(new URL('../assets', import.meta.url));
   const LICENCIAMENTO = fileURLToPath(

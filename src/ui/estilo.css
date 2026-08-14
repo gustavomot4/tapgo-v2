@@ -52,6 +52,24 @@
   box-sizing: inherit;
 }
 
+/*
+ * `hidden` volta a esconder (`QA-16`).
+ *
+ * `[hidden] { display: none }` é regra da folha do NAVEGADOR; `display: flex` desta folha é regra
+ * de AUTOR, e no cascade o autor ganha. O resultado era todo `elemento.hidden = true` do projeto
+ * não escondendo nada: a caixa de erro vazia de `.aviso` ficava na tela nas três telas que a usam,
+ * e `.campo__sem-canvas` (`display: grid`) repetia o mesmo defeito durante a disputa.
+ *
+ * A regra é global e leva `!important` de propósito: escrever uma linha `[hidden]` por classe é
+ * uma lista que a próxima classe com `display:` esquece de entrar — foi assim que `.aviso` e
+ * `.campo__sem-canvas` chegaram aqui. `!important` de autor vence qualquer `display:` de autor sem
+ * `!important`, então o portão desta folha passa a ser "nenhuma OUTRA regra declara `display`
+ * com `!important`", que é uma frase que teste lê.
+ */
+[hidden] {
+  display: none !important;
+}
+
 /* Anel de foco em TUDO que recebe foco. `:focus-visible` não aparece no toque, só no teclado —
    que é exatamente quem precisa dele. */
 .tapgo :focus-visible {
@@ -244,27 +262,56 @@
   overflow-wrap: anywhere;
 }
 
-/* Disco com o código ISO enquanto `A-04` não entrega bandeira. Não é bandeira e não imita
-   nenhuma: o matiz sai do próprio código, por soma de caracteres. */
+/*
+ * A marca da seleção. Dois ramos, e a diferença é de conteúdo, não de gosto:
+ *
+ * - **bandeira** (`.marca--bandeira`) — o caso das 32 desde `T-19`. Largura FIXA, porque a grade
+ *   tem 2 colunas e o cartão não pode mudar de largura conforme o arquivo que caiu dentro dele.
+ * - **código ISO** — o que sobra quando `flag` é `null` (`D-22`, hoje nenhuma). Aqui a largura é
+ *   MÍNIMA, não fixa: `GB-ENG` são 6 caracteres (`D-52`) num disco desenhado para 2, e o disco
+ *   fixo de 34px sem `overflow` era `QA-18`. Vira cápsula em vez de estourar — `border-radius`
+ *   grande dá círculo em 2 caracteres e cápsula em 6, com a mesma linha.
+ *
+ * `overflow: hidden` é o anteparo do anteparo: se um dia entrar código mais longo que a cápsula
+ * comporta, ele é cortado dentro da borda em vez de invadir o nome ao lado.
+ */
 .marca {
   display: grid;
   flex: 0 0 auto;
   place-items: center;
-  width: 34px;
-  height: 34px;
+  min-width: var(--marca-tam, 34px);
+  height: var(--marca-tam, 34px);
+  padding: 0 4px;
+  overflow: hidden;
   border: 1px solid hsl(var(--matiz) 45% 55%);
-  border-radius: 50%;
+  border-radius: 999px;
   background: hsl(var(--matiz) 40% 22%);
   color: hsl(var(--matiz) 75% 82%);
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.04em;
+  white-space: nowrap;
 }
 
 .marca--grande {
-  width: 42px;
-  height: 42px;
+  --marca-tam: 42px;
+
   font-size: 0.85rem;
+}
+
+/* A bandeira ocupa o disco inteiro: sem respiro lateral e sem o matiz por cima — cor inventada
+   sobre bandeira real é justamente o que a restrição de identidade não quer. */
+.marca--bandeira {
+  width: var(--marca-tam, 34px);
+  padding: 0;
+  border-color: var(--borda);
+  background: var(--superficie);
+}
+
+.marca__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* ── Placar ────────────────────────────────────────────────────────────────────────────── */
@@ -323,12 +370,8 @@
   background: var(--acento-escuro);
 }
 
-/* O `hidden` do elemento vem do JS, e sem esta linha a regra de `display` acima o venceria: no
-   cascade, folha do autor ganha da folha do navegador, que é de onde `[hidden]` sai. Ver `QA-16`,
-   que é o mesmo defeito em `.aviso` — aberto, e de propósito não consertado aqui. */
-.sorteio[hidden] {
-  display: none;
-}
+/* O `.sorteio[hidden]` que nascia aqui em `T-17b` saiu: a regra global de `[hidden]` no topo desta
+   folha o cobre, e mantê-lo seria a lista por classe que `QA-16` provou não se manter sozinha. */
 
 .sorteio__marca {
   display: flex;

@@ -55,6 +55,12 @@ da sessão. A correção é uma linha (`.aviso[hidden] { display: none }`), mas 
 telas e é anterior a esta tarefa — regra 4, fica registrado e não consertado de carona. O
 `.sorteio` que nasceu aqui já traz a própria linha `[hidden]`, com o motivo escrito ao lado.
 
+> **Fechado em 2026-08-13, e por uma regra global, não por classe.** A linha por classe é
+> justamente a lista que ninguém mantém: `.campo__sem-canvas` (`display: grid`, escondido durante
+> a disputa) tinha o mesmo defeito e não estava nas três telas contadas acima. A folha passou a ter
+> um `[hidden] { display: none !important }` no topo, e o `.sorteio[hidden]` daqui saiu por
+> redundante. O portão virou "nenhuma OUTRA regra declara `display` com `!important`".
+
 ## O que esta sessão NÃO cobriu
 
 - **O modo `online`**, que segue em `'A'` por `Q-11`: sem semente compartilhada os dois aparelhos

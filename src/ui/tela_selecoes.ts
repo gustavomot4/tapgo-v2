@@ -26,17 +26,53 @@ import { selecaoInicial } from './preferencias';
 import type { Contexto, Tela } from './rotas';
 import { LADO_DO_HUMANO } from './rotas';
 
-/** O disco com o código ISO da seleção. Vira bandeira em `A-04`, sem mexer em quem o chama. */
+/**
+ * A marca da seleção: a bandeira em `<img>`, ou o disco com o código ISO quando não há arquivo.
+ *
+ * **Quem decide é `ehBandeira`, e é esse o conserto de `QA-19`:** `marcaSelecao().texto` carrega
+ * dois formatos, e tratar os dois como texto punha o caminho do SVG dentro do disco de 34px assim
+ * que `T-19` entregou os arquivos. O campo existia para esta decisão desde `T-10` e ninguém o lia.
+ *
+ * **Continua decoração nos dois ramos.** O `aria-hidden="true"` fica no disco e a imagem leva
+ * `alt=""`: o nome da seleção está escrito ao lado em todo lugar onde a marca aparece, e trocar
+ * texto por imagem não pode transformar decoração em conteúdo anunciado duas vezes.
+ */
 export function marca(code: CountryCode, grande = false): HTMLElement {
   const m = marcaSelecao(code);
-  return el('span', {
-    classe: grande ? 'marca marca--grande' : 'marca',
-    texto: m.texto,
+
+  const classes = ['marca'];
+  if (grande) classes.push('marca--grande');
+  if (m.ehBandeira) classes.push('marca--bandeira');
+
+  const disco = el('span', {
+    classe: classes.join(' '),
     estilo: { '--matiz': String(m.matiz) },
-    // O nome já está escrito ao lado em todo lugar onde a marca aparece, então para o leitor de
-    // tela ela é decoração. Repetir "BR, Brasil" a cada cartão é ruído, não acessibilidade.
     attrs: { 'aria-hidden': 'true' },
   });
+
+  if (!m.ehBandeira) {
+    disco.textContent = m.texto;
+    return disco;
+  }
+
+  const bandeira = el('img', {
+    classe: 'marca__img',
+    // `src` é o caminho que o build resolveu (`D-62`), nunca URL: hotlink quebra o jogo offline.
+    // `lazy` porque a tela de seleções monta 64 destas de uma vez, 32 por lado, em 360x640.
+    attrs: { src: m.texto, alt: '', decoding: 'async', loading: 'lazy' },
+  });
+
+  // Estado de ERRO deste pedaço de tela, e ele não tem outro: arquivo que não carrega volta a ser
+  // o código ISO, e não o ícone de imagem quebrada do navegador. 64 quadrados partidos na grade
+  // seriam a tela gritando defeito onde o dado existe — e o código é informação verdadeira.
+  bandeira.addEventListener('error', () => {
+    bandeira.remove();
+    disco.classList.remove('marca--bandeira');
+    disco.textContent = code;
+  });
+
+  disco.append(bandeira);
+  return disco;
 }
 
 function grade(
