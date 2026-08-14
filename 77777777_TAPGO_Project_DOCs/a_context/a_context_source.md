@@ -31,8 +31,8 @@ Partida de ~1 minuto: contra a CPU, contra alguém no mesmo aparelho, ou por lin
 - **Bundle:** **382.402 B** (4,8% de 8 MB) lido de `dist/`, **+281.146 B** em T-19 — 278.646 B são os 32 SVGs, asset do chunk de M4 (`QA-06`); Phaser e Trystero fora, por `import()` (D-27)
 - **Em andamento (máx 1):** nada
 - **Próximo:** **E-5** — T-12 (M8), depois T-14. Fora de E-5: A-14, a passada de T-17b no celular real (sandbox não tem navegador; tela de M7 não é coberta por teste)
-- **Bloqueado/pendente:** registro **10.600/12.000** (aviso agora em 10.800 — `D-63`) e QA **6.228/8.000**, folga somada **3.172**; esta sessão devolveu 398 · Q-11 trava o online · a bandeira existe mas **não aparece na tela** até M7 (`QA-19`)
-- **Questões abertas:** Q-08, Q-09, Q-11 · respondidas: Q-03, Q-04, Q-05, Q-07, Q-10, Q-12 (o D-NN de cada uma está na linha dela) · **QA abertos:** QA-04..QA-07, QA-10, QA-16..QA-19 · **QA-11 sem objeto** · fechados: QA-08, QA-09, QA-12..QA-15
+- **Bloqueado/pendente:** registro **10.600/12.000** (aviso agora em 10.800 — `D-63`) e QA **6.372/8.000**, folga somada **3.028**; esta sessão devolveu 398 · Q-11 trava o online · a bandeira existe mas **não aparece na tela** até M7 (`QA-19`)
+- **Questões abertas:** Q-08, Q-09, Q-11 · respondidas: Q-03, Q-04, Q-05, Q-07, Q-10, Q-12 (o D-NN de cada uma está na linha dela) · **QA abertos:** QA-04..QA-07, QA-10, QA-16..QA-19 · fechados: QA-08, QA-09, QA-11..QA-15
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)
 - [[portao_de_aceite]] — **antes de fechar tarefa, declarar etapa fechada ou entregar**
