@@ -899,6 +899,107 @@
   text-align: center;
 }
 
+/* ── A tabela do grupo, no torneio (T-14) ──────────────────────────────────────────────── */
+
+/*
+ * `<table>` de verdade, e por isso a folha precisa desfazer o que a folha do NAVEGADOR traz:
+ * `border-spacing` de 2px separando as linhas e `border-collapse: separate`. Com `collapse` as
+ * bordas viram uma linha só e a tabela para de parecer uma planilha de 1998 dentro do cartão.
+ *
+ * Em 360px a largura é toda do nome: as três outras colunas são `width: 1%` com `white-space:
+ * nowrap`, o truque que faz a coluna encolher até o conteúdo e devolver o resto para a primeira.
+ */
+.tabela {
+  width: 100%;
+  border: 1px solid var(--borda);
+  border-collapse: collapse;
+  border-radius: var(--raio);
+  background: linear-gradient(180deg, var(--superficie-alta), var(--superficie));
+  box-shadow: var(--sombra), var(--realce);
+  font-size: 0.85rem;
+  /* `separate` + `radius` cortaria as bordas internas; `hidden` é o que arredonda o conjunto. */
+  overflow: hidden;
+}
+
+.tabela th,
+.tabela td {
+  padding: 8px 6px;
+  border-bottom: 1px solid rgb(255 255 255 / 6%);
+  text-align: left;
+}
+
+.tabela thead th {
+  color: var(--texto-apagado);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tabela tbody tr:last-child th,
+.tabela tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.tabela__pos,
+.tabela__num {
+  width: 1%;
+  padding-right: 10px;
+  padding-left: 10px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Números em largura tabular: sem isto as colunas dançam a cada linha, e a tabela fica difícil
+   de correr o olho de cima a baixo. */
+.tabela__num {
+  font-variant-numeric: tabular-nums;
+}
+
+.tabela__pos {
+  color: var(--texto-apagado);
+  font-weight: 700;
+}
+
+.tabela__time {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.tabela__nome {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/*
+ * A linha do jogador. O destaque NÃO é só cor: a etiqueta "você" ao lado do nome é o que o
+ * leitor de tela anuncia e o que sobrevive a qualquer daltonismo — cor é o reforço, não a
+ * informação.
+ */
+.tabela tbody tr[data-voce='sim'] {
+  background: rgb(74 222 128 / 10%);
+}
+
+.tabela tbody tr[data-voce='sim'] .tabela__nome {
+  color: var(--acento);
+  font-weight: 700;
+}
+
+.tabela__voce {
+  flex: 0 0 auto;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--acento-escolhido);
+  color: var(--acento-claro);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 /* ── Movimento de entrada ───────────────────────────────────────────────────────────────── */
 
 /*

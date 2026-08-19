@@ -5,6 +5,12 @@
  * semente nova. Mandar de volta ao início a cada partida de um minuto seria cobrar dois toques
  * por algo que quase todo mundo quer.
  *
+ * ## A disputa do torneio termina aqui, e é daqui que ela volta para M8 (`T-14`)
+ * `partida.torneio` diz que esta disputa é do torneio. Nesse caso a tela **devolve o vencedor**
+ * por `report(winner)` e grava o retrato: é o único ponto do jogo onde isso acontece, porque é
+ * o único ponto em que a disputa do jogador está de fato encerrada. "Jogar de novo" some — ele
+ * repetiria uma disputa que o chaveamento já registrou.
+ *
  * ## Os 4 estados
  * - **carregando** e **vazio** — não existem: a tela só é alcançada com um `MatchState` já
  *   encerrado na mão. Lacunas declaradas.
@@ -41,6 +47,28 @@ export const telaFim =
   (partida: Partida, estado: MatchState): Tela =>
   (raiz: HTMLElement, ctx: Contexto) => {
     const tela = el('section', { classe: 'tela' });
+
+    /*
+     * A volta para o torneio (`D-57`). Roda ANTES do desenho porque o rótulo do botão depende
+     * dela, e é feita uma vez por montagem da tela — a rota só é alcançada quando a disputa
+     * termina, e sair daqui não volta.
+     *
+     * Sem vencedor não há o que reportar: `report()` recebe um lado, e inventar um seria
+     * escrever no chaveamento um resultado que a disputa não deu.
+     */
+    const emCurso = ctx.torneio();
+    let voltouAoTorneio = false;
+    if (partida.torneio && emCurso !== null && estado.winner !== null) {
+      try {
+        emCurso.torneio.report(estado.winner);
+        ctx.salvarTorneio();
+        voltouAoTorneio = true;
+      } catch {
+        // M8 recusa `report()` sem disputa esperando — acontece se a mesma disputa for
+        // reportada duas vezes. Nada técnico na tela: o torneio segue de onde M8 o deixou.
+        voltouAoTorneio = false;
+      }
+    }
 
     const vencedor = estado.winner;
     const titulo =
@@ -90,21 +118,33 @@ export const telaFim =
       tela.append(resumo(estado, partida));
     }
 
-    const denovo = botao('Jogar de novo', 'botao botao--principal', () => {
-      ctx.ir({
-        nome: 'cobranca',
-        partida: { ...partida, semente: newSeed() },
-      });
-    });
+    if (partida.torneio && !voltouAoTorneio) {
+      // ── Estado de ERRO do torneio ───────────────────────────────────────────────────────
+      tela.append(
+        el('div', { classe: 'aviso', dados: { tom: 'erro' } }, [
+          el('p', { texto: 'Este resultado não entrou no torneio.' }),
+          el('p', { classe: 'sub', texto: 'Volte ao torneio para ver a próxima disputa.' }),
+        ]),
+      );
+    }
+
+    const seguir = partida.torneio
+      ? botao('Continuar no torneio', 'botao botao--principal', () => ctx.ir({ nome: 'torneio' }))
+      : botao('Jogar de novo', 'botao botao--principal', () => {
+          ctx.ir({
+            nome: 'cobranca',
+            partida: { ...partida, semente: newSeed() },
+          });
+        });
 
     tela.append(
       el('div', { classe: 'grupo empurra' }, [
-        denovo,
+        seguir,
         botao('Voltar ao início', 'botao', () => ctx.ir({ nome: 'inicio' })),
       ]),
     );
 
     raiz.append(tela);
-    focar(denovo);
+    focar(seguir);
     return () => undefined;
   };

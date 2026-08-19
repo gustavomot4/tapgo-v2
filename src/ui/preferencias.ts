@@ -26,7 +26,14 @@ import { findTeam, listTeams } from '../data/teams';
 /** Chave única e versionada: formato novo não briga com o gravado pelo formato velho. */
 const CHAVE = 'tapgo.v2.preferencias';
 
-const NIVEIS: readonly Level[] = ['easy', 'medium', 'hard'];
+/**
+ * Os três níveis, **em ordem fixa**.
+ *
+ * Exportada porque a ordem virou formato gravado em `T-14`: o registro do torneio guarda o nível
+ * como índice desta lista, e não como texto — "só código de país e inteiro" é portão de M7.
+ * Reordenar isto muda o significado do que já está no aparelho das pessoas.
+ */
+export const NIVEIS: readonly Level[] = ['easy', 'medium', 'hard'];
 
 export interface Preferencias {
   readonly nivel: Level;

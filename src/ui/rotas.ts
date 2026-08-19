@@ -10,6 +10,7 @@ import type { Level, MatchState } from '../session/index';
 import type { ModoJogavel } from './derivacao';
 import type { Preferencias } from './preferencias';
 import type { Som } from './som';
+import type { TorneioEmCurso } from './torneio_salvo';
 
 /**
  * Tudo que a tela de cobrança precisa para criar a sessão — e nada além.
@@ -19,6 +20,15 @@ import type { Som } from './som';
  */
 export interface Partida {
   readonly modo: ModoJogavel;
+  /**
+   * `true` quando esta disputa é uma disputa do torneio (`T-14`).
+   *
+   * É o que diz à tela de fim para devolver o vencedor a M8 por `report()` em vez de oferecer
+   * "jogar de novo": a MESMA tela de cobrança serve os dois casos, e ela não precisa saber de
+   * torneio nenhum para isso. Campo obrigatório de propósito — `false` escrito em cada criação
+   * é mais barato que descobrir, seis meses depois, qual dos caminhos esqueceu de marcar.
+   */
+  readonly torneio: boolean;
   readonly nivel: Level | null;
   readonly times: Readonly<Record<Side, CountryCode>>;
   readonly ladoLocal: Side;
@@ -29,13 +39,32 @@ export type Rota =
   | { readonly nome: 'inicio' }
   | { readonly nome: 'selecoes'; readonly modo: ModoJogavel; readonly nivel: Level | null }
   | { readonly nome: 'cobranca'; readonly partida: Partida }
-  | { readonly nome: 'fim'; readonly partida: Partida; readonly estado: MatchState };
+  | { readonly nome: 'fim'; readonly partida: Partida; readonly estado: MatchState }
+  | { readonly nome: 'torneio_novo' }
+  | { readonly nome: 'torneio' }
+  | { readonly nome: 'campeao' };
 
 export interface Contexto {
   readonly som: Som;
   prefs(): Preferencias;
   salvarPrefs(p: Preferencias): void;
   ir(rota: Rota): void;
+  /**
+   * O torneio vivo, ou `null` quando não há nenhum em andamento.
+   *
+   * Mora no contexto, e não numa tela, porque ele atravessa três delas (chaveamento, cobrança e
+   * campeão) e sobrevive à troca de rota. O retrato salvo é assunto de `torneio_salvo.ts`.
+   */
+  torneio(): TorneioEmCurso | null;
+  /**
+   * Troca o torneio vivo e ACERTA o salvo na mesma chamada: `null` apaga o retrato.
+   *
+   * Um só ponto de escrita porque dois donos da mesma verdade é como o torneio salvo passaria a
+   * divergir do da memória — e o que a pessoa reabriria seria o divergente.
+   */
+  definirTorneio(t: TorneioEmCurso | null): void;
+  /** Grava o retrato do torneio vivo. Chamado depois de cada `report()`. */
+  salvarTorneio(): void;
   /**
    * Pede que o pacote da cena Phaser comece a chegar, sem esperar por ele.
    *

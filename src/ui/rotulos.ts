@@ -17,6 +17,7 @@
 import type { CountryCode, Side, Zone } from '../core/index';
 import type { MatchState } from '../session/index';
 import type { Level } from '../session/index';
+import type { Stage, Standing } from '../tournament/index';
 import { findTeam } from '../data/teams';
 import type { ModoJogavel, Papel } from './derivacao';
 
@@ -161,4 +162,71 @@ export function desfecho(estado: MatchState, times: Readonly<Record<Side, Countr
     return estado.phase === 'finished' ? 'A disputa terminou empatada.' : 'Disputa em andamento.';
   }
   return `${nomeSelecao(times[estado.winner])} venceu por ${placar(estado)}.`;
+}
+
+/* ─────────────────────────── O torneio (`T-14`) ─────────────────────────── */
+
+/**
+ * O nome da competição (`D-55`).
+ *
+ * Escrito UMA vez, aqui: é o termo que o portão de licença de M7 varre, e um nome repetido em
+ * três telas é um nome que só some de duas no dia em que ele mudar. Não é nome de competição
+ * real, e nenhum termo da lista-morta de [[licenciamento]] entra nele.
+ */
+export const NOME_TORNEIO = 'TAP GO Cup';
+
+/** A fase, em português de quem joga — `stage` é o que a nomeia (`D-58`), nunca o `round`. */
+export function nomeFase(stage: Stage, round: number): string {
+  if (stage === 'groups') return `Fase de grupos · ${String(round)}ª rodada`;
+  if (stage === 'r16') return 'Oitavas de final';
+  if (stage === 'quarter') return 'Quartas de final';
+  if (stage === 'semi') return 'Semifinal';
+  if (stage === 'third') return 'Disputa do 3º lugar';
+  return 'Final';
+}
+
+/** O traço de dado ausente. **Não é zero**, e é essa a diferença que `D-67` protege. */
+export const GOLS_AUSENTES = '—';
+
+/**
+ * A coluna de gols de uma linha da tabela — e a decisão de `Q-13` está aqui (`D-67`).
+ *
+ * `report(winner)` não traz o placar (porta congelada, `D-13`/`D-58`), então a disputa do jogador
+ * entra na tabela **sem gols**. Escrever `0` no lugar está fora de questão: zero é um número, e
+ * número que ninguém mediu é dado inventado — o que a regra 5 do kit proíbe. Mas as duas linhas
+ * da tabela não são iguais, e é aí que a decisão morde:
+ *
+ * - **a linha do jogador** só tem as disputas DELE — as três do grupo. Nenhuma tem placar, hoje
+ *   e sempre: `goalsFor`/`goalsAgainst` ali são um zero estrutural, nunca uma medição. Ela mostra
+ *   `—`, e não `0 × 0`, que era a tela dizendo um número que não existe.
+ * - **as outras três** têm duas disputas medidas e uma sem placar (a que jogaram contra o
+ *   jogador). O que elas mostram é verdade, só que **parcial** — e é a nota abaixo da tabela que
+ *   diz isso, em vez de a tela fingir que a soma está fechada.
+ *
+ * @param doJogador é a linha da seleção da pessoa? Vem de quem monta a tabela, que já sabe.
+ */
+export function golsDaLinha(linha: Standing, doJogador: boolean): string {
+  if (doJogador) return GOLS_AUSENTES;
+  return `${String(linha.goalsFor)} × ${String(linha.goalsAgainst)}`;
+}
+
+/** A nota que torna a coluna de gols honesta. Ver `golsDaLinha` e `Q-13`. */
+export const NOTA_SEM_GOLS =
+  'A sua seleção não tem coluna de gols: o placar das disputas que você joga não volta para a ' +
+  'tabela. Nas outras três, a coluna deixa de fora a disputa contra você.';
+
+/** O que o leitor de tela ouve no lugar do traço — "menos" não diria nada a ninguém. */
+export const ROTULO_SEM_GOLS = 'sem gols registrados';
+
+/**
+ * O que aconteceu com a seleção do jogador, dito sem inventar a fase da eliminação.
+ *
+ * A porta de M8 entrega o campeão e a tabela do grupo; **em que fase o jogador caiu ela não
+ * entrega**, e derivar isso aqui seria a tela recontando o chaveamento por fora. Lacuna
+ * declarada: a frase diz o que é verdade — campeão ou não — e nada além.
+ */
+export function desfechoDoJogador(campeao: CountryCode, humano: CountryCode): string {
+  return campeao === humano
+    ? `${nomeSelecao(humano)} é campeã. O título é seu.`
+    : `${nomeSelecao(humano)} não ficou com o título desta vez.`;
 }

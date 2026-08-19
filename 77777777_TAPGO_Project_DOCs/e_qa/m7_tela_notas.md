@@ -1,8 +1,8 @@
 ---
 tags: [notas, m7]
-status: arquivado
+status: atual
 ---
-# M7 — notas de T-10 (evidência longa de `D-27`, `D-28` e `QA-05`)
+# M7 — notas (evidência longa de `D-27`, `D-28`, `QA-05` em `T-10`; `D-67` e `D-68` em `T-14`)
 
 > **Este arquivo não define ID.** As decisões vivem em `a_context/c_decisions.md`; aqui fica só a
 > evidência que não cabe no teto de 2 frases por linha daquele registro. Nenhuma sessão precisa
@@ -90,3 +90,47 @@ arquivo é de outro dono e a regra 4 manda registrar, não consertar.
 - **Modo `online`.** `createSession` o recusa em voz alta; é `T-13`.
 - **Bandeiras.** `flag` é `null` em todo o catálogo (`D-22`), e a tela diz isso na abertura em vez
   de fingir que a lacuna não existe.
+
+
+## `D-67` — a coluna de gols da tabela do grupo (`T-14`, resposta parcial a `Q-13`)
+
+`report(winner)` carrega o vencedor e nada mais — porta congelada por `D-13`/`D-58`. M8 grava o
+placar da disputa do jogador como `GOLS_DESCONHECIDOS` e **não** o soma na tabela. A pergunta que
+sobrou para a tela é o que mostrar na coluna de gols, e as três saídas eram:
+
+1. **`0 × 0`** — o que sai de `Standing` se ninguém pensar no assunto. É dado inventado: zero é um
+   número, e nenhuma dessas disputas foi medida. Reprova pela regra 5 do kit.
+2. **Esconder a coluna** — perde informação verdadeira. As outras três seleções do grupo jogam
+   entre si, e esses placares existem.
+3. **A escolhida:** a linha do jogador mostra `—`; as outras três mostram a soma do que se sabe; e
+   uma nota abaixo da tabela diz o que a coluna deixa de fora.
+
+A assimetria não é gosto, é a forma do dado. **A linha do jogador só contém disputas dele** — as
+três do grupo são todas contra ele —, então `goalsFor`/`goalsAgainst` ali são zero **estrutural**,
+hoje e sempre, nunca uma medição. Já as outras três têm duas disputas medidas e uma sem placar (a
+que jogaram contra o jogador): o número delas é verdadeiro, só que parcial, e é disso que a nota
+trata. O traço leva `aria-label` próprio: quem usa leitor de tela ouviria "menos".
+
+O custo em `Q-13` continua de pé e é do dono: o desempate por saldo compara, dentro do grupo do
+jogador, quem tem 2 placares com quem tem 0. Fechar isso exige mexer na porta de M8.
+
+## `D-68` — por que o gravado tem uma camada em volta do retrato de M8 (`T-14`)
+
+O plano diz que M7 persiste "o `TournamentState` que M8 devolve por `toJSON()`", e que esse
+retrato é **opaco para quem lê**. A tela precisa de dois dados que o retrato tem mas que ela não
+pode interpretar sem quebrar essa cláusula — e que, olhados de perto, são **de M7**, não de M8:
+
+- **qual seleção é a da pessoa.** Decide de quem é a tabela de grupo mostrada e de que lado o
+  jogador entra na cobrança. Derivá-la de `current()` cobre só parte do torneio: eliminado o
+  jogador, `current()` devolve `null` e o dado some justo quando a tela do campeão precisa dele.
+- **o nível com que o torneio começou.** A preferência do aparelho muda a qualquer momento; o
+  nível dentro de M8 não. Sem guardá-lo, quem trocasse o nível no menu no meio da competição
+  jogaria as próprias disputas num nível e as simuladas em outro — a progressão que `D-60` recusa.
+
+Por isso o registro é `{ v, humana, nivel, estado }`: `estado` atravessa sem ser lido, e os dois
+campos de M7 ficam do lado de fora. `nivel` é **índice** de `NIVEIS`, nunca o texto `'hard'` — o
+portão de `T-14` cobra "só código de país e inteiro" no que vai ao armazenamento.
+
+O preço é a mesma verdade em dois lugares, e ele é pago na leitura: `restaurarTorneio` cruza a
+`humana` gravada com `group()` e com `current()` (portão de M8: o par sempre contém o jogador), e
+registro que não fecha é descartado em silêncio como qualquer outro lixo.

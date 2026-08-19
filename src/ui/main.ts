@@ -25,12 +25,20 @@ import { telaInicio } from './tela_inicio';
 import { telaSelecoes } from './tela_selecoes';
 import { telaCobranca } from './tela_cobranca';
 import { telaFim } from './tela_fim';
+import { telaTorneio } from './tela_torneio';
+import { telaTorneioNovo } from './tela_torneio_novo';
+import { telaCampeao } from './tela_campeao';
+import { gravarTorneio, limparTorneio, restaurarTorneio } from './torneio_salvo';
+import type { TorneioEmCurso } from './torneio_salvo';
 import './estilo.css';
 
 function escolherTela(rota: Rota): Tela {
   if (rota.nome === 'inicio') return telaInicio;
   if (rota.nome === 'selecoes') return telaSelecoes(rota.modo, rota.nivel);
   if (rota.nome === 'cobranca') return telaCobranca(rota.partida);
+  if (rota.nome === 'torneio_novo') return telaTorneioNovo;
+  if (rota.nome === 'torneio') return telaTorneio;
+  if (rota.nome === 'campeao') return telaCampeao;
   return telaFim(rota.partida, rota.estado);
 }
 
@@ -46,6 +54,14 @@ export function bootGame(container: HTMLElement): void {
 
   let prefs: Preferencias = lerPreferencias();
   const som = criarSom(prefs.som);
+
+  /*
+   * O torneio salvo é lido UMA vez, na abertura, e vira o torneio vivo (`D-57`). Retrato
+   * ilegível devolve `null` sem dizer nada — quem descarta é `torneio_salvo.ts`, e o jogo abre
+   * no menu como se nunca tivesse havido torneio. É o portão de `T-14`, e é o caminho normal
+   * de quem nunca jogou um.
+   */
+  let torneio: TorneioEmCurso | null = restaurarTorneio();
 
   let desmontar: () => void = () => undefined;
   let aqueceu = false;
@@ -74,6 +90,18 @@ export function bootGame(container: HTMLElement): void {
       }
     },
 
+    torneio: () => torneio,
+
+    definirTorneio(t: TorneioEmCurso | null): void {
+      torneio = t;
+      if (t === null) limparTorneio();
+      else gravarTorneio(t);
+    },
+
+    salvarTorneio(): void {
+      if (torneio !== null) gravarTorneio(torneio);
+    },
+
     aquecerCena(): void {
       if (aqueceu) return;
       aqueceu = true;
@@ -83,7 +111,10 @@ export function bootGame(container: HTMLElement): void {
     },
   };
 
-  ctx.ir({ nome: 'inicio' });
+  // Fechar e reabrir o navegador continua de onde parou (`D-57`): havendo torneio salvo, a
+  // abertura é a tela dele. A disputa em andamento NÃO é retomada — ela nunca é gravada, por
+  // contrato de privacidade —, então o que volta é a próxima disputa do jogador.
+  ctx.ir(torneio === null ? { nome: 'inicio' } : { nome: 'torneio' });
 }
 
 /** Última rede: tela quebrada vira frase em português com uma saída, nunca página em branco. */

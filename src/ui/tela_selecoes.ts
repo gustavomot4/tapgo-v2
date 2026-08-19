@@ -116,7 +116,15 @@ function confronto(times: Readonly<Record<Side, CountryCode>>): {
   };
 }
 
-function grade(
+/**
+ * Uma grade de escolha de seleção: 32 rádios com marca e nome.
+ *
+ * Exportada para a tela de torneio novo (`T-14`), que escolhe UMA seleção com a mesma grade —
+ * dois desenhos de cartão para a mesma escolha seriam duas coisas para manter e uma para o
+ * dono estranhar. O `name` do rádio sai de `lado`, e por isso duas grades na mesma tela não
+ * disputam a marcação.
+ */
+export function grade(
   lado: Side,
   rotulo: string,
   escolhido: CountryCode,
@@ -209,6 +217,8 @@ export const telaSelecoes =
           // Semente nova a cada disputa: mesma semente daria a mesma CPU toda partida. A
           // reprodutibilidade que os testes exigem é por semente FIXADA, não por semente única.
           semente: newSeed(),
+          // Disputa avulsa: nada a devolver a M8. A do torneio nasce em `tela_torneio.ts`.
+          torneio: false,
         },
       });
     }

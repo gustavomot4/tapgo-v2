@@ -20,7 +20,7 @@
 import type { Level } from '../session/index';
 import { listTeams } from '../data/teams';
 import { botao, el, focar } from './dom';
-import { nomeNivel } from './rotulos';
+import { NOME_TORNEIO, nomeNivel } from './rotulos';
 import type { Contexto, Tela } from './rotas';
 
 const NIVEIS: readonly Level[] = ['easy', 'medium', 'hard'];
@@ -139,10 +139,23 @@ export const telaInicio: Tela = (raiz: HTMLElement, ctx: Contexto) => {
     () => ctx.ir({ nome: 'selecoes', modo: 'local', nivel: null }),
   );
 
+  /*
+   * O torneio (`T-14`). O rótulo muda com o que existe no aparelho: havendo torneio salvo, o
+   * botão CONTINUA o que está em andamento — começar um novo por engano apagaria o outro, e a
+   * tela não pode oferecer isso com o mesmo texto que oferece continuar.
+   */
+  const temTorneio = ctx.torneio() !== null;
+  const torneio = botao(
+    temTorneio ? `Continuar a ${NOME_TORNEIO}` : NOME_TORNEIO,
+    'botao',
+    () => ctx.ir({ nome: temTorneio ? 'torneio' : 'torneio_novo' }),
+  );
+
   const modos = el('div', { classe: 'grupo' }, [
     el('p', { classe: 'legenda', texto: 'Como jogar' }),
     contraCpu,
     doisNoAparelho,
+    torneio,
   ]);
 
   const rodape = el('div', { classe: 'grupo empurra' }, [
