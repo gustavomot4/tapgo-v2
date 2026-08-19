@@ -7,6 +7,13 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-19] — `A-17`: o torneio passa no aparelho e **E-5 fecha**; o Chrome do desktop vira `D-70`
+- **Skill:** delivery-review (continuação da sessão de conferência de E-5) — só documentação: `b_process/c_backlog.md`, `a_context/c_decisions.md`, `a_context/a_context_source.md`. Nenhum arquivo de `src/` tocado.
+- **Os dois itens de aparelho passaram:** do menu ao campeão **só por toque** em 360x640, e fechar e reabrir continuando de onde parou. Com eles, os **cinco** itens do portão de E-5 têm prova — os outros três (64 disputas por instrumentação, SHA-256 dos 32 SVGs, `grep` da lista-morta em 0) foram conferidos no sandbox e estão escritos no card `A-17`.
+- **O achado da ida, e a razão de ele NÃO ser defeito (`D-70`):** no **Chrome do desktop**, fechar o navegador inteiro perdia o torneio; fechar só a **aba** guardava, e o **Edge** do mesmo desktop e o **Chrome do celular** guardavam nos dois casos. Edge é Chromium e usa o mesmo `localStorage`, então um defeito de gravação de M7 reprovaria os três — sobra a política de dados do **perfil** daquele Chrome, que é config de máquina.
+- **Por que não virou `QA-NN`:** o registro de QA é de defeito, e este tem causa fora da árvore com três controles passando. O suspeito ficou nomeado no card `A-17` e em `D-70`: se um dia o Edge ou o celular também perderem o torneio, aí é QA e a investigação começa pronta.
+- **O que E-5 fechada destrava:** **E-6**, a etapa de entrega — E-4 já estava fechada, e o portão de E-6 pede o Critério de aceite inteiro verde, a tabela de custo de [[stack]] sem linha em branco e `check.py --historico-completo`.
+
 ## [2026-08-19] — E-5 conferida item a item: 3 dos 5 passam, 2 vão para `A-17`
 - **Skill:** delivery-review — só documentação: `b_process/c_backlog.md`, `a_context/a_context_source.md`. Nenhum arquivo de `src/` tocado, nenhuma decisão nova.
 - **E-5 NÃO foi declarada fechada**, e o motivo não é defeito: dois dos cinco itens do portão só existem em aparelho, e a passagem que houve (`A-14`) cobriu o **painel do sorteio** nos modos `cpu`/`local` — não o torneio. Declarar E-5 fechada em cima dela seria dar por conferido o que ninguém abriu.
