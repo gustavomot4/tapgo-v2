@@ -7,6 +7,12 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-19] — `A-14`: o painel do sorteio conferido no aparelho, e os 4 itens passam
+- **Skill:** evolution-auditor (continuação da sessão de `A-16`) — só documentação: `b_process/c_backlog.md`, `a_context/a_context_source.md`. Nenhum arquivo de `src/` tocado, nenhuma decisão nova.
+- **O portão de `A-14`, cobrado em 360x640 pelo dono:** o painel de `D-49` aparece **antes** do 1º toque nos modos `cpu` e `local`, some depois dele, as três zonas seguem alcançáveis **sem rolar**, e recomeçar partidas nomeia **os dois** lados. Este último item é a única prova que `T-17` tem de que o sorteio chega à tela — nenhuma tela de M7 é coberta por teste, porque `vitest` roda em Node sem DOM.
+- **O item (3) passou, e isso muda o peso de `QA-16`:** o card previa que a caixa de erro vazia (~30 px) somada à altura do painel pudesse empurrar a 3ª zona para fora da dobra. Não empurrou. `QA-16` continua **aberto** como defeito, mas deixa de ser risco de layout na tela de cobrança.
+- **O que isto não fecha:** a aprovação visual de `T-20`, que o card manda acontecer junto de `A-14` mas é gosto e decisão de produto (regra 6) — segue do dono, e é o que ainda prende **E-5**.
+
 ## [2026-08-19] — `A-16`: o teto do registro sobe, porque o arquivamento acabou (`D-69`)
 - **Skill:** evolution-auditor — sessão de kit, não de módulo: `scripts/check.py`, `a_context/c_decisions.md`, `a_context/a_context_source.md`, `b_process/c_backlog.md`, `README.md`, `e_qa/README.md` e a nota nova `e_qa/a16_teto_do_registro.md`. Nenhum arquivo de `src/` tocado.
 - **A escolha do card foi decidida por medição, e a medição derrubou a alternativa:** o pool de `D-43` (sai da tabela quem nenhum `.md` vivo cita) é **0 linha**. Afrouxando a régua até tratar a seção "Feito" do backlog e depois `e_qa/` como histórico, solta **uma** linha de 77 caracteres — `D-07`, que é lista-morta e `A-09`/`A-12` guardaram de propósito. As duas saídas de arquivamento que sobravam rendem **788** (as 15 linhas `ARQUIVADO` como ponteiro puro) e **821** (as 6 REJEITADAS em arquivo próprio), as duas abaixo das 3 decisões que o portão exige, e nenhuma se regenera.

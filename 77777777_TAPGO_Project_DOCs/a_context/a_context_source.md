@@ -27,11 +27,11 @@ Partida de ~1 minuto: contra a CPU, contra alguém no mesmo aparelho, ou por lin
 
 ## Estado atual (formato fixo — 1 linha por item, SEM prosa corrida)
 - **Versão:** v2.0.0-dev (a v1 é baseline morto: reescrita total, nenhum código reaproveitado)
-- **Pronto:** M1 (T-04) · M9 esqueleto (T-05) · M2 (T-06) · M3 (T-07) · **M4 fechado (T-08 + T-18 + T-19)** · M5 (T-09 + `online` T-13) · M7 (T-10 + T-17b + QA-19 + T-20 + **T-14: as 3 telas do torneio**) · M6 (T-11) · **M8 (T-12)** · medição (T-15, T-16) · A-08 · **T-17 em `cpu`/`local`** — **E-1..E-4 fechadas**, suíte **531/531**; PLANO em D-13 (M4 e M8 alterados por D-51..D-62)
+- **Pronto:** M1 (T-04) · M9 esqueleto (T-05) · M2 (T-06) · M3 (T-07) · **M4 fechado (T-08 + T-18 + T-19)** · M5 (T-09 + `online` T-13) · M7 (T-10 + T-17b + QA-19 + T-20 + **T-14: as 3 telas do torneio**) · M6 (T-11) · **M8 (T-12)** · medição (T-15, T-16) · A-08 · **A-14** · **T-17 em `cpu`/`local`** — **E-1..E-4 fechadas**, suíte **531/531**; PLANO em D-13 (M4 e M8 alterados por D-51..D-62)
 - **Bundle:** **408.094 B** (5,1% de 8 MB) lido de `dist/` na máquina do dono; T-14 ligou M8 (+18.750 B, zero asset novo) — 278.646 B são os 32 SVGs de T-19, asset do chunk de M4 (`QA-06`); Phaser e Trystero fora, por `import()` (D-27)
 - **Em andamento (máx 1):** nada
-- **Próximo:** **A-14** — E-5 só fecha no aparelho real do dono: nenhuma tela de M7 tem teste, e o torneio inteiro por toque em 360x640 é medição dele
-- **Bloqueado/pendente:** registro **12.499/16.000** — `A-16` fechada em `D-69`: o teto subiu porque o corte de `D-43` rendia 0, e sobram ~10 decisões · o **CONTEXT** é o próximo teto a estourar, sem `A-NN` aberto · QA **7.623/8.000** · Q-11 trava o online
+- **Próximo:** aprovação visual de **T-20** e o torneio por toque em 360x640 — E-5 só fecha no aparelho do dono, única via de prova de M7 (nenhuma tela tem teste)
+- **Bloqueado/pendente:** registro **12.499/16.000** (`D-69` subiu o teto; ~10 decisões de folga) · o **CONTEXT** é o próximo teto, e não tem `A-NN` · QA **7.623/8.000** · Q-11 trava o online
 - **Questões abertas:** Q-08, Q-09, Q-11, Q-13 (a metade da tela caiu em `D-67`; a porta segue do dono) · respondidas: Q-03, Q-04, Q-05, Q-07, Q-10, Q-12 · **QA abertos:** QA-04..QA-07, QA-10, QA-17, QA-20, QA-21 · fechados: QA-08, QA-09, QA-11..QA-16, QA-18, QA-19
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)
