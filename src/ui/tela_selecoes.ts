@@ -75,6 +75,47 @@ export function marca(code: CountryCode, grande = false): HTMLElement {
   return disco;
 }
 
+/**
+ * O confronto: as duas seleções escolhidas, grandes, no topo da tela (`D-65`).
+ *
+ * **Não custa toque nenhum** — e isso é portão, não detalhe. O fluxo crítico fecha em 2 toques
+ * (`tela_inicio.ts`), então uma peça de menu só entra se ESPELHAR uma escolha que já existe. Ela
+ * lê as mesmas seleções marcadas nas grades abaixo e se repinta quando elas mudam.
+ *
+ * **Só dado que o jogo tem:** bandeira e nome. A referência do dono mostra estrela, nota e valor
+ * de elenco porque tem base licenciada; aqui isso seria número inventado — e `D-60` deixa a
+ * dificuldade constante, então nem "nível da seleção" existe para mostrar (regra 5).
+ *
+ * `aria-hidden` na caixa inteira: cada nome daqui já está escrito no rádio marcado da grade, e o
+ * leitor de tela anunciar as duas seleções duas vezes é ruído, não acessibilidade.
+ */
+function confronto(times: Readonly<Record<Side, CountryCode>>): {
+  node: HTMLElement;
+  atualizar: () => void;
+} {
+  const ladoA = el('span', { classe: 'confronto__lado' });
+  const ladoB = el('span', { classe: 'confronto__lado' });
+
+  function pintar(alvo: HTMLElement, code: CountryCode): void {
+    limpar(alvo);
+    alvo.append(marca(code), el('span', { classe: 'confronto__nome', texto: nomeSelecao(code) }));
+  }
+
+  const node = el('div', { classe: 'confronto', attrs: { 'aria-hidden': 'true' } }, [
+    ladoA,
+    el('span', { classe: 'confronto__vs', texto: '×' }),
+    ladoB,
+  ]);
+
+  return {
+    node,
+    atualizar: () => {
+      pintar(ladoA, times.A);
+      pintar(ladoB, times.B);
+    },
+  };
+}
+
 function grade(
   lado: Side,
   rotulo: string,
@@ -132,8 +173,10 @@ export const telaSelecoes =
     const times: Record<Side, CountryCode> = { A: escolha.A, B: escolha.B };
     const avisoRepetida = el('p', { classe: 'faixa', dados: { tom: 'atencao' } });
     const avisoErro = el('div', { classe: 'aviso', dados: { tom: 'erro' } });
+    const duelo = confronto(times);
 
     function atualizarAvisos(): void {
+      duelo.atualizar();
       const repetida = times.A === times.B;
       avisoRepetida.textContent = repetida
         ? 'As duas seleções são a mesma — dá para jogar assim.'
@@ -190,6 +233,7 @@ export const telaSelecoes =
             ? 'Um sorteio decide quem começa. Você e o computador se revezam a cada cobrança.'
             : 'Os dois jogam neste aparelho, revezando o toque. Um sorteio decide quem começa.',
       }),
+      duelo.node,
       grade('A', rotuloA, times.A, (code) => {
         times.A = code;
         atualizarAvisos();

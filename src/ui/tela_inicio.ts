@@ -25,6 +25,34 @@ import type { Contexto, Tela } from './rotas';
 
 const NIVEIS: readonly Level[] = ['easy', 'medium', 'hard'];
 
+/**
+ * A capa — o campo visto de cima, com o nome do jogo em cima dele (`D-65`).
+ *
+ * **É o `<h1>` de sempre, dentro de uma moldura.** O nome acessível da tela não muda: "TAP GO"
+ * continua sendo o único cabeçalho de nível 1, e o "GO" só troca de cor porque está num `<span>`
+ * — `<em>` daria ênfase que nenhum leitor de tela precisa ouvir num logotipo.
+ *
+ * **Nada aqui é arquivo.** Grama, grande área, círculo e o refletor que passa são degradê e
+ * borda em `estilo.css`. É a mesma escolha da fatia 1 (`sprites.ts`): arte como dado, porque
+ * ilustração é o que mais cresce bundle e o teto de `D-02` vale para o menu também.
+ *
+ * O brilho é `<span>` vazio e decorativo, então leva `aria-hidden` — e some sozinho para quem
+ * pediu menos movimento, pela regra de `prefers-reduced-motion` que a folha já tem.
+ */
+function capa(): HTMLElement {
+  return el('section', { classe: 'capa' }, [
+    el('span', { classe: 'capa__brilho', attrs: { 'aria-hidden': 'true' } }),
+    el('h1', { classe: 'titulo capa__marca' }, [
+      'TAP ',
+      el('span', { classe: 'capa__go', texto: 'GO' }),
+    ]),
+    el('p', {
+      classe: 'sub',
+      texto: 'Disputa de pênaltis · 5 cobranças e, se empatar, alternadas.',
+    }),
+  ]);
+}
+
 /** Radios de verdade, num `fieldset` com legenda: é o que o leitor de tela anuncia como grupo. */
 function grupoDeNivel(nivelAtual: Level, aoMudar: (n: Level) => void): HTMLFieldSetElement {
   const campo = el('fieldset', { classe: 'grupo' });
@@ -77,10 +105,7 @@ export const telaInicio: Tela = (raiz: HTMLElement, ctx: Contexto) => {
   let nivel = ctx.prefs().nivel;
 
   const tela = el('section', { classe: 'tela' });
-  tela.append(
-    el('h1', { classe: 'titulo', texto: 'TAP GO' }),
-    el('p', { classe: 'sub', texto: 'Disputa de pênaltis · 5 cobranças e, se empatar, alternadas.' }),
-  );
+  tela.append(capa());
 
   if (semSelecoes) {
     // ── Estado VAZIO ──────────────────────────────────────────────────────────────────────

@@ -46,8 +46,24 @@ export const telaFim =
     const titulo =
       vencedor === null ? 'Fim da disputa' : `${nomeSelecao(partida.times[vencedor])} venceu`;
 
+    /*
+     * O pódio (`D-65`): a bandeira do vencedor grande, e o título embaixo dela. É a única peça de
+     * imagem do jogo pensada para ser lida de longe — a pessoa acabou de largar o aparelho na
+     * mesa e o que ela quer saber de relance é quem ganhou.
+     *
+     * Sem vencedor, a MESMA caixa muda de tom para `erro`: comemorar em verde um desfecho que o
+     * motor não produz seria a tela mentindo sobre o próprio estado.
+     */
+    const podio = el('div', {
+      classe: 'resultado',
+      ...(vencedor === null ? { dados: { tom: 'erro' } } : {}),
+    });
+
+    if (vencedor !== null) podio.append(marca(partida.times[vencedor], true));
+    podio.append(el('h1', { classe: 'titulo resultado__titulo', texto: titulo }));
+
     tela.append(
-      el('h1', { classe: 'titulo', texto: titulo }),
+      podio,
       el('div', { classe: 'placar' }, [
         el('span', { classe: 'placar__lado' }, [
           marca(partida.times.A, true),

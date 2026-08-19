@@ -12,21 +12,54 @@
  *   48px  — alvo de toque mínimo; abaixo disso o dedo erra e o portão de toque cai.
  *   3px   — espessura do anel de foco; abaixo disso ele some no celular do dono.
  *   4.5:1 — contraste mínimo do texto sobre o fundo, inclusive o texto apagado.
+ *
+ * ## A direção visual é `D-65` (T-20, fatia 2)
+ * Antes de `T-20` esta folha nunca teve direção decidida: ela era o que sobrou de `T-10` depois de
+ * passar nos portões funcionais. `D-65` fixa a de agora — **noite de estádio**: fundo azul
+ * profundo com refletor no topo, superfície em degradê com sombra e realce (nunca cor chapada),
+ * verde do gramado como acento, bandeira em retângulo e não em disco, e movimento só nas duas
+ * propriedades que não repintam layout. As telas de `T-14` herdam isto, e é por isso que virou
+ * decisão em vez de gosto de uma sessão.
+ *
+ * **Zero asset**: capa, profundidade e brilho são degradê e sombra. Ilustração é o que mais cresce
+ * bundle (`D-02`), e a fatia 1 já pagou esse caminho pondo a arte do campo como dado em
+ * `sprites.ts`.
  */
 
 .tapgo {
-  --fundo: #0f1115;
-  --superficie: #1b1e26;
-  --superficie-alta: #262b38;
-  --borda: #363d4e;
-  --texto: #e7e9ee;
-  --texto-apagado: #a7b0c4;
+  /*
+   * Paleta de `D-65` — noite de estádio. O verde segue o acento (é o do gramado da fatia 1), o
+   * fundo desce para o azul profundo, e a luz vem de cima: o degradê radial do `background` é o
+   * refletor. Profundidade sem um byte de imagem — a restrição de bundle de `D-02` não admite
+   * ilustração, e degradê custa zero.
+   */
+  --fundo: #0b0f16;
+  --fundo-luz: #1c2333;
+  --superficie: #161c28;
+  --superficie-alta: #202839;
+  --borda: #33405a;
+  --texto: #eef2f9;
+  --texto-apagado: #a9b5cc;
   --acento: #4ade80;
-  --acento-escuro: #10331f;
+  --acento-forte: #22c55e;
+  --acento-claro: #6ee79b;
+  --acento-escuro: #0e2e1c;
+  --acento-escolhido: #17452c;
   --perigo: #ff8b93;
   --perigo-escuro: #3a1417;
+  --atencao: #ffd166;
+  --atencao-escuro: #33280e;
   --foco: #ffd166;
   --raio: 12px;
+  --raio-g: 18px;
+
+  /*
+   * Duas sombras, nunca uma. A de baixo afunda o elemento no fundo; a linha clara de dentro
+   * (`--realce`) é o brilho da borda de cima. É o PAR que faz o cartão parecer levantado — só a
+   * de baixo dá cartão escuro, só a de cima dá cartão chapado.
+   */
+  --sombra: 0 2px 0 rgb(0 0 0 / 45%), 0 10px 20px -12px rgb(0 0 0 / 85%);
+  --realce: inset 0 1px 0 rgb(255 255 255 / 8%);
 
   box-sizing: border-box;
   display: flex;
@@ -37,7 +70,10 @@
   min-height: 100dvh;
   margin: 0 auto;
   padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom));
-  background: var(--fundo);
+  background:
+    radial-gradient(125% 58% at 50% 0%, var(--fundo-luz) 0%, transparent 62%),
+    var(--fundo);
+  background-repeat: no-repeat;
   color: var(--texto);
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   font-size: 16px;
@@ -88,32 +124,65 @@
   min-height: 0;
 }
 
+/*
+ * Hierarquia tipográfica (`D-65`). A referência do dono ganha metade do "ar" na tipografia, e
+ * fonte remota é proibida (privacidade de M9) — então o degrau é feito com o que a pilha do
+ * sistema já dá: TAMANHO, PESO e ENTRELINHA, três níveis bem separados.
+ *
+ *   título   ~1,3–1,7rem · 800 · entrelinha curta   → o que é esta tela
+ *   legenda  0,76rem · 700 · caixa alta · barra     → o que é este grupo
+ *   sub      0,85rem · normal · apagado             → a explicação
+ *
+ * `clamp` porque a mesma folha atende 360 e o desktop: em 360 o título não pode empurrar o
+ * conteúdo para fora da dobra, e em 420 ele pode respirar.
+ */
 .titulo {
   margin: 0;
-  font-size: 1.15rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  font-size: clamp(1.3rem, 6vw, 1.7rem);
+  font-weight: 800;
+  letter-spacing: -0.005em;
+  line-height: 1.15;
 }
 
 .sub {
   margin: 0;
   color: var(--texto-apagado);
-  font-size: 0.82rem;
+  font-size: 0.85rem;
 }
 
+/*
+ * `.grupo` cai em `<div>` e em `<fieldset>`, e o `<fieldset>` chega com bagagem da folha do
+ * NAVEGADOR que nenhuma linha de `T-10` desfez — medido no dev server em 360x640:
+ *
+ *   border: 1.6px groove #6b6b6b   → a moldura cinza de formulário de 1998, na tela do jogo
+ *   padding: 5.6px 12px            → 31px da largura útil, que saem do cartão de seleção
+ *   min-inline-size: min-content   → o fieldset se recusa a encolher, e a grade de 2 colunas
+ *                                    dentro dele herda esse chão
+ *
+ * Os três zerados aqui, e não em cada tela: `<fieldset>` é o que dá grupo com legenda ao leitor
+ * de tela, então ele fica — o que sai é só a pintura que vem de graça com ele.
+ */
 .grupo {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-inline-size: 0;
+  padding: 0;
+  border: 0;
+  margin: 0;
 }
 
+/* A barra de acento é `border-left`, e não um `::before` com `display: flex`: `.legenda` cai em
+   `<legend>`, o elemento com mais exceção de layout do HTML — mudar o `display` dele é onde os
+   navegadores divergem. Borda e padding nenhum deles discute. */
 .legenda {
   margin: 0;
-  padding: 0;
+  padding: 0 0 0 9px;
+  border-left: 3px solid var(--acento);
   color: var(--texto-apagado);
-  font-size: 0.78rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
@@ -123,7 +192,9 @@
 
 /* ── Botões ────────────────────────────────────────────────────────────────────────────── */
 
+/* Os 52px de altura são de `T-10` e continuam: o botão ganhou relevo, não perdeu alvo de toque. */
 .botao {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -132,29 +203,49 @@
   padding: 12px 16px;
   border: 1px solid var(--borda);
   border-radius: var(--raio);
-  background: var(--superficie);
+  background: linear-gradient(180deg, var(--superficie-alta), var(--superficie));
+  box-shadow: var(--sombra), var(--realce);
   color: var(--texto);
   font: inherit;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.01em;
   text-align: center;
   cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease;
 }
 
+/* O botão AFUNDA: desce 2px e perde a sombra de baixo, que é o que o dedo espera de um botão com
+   relevo. Sem tirar a sombra, ele desceria por cima da própria sombra e pareceria escorregar. */
 .botao:active {
-  transform: translateY(1px);
+  box-shadow: var(--realce);
+  transform: translateY(2px);
 }
 
 .botao--principal {
-  border-color: transparent;
-  background: var(--acento);
+  border-color: var(--acento-forte);
+  background: linear-gradient(180deg, var(--acento-claro), var(--acento-forte));
+  box-shadow:
+    var(--sombra),
+    inset 0 1px 0 rgb(255 255 255 / 35%),
+    0 0 24px -8px var(--acento);
   color: #06240f;
+}
+
+.botao--principal:active {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 35%);
 }
 
 .botao--discreto {
   min-height: 48px;
+  border-color: transparent;
   background: transparent;
+  box-shadow: none;
   color: var(--texto-apagado);
-  font-weight: 500;
+  font-weight: 600;
+}
+
+.botao--discreto:active {
+  box-shadow: none;
 }
 
 .botao--perigo {
@@ -189,10 +280,12 @@
   padding: 8px 4px;
   border: 1px solid var(--borda);
   border-radius: var(--raio);
-  background: var(--superficie);
+  background: linear-gradient(180deg, var(--superficie-alta), var(--superficie));
+  box-shadow: var(--sombra), var(--realce);
   font-size: 0.9rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
 }
 
 .segmento input {
@@ -204,9 +297,12 @@
   cursor: pointer;
 }
 
+/* O escolhido não muda só de cor: ele acende. O anel interno de 1px dá a borda dupla que separa
+   "marcado" de "só mais escuro" — a diferença que se lê de relance, com o aparelho na mão. */
 .segmento:has(input:checked) {
   border-color: var(--acento);
-  background: var(--acento-escuro);
+  background: linear-gradient(180deg, var(--acento-escolhido), var(--acento-escuro));
+  box-shadow: var(--sombra), inset 0 0 0 1px rgb(74 222 128 / 45%);
   color: var(--acento);
 }
 
@@ -220,26 +316,44 @@
 .selecoes {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
+  gap: 9px;
 }
 
+/*
+ * O cartão de seleção — o elemento mais repetido do jogo (64 deles na tela de seleções) e por
+ * isso o que mais decide se o conjunto parece jogo ou parece formulário.
+ *
+ * `--marca-tam: 38px` sobe a bandeira dos 34px de `T-10`. Não sobe mais que isso porque a conta é
+ * fechada: em 360 de largura, com 12px de padding da folha e 9px de vão, cada cartão tem ~164px;
+ * a bandeira de 38 de altura ocupa 50 de largura (ver `.marca--bandeira`), e o que sobra para o
+ * nome é o que decide se "Estados Unidos" quebra em duas linhas ou em três.
+ */
 .cartao {
+  --marca-tam: 38px;
+
   position: relative;
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-height: 60px;
-  padding: 10px;
+  gap: 9px;
+  min-height: 64px;
+  padding: 9px 10px;
   border: 1px solid var(--borda);
   border-radius: var(--raio);
-  background: var(--superficie);
+  background: linear-gradient(180deg, var(--superficie-alta), var(--superficie));
+  box-shadow: var(--sombra), var(--realce);
   text-align: left;
   cursor: pointer;
+  transition: border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
 }
 
 .cartao:has(input:checked) {
   border-color: var(--acento);
-  background: var(--acento-escuro);
+  background: linear-gradient(180deg, var(--acento-escolhido), var(--acento-escuro));
+  box-shadow: var(--sombra), inset 0 0 0 1px rgb(74 222 128 / 45%);
+}
+
+.cartao:active {
+  transform: translateY(1px);
 }
 
 .cartao:has(input:focus-visible) {
@@ -294,18 +408,28 @@
 }
 
 .marca--grande {
-  --marca-tam: 42px;
+  --marca-tam: 38px;
 
   font-size: 0.85rem;
 }
 
-/* A bandeira ocupa o disco inteiro: sem respiro lateral e sem o matiz por cima — cor inventada
-   sobre bandeira real é justamente o que a restrição de identidade não quer. */
+/*
+ * A bandeira ocupa o disco inteiro: sem respiro lateral e sem o matiz por cima — cor inventada
+ * sobre bandeira real é justamente o que a restrição de identidade não quer.
+ *
+ * **`D-65` tirou a bandeira do círculo.** Círculo com `object-fit: cover` corta as pontas de toda
+ * bandeira e some com a faixa de baixo das tricolores horizontais; retângulo 4:3 (a proporção em
+ * que os SVGs de `T-19` são desenhados) mostra a bandeira inteira e ainda ganha área com a mesma
+ * altura. A largura segue FIXA — a grade tem 2 colunas e o cartão não pode mudar de largura
+ * conforme o arquivo que caiu dentro dele.
+ */
 .marca--bandeira {
-  width: var(--marca-tam, 34px);
+  width: calc(var(--marca-tam, 34px) * 1.32);
   padding: 0;
-  border-color: var(--borda);
+  border-color: rgb(255 255 255 / 22%);
+  border-radius: 5px;
   background: var(--superficie);
+  box-shadow: 0 2px 6px -2px rgb(0 0 0 / 75%);
 }
 
 .marca__img {
@@ -324,7 +448,8 @@
   padding: 10px 12px;
   border: 1px solid var(--borda);
   border-radius: var(--raio);
-  background: var(--superficie);
+  background: linear-gradient(180deg, var(--superficie-alta), var(--superficie));
+  box-shadow: var(--sombra), var(--realce);
 }
 
 .placar__lado {
@@ -347,8 +472,13 @@
   white-space: nowrap;
 }
 
+/* O número é o topo da hierarquia da tela de cobrança: ele cresce e ganha o degradê do acento,
+   que é a única peça de texto do jogo com tratamento de "letreiro". */
 .placar__numeros {
-  font-size: 1.45rem;
+  padding: 2px 10px;
+  border-radius: 8px;
+  background: rgb(0 0 0 / 32%);
+  font-size: 1.6rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.02em;
@@ -474,22 +604,26 @@
 
 .faixa {
   min-height: 44px;
-  padding: 10px 12px;
+  padding: 11px 12px;
+  border: 1px solid var(--borda);
   border-radius: var(--raio);
-  background: var(--superficie);
-  font-size: 0.88rem;
-  font-weight: 600;
+  background: linear-gradient(180deg, var(--superficie-alta), var(--superficie));
+  box-shadow: var(--realce);
+  font-size: 0.9rem;
+  font-weight: 700;
   text-align: center;
 }
 
 .faixa[data-tom='bom'] {
-  background: var(--acento-escuro);
+  border-color: rgb(74 222 128 / 45%);
+  background: linear-gradient(180deg, var(--acento-escolhido), var(--acento-escuro));
   color: var(--acento);
 }
 
 .faixa[data-tom='atencao'] {
-  background: #34290f;
-  color: #ffd166;
+  border-color: rgb(255 209 102 / 45%);
+  background: var(--atencao-escuro);
+  color: var(--atencao);
 }
 
 .aviso {
@@ -499,7 +633,8 @@
   padding: 14px;
   border: 1px solid var(--borda);
   border-radius: var(--raio);
-  background: var(--superficie);
+  background: linear-gradient(180deg, var(--superficie-alta), var(--superficie));
+  box-shadow: var(--sombra), var(--realce);
   font-size: 0.88rem;
 }
 
@@ -557,8 +692,9 @@
   max-width: 320px;
   padding: 18px;
   border: 1px solid var(--borda);
-  border-radius: var(--raio);
-  background: var(--superficie-alta);
+  border-radius: var(--raio-g);
+  background: linear-gradient(180deg, var(--superficie-alta), var(--superficie));
+  box-shadow: 0 24px 48px -20px rgb(0 0 0 / 90%), var(--realce);
 }
 
 .dialogo__caixa h2 {
@@ -579,13 +715,258 @@
   font-size: 0.75rem;
 }
 
+/* ── A capa da tela de início (D-65) ───────────────────────────────────────────────────── */
+
+/*
+ * A "imagem bonita" do menu, e ela não é imagem: é o campo visto de cima, desenhado com três
+ * degradês e duas bordas. Faixas de grama em `repeating-linear-gradient`, a grande área em
+ * `::before`, o círculo da marca do pênalti em `::after`.
+ *
+ * Custa **zero byte de asset**, que é a única forma de a capa caber no portão de bundle de
+ * `D-02` — e é a mesma escolha que `sprites.ts` fez na fatia 1: arte como dado, não como arquivo.
+ */
+.capa {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 6px;
+  min-height: 156px;
+  padding: 16px 14px 14px;
+  overflow: hidden;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-g);
+  background:
+    linear-gradient(180deg, rgb(11 15 22 / 6%) 0%, rgb(11 15 22 / 62%) 55%, rgb(11 15 22 / 92%) 100%),
+    radial-gradient(70% 50% at 50% 0%, rgb(255 255 255 / 16%), transparent 70%),
+    repeating-linear-gradient(96deg, #1a6b41 0 26px, #155836 26px 52px);
+  box-shadow: var(--sombra), var(--realce);
+}
+
+/* A grande área, encostada na borda de cima: é o que diz "isto é um gol", sem escrever. */
+.capa::before {
+  position: absolute;
+  top: -2px;
+  left: 50%;
+  width: 58%;
+  height: 62px;
+  border: 3px solid rgb(255 255 255 / 22%);
+  border-top: 0;
+  border-radius: 0 0 8px 8px;
+  content: '';
+  transform: translateX(-50%);
+}
+
+.capa::after {
+  position: absolute;
+  top: 30px;
+  left: 50%;
+  width: 170px;
+  height: 170px;
+  border: 3px solid rgb(255 255 255 / 14%);
+  border-radius: 50%;
+  content: '';
+  transform: translateX(-50%);
+}
+
+/* O refletor que passa. `transform` e nada mais — é a única propriedade que anima sem repintar,
+   e o portão de 30 fps vale para o menu tanto quanto para a cena. */
+.capa__brilho {
+  position: absolute;
+  inset: -40% -60%;
+  background: linear-gradient(104deg, transparent 42%, rgb(255 255 255 / 12%) 50%, transparent 58%);
+  animation: tapgo-varre 7s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes tapgo-varre {
+  0%,
+  100% {
+    transform: translateX(-42%);
+  }
+
+  50% {
+    transform: translateX(42%);
+  }
+}
+
+.capa__marca {
+  position: relative;
+  z-index: 1;
+  font-size: clamp(2.4rem, 14vw, 3.2rem);
+  font-weight: 900;
+  letter-spacing: -0.025em;
+  line-height: 0.92;
+  text-shadow: 0 3px 0 rgb(0 0 0 / 55%), 0 0 28px rgb(74 222 128 / 45%);
+}
+
+.capa__go {
+  color: var(--acento);
+}
+
+.capa .sub {
+  position: relative;
+  z-index: 1;
+  color: #d3dcea;
+}
+
+/* ── O confronto: as duas seleções escolhidas, grandes, antes de começar (D-65) ─────────── */
+
+/*
+ * O cartão de informação da referência, traduzido para o que o jogo REALMENTE tem: código, nome
+ * e bandeira. Sem estrela, sem nota, sem valor de elenco — `D-60` deixa a dificuldade constante e
+ * qualquer número por seleção aqui seria inventado (regra 5).
+ *
+ * Não custa toque: ele ESPELHA a escolha que já está feita nas duas grades logo abaixo.
+ */
+.confronto {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 10px;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-g);
+  background:
+    radial-gradient(85% 130% at 50% -25%, rgb(74 222 128 / 16%), transparent 68%),
+    linear-gradient(180deg, var(--superficie-alta), var(--superficie));
+  box-shadow: var(--sombra), var(--realce);
+}
+
+.confronto__lado {
+  --marca-tam: 46px;
+
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.confronto__nome {
+  overflow: hidden;
+  max-width: 100%;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.confronto__vs {
+  color: var(--texto-apagado);
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+/* ── O pódio da tela de fim (D-65) ──────────────────────────────────────────────────────── */
+
+.resultado {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 14px 16px;
+  overflow: hidden;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-g);
+  background:
+    radial-gradient(90% 85% at 50% 0%, rgb(74 222 128 / 20%), transparent 66%),
+    linear-gradient(180deg, var(--superficie-alta), var(--superficie));
+  box-shadow: var(--sombra), var(--realce);
+}
+
+/* Sem vencedor é o estado de ERRO da tela: a mesma caixa, com a luz trocada para o tom de perigo,
+   porque comemorar em verde um desfecho que não deveria existir seria a tela mentindo. */
+.resultado[data-tom='erro'] {
+  background:
+    radial-gradient(90% 85% at 50% 0%, rgb(255 139 147 / 18%), transparent 66%),
+    linear-gradient(180deg, var(--superficie-alta), var(--superficie));
+}
+
+/* A bandeira do vencedor é a maior peça de imagem do jogo — e é a única coisa que a tela de fim
+   precisa dizer de longe. */
+.resultado .marca--grande {
+  --marca-tam: 66px;
+
+  border-width: 2px;
+  border-radius: 8px;
+}
+
+.resultado__titulo {
+  text-align: center;
+}
+
+/* ── Movimento de entrada ───────────────────────────────────────────────────────────────── */
+
+/*
+ * Cada bloco da tela sobe ao aparecer, em cascata. É o "ar" da referência — a tela se MONTA em
+ * vez de piscar pronta — e cabe em duas propriedades compostas (`opacity` e `transform`), as duas
+ * que o navegador anima sem repintar layout.
+ *
+ * O escalonamento para na 6ª filha de propósito: depois disso o atraso somado passaria de 250ms e
+ * a última peça pareceria atrasada em vez de encadeada. Da 7ª em diante todas entram juntas.
+ */
+@keyframes tapgo-sobe {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.tela > * {
+  animation: tapgo-sobe 260ms ease-out both;
+}
+
+.tela > *:nth-child(2) {
+  animation-delay: 45ms;
+}
+
+.tela > *:nth-child(3) {
+  animation-delay: 90ms;
+}
+
+.tela > *:nth-child(4) {
+  animation-delay: 135ms;
+}
+
+.tela > *:nth-child(5) {
+  animation-delay: 180ms;
+}
+
+.tela > *:nth-child(n + 6) {
+  animation-delay: 225ms;
+}
+
 /* Quem pediu menos movimento recebe menos movimento — inclusive na cena do Phaser, que lê a
    mesma preferência por `matchMedia`. */
 @media (prefers-reduced-motion: reduce) {
   .tapgo *,
-  .tapgo *::before {
+  .tapgo *::before,
+  .tapgo *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+
+    /*
+     * Zerar o ATRASO é tão obrigatório quanto zerar a duração, e é o erro fácil deste bloco: a
+     * cascata de entrada usa `animation-delay` com preenchimento `both`, então uma duração de
+     * 0,01ms com 225ms de atraso deixaria o último bloco da tela INVISÍVEL por um quinto de
+     * segundo — mais movimento aparente, não menos. `::after` entrou pelo mesmo motivo: a folha
+     * passou a ter pseudoelemento decorativo (a capa), e a lista tinha só `::before`.
+     */
+    animation-delay: 0s !important;
+    transition-delay: 0s !important;
+
+    /* E o refletor da capa é `infinite`: sem esta linha ele repetiria um ciclo de 0,01ms para
+       sempre, que é a pior das duas leituras possíveis de "menos movimento". */
+    animation-iteration-count: 1 !important;
   }
 }
 
@@ -596,6 +977,7 @@
     min-height: auto;
     margin: 24px auto;
     border: 1px solid var(--borda);
-    border-radius: 20px;
+    border-radius: 22px;
+    box-shadow: 0 32px 64px -28px rgb(0 0 0 / 90%), var(--realce);
   }
 }

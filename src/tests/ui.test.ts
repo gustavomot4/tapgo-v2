@@ -870,3 +870,203 @@ describe('portão de licença de assets (M7)', () => {
     }
   });
 });
+
+// ── T-20 fatia 2: a direção visual dos menus (`D-65`) ──────────────────────────────────────
+//
+// Nenhum destes testes diz que a tela ficou BONITA — isso é do dono, no aparelho dele (`A-14`).
+// O que eles cobram é o que o gosto não pode revogar: os portões funcionais de M7 que a folha
+// nova poderia ter afrouxado sem ninguém notar, porque redesenho mexe justamente nas linhas onde
+// contraste, alvo de toque e privacidade moram.
+describe('a direção visual não afrouxa portão de M7 (T-20 fatia 2 / D-65)', () => {
+  const FOLHA = fileURLToPath(new URL('../ui/estilo.css', import.meta.url));
+  const PAGINA = fileURLToPath(new URL('../index.html', import.meta.url));
+
+  /** A folha sem comentário — senão o texto que EXPLICA uma regra passa por ela. */
+  function folha(): string {
+    return readFileSync(FOLHA, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  }
+
+  function regras(): { seletor: string; corpo: string }[] {
+    const out: { seletor: string; corpo: string }[] = [];
+    for (const m of folha().matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+      out.push({ seletor: (m[1] ?? '').trim(), corpo: (m[2] ?? '').trim() });
+    }
+    return out;
+  }
+
+  /** Os tokens `--nome: #hex` do bloco `.tapgo` — a paleta, e só ela. */
+  function paletaDaFolha(): Record<string, string> {
+    const bloco = regras().find((r) => r.seletor === '.tapgo')?.corpo ?? '';
+    const out: Record<string, string> = {};
+    for (const m of bloco.matchAll(/--([\w-]+)\s*:\s*(#[0-9a-f]{6})\s*;/gi)) {
+      out[(m[1] ?? '').toLowerCase()] = (m[2] ?? '').toLowerCase();
+    }
+    return out;
+  }
+
+  /** Contraste WCAG entre duas cores `#rrggbb`. */
+  function contraste(a: string, b: string): number {
+    const luz = (hex: string): number => {
+      const n = parseInt(hex.slice(1), 16);
+      const canais = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => {
+        const s = v / 255;
+        return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * (canais[0] ?? 0) + 0.7152 * (canais[1] ?? 0) + 0.0722 * (canais[2] ?? 0);
+    };
+    const ordenadas = [luz(a), luz(b)].sort((x, y) => y - x);
+    return ((ordenadas[0] ?? 0) + 0.05) / ((ordenadas[1] ?? 0) + 0.05);
+  }
+
+  it('o extrator de paleta acha as cores (senão os testes abaixo ficam verdes por vazio)', () => {
+    const p = paletaDaFolha();
+    expect(Object.keys(p).length).toBeGreaterThan(10);
+    expect(p['fundo']).toMatch(/^#[0-9a-f]{6}$/);
+    expect(p['acento']).toMatch(/^#[0-9a-f]{6}$/);
+  });
+
+  // ── Privacidade de M9: o visual novo é a hora clássica de uma fonte remota entrar ────────
+  it('zero fonte remota, zero @import e zero @font-face — na folha E na página', () => {
+    // A tentação é conhecida: metade do "ar" da referência é tipografia, e a saída fácil seria um
+    // `@import` de fonte hospedada. Ele buscaria na rede a cada abertura do jogo, que é exatamente
+    // o que o portão de privacidade de M9 proíbe. Fonte própria só embarcada em `src/assets/`.
+    const alvos: [string, string][] = [
+      ['estilo.css', readFileSync(FOLHA, 'utf8')],
+      ['index.html', readFileSync(PAGINA, 'utf8')],
+    ];
+    for (const [nome, texto] of alvos) {
+      const limpo = texto.replace(/\/\*[\s\S]*?\*\//g, '').replace(/<!--[\s\S]*?-->/g, '');
+      expect(limpo, `${nome}: @import`).not.toMatch(/@import/);
+      expect(limpo, `${nome}: @font-face`).not.toMatch(/@font-face/);
+      expect(limpo, `${nome}: folha externa`).not.toMatch(/<link[^>]+stylesheet/i);
+      expect(limpo, `${nome}: endereço externo`).not.toMatch(
+        /(?:https?:)?\/\/[a-z0-9-]+\.[a-z]/i,
+      );
+    }
+  });
+
+  // ── Contraste: a paleta inteira, não os pares de que eu lembrei ──────────────────────────
+  it('todo par cor-de-texto × cor-de-fundo da paleta passa de 4,5:1', () => {
+    // A varredura é do PRODUTO CARTESIANO de propósito. Conferir só os pares que a tela usa hoje
+    // deixaria o próximo `data-tom` combinar duas cores que nunca foram medidas — e `T-14` traz
+    // três telas novas sobre esta mesma paleta.
+    const p = paletaDaFolha();
+    const fundos = [
+      'fundo',
+      'fundo-luz',
+      'superficie',
+      'superficie-alta',
+      'acento-escuro',
+      'acento-escolhido',
+      'perigo-escuro',
+      'atencao-escuro',
+    ];
+    const textos = ['texto', 'texto-apagado', 'acento', 'perigo', 'atencao', 'foco'];
+
+    for (const f of fundos) {
+      const corF = p[f];
+      expect(corF, `token --${f} sumiu da paleta`).toBeDefined();
+      for (const t of textos) {
+        const corT = p[t];
+        expect(corT, `token --${t} sumiu da paleta`).toBeDefined();
+        if (corF === undefined || corT === undefined) continue;
+        expect(contraste(corF, corT), `--${t} sobre --${f}`).toBeGreaterThanOrEqual(4.5);
+      }
+    }
+  });
+
+  it('o texto do botão principal passa de 4,5:1 nas DUAS pontas do degradê', () => {
+    // O botão principal deixou de ser cor chapada: o texto escuro tem de aguentar o topo claro e
+    // o pé escuro do degradê, e é o pé que aperta.
+    const p = paletaDaFolha();
+    const regra = regras().find((r) => r.seletor === '.botao--principal');
+    const cor = /color:\s*(#[0-9a-f]{6})/i.exec(regra?.corpo ?? '')?.[1];
+    expect(cor, '.botao--principal sem cor de texto literal').toBeDefined();
+    for (const ponta of ['acento-claro', 'acento-forte']) {
+      const fundo = p[ponta];
+      expect(fundo, `token --${ponta} sumiu`).toBeDefined();
+      if (cor === undefined || fundo === undefined) continue;
+      expect(contraste(fundo, cor), `texto do botão sobre --${ponta}`).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  // ── Alvo de toque: o número que o relevo poderia ter comido ──────────────────────────────
+  it('tudo que se toca continua com pelo menos 48px de altura', () => {
+    const minimos: Record<string, number> = {
+      '.botao': 48,
+      '.botao--discreto': 48,
+      '.segmento': 48,
+      '.cartao': 48,
+    };
+    for (const [seletor, minimo] of Object.entries(minimos)) {
+      const regra = regras().find((r) => r.seletor === seletor);
+      expect(regra, `${seletor} sumiu da folha`).toBeDefined();
+      const px = /min-height:\s*(\d+)px/.exec(regra?.corpo ?? '')?.[1];
+      expect(px, `${seletor} sem min-height em px`).toBeDefined();
+      expect(Number(px), `${seletor} abaixo do alvo de toque`).toBeGreaterThanOrEqual(minimo);
+    }
+  });
+
+  // ── prefers-reduced-motion: duração zerada e atraso ESQUECIDO é o defeito clássico ───────
+  it('quem pede menos movimento tem duração, atraso e repetição neutralizados', () => {
+    const bloco = /@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{([\s\S]*?\})\s*\}/.exec(
+      folha(),
+    )?.[1];
+    expect(bloco, 'o bloco de prefers-reduced-motion sumiu da folha').toBeDefined();
+
+    // Os quatro juntos, porque três deles sozinhos ainda deixam movimento na tela: com a duração
+    // em 0,01ms e o ATRASO de 225ms intacto, o último bloco da cascata fica invisível por um
+    // quinto de segundo; e o refletor `infinite` da capa repetiria um ciclo instantâneo para
+    // sempre sem a contagem de repetições.
+    for (const prop of [
+      'animation-duration',
+      'transition-duration',
+      'animation-delay',
+      'animation-iteration-count',
+    ]) {
+      expect(bloco, `${prop} não é neutralizado com !important`).toMatch(
+        new RegExp(`${prop}\\s*:[^;]*!important`),
+      );
+    }
+
+    // E o pseudoelemento novo entra na lista: a capa desenha com `::before` e `::after`.
+    expect(bloco).toMatch(/::after/);
+  });
+
+  // ── O fluxo crítico continua em 2 toques ─────────────────────────────────────────────────
+  it('o menu não ganhou passo: as telas do fluxo crítico só levam às três rotas de sempre', () => {
+    // Este é o portão que uma tela mais rica quebra sem querer — "só mais um passo para escolher
+    // X" custa o 3º toque, e o número declarado em `tela_inicio.ts` é 2. A varredura pega uma
+    // rota nova nas duas telas do fluxo, que é a forma que o passo a mais teria.
+    const rotas = new Set<string>();
+    for (const arquivo of ['tela_inicio.ts', 'tela_selecoes.ts']) {
+      const fonte = readFileSync(join(DIR_UI, arquivo), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+      for (const m of fonte.matchAll(/nome:\s*'([a-z]+)'/g)) rotas.add(m[1] ?? '');
+    }
+    expect([...rotas].sort()).toEqual(['cobranca', 'inicio', 'selecoes']);
+  });
+
+  it('o confronto é espelho, não controle: sem rádio, sem botão e fora do leitor de tela', () => {
+    // Ele repete uma escolha que já está feita nas grades. Se um dia ganhar `<input>` ou `botao(`,
+    // virou um lugar a mais para tocar — e aí o teste acima ainda passaria, porque a rota é a
+    // mesma. Este cobre o outro lado.
+    const fonte = readFileSync(join(DIR_UI, 'tela_selecoes.ts'), 'utf8');
+    const corpo = /\nfunction confronto\([\s\S]*?\n}\n/.exec(fonte)?.[0];
+    expect(corpo, 'a função confronto sumiu de tela_selecoes.ts').toBeDefined();
+    expect(corpo, 'o confronto ganhou controle').not.toMatch(
+      /botao\(|type:\s*'radio'|addEventListener/,
+    );
+    expect(corpo, 'o confronto deixou de ser decorativo para o leitor de tela').toMatch(
+      /'aria-hidden':\s*'true'/,
+    );
+  });
+
+  it('as peças novas de D-65 estão na folha — capa, confronto e pódio', () => {
+    // Sem isto, uma classe que sai do TS e fica órfã na folha (ou o contrário) passa em silêncio,
+    // e `T-14` herda uma direção que só existe pela metade.
+    const seletores = regras().map((r) => r.seletor);
+    for (const classe of ['.capa', '.capa__marca', '.confronto', '.resultado']) {
+      expect(seletores, `${classe} sumiu da folha`).toContain(classe);
+    }
+  });
+});

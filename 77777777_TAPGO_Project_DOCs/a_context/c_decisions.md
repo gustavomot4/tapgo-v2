@@ -55,6 +55,8 @@ status: atual
 | D-62 | 2026-08-12 | ADOTADO | `T-19`: `flag` sai de `import.meta.glob` eager com `?no-inline` sobre `src/assets/flags/`, e seleção sem arquivo **derruba o carregamento** — `buildCatalog` exportado pelo motivo de `D-61` | O caminho passa a vir do arquivo versionado, não de uma segunda lista digitada ao lado de `CODES`. Sem `no-inline`, 24 dos 32 SVGs virariam `data:` e `flag` teria dois formatos — e a suíte NÃO veria, porque roda em modo dev, onde nada é embutido |
 | D-63 | 2026-08-13 | ADOTADO | `A-15` (c)+(b): as 8 questões RESPONDIDAS saem para [[decisions_archive]] com o ID preservado, e o aviso do registro sobe de 9.600 para **10.800** | (c) sozinha para em 10.204 e nem a saída (a) inteira ficava 500 abaixo de 9.600: o aviso media um registro que não existe mais. Sobra folga de ~3 decisões (362 caracteres cada) até o teto — a sessão de M8 precisa de outro corte |
 
+| D-65 | 2026-08-19 | ADOTADO | `T-20`: a direção visual é **noite de estádio** — superfície em degradê com sombra **e** realce (nunca cor chapada), verde do gramado como acento, bandeira em **retângulo** e não em disco, capa e profundidade feitas só de degradê (zero asset), e movimento restrito a `opacity`/`transform` | É restrição permanente: as 3 telas de `T-14` herdam esta folha. Zero asset é o que mantém a capa sob o teto de `D-02`; e o retângulo existe porque `object-fit: cover` num círculo corta a faixa de baixo de toda tricolor horizontal — as 32 bandeiras de `T-19` são 4:3 |
+
 > **Gatilhos de revisão** (`D-43`): moram no tema que cada um mede — `D-01` em [[online_p2p]], `D-02` em [[stack]].
 
 ## Questões abertas (Q-NN — decisões do DONO, não do agente)
