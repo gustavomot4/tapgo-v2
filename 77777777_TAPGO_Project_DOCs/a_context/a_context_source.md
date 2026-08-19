@@ -30,8 +30,8 @@ Partida de ~1 minuto: contra a CPU, contra alguém no mesmo aparelho, ou por lin
 - **Pronto:** M1 (T-04) · M9 esqueleto (T-05) · M2 (T-06) · M3 (T-07) · **M4 fechado (T-08 + 32 seleções T-18 + 32 bandeiras T-19)** · M5 (T-09 + `online` T-13) · M7 (T-10 + T-17b + bandeira na tela QA-19) · M6 (T-11) · medição (T-15, T-16) · A-08 · **T-17 em `cpu`/`local`** — **E-1..E-4 fechadas**, suíte **405/405**; PLANO em D-13 (M4 e M8 alterados por D-51..D-62)
 - **Bundle:** **382.965 B** (4,8% de 8 MB) lido de `dist/`, **+563 B** de CSS em QA-16/18 — 278.646 B são os 32 SVGs de T-19, asset do chunk de M4 (`QA-06`); Phaser e Trystero fora, por `import()` (D-27)
 - **Em andamento (máx 1):** nada
-- **Próximo:** **E-5** — T-12 (M8), depois T-14. Fora de E-5: A-14, a passada de T-17b e da bandeira no celular real (sandbox não tem navegador; tela de M7 não é coberta por teste)
-- **Bloqueado/pendente:** registro **10.600/12.000** (aviso em 10.800 — `D-63`) e QA **6.735/8.000** (aviso de 6.400 aceso), folga somada **2.665**; esta sessão custou 363 · Q-11 trava o online · CONTEXT a 94% é o próximo corte
+- **Próximo:** **E-5** — T-12 (M8), T-20 (visual, antes de T-14), T-14. Fora de E-5: A-14, a passada de T-17b e da bandeira no celular real (sandbox não tem navegador; tela de M7 não é coberta por teste)
+- **Bloqueado/pendente:** registro **10.600/12.000** (aviso em 10.800 — `D-63`) e QA **6.735/8.000** (aviso de 6.400 aceso), folga somada **2.665**; esta sessão custou 363 · Q-11 trava o online · CONTEXT a 95% é o próximo corte
 - **Questões abertas:** Q-08, Q-09, Q-11 · respondidas: Q-03, Q-04, Q-05, Q-07, Q-10, Q-12 (o D-NN de cada uma está na linha dela) · **QA abertos:** QA-04..QA-07, QA-10, QA-17 · fechados: QA-08, QA-09, QA-11..QA-16, QA-18, QA-19
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)
