@@ -42,6 +42,7 @@ import {
   descricaoFase,
   instrucao,
   instrucaoDoSorteio,
+  marcaSelecao,
   nomeSelecao,
   nomeZona,
   placar,
@@ -252,12 +253,15 @@ export const telaCobranca =
       if (kick === undefined) return;
 
       ctx.som.tocar('chute');
-      if (cena !== null) await cena.animar(kick.shot, kick.dive, kick.goal);
+      // `kick.side` e quem COBROU: o goleiro e o outro lado, e e dele a camisa que a cena veste.
+      if (cena !== null) await cena.animar(kick.shot, kick.dive, kick.goal, kick.side);
       if (!vivo) return;
 
       ctx.som.tocar(kick.goal ? 'gol' : 'defesa');
       apresentados = estado.kicks.length;
-      cena?.repousar();
+      // Ja vestido para a PROXIMA cobranca: `turn` e quem cobra agora, e `null` no fim da disputa
+      // deixa em cena as cores da ultima — trocar de camisa num campo parado pareceria defeito.
+      cena?.repousar(estado.turn);
     }
 
     function escolher(zona: Zone): void {
@@ -370,6 +374,14 @@ export const telaCobranca =
           cena = null;
           return;
         }
+        // O matiz vem de `marcaSelecao`, o MESMO que pinta o disco ao lado do nome no placar: o
+        // goleiro em campo e a marca no cabecalho sao a mesma cor, e a pessoa liga as duas sem
+        // legenda. Arbitrario e derivado do codigo ISO — nao e cor nacional (ver `licenciamento`).
+        cena.definirMatizes({
+          A: marcaSelecao(partida.times.A).matiz,
+          B: marcaSelecao(partida.times.B).matiz,
+        });
+        cena.repousar(sessao.state().turn);
         semCanvas.hidden = true;
       })
       .catch(() => {

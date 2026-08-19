@@ -27,6 +27,20 @@ import {
   sorteioDoPrimeiro,
 } from '../ui/rotulos';
 import { PADRAO, lerPreferencias, gravarPreferencias, selecaoInicial } from '../ui/preferencias';
+import {
+  ALFABETO,
+  BATEDOR_CHUTE,
+  BATEDOR_PARADO,
+  BOLA,
+  GOLEIRO_MERGULHO,
+  GOLEIRO_PARADO,
+  dimensoes,
+  hsl,
+  matizDistinto,
+  paleta,
+  SEPARACAO_MINIMA,
+} from '../ui/sprites';
+import type { Papel, Sprite } from '../ui/sprites';
 import type { Preferencias } from '../ui/preferencias';
 
 const DIR_UI = fileURLToPath(new URL('../ui', import.meta.url));
@@ -691,6 +705,134 @@ describe('a tela lê a bandeira, e o hidden esconde (QA-19 / QA-18 / QA-16)', ()
       expect(regra?.corpo, `${seletor} com display !important vence a global`).not.toMatch(
         /display\s*:[^;]*!important/,
       );
+    }
+  });
+});
+
+// ── A arte do campo: grade de pixels, e por isso testável sem navegador ────────────────────
+//
+// `cena.ts` precisa de Phaser e de canvas, e nenhum dos dois existe aqui. Mas a ARTE não é
+// código de cena: é dado puro em `sprites.ts`, e dado puro tem portão. O que sobra para o
+// aparelho real é se ela fica bonita — não se ela está bem formada.
+describe('sprites do campo (T-20)', () => {
+  const TODOS: Readonly<Record<string, Sprite>> = {
+    GOLEIRO_PARADO,
+    GOLEIRO_MERGULHO,
+    BATEDOR_PARADO,
+    BATEDOR_CHUTE,
+    BOLA,
+  };
+
+  it.each(Object.entries(TODOS))('%s é retangular — toda linha do mesmo tamanho', (nome, sprite) => {
+    // Uma linha com um caractere a mais desloca a coluna e entorta o boneco, e no canvas isso
+    // aparece como "o braço saiu do lugar" — defeito caro de achar olhando.
+    const larguras = new Set(sprite.map((l) => l.length));
+    expect(larguras.size, `${nome}: linhas de larguras ${[...larguras].join(', ')}`).toBe(1);
+    expect(sprite.length).toBeGreaterThan(4);
+  });
+
+  it.each(Object.entries(TODOS))('%s só usa caracteres do alfabeto', (nome, sprite) => {
+    for (const [i, linha] of sprite.entries()) {
+      for (const ch of linha) {
+        expect(ALFABETO, `${nome} linha ${i}: caractere ${JSON.stringify(ch)}`).toContain(ch);
+      }
+    }
+  });
+
+  it('todo papel usado nas grades tem cor na paleta — nenhum pixel fica sem cor', () => {
+    const cores = paleta(200);
+    for (const [nome, sprite] of Object.entries(TODOS)) {
+      for (const linha of sprite) {
+        for (const ch of linha) {
+          if (ch === '.') continue;
+          expect(cores[ch as Papel], `${nome}: papel ${ch} sem cor`).toBeTypeOf('number');
+        }
+      }
+    }
+  });
+
+  it('dimensoes lê a grade, e não um número escrito ao lado', () => {
+    expect(dimensoes(BOLA)).toEqual({ largura: 10, altura: 10 });
+    expect(dimensoes(GOLEIRO_PARADO).largura).toBe(GOLEIRO_PARADO[0]?.length);
+    expect(dimensoes(GOLEIRO_PARADO).altura).toBe(GOLEIRO_PARADO.length);
+  });
+
+  it('a camisa muda com o matiz, e o resto do boneco NÃO', () => {
+    // É o pedido "cada goleiro com a cor da sua seleção". Pele, cabelo e chuteira ficam fixos:
+    // variar tom de pele por seleção seria inventar identidade onde só existe um código ISO.
+    const a = paleta(10);
+    const b = paleta(200);
+
+    expect(a.C).not.toBe(b.C);
+    expect(a.M).not.toBe(b.M);
+    expect(a.P).toBe(b.P);
+    expect(a.K).toBe(b.K);
+    expect(a.B).toBe(b.B);
+    // A bola não é de time nenhum.
+    expect(a.W).toBe(b.W);
+    expect(a.D).toBe(b.D);
+  });
+
+  it('o matiz de M7 NÃO é injetor — 2 pares das 32 colidem, e por isso matizDistinto existe', () => {
+    // Este teste documenta o defeito de `QA-20` em vez de fingir que ele não existe: se um dia o
+    // hash mudar e as 32 passarem a ser únicas, ele reprova e alguém revisita `matizDistinto`.
+    const matizes = listTeams().map((t) => marcaSelecao(t.code).matiz);
+    expect(matizes).toHaveLength(32);
+    expect(new Set(matizes).size).toBe(30);
+  });
+
+  it('em campo, os dois lados nunca saem com a mesma camisa — nem os 3 pares que colidem', () => {
+    const codigos = listTeams().map((t) => t.code);
+
+    for (const a of codigos) {
+      for (const b of codigos) {
+        if (a === b) continue; // seleção contra ela mesma é permitido, e aí a cor igual é honesta
+        const mA = marcaSelecao(a).matiz;
+        const mB = matizDistinto(mA, marcaSelecao(b).matiz);
+
+        const bruto = Math.abs(mA - mB);
+        const distancia = Math.min(bruto, 360 - bruto);
+        expect(distancia, `${a} x ${b}: camisas a ${distancia}graus`).toBeGreaterThanOrEqual(
+          SEPARACAO_MINIMA,
+        );
+        expect(paleta(mA).C, `${a} x ${b}`).not.toBe(paleta(mB).C);
+      }
+    }
+  });
+
+  it('matizDistinto não mexe em quem já estava longe, e é determinístico', () => {
+    expect(matizDistinto(0, 180)).toBe(180);
+    expect(matizDistinto(10, 90)).toBe(90);
+    // Colidiu: vai para o oposto, sempre no mesmo lugar.
+    expect(matizDistinto(100, 100)).toBe(280);
+    expect(matizDistinto(100, 100)).toBe(280);
+    // A volta do círculo conta como perto: 350 e 10 estão a 20 graus.
+    expect(matizDistinto(350, 10)).toBe(170);
+  });
+
+  it('hsl devolve cor dentro da faixa de 24 bits, para qualquer matiz', () => {
+    for (let h = 0; h < 360; h += 7) {
+      const cor = hsl(h, 72, 52);
+      expect(Number.isInteger(cor)).toBe(true);
+      expect(cor).toBeGreaterThanOrEqual(0);
+      expect(cor).toBeLessThanOrEqual(0xffffff);
+    }
+    // Âncoras: matiz fora da faixa dá a volta em vez de sair preto.
+    expect(hsl(0, 100, 50)).toBe(hsl(360, 100, 50));
+    expect(hsl(-120, 100, 50)).toBe(hsl(240, 100, 50));
+    // Saturação zero é cinza — os três canais iguais.
+    const cinza = hsl(123, 0, 50);
+    expect((cinza >> 16) & 0xff).toBe((cinza >> 8) & 0xff);
+    expect((cinza >> 8) & 0xff).toBe(cinza & 0xff);
+  });
+
+  it('a grade tem desenho: nem tudo transparente, nem tudo cheio', () => {
+    // Sem isto, apagar o conteúdo de um sprite passaria por todos os testes acima.
+    for (const [nome, sprite] of Object.entries(TODOS)) {
+      const total = sprite.join('').length;
+      const pintados = sprite.join('').split('').filter((c) => c !== '.').length;
+      expect(pintados, `${nome} está vazio`).toBeGreaterThan(total * 0.15);
+      expect(pintados, `${nome} é um bloco cheio`).toBeLessThan(total * 0.95);
     }
   });
 });
