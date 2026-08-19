@@ -11,7 +11,7 @@ Evidência longa que não cabe (e não deve caber) no [[c_decisions|DECISIONS]]:
 |---|---|
 | `<n>_qa_pass<NN>_report_<AAMMDD>_<HHMM>.md` | **toda** sessão de [[b_process/skills/guardrails-review/SKILL\|guardrails-review]]. Sem relatório, a fase de QA não aconteceu — mesmo com placar zero |
 | `<slug>.md` | a evidência de um D-NN: os números, os ângulos testados, o que matou a alternativa |
-| `decisions_archive.md` | quando o [[c_decisions|DECISIONS]] passar de ~12.000 caracteres: mova para cá as SUPERSEDIDAS e rejeitadas antigas, preservando os IDs |
+| `decisions_archive.md` | quando o [[c_decisions|DECISIONS]] passar de ~16.000 caracteres (`D-69`): mova para cá as SUPERSEDIDAS e rejeitadas antigas, preservando os IDs |
 
 ## Como se nomeia aqui
 Relatório é **saída de IA datada**, então leva timestamp `AAMMDD_HHMM` no fim do nome —

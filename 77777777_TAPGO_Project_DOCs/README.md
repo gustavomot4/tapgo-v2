@@ -18,7 +18,7 @@ Nenhuma ferramenta serve para tudo, e o kit fica mais útil quando você sabe on
 | **Sustentar o que já roda** | Sim, desde a v5 | [[b_process/skills/debugging-diagnosis/SKILL\|depuração]] · [[b_process/skills/performance/SKILL\|performance]] · [[b_process/skills/observability/SKILL\|observabilidade]] · [[b_process/skills/dependencies-supply-chain/SKILL\|dependências]] |
 | Time de 2–4 pessoas | Parcialmente | `WIP` é declarado no cabeçalho do [[c_backlog|BACKLOG]] (`Em andamento (máx N)`) e o script cobra esse número — suba-o. Mas não há atribuição por pessoa nem merge de decisões concorrentes |
 | App grande (30+ módulos) | **Não** | o [[a_context_source|CONTEXT]] de 4.000 chars não representa 30 módulos em "Pronto:". Solução parcial: `a_context/modules.md` com a lista e o CONTEXT guardando só a contagem |
-| Projeto longo (100+ decisões) | Com atrito | o teto de 12.000 chars do [[c_decisions|DECISIONS]] dá ~66 linhas; o arquivamento em `e_qa/decisions_archive.md` é **manual** e ninguém lembra |
+| Projeto longo (100+ decisões) | Com atrito | o teto de 16.000 chars do [[c_decisions|DECISIONS]] (`D-69`) dá ~70 linhas ao custo medido de 227 cada; o arquivamento em `e_qa/decisions_archive.md` é **manual**, e neste projeto ele **acabou** — nenhuma linha viva deixou de ser citada |
 | Multi-repo / monorepo grande | Não | o kit assume um repositório e um `CONTEXT` |
 | CI/CD, revisão por pares | Não cobre | o único automatismo é o pre-commit de `scripts/check.py` |
 

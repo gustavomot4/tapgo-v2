@@ -263,12 +263,13 @@ elif texto_qa and n_qa > 6400:
 dec = raiz / DECISOES
 texto_dec = corpo.get(dec, "")
 n_dec = medida(texto_dec)
-if texto_dec and n_dec > 12000:
+if texto_dec and n_dec > 16000:
     falhas.append(
-        f"{DECISOES} acima de 12.000 caracteres — arquive SUPERSEDIDAS/rejeitadas antigas "
-        "em e_qa/decisions_archive.md (IDs preservados) e deixe um ponteiro."
+        f"{DECISOES} acima de 16.000 caracteres — arquive SUPERSEDIDAS/rejeitadas antigas "
+        "em e_qa/decisions_archive.md (IDs preservados) e deixe um ponteiro. Se o corte de "
+        "`D-43` estiver esgotado, o teto é que precisa de decisão nova (`D-69`)."
     )
-elif texto_dec and n_dec > 10800:
+elif texto_dec and n_dec > 14400:
     # O README declarava esta fraqueza com todas as letras: "o arquivamento é manual e
     # ninguém lembra". Portão que só roda quando alguém lembra não é portão — foi o
     # argumento do QA-04, e valia contra o próprio kit. O script não arquiva (a decisão
@@ -276,6 +277,10 @@ elif texto_dec and n_dec > 10800:
     # `D-63`: as candidatas saem do critério de `D-43` — sai da tabela quem NENHUM `.md` vivo
     # cita. Listar "as mais antigas" mandava arquivar linha que `D-43` proíbe retirar: o aviso
     # ensinava a violar a regra que ele deveria proteger, e quem obedecesse reprovaria depois.
+    # `D-69`: teto 12.000 -> 16.000 e aviso 10.800 -> 14.400 (mesmos 90% de `D-63`). Medido em
+    # 2026-08-19, com o registro em 11.997: o pool de `D-43` era ZERO linhas, e as duas saídas
+    # de arquivamento que sobravam rendiam 788 e 821 — menos que as 3 decisões que o portão
+    # de `A-16` exige. Quando o pool é vazio, o aviso abaixo imprime isso em vez de mentir.
     vivos = "\n".join(txt for cam, txt in corpo.items()
                       if cam.name not in (Path(DECISOES).name, Path(ARQUIVO_MORTO).name)
                       and "d_history" not in cam.parts)
@@ -285,7 +290,7 @@ elif texto_dec and n_dec > 10800:
         "NENHUMA — todo D-NN vivo é citado por algum .md, então o corte de `D-43` está esgotado "
         "e o que resta é rever o teto")
     avisos.append(
-        f"{DECISOES} com {n_dec}/12.000 caracteres ({100*n_dec//12000}%) — "
+        f"{DECISOES} com {n_dec}/16.000 caracteres ({100*n_dec//16000}%) — "
         f"arquive o que `D-43` libera em e_qa/decisions_archive.md, preservando os IDs. Candidatas: {amostra}."
     )
 
@@ -665,10 +670,10 @@ if texto_ctx:
 # cortar por ESSE número; número velho manda cortar cedo demais ou tarde demais.
 # A chave do dicionário é o ORÇAMENTO, não o nome do arquivo: é o denominador que diz
 # de qual registro a linha fala, sem depender de como ela foi escrita.
-ORCAMENTOS = {4000: (CONTEXTO, texto_ctx), 12000: (DECISOES, texto_dec), 8000: (QA_REG, texto_qa)}
+ORCAMENTOS = {4000: (CONTEXTO, texto_ctx), 16000: (DECISOES, texto_dec), 8000: (QA_REG, texto_qa)}
 if texto_ctx:
     ja_avisado = set()
-    # `**10.998**/12.000` e `10.998/12.000` são a mesma frase: o negrito sai antes de contar.
+    # `**10.998**/16.000` e `10.998/16.000` são a mesma frase: o negrito sai antes de contar.
     for bruto_dec, bruto_teto in re.findall(r"(\d[\d.]*)\s*/\s*(\d[\d.]*)", texto_ctx.replace("*", "")):
         teto = int(bruto_teto.replace(".", ""))
         if teto not in ORCAMENTOS or teto in ja_avisado:
