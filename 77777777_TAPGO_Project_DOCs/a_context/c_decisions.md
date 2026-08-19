@@ -56,6 +56,7 @@ status: atual
 | D-63 | 2026-08-13 | ADOTADO | `A-15` (c)+(b): as 8 questões RESPONDIDAS saem para [[decisions_archive]] com o ID preservado, e o aviso do registro sobe de 9.600 para **10.800** | (c) sozinha para em 10.204 e nem a saída (a) inteira ficava 500 abaixo de 9.600: o aviso media um registro que não existe mais. Sobra folga de ~3 decisões (362 caracteres cada) até o teto — a sessão de M8 precisa de outro corte |
 
 | D-65 | 2026-08-19 | ADOTADO | `T-20`: a direção visual é **noite de estádio** — superfície em degradê com sombra **e** realce (nunca cor chapada), verde do gramado como acento, bandeira em **retângulo** e não em disco, capa e profundidade feitas só de degradê (zero asset), e movimento restrito a `opacity`/`transform` | É restrição permanente: as 3 telas de `T-14` herdam esta folha. Zero asset é o que mantém a capa sob o teto de `D-02`; e o retângulo existe porque `object-fit: cover` num círculo corta a faixa de baixo de toda tricolor horizontal — as 32 bandeiras de `T-19` são 4:3 |
+| D-66 | 2026-08-19 | ADOTADO | `T-12`: **um `Cpu` por disputa** — os dois histogramas nascem e morrem com a disputa, e nenhum atravessa o torneio | Reusar a instância nas 3 a 7 do jogador daria a progressão **implícita** que `D-60` recusou: a CPU chegaria à final tendo lido o torneio inteiro. Responde a 1ª das 3 perguntas do PLANO |
 
 > **Gatilhos de revisão** (`D-43`): moram no tema que cada um mede — `D-01` em [[online_p2p]], `D-02` em [[stack]].
 
@@ -64,4 +65,5 @@ status: atual
 |---|---|---|
 | Q-09 | No modo `local`, de quem é a escolha pendente, se a porta congelada de M5 não a expõe? | antes de T-10 (**prazo vencido — `QA-07`**); hoje M7 deriva de `kicks.length` e a saída definitiva está em [[questoes_abertas_notas]] |
 | Q-08 | `pick(role)` lê o histograma do **mesmo** papel — é essa a intenção, ou quem defende deveria ler o histograma `shooter` do humano? | antes de E-3 (**prazo vencido — `QA-07`**); as duas leituras e o custo de inverter em [[questoes_abertas_notas]] |
+| Q-13 | `report(winner)` não traz o placar: a disputa do jogador entra na tabela **sem gols**, e o saldo do grupo dela compara 3 placares com 2. Mudar isso é porta congelada (`D-13`/`D-58`), logo `D-NN` do dono | antes de `T-14` fechar |
 | Q-11 | Como M7 recebe o `roomId` do anfitrião, se a porta de M5 (`D-13`) não o devolve e M7 não pode importar `src/net`? | antes da tela de convite — duas saídas em [[m5_sessao_notas]], as duas mexendo em porta congelada, logo `D-NN` do dono |
