@@ -7,6 +7,13 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-19] — `T-20` aprovado no aparelho: `D-65` deixa de ser proposta e vira a folha
+- **Skill:** evolution-auditor (mesma sessão de `A-16`/`A-14`) — só documentação: `b_process/c_backlog.md`, `a_context/a_context_source.md`. Nenhum arquivo de `src/` tocado.
+- **A aprovação era o portão que faltava.** As duas fatias de `T-20` já estavam no ar (`6bd7276`, `c949ab8`) e a direção já tinha virado `D-65`, mas o card exige aprovação no **aparelho real** — nenhuma tela de M7 é verificável por teste, porque `vitest` roda em Node sem DOM. Conferida junto de `A-14`, na mesma passagem em 360x640.
+- **O que a aprovação torna permanente:** `D-65` passa a ser a folha que as 3 telas de `T-14` já herdaram — noite de estádio, superfície em degradê com sombra **e** realce, verde do gramado como acento, bandeira em retângulo, capa e profundidade só de degradê (zero asset), movimento restrito a `opacity`/`transform`.
+- **Custo zero de bundle confirmado:** `D-65` proibia asset novo para não cruzar o gatilho de `D-02`; o bundle lido de `dist/` depois de `T-14` é **408.094 B**, 5,1% dos 8 MB.
+- **O que isto não fecha: E-5.** O portão da etapa é o torneio — campeão em exatamente 64 disputas, jogável de ponta a ponta por toque, sobrevivendo a um reload, com procedência dos 32 SVGs em [[licenciamento]] mais o texto da licença do flag-icons, e o nome **TAP GO Cup** passando no `grep` da lista-morta. Nada disso é folha de estilo, e nenhum deles foi conferido nesta sessão.
+
 ## [2026-08-19] — `A-14`: o painel do sorteio conferido no aparelho, e os 4 itens passam
 - **Skill:** evolution-auditor (continuação da sessão de `A-16`) — só documentação: `b_process/c_backlog.md`, `a_context/a_context_source.md`. Nenhum arquivo de `src/` tocado, nenhuma decisão nova.
 - **O portão de `A-14`, cobrado em 360x640 pelo dono:** o painel de `D-49` aparece **antes** do 1º toque nos modos `cpu` e `local`, some depois dele, as três zonas seguem alcançáveis **sem rolar**, e recomeçar partidas nomeia **os dois** lados. Este último item é a única prova que `T-17` tem de que o sorteio chega à tela — nenhuma tela de M7 é coberta por teste, porque `vitest` roda em Node sem DOM.
