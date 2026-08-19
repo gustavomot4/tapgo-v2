@@ -309,7 +309,7 @@ Dados/schema (M1, forma de M4) → domínio (M2, M3, **M8**) → borda (M6, M5) 
 - **Skill responsável:** [[b_process/skills/iac-docker-terraform/SKILL|iac-docker-terraform]] (sem Docker: o "empacotar e operar" deste projeto é build estático + Pages)
 - **Portão — build:** `npx tsc --noEmit && npm run build` verdes na máquina do dono · bundle inicial < 8 MB **lido da saída**, nunca estimado · a página publicada carrega todos os assets sem 404 · nenhum segredo versionado.
 - **Portão — custo (a restrição "R$ 0" só existe se for verificada aqui):** toda dependência de runtime e todo endpoint externo que o build publicado alcança têm linha na tabela de custo de [[stack]], cada uma com a camada usada e a confirmação de que ela **não exige cartão**; host que aparece no `dist/` e não está na tabela reprova.
-- **Portão — privacidade:** zero `<script>` de origem externa no HTML publicado · zero endpoint externo em runtime fora da sinalização e do relay de M6 · nenhuma chamada de telemetria, analytics ou fonte remota.
+- **Portão — privacidade:** zero `<script>` de origem externa no HTML publicado · zero endpoint externo em runtime fora de **três** exceções nominais de M6 — sinalização, relay e os **STUN de descoberta de endereço** (`D-71`) · nenhuma chamada de telemetria, analytics ou fonte remota.
 - **Onde a stack vai doer:** o GitHub Pages de repositório serve em `/tapgo-v2/`, não na raiz. Com o `base` padrão, o build gera caminhos absolutos e **todo asset dá 404 só em produção** — verde no `npm run dev`, quebrado no ar. É a falha clássica desta combinação, e o motivo de E-1 publicar uma página vazia antes de existir jogo. HTTPS, que o WebRTC exige, o Pages já dá.
 
 ## Milestones com portão (cada uma só abre com o portão da anterior)

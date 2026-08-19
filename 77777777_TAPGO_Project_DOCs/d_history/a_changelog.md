@@ -7,6 +7,14 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-19] — `Q-14` respondida: os 4 STUN viram a segunda excecao nominal do portao de privacidade (`D-71`)
+- **Skill:** delivery-review (mesma sessão) — só documentação: `a_context/c_decisions.md`, `a_context/b_plan.md`, `a_context/stack.md`, `a_context/a_context_source.md`. Nenhum arquivo de `src/` tocado.
+- **`D-71` (saída a, escolhida pelo dono):** descoberta de endereço é parte da conexão de M6, não endpoint novo. Sem STUN não existe P2P — os 17/17 de `A-08` são candidatos `srflx`, e eles só existem porque um STUN respondeu.
+- **Por que não a saída (b):** fixar `iceServers` em M6 escolheria **os mesmos** servidores públicos à mão. Mudaria quem digitou a lista, não o que vai ao ar.
+- **O que a isenção compra, e é o ponto do achado:** ela nomeia `defaultIceServers` de `@trystero-p2p/core@0.25.3`. O defeito nunca foi "STUN é risco" — foi **default de dependência não aparecer em revisão nenhuma**, que é como esses 4 endpoints atravessaram cinco etapas sem linha. Com arquivo e versão escritos, a próxima subida de dependência reabre a conferência sozinha.
+- **Propagado para os três lugares:** portão de privacidade de M9 no [[b_plan|PLANO]] passa a ter três exceções nominais (sinalização, relay, STUN) · a linha da tabela de custo de [[stack]] deixa de ser pergunta e vira política · `Q-14` sai das abertas do CONTEXT.
+- **Sobra para E-6:** só a porta do dono sobre entregar sem a tela de convite (`Q-11`). Nenhuma conferência de agente em aberto.
+
 ## [2026-08-19] — `A-18` fechada pela declaração do dono: a página no ar está certa e atualizada
 - **Skill:** delivery-review (mesma sessão) — só documentação: `b_process/c_backlog.md`, `a_context/a_context_source.md`. Nenhum arquivo de `src/` tocado.
 - **O dono declarou que conferiu pelo telefone, na página publicada, e que está tudo correto e atualizado.** É a mesma passagem de `A-17`: jogar a TAP GO Cup até o campeão exige a tela de cobrança (onde o chunk do Phaser e os 3 WAVs são buscados) e as telas de seleção e de grupo (onde as 32 bandeiras aparecem), então os três sinais do portão foram exercitados pelo jogo, não por inspeção.

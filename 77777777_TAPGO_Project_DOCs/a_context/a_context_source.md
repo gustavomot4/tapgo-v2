@@ -30,9 +30,9 @@ Partida de ~1 minuto: contra a CPU, contra alguém no mesmo aparelho, ou por lin
 - **Pronto:** M1 (T-04) · M9 esqueleto (T-05) · M2 (T-06) · M3 (T-07) · **M4 fechado (T-08 + T-18 + T-19)** · M5 (T-09 + `online` T-13) · M7 (T-10 + T-17b + QA-19 + T-20 + **T-14: as 3 telas do torneio**) · M6 (T-11) · **M8 (T-12)** · medição (T-15, T-16) · A-08 · **A-14** · **A-17** · **A-18** · **T-17 em `cpu`/`local`** — **E-1..E-5 fechadas**, suíte **531/531**; PLANO em D-13 (M4 e M8 alterados por D-51..D-62)
 - **Bundle:** **408.094 B** (5,1% de 8 MB) lido de `dist/` na máquina do dono; T-14 ligou M8 (+18.750 B, zero asset novo) — 278.646 B são os 32 SVGs de T-19, asset do chunk de M4 (`QA-06`); Phaser e Trystero fora, por `import()` (D-27)
 - **Em andamento (máx 1):** nada
-- **Próximo:** **E-6** (entrega) — os 6 critérios de [[portao_de_aceite]] verdes, `check.py --historico-completo` verde, tabela de [[stack]] fechada e a página no ar conferida (`A-18`); falta `Q-14` e a porta do dono sobre o online
+- **Próximo:** **E-6** (entrega) — os 6 critérios de [[portao_de_aceite]] verdes, `check.py --historico-completo` verde, tabela de [[stack]] fechada (`D-71`) e a página no ar conferida (`A-18`); falta só a porta do dono sobre entregar sem o convite
 - **Bloqueado/pendente:** registro **13.331/16.000** (`D-69` subiu o teto) · o **CONTEXT** é o próximo teto, e não tem `A-NN` · QA **7.623/8.000** · `Q-11` trava o online: o build no ar não tem tela de convite · `Q-14` trava E-6
-- **Questões abertas:** Q-08, Q-09, Q-11, Q-13 (a metade da tela caiu em `D-67`), **Q-14** · respondidas: Q-03, Q-04, Q-05, Q-07, Q-10, Q-12 · **QA abertos:** QA-04..QA-07, QA-10, QA-17, QA-20, QA-21 · fechados: QA-08, QA-09, QA-11..QA-16, QA-18, QA-19
+- **Questões abertas:** Q-08, Q-09, Q-11, Q-13 (metade da tela caiu em `D-67`; porta do dono) · respondidas: Q-03, Q-04, Q-05, Q-07, Q-10, Q-12, Q-14 · **QA abertos:** QA-04..QA-07, QA-10, QA-17, QA-20, QA-21 · fechados: QA-08, QA-09, QA-11..QA-16, QA-18, QA-19
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)
 - [[portao_de_aceite]] — **antes de fechar tarefa, declarar etapa fechada ou entregar**
