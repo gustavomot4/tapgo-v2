@@ -28,7 +28,7 @@ Partida de ~1 minuto: contra a CPU, contra alguém no mesmo aparelho, ou por lin
 ## Estado atual (formato fixo — 1 linha por item, SEM prosa corrida)
 - **Versão:** v2.0.0-dev (a v1 é baseline morto: reescrita total, nenhum código reaproveitado)
 - **Pronto:** M1 (T-04) · M9 esqueleto (T-05) · M2 (T-06) · M3 (T-07) · **M4 fechado (T-08 + T-18 + T-19)** · M5 (T-09 + `online` T-13) · M7 (T-10 + T-17b + QA-19 + T-20 + **T-14: as 3 telas do torneio**) · M6 (T-11) · **M8 (T-12)** · medição (T-15, T-16) · A-08 · **T-17 em `cpu`/`local`** — **E-1..E-4 fechadas**, suíte **531/531**; PLANO em D-13 (M4 e M8 alterados por D-51..D-62)
-- **Bundle:** **407.960 B** (5,1% de 8 MB) lido de `dist/`; T-14 ligou M8 (+18.616 B, zero asset novo) — 278.646 B são os 32 SVGs de T-19, asset do chunk de M4 (`QA-06`); Phaser e Trystero fora, por `import()` (D-27)
+- **Bundle:** **408.094 B** (5,1% de 8 MB) lido de `dist/` na máquina do dono; T-14 ligou M8 (+18.750 B, zero asset novo) — 278.646 B são os 32 SVGs de T-19, asset do chunk de M4 (`QA-06`); Phaser e Trystero fora, por `import()` (D-27)
 - **Em andamento (máx 1):** nada
 - **Próximo:** **A-16** (o registro estourou e trava o commit) e **A-14** — E-5 só fecha no aparelho real do dono: nenhuma tela de M7 tem teste, e o torneio inteiro por toque em 360x640 é medição dele
 - **Bloqueado/pendente:** registro **11.997/12.000** — 3 de folga: a próxima decisão estoura e `check.py` reprova (A-16, e é do dono: `D-43` esgotado) · QA **7.623/8.000** · Q-11 trava o online
