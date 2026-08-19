@@ -7,6 +7,13 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-19] — E-5 conferida item a item: 3 dos 5 passam, 2 vão para `A-17`
+- **Skill:** delivery-review — só documentação: `b_process/c_backlog.md`, `a_context/a_context_source.md`. Nenhum arquivo de `src/` tocado, nenhuma decisão nova.
+- **E-5 NÃO foi declarada fechada**, e o motivo não é defeito: dois dos cinco itens do portão só existem em aparelho, e a passagem que houve (`A-14`) cobriu o **painel do sorteio** nos modos `cpu`/`local` — não o torneio. Declarar E-5 fechada em cima dela seria dar por conferido o que ninguém abriu.
+- **O que passou, com a prova:** (1) **64 disputas e um campeão** em 6 sementes, contadas por instrumentação (`played`), com restaurar-no-meio chegando à mesma linha do tempo (`D-57`) — suíte **531/531** verde nesta sessão · (2) **procedência dos 32 SVGs reconferida arquivo a arquivo**: SHA-256 e bytes de cada um batem com a tabela de [[licenciamento]], a soma dá os **278.646 B** declarados, e o texto MIT com o aviso `Copyright (c) 2013 Panayiotis Lipiridis` está íntegro em `src/assets/flags/LICENSE.txt` · (3) **`grep` da lista-morta em 0** fora de `src/tests/` (onde as agulhas são montadas em tempo de execução, `QA-05`), com `NOME_TORNEIO` como fonte única de **TAP GO Cup**.
+- **O que falta, e virou `A-17`:** o torneio jogado **de ponta a ponta por toque** em 360x640, e **fechar e reabrir o navegador** no meio continuando de onde parou. O dev server do sandbox viu o segundo em `T-14`, mas sandbox não é aparelho e a convenção do projeto já estava escrita: nenhuma tela de M7 é verificável por teste.
+- **Varredura de entrega, de carona:** `python scripts/check.py --historico-completo` **verde** — nenhum segredo na árvore nem no histórico completo, fonte única e sincronia de estado OK. Os dois avisos de orçamento seguem: CONTEXT em 3.884/4.000 e QA em 7.623/8.000.
+
 ## [2026-08-19] — `T-20` aprovado no aparelho: `D-65` deixa de ser proposta e vira a folha
 - **Skill:** evolution-auditor (mesma sessão de `A-16`/`A-14`) — só documentação: `b_process/c_backlog.md`, `a_context/a_context_source.md`. Nenhum arquivo de `src/` tocado.
 - **A aprovação era o portão que faltava.** As duas fatias de `T-20` já estavam no ar (`6bd7276`, `c949ab8`) e a direção já tinha virado `D-65`, mas o card exige aprovação no **aparelho real** — nenhuma tela de M7 é verificável por teste, porque `vitest` roda em Node sem DOM. Conferida junto de `A-14`, na mesma passagem em 360x640.
