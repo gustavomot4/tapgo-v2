@@ -7,6 +7,13 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-19] — `A-18` fechada pela declaração do dono: a página no ar está certa e atualizada
+- **Skill:** delivery-review (mesma sessão) — só documentação: `b_process/c_backlog.md`, `a_context/a_context_source.md`. Nenhum arquivo de `src/` tocado.
+- **O dono declarou que conferiu pelo telefone, na página publicada, e que está tudo correto e atualizado.** É a mesma passagem de `A-17`: jogar a TAP GO Cup até o campeão exige a tela de cobrança (onde o chunk do Phaser e os 3 WAVs são buscados) e as telas de seleção e de grupo (onde as 32 bandeiras aparecem), então os três sinais do portão foram exercitados pelo jogo, não por inspeção.
+- **O que isso fecha, e faltava desde `A-07`:** o `base` `/tapgo-v2/` continua certo para as URLs que nasceram DEPOIS do esqueleto de 4.599 B — asset de `import.meta.glob` com `?no-inline` e chunk de `import()` dinâmico — e o Actions publicou o commit atual. A falha clássica de M9 (404 só em produção) não aconteceu.
+- **O portão foi cumprido por sinal visual, não por console:** o card pedia o console do celular sem 404, e o Chrome do Android não o abre. Bandeira quebrada, cobrança que não anima e menu sem torneio cobrem o mesmo 404 — a substituição está escrita no card.
+- **Sobra para E-6:** `Q-14` (a política do STUN) e a porta do dono sobre entregar sem tela de convite (`Q-11`). Nenhuma das duas é do agente.
+
 ## [2026-08-19] — E-6 conferida: os 6 critérios passam, a tabela de custo fecha, e o STUN vira `Q-14`
 - **Skill:** delivery-review — só documentação: `a_context/stack.md`, `a_context/c_decisions.md`, `b_process/c_backlog.md`, `a_context/a_context_source.md`. Nenhum arquivo de `src/` tocado.
 - **E-6 NÃO foi declarada fechada.** Dois dos três itens do portão passam; o que trava é `Q-14` (decisão do dono) e `A-18` (a página no ar nunca foi reconferida depois do esqueleto de `A-07`).
