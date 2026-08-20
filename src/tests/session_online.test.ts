@@ -185,6 +185,52 @@ async function doisAparelhos(seed: number): Promise<{
   return { a, b, linkA, linkB, salaB };
 }
 
+/**
+ * Os DOIS aparelhos no mesmo link — o par espelhado de `QA-26`.
+ *
+ * Reproduz o que `abertura()` produz hoje (`src/ui/main.ts:162`): todo endereço com `?sala=`
+ * recebe `ladoLocal: 'B'`, sem exceção, então quem abre o mesmo link em dois aparelhos nasce
+ * `'B'` nos dois. É a única diferença para `doisAparelhos` — mesma sala, mesmo `seed`, e o
+ * `localSide` repetido.
+ *
+ * Quem abre a sala aqui é o primeiro aparelho (`roomId` ausente ⇒ `hostRoom`), pelo mesmo motivo
+ * de `doisAparelhos`: a porta congelada de M5 não devolve o ID que M6 sorteou (`Q-11`). Isso não
+ * muda o que está sob teste — o que faz o par ser espelhado é o `localSide`, não quem hospedou.
+ */
+async function parEspelhado(seed: number): Promise<{
+  b1: Session;
+  b2: Session;
+  link1: LinkStatus[];
+  link2: LinkStatus[];
+}> {
+  const b1 = nova(cfgOnline(seed, 'B'));
+  const link1: LinkStatus[] = [];
+  b1.subscribe((_s, l) => link1.push(l));
+
+  await ate(() => salas.length === 1, 'a sala do primeiro aparelho abrir');
+  const sala1 = salas[0];
+  if (sala1 === undefined) throw new Error('D-81: sala do primeiro aparelho ausente');
+
+  const b2 = nova(cfgOnline(seed, 'B', sala1.roomId));
+  const link2: LinkStatus[] = [];
+  b2.subscribe((_s, l) => link2.push(l));
+
+  await ate(() => salas.length === 2, 'a sala do segundo aparelho abrir');
+  await ate(
+    () => link1.includes('connected') || link2.includes('connected'),
+    'os dois aparelhos conectarem',
+  );
+
+  // As duas primeiras previsões que o dono mediu em campo em 2026-08-20, antes de qualquer
+  // código: com `first = 'A'` (o `online` não sorteia — ver `Q-11`) e `localSide = 'B'` nos dois,
+  // `turn !== localSide` dos dois lados, logo os DOIS ficam de defesa e nenhum cobra. A terceira
+  // — que o toque acontece e a jogada SAI — é a pré-condição da guarda, e é o que os testes
+  // abaixo exercitam.
+  expect(b1.state().turn, 'o par espelhado nasce com os dois esperando o lado A cobrar').toBe('A');
+  expect(b2.state().turn).toBe('A');
+  return { b1, b2, link1, link2 };
+}
+
 /** Toca a cobrança corrente nos dois aparelhos, com o par (chute, defesa) que M2 registrou. */
 function cobrar(a: Session, b: Session, shot: Zone, dive: Zone): void {
   // Quem cobra é `match.turn`, de M2 — os dois aparelhos leem o mesmo e derivam a própria zona.
@@ -341,14 +387,16 @@ describe('T-13 — evento remoto fora de ordem, repetido ou torto morre em M5', 
     return { s, injetar: (m: unknown) => sala.acao.onMessage?.(m, null) };
   }
 
-  it('seq futuro, seq velho, lado errado e zona torta são todos descartados', async () => {
+  // O lado DESTE aparelho saiu desta lista em `D-81`: ele deixou de ser descarte silencioso e
+  // passou a terminar a disputa (par espelhado, `QA-26`). Deixá-lo aqui mataria a sessão no meio
+  // do laço e os itens seguintes passariam sem exercitar guarda nenhuma. Está no bloco de `D-81`.
+  it('seq futuro, seq velho, lado inexistente e zona torta são todos descartados', async () => {
     const { s, injetar } = await comAparelhoSozinho();
     const antes = s.state();
 
     const ilegais: readonly unknown[] = [
       { seq: 5, side: 'B', zone: 'L' }, // fora de ordem: cobrança que não começou
       { seq: 1, side: 'B', zone: 'L' }, // idem, logo à frente
-      { seq: 0, side: 'A', zone: 'L' }, // o lado DESTE aparelho — cliente modificado
       { seq: 0, side: 'B', zone: 'X' }, // zona que não existe
       { seq: -1, side: 'B', zone: 'L' }, // seq negativo
       { seq: 1.5, side: 'B', zone: 'L' }, // seq não inteiro
@@ -787,5 +835,148 @@ describe('D-80 — reentrada de sessão zerada dentro dos 20 s termina a disputa
       'a queda que se recupera sozinha não pode virar D-35 — é o número que matou D-78',
     ).not.toContain('failed');
     expect(avisos.filter((m) => m.includes('sessão zerada (D-80)'))).toEqual([]);
+  });
+});
+
+/* ──── `D-81`: os dois no MESMO link — o par espelhado vira falha honesta (`QA-26`) ──── */
+
+describe('D-81 — par espelhado: a jogada assinada com o NOSSO lado termina a disputa (QA-26)', () => {
+  // Antes de `D-81` este cenário era a TRAVA PERMANENTE do achado: os dois aparelhos em `'B'`,
+  // os dois assinando `side: 'B'`, e cada um descartando a jogada do outro na guarda de lado —
+  // em silêncio. O canal seguia `'connected'`, o timer de 20 s já tinha sido limpo por
+  // `onPeerJoin`, ninguém emitia `'failed'`, e as duas telas paravam em "Esperando o outro
+  // jogador…" para sempre. `D-80` é inalcançável aqui: nenhuma jogada atravessa, então
+  // `kicks.length` fica em 0 nos dois lados, e a pré-condição dele (`kicks.length > 0`) nunca
+  // chega. É esse travamento que os testes abaixo proíbem.
+
+  it('portão (1): quem RECEBE a jogada espelhada vai a `failed` no mesmo tique, sem relógio', async () => {
+    const { b1, b2, link1 } = await parEspelhado(31);
+    const antes = link1.length;
+
+    // Sem `advanceTimers` e sem `respirar()`: a entrega da rede falsa é síncrona, e o portão
+    // exige o desfecho no tique da chegada — não daqui a 20 s.
+    b2.choose('C');
+
+    expect(link1.at(-1), 'D-81: `failed` devia sair no tique da jogada espelhada').toBe('failed');
+    expect(link1.length, 'M7 não foi notificado').toBeGreaterThan(antes);
+    expect(
+      avisos.some((m) => m.includes('par espelhado (D-81)') && m.includes('"side":"B"')),
+      'o descarte devia dizer POR QUE, e não "lado B não é o do peer"',
+    ).toBe(true);
+
+    // `D-35` intacto: abandono não escreve vencedor, nada chega a M2, e nenhuma escolha é aceita.
+    expect(b1.state().winner, 'abandono não pode escrever vencedor (D-35)').toBeNull();
+    expect(b1.state().kicks.length, 'a jogada espelhada não pode virar cobrança').toBe(0);
+    expect(b1.state().phase).not.toBe('finished');
+    expect(() => b1.choose('L')).toThrowError(/SEM RESULTADO/);
+  });
+
+  it('portão (1): os DOIS saem da trava — o que enviou pelo `close()`, em até 20 s', async () => {
+    const { b2, link2 } = await parEspelhado(31);
+    b2.choose('C');
+    await respirar();
+
+    // O `canal.close()` do lado que recebeu solta a sala; o `leave()` de M6 vira `onPeerLeave`
+    // aqui, que emite `'waiting'` e rearma os 20 s — o mesmo caminho que `A-22` mediu e que
+    // `A-24` confirmou em campo por `D-80`. É a assimetria declarada: quem recebe cai no tique,
+    // quem enviou cai pelo relógio. O que NÃO existe mais é o "para sempre".
+    expect(link2.at(-1), 'a saída do outro devia ter chegado como waiting').toBe('waiting');
+
+    await vi.advanceTimersByTimeAsync(20_000);
+    await respirar();
+
+    expect(link2.at(-1), 'QA-26: o lado que enviou ficaria preso para sempre').toBe('failed');
+    expect(link2, 'ninguém pode passar por failed antes do relógio deste lado').toEqual([
+      ...link2.slice(0, -1).filter((l) => l !== 'failed'),
+      'failed',
+    ]);
+    expect(b2.state().winner, 'nem aqui o abandono escreve vencedor').toBeNull();
+    expect(b2.state().kicks.length).toBe(0);
+    expect(() => b2.choose('L')).toThrowError(/SEM RESULTADO/);
+  });
+
+  it('escrita repetida não duplica efeito: a segunda jogada espelhada não move mais nada', async () => {
+    const { b1, b2, link1 } = await parEspelhado(31);
+    b2.choose('C');
+    await respirar();
+    const depoisDoPrimeiro = [...link1];
+
+    // O aparelho espelhado insiste (retry da fila, peer teimoso). `abandonada` já barra na
+    // primeira linha de `aoMove`, então nada é notificado de novo e nada regride.
+    b2.dispose();
+    await respirar();
+
+    expect(link1, 'o segundo evento moveu o status de novo').toEqual(depoisDoPrimeiro);
+    expect(b1.state().kicks.length).toBe(0);
+    expect(b1.state().winner).toBeNull();
+  });
+
+  it('falseamento: `Move` legítimo (`side === remoteSide`) NÃO dispara a guarda', async () => {
+    // O portão do falsificador, item 2: sob a mutação `===` → `!==` na guarda de `D-81` é ESTE
+    // teste que reprova primeiro — o par são passaria a se matar na 1ª cobrança. Cinco cobranças
+    // é o número escrito no portão de campo (`A-25`).
+    const { a, b } = await doisAparelhos(77);
+
+    for (let i = 0; i < 5; i += 1) {
+      cobrar(a, b, 'L', 'R'); // chute num canto, defesa no outro: gol, e a disputa segue viva
+      await respirar();
+    }
+
+    expect(a.state().kicks.length, 'o par são não completou as 5 cobranças').toBe(5);
+    expect(b.state(), 'os dois aparelhos divergiram').toEqual(a.state());
+    expect(
+      avisos.filter((m) => m.includes('descartada')),
+      'par são não pode ter UM descarte sequer, de lado nenhum',
+    ).toEqual([]);
+  });
+
+  it('lado de terceiro tipo nem chega a M5: morre na forma, em M6, e não abandona nada', async () => {
+    // A guarda de `D-81` é `=== localSide`, e não "≠ remoteSide". A diferença entre as duas só
+    // apareceria num `side` de terceiro tipo — e este teste mede que ele **não chega a M5**:
+    // `isMove` (`net/index.ts:370`) o derruba antes, então a guarda repetida de M5 sobre um
+    // `side` inexistente é inalcançável pelo fio. Fica declarado: essa borda é coberta em M6,
+    // não aqui. O que fecha o alargamento da guarda é o teste do `Move` legítimo, acima.
+    const { b1, link1 } = await parEspelhado(31);
+    const sala1 = salas[0];
+    if (sala1 === undefined) throw new Error('D-81: sala do primeiro aparelho ausente');
+
+    sala1.acao.onMessage?.({ seq: 0, side: 'C', zone: 'L' }, null);
+
+    expect(
+      avisos.some((m) => m.includes('payload descartado, não é Move')),
+      'o lado inexistente devia ter morrido na forma, em M6',
+    ).toBe(true);
+    expect(link1, 'lado inexistente não pode terminar a disputa').not.toContain('failed');
+    expect(avisos.some((m) => m.includes('par espelhado (D-81)'))).toBe(false);
+    expect(b1.state().kicks.length).toBe(0);
+  });
+
+  it('a guarda de `D-81` não rouba o evento da guarda de fase: disputa terminada não abandona', async () => {
+    // Ordem importa: `phase === 'finished'` vem ANTES de `D-81`. Se a guarda subisse, uma jogada
+    // espelhada chegando depois do fim pintaria `D-35` por cima de um resultado legítimo — o
+    // placar mentiroso ao contrário.
+    const { a, b } = await doisAparelhos(3);
+    for (let i = 0; i < 10 && a.state().phase !== 'finished'; i += 1) {
+      const vez = a.state().turn;
+      if (vez === 'A') {
+        a.choose('L');
+        b.choose('R');
+      } else {
+        b.choose('L');
+        a.choose('L');
+      }
+      await respirar();
+    }
+    expect(a.state().phase).toBe('finished');
+
+    const final = a.state();
+    const sala = salas[0];
+    sala?.acao.onMessage?.({ seq: final.kicks.length, side: 'A', zone: 'L' }, null);
+
+    expect(a.state(), 'o evento espelhado mexeu no MatchState de uma disputa terminada').toEqual(
+      final,
+    );
+    expect(avisos.some((m) => m.includes('par espelhado (D-81)'))).toBe(false);
+    expect(avisos.some((m) => m.includes('a disputa já terminou'))).toBe(true);
   });
 });

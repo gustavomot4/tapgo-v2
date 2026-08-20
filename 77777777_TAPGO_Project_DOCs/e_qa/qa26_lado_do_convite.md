@@ -5,9 +5,10 @@ status: atual
 # `QA-26` — quem abre o link vira lado B, sempre
 
 > Nota de evidência de `QA-26`. O ID mora em [[d_qa|QA]]; aqui fica o que não cabe em 2 frases.
-> Sessão de **evolução** (auditoria), não de código: nada foi implementado. O que esta nota
-> entrega são as portas vivas com custo completo, as mortas com o número que as matou, e o
-> **portão escrito antes** do experimento.
+> Escrita em sessão de **evolução** (auditoria): as portas vivas com custo completo, as mortas
+> com o número que as matou, e o **portão escrito antes** do experimento. A partir de
+> "`T-23` implementada" a nota passa a registrar o **código** que a porta D virou, medido contra
+> esse mesmo portão. As referências de linha acima são as de ANTES da mudança.
 
 ## O mecanismo, lido do disco
 
@@ -175,6 +176,72 @@ de lado, o timer foi limpo por `onPeerJoin`, e nada mais emite `'failed'`.
 **Consequência para `T-23`:** o item "o que REPROVA a porta inteira" do portão está **resolvido
 antes do código**, e a porta do `peerId` deixa de ser alternativa desta rodada — segue viva só
 como a única que faria os 3 casos funcionarem, ainda sem dado.
+
+## `T-23` implementada — o que entrou, e o item do portão que a medição não pode cobrar
+
+Delta de **um arquivo de produção**, `src/session/index.ts`, e do teste. `git diff --stat` fecha
+em `src/session/index.ts` + `src/tests/session_online.test.ts` e mais nada: **zero byte em
+`src/net` e em `src/ui`**, como o portão exigiu.
+
+- a guarda de lado passa a deixar o `=== localSide` seguir adiante (`!== remoteSide` sozinho o
+  engolia em silêncio); lado de **terceiro** tipo continua descarte mudo;
+- **depois** das guardas de forma (`isZone`) e de **fase** (`phase === 'finished'`), o
+  `m.side === localSide` marca `abandonada`, sintetiza `'failed'`, chama `canal.close()`;
+- o helper de `D-80` deixou de se chamar `abandonarPorReentrada` e virou
+  `abandonarSemResultado(origem)` — os dois discriminadores partilham o desfecho, e um só nome
+  honesto é melhor que dois corpos idênticos.
+
+**Por que a guarda ficou DEPOIS da de fase, e não antes:** acima dela, uma jogada espelhada
+chegando com a disputa já terminada pintaria a mensagem de `D-35` por cima de um resultado
+legítimo — o placar mentiroso ao contrário. Há teste só para essa ordem, e ele reprova quando a
+guarda sobe uma linha.
+
+### Portão, item por item
+
+| item | resultado |
+|---|---|
+| suíte 563 → 563+N, sem reprovação | **569/569** (+6), `tsc --noEmit` limpo |
+| falseamento `===` → `!==` | **17 testes reprovam**, os 5 do bloco `D-81` entre eles |
+| falseamento: guarda inalcançável (volta do `!== remoteSide` sozinho) | **4 reprovam** |
+| falseamento: guarda **acima** da de fase | **1 reprova**, a que existe para isso |
+| `Move` legítimo (`side === remoteSide`) não dispara | par são completa **5 cobranças**, **zero** descarte |
+| bundle `+<=150 B`, zero asset | **+104 B** (415.713 -> **415.817**), lido de `dist/` no sandbox |
+| zero byte em `src/net` e `src/ui` | confere |
+
+**Lacuna declarada no teste:** o `side` de terceiro tipo (nem `A` nem `B`) **não chega a M5** —
+`isMove` o derruba em M6 (`net/index.ts:370`). A guarda repetida de M5 sobre ele é inalcançável
+pelo fio, e o teste correspondente mede a morte em M6, não em M5. Quem fecha o alargamento da
+guarda é o teste do `Move` legítimo.
+
+### O item 1 do portão está escrito mais apertado do que o mecanismo entrega
+
+O portão pediu: *"ao primeiro toque em qualquer zona, os **dois** aparelhos chegam à mensagem de
+`D-35` em **<= 2 s**, e nenhum fica em 'Esperando o outro jogador…'"*. O mecanismo da porta D dá
+isso **de um lado só**, e o motivo é o mesmo caminho que `A-24` já mediu e aceitou:
+
+- **quem RECEBE a jogada espelhada** cai em `D-35` no tique da chegada — sem relógio nenhum;
+- **quem ENVIOU** recebe o `leave()` do outro como `onPeerLeave`, que M6 traduz em `'waiting'` e
+  **rearma os 20 s** (`net/index.ts:390`). Como M7 pinta "Escolha enviada. Esperando o outro
+  jogador…" enquanto há escolha pendente (`tela_cobranca.ts:283`), esse lado **continua nessa
+  frase por até 20 s**, e só então vê `D-35`.
+
+Encurtar isso exigiria mexer em `src/net` — que o item 4 do mesmo portão proíbe — ou tratar
+`'waiting'` como terminal em M5, que mataria a queda-e-volta de ~5 s do modo avião, o número que
+matou `D-78`. Então **não é defeito da implementação: é o item do portão que foi escrito com um
+número que a porta D nunca prometeu.** O precedente é literal: o portão de `A-24`, para este
+mesmo `close()`, escreveu *"o aparelho 2 sai da tela travada **em até 20 s**"*.
+
+**O que `A-25` deve cobrar, para não reprovar uma porta que funciona:**
+
+1. o aparelho que **recebeu** mostra `D-35` **na hora** do toque do outro (<= 2 s);
+2. o aparelho que **tocou** sai da frase "Esperando o outro jogador…" **em até 20 s**, com a mesma
+   mensagem — e **nenhum dos dois** fica preso para sempre, que é a invariante de [[online_p2p]];
+3. o falsificador de sempre: **anotar se tocou antes de travar** (já medido em 2026-08-20, e
+   passou).
+
+Reprova de verdade: algum dos dois seguir em "Esperando o outro jogador…" **passados os 20 s**, ou
+qualquer placar aparecer. Essa releitura do item 1 é do dono — o registro está em **15.982/16.000**
+e **não cabe** um `D-NN` para ela nesta sessão (`A-21`).
 
 ## O que a decisão custa à promessa de `D-72`
 

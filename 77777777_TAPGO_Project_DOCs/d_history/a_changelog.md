@@ -7,6 +7,17 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-20] — `T-23`: `D-81` no código — o par espelhado vira falha honesta, +104 B, 569/569
+
+- **Skill:** backend-domain. **Delta de UM arquivo de produção:** `src/session/index.ts` (+ o teste). `git diff --stat` fecha em `src/session/index.ts` e `src/tests/session_online.test.ts` — **zero byte em `src/net` e `src/ui`**, como o item 4 do portão exigiu.
+- **O que entrou (`D-81`, `QA-26`):** a guarda de lado deixou de engolir o `=== localSide` (ela agora só descarta o lado de **terceiro** tipo), e **depois** das guardas de forma (`isZone`) e de **fase** (`phase === 'finished'`) o `m.side === localSide` marca `abandonada`, sintetiza `'failed'` e chama `canal.close()` — a forma exata de `D-80`. O helper virou `abandonarSemResultado(origem)`: os dois discriminadores partilham o desfecho.
+- **Por que DEPOIS da guarda de fase:** acima dela, uma jogada espelhada chegando com a disputa já terminada pintaria `D-35` por cima de um resultado legítimo — o placar mentiroso ao contrário. Há teste só para a ordem, e ele reprova quando a guarda sobe uma linha.
+- **Portão de sandbox, inteiro:** suíte **563 → 569/569** (+6), `tsc --noEmit` limpo, bundle **415.713 → 415.817 B (+104 B** contra o teto de 150**)**, zero asset novo.
+- **Três falseamentos rodados e revertidos:** `===` → `!==` reprova **17** testes (os 5 do bloco `D-81` entre eles); a guarda inalcançável (volta do `!== remoteSide` sozinho) reprova **4**; a guarda **acima** da de fase reprova **1**, a que existe só para isso. E o `Move` legítimo não dispara nada: par são completa **5 cobranças com zero descarte**.
+- **Lacuna declarada no teste:** `side` de terceiro tipo **não chega a M5** — `isMove` o derruba em M6 —, então a guarda repetida de M5 sobre ele é inalcançável pelo fio; o teste correspondente mede a morte em M6, e diz isso.
+- **Achado para o dono, ANTES de `A-25`:** o item 1 do portão ("os **dois** aparelhos em `D-35` em ≤2 s") é mais apertado que o mecanismo. Quem **recebe** a jogada espelhada cai no tique; quem **tocou** segue em "Esperando o outro jogador…" por **até 20 s** (`close()` → `onPeerLeave` → `'waiting'` → relógio), que é o caminho que o portão de `A-24` já escrevera e aceitara. Encurtar exigiria `src/net` (proibido pelo item 4) ou matar a queda-e-volta de ~5 s (`D-78`). Releitura proposta em [[qa26_lado_do_convite]]; o `D-NN` dela não cabe no registro (**15.982/16.000**, `A-21`).
+- **`QA-26` segue ABERTO:** o código está entregue e medido em sandbox; o que fecha é `A-25`, campo em dois aparelhos.
+
 ## [2026-08-20] — o falsificador de `D-81` medido em campo: a porta M5 passou, `T-23` liberada
 
 - **Skill:** evolution-auditor (registro da medição do dono; `src/` intocado).

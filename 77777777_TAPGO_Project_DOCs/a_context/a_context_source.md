@@ -27,10 +27,10 @@ Partida de ~1 minuto: contra a CPU ou contra alguém no mesmo aparelho. O online
 
 ## Estado atual (formato fixo — 1 linha por item, SEM prosa corrida)
 - **Versão:** v2.0.0 — entregue em 2026-08-19 (a v1 é baseline morto: reescrita total, nenhum código reaproveitado)
-- **Pronto:** M1..M9 e a medição, com **E-1..E-6 fechadas**; suíte **563/563**. Módulo a módulo, e a tarefa que fechou cada um: [[estado_modulos]]
-- **Bundle:** **415.713 B** (5,2% de 8 MB) lido de `dist/` no sandbox — não reconferido na máquina do dono; `D-80` somou **+208 B**, zero asset novo; 278.646 B são os 32 SVGs de T-19, asset do chunk de M4 (`QA-06`); Phaser e Trystero fora, por `import()` (D-27)
+- **Pronto:** M1..M9 e a medição, com **E-1..E-6 fechadas**; suíte **569/569**. Módulo a módulo, e a tarefa que fechou cada um: [[estado_modulos]]
+- **Bundle:** **415.817 B** (5,2% de 8 MB) lido de `dist/` no sandbox — não reconferido na máquina do dono; `D-81` somou **+104 B**, zero asset novo; 278.646 B são os 32 SVGs de T-19, asset do chunk de M4 (`QA-06`); Phaser e Trystero fora, por `import()` (D-27)
 - **Em andamento (máx 1):** nada
-- **Próximo:** **`T-23`** — `QA-26` auditado e decidido por `D-81` (porta M5: par espelhado vira falha honesta, forma de `D-80`); 4 saídas mortas e o portão em [[qa26_lado_do_convite]], campo é `A-25` · `T-22` — contador de segundos · `A-21` — as 2 frases por linha, `D-NN` do dono · a promessa que `D-72` tirou volta ao Objetivo com `A-25` verde, e com a frase honesta junto: o link é de uso único e do convidado
+- **Próximo:** **`A-25`** — `T-23` entregou `D-81` (569/569, +104 B); o item 1 do portão pede releitura: quem RECEBE cai na hora, quem TOCOU sai em até 20 s ([[qa26_lado_do_convite]]) · `T-22` — contador de segundos · `A-21` — as 2 frases por linha, `D-NN` do dono · a promessa que `D-72` tirou volta ao Objetivo com `A-25` verde, e com a frase honesta junto: o link é de uso único e do convidado
 - **Bloqueado/pendente:** **os três orçamentos na parede** — registro **15.982/16.000** (sobram **18**), QA **7.984/8.000** (16), CONTEXT 97%: o corte de `D-43` está **esgotado** (nenhuma candidata) e `A-21` vira bloqueio: a próxima decisão não cabe
 - **Questões abertas:** Q-08, Q-09, Q-13, **Q-14** (respondida: 15 s e quem demorou perde — falta o `D-NN` e a sessão de M2) · **QA abertos:** QA-04..QA-07, QA-10, QA-17, QA-20, QA-21, QA-24, **QA-26**, **QA-27**, **QA-28** · respondidas e fechados: [[decisions_archive]]
 

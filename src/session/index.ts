@@ -338,23 +338,25 @@ export function createSession(cfg: SessionConfig): Session {
   }
 
   /**
-   * `D-80` (`QA-25`): a reentrada de sessão zerada termina a disputa SEM RESULTADO, no tick da
-   * chegada do `seq=0` — sem esperar relógio nenhum.
+   * O desfecho único de `D-80` (`QA-25`) e `D-81` (`QA-26`): a disputa termina SEM RESULTADO no
+   * tique do evento que a denunciou — sem esperar relógio nenhum.
    *
    * M5 **sintetiza** `'failed'` no `link`, que é o status que M7 já traduz na mensagem de `D-35`
    * (`src/ui/tela_cobranca.ts:395`), e fecha o canal. Fechar não é enfeite: é o que tira o OUTRO
    * lado da tela travada. O `leave()` de M6 vira `onPeerLeave` lá, que emite `'waiting'` e rearma
    * os 20 s — o mesmo caminho que `A-22` mediu em campo, e que termina em `'failed'` também lá.
+   * Logo o lado que RECEBEU o evento cai em `D-35` no tique; o outro, pelo relógio, em até 20 s —
+   * a assimetria que `A-24` mediu e aceitou, e que nenhuma mudança só em M5 encurta.
    *
    * Nada aqui toca `MatchState`: `winner` continua `null` pelo motivo de `abandonada`.
    */
-  function abandonarPorReentrada(): void {
+  function abandonarSemResultado(origem: string): void {
     abandonada = true;
     pending = null;
     pendenteRemoto = null;
     link = 'failed';
     canal?.close();
-    notificarDaRede('reentrada');
+    notificarDaRede(origem);
   }
 
   /**
@@ -366,8 +368,10 @@ export function createSession(cfg: SessionConfig): Session {
    * começou; segunda jogada na mesma cobrança é duplicata. Descartar é logar e sair — nunca
    * corrigir, nunca "aproveitar o que dá".
    *
-   * A exceção é `D-80`: `seq=0` com cobrança já fechada também é descartado, mas NÃO só isso —
-   * é o único caso em que descartar em silêncio trava as duas telas para sempre.
+   * As exceções são `D-80` (`seq=0` com cobrança já fechada) e `D-81` (`side` igual ao NOSSO):
+   * também descartados, mas NÃO só isso — são os dois casos em que descartar em silêncio trava
+   * as duas telas para sempre. Nunca disputam o mesmo evento: `D-80` exige cobrança fechada e no
+   * par espelhado de `D-81` nenhuma jogada atravessa, então `kicks.length` fica em 0 nos dois.
    */
   function aoMove(m: Move): void {
     if (disposed || abandonada) return;
@@ -376,11 +380,38 @@ export function createSession(cfg: SessionConfig): Session {
       console.warn(`[M5] jogada remota descartada — ${motivo}: ${JSON.stringify(m)}`);
     };
 
-    if (m.side !== remoteSide) return descartar(`lado ${String(m.side)} não é o do peer`);
+    // Lado que não é nem o do peer nem o nosso (versão trocada, payload torto): morre em
+    // silêncio, como sempre. O `=== localSide` NÃO morre aqui — ele é o par espelhado de `D-81`,
+    // diagnosticado logo abaixo, depois das guardas de forma e de fase.
+    if (m.side !== remoteSide && m.side !== localSide) {
+      return descartar(`lado ${String(m.side)} não é o do peer`);
+    }
     // M6 já conferiu a forma (`D-32`). M5 confere de novo porque o portão é literal: zona
     // inválida morre em M5. Guarda repetida na fronteira é barata; a que falta, não.
     if (!isZone(m.zone)) return descartar(`zona inválida ${String(m.zone)}`);
     if (match.phase === 'finished') return descartar('a disputa já terminou');
+    // ── `D-81` (`QA-26`): par espelhado — os dois aparelhos entraram pelo MESMO lado ─────────
+    // `abertura()` dá `ladoLocal: 'B'` a TODO endereço com `?sala=` (`src/ui/main.ts:162`), então
+    // dois aparelhos no mesmo link nascem os dois em `B`, os dois assinam `side: 'B'`, e a guarda
+    // de lado acima descartava tudo em silêncio: canal `'connected'`, o timer de 20 s já limpo
+    // por `onPeerJoin`, ninguém emitindo `'failed'` — as duas telas presas em "Esperando o outro
+    // jogador…" para sempre. `D-80` é provadamente inalcançável aqui (`kicks.length` fica em 0
+    // nos dois lados), e por isso os dois discriminadores nunca disputam o mesmo evento.
+    //
+    // O discriminador é de graça e impossível num par são: `aoMove` só é ligado no modo `online`
+    // (abaixo — em `cpu` e `local` não existe canal), e no `online` cada aparelho assina a jogada
+    // com o PRÓPRIO lado. Receber o nosso lado significa, sem ambiguidade, "o outro aparelho acha
+    // que é o meu lado". Cliente modificado mentiria em qualquer discriminador — o argumento de
+    // `D-79` —, e não é o que esta guarda existe para pegar.
+    //
+    // O que ela NÃO faz, e fica declarado: não faz a disputa acontecer. Troca *trava permanente*
+    // por *falha honesta com saída*, que é a invariante escrita em `a_context/online_p2p.md`.
+    // Fazer os dois jogarem exigiria negociar o lado no transporte — a porta reprovada por falta
+    // de dado em `e_qa/qa26_lado_do_convite.md`, que reabriria `D-13` e `D-77`.
+    if (m.side === localSide) {
+      descartar(`lado ${m.side} é o NOSSO — par espelhado (D-81)`);
+      return abandonarSemResultado('espelho');
+    }
     // ── `D-80` (`QA-25`): sessão zerada vestindo o mesmo `roomId` ───────────────────────────
     // `seq=0` depois de uma cobrança fechada **não** é o reenvio da fila de M6: `escoarFila`
     // consome com `shift` e só anda para a frente, então "peer com `kicks.length>0`" e "`seq=0`
@@ -400,7 +431,7 @@ export function createSession(cfg: SessionConfig): Session {
     // — e nesse caso não há divergência a detectar.
     if (m.seq === 0 && match.kicks.length > 0) {
       descartar(`seq 0 com ${match.kicks.length} cobrança(s) fechada(s) — sessão zerada (D-80)`);
-      return abandonarPorReentrada();
+      return abandonarSemResultado('reentrada');
     }
     if (m.seq !== match.kicks.length) {
       return descartar(`seq ${m.seq} fora de ordem (a cobrança corrente é ${match.kicks.length})`);
