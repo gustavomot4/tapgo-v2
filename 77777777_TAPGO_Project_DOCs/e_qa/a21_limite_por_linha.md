@@ -131,6 +131,17 @@ atribuir, logo não há confusão a proteger. O que se perde é a chance de resp
 linha foi a causa da queda da curva?"* — pergunta que, medida como estava, já não tinha controle
 (§2.3).
 
+### 5.3 As duas linhas, prontas para colar (medidas: 329 e 363 — ambas ≤ 400)
+
+O número `20.000` é do dono; o resto da linha não muda com ele. As duas entram no MESMO commit em
+que o teto do `check.py` sobe, senão o portão reprova o commit que o conserta. Com elas o registro
+fica em **16.676**, e o aviso novo (18.000) não dispara.
+
+```
+| D-82 | 2026-08-20 | ADOTADO · SUPERSEDE D-69 no número | `A-21`: o teto do registro sobe de 16.000 para **20.000** (aviso 18.000) — os TRÊS pools estão em zero ao mesmo tempo, medido, e nem o veredito de `A-21` coube | É rejeição adiada e o prazo é declarado: ~9 decisões a 438, ~11 se `D-83` valer. Números em [[a21_limite_por_linha]] |
+| D-83 | 2026-08-20 | ADOTADO | `A-21` reparado: `check.py` reprova linha de `D-NN`/`QA-NN` acima de **400** medidos, com as 18 vivas isentas por ID congelado; o que sai da linha entra em `e_qa/<slug>.md` | Portão: das próximas 10 linhas, todas ≤ 400 e nenhuma perde evidência. O §8 de [[a20_tres_orcamentos]] reprovou como escrito — 3 números em [[a21_limite_por_linha]] |
+```
+
 ## 6. Prioridade (valor × P ÷ custo)
 
 | # | proposta | valor | P | custo | veredito |
