@@ -708,6 +708,19 @@
   font-size: 0.86rem;
 }
 
+/*
+ * `QA-23` — o resumo das cobranças numera no texto, e só lá.
+ *
+ * A lista é `<ol>` por semântica, mas `.grupo` a deixa `display: flex`, e o marcador do `<li>`
+ * nesse caso é onde os navegadores divergem: dos dois aparelhos do dono, um desenhou o marcador
+ * por cima do número escrito ("1. 1. Espanha") e o outro não desenhou nenhum. Apagar o marcador
+ * deixa o número em UM lugar só — o texto, que não depende de navegador.
+ */
+.resumo {
+  padding-left: 0;
+  list-style: none;
+}
+
 /* ── O convite do modo online (T-21) ───────────────────────────────────────────────────── */
 
 /*

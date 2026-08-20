@@ -37,6 +37,17 @@ export function nomeSelecao(code: CountryCode): string {
 }
 
 /**
+ * O código existe no catálogo de M4? (`D-77`)
+ *
+ * Existe para que `convite.ts` continue **puro** — ele recebe este predicado por parâmetro em vez
+ * de importar o catálogo. Uma linha, e ela mora aqui porque este é o módulo que já traduz código
+ * de seleção para o que a pessoa lê.
+ */
+export function ehDoCatalogo(code: string): boolean {
+  return findTeam(code) !== undefined;
+}
+
+/**
  * A marca visual da seleção: a bandeira quando existe arquivo, o código ISO quando não.
  *
  * Desde `T-19` as 32 têm arquivo (`D-62`), então na prática o resultado é sempre bandeira. O ramo

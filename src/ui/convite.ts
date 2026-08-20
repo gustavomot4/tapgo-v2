@@ -22,6 +22,30 @@
 export const PARAM_SALA = 'sala';
 
 /**
+ * O parâmetro das duas seleções do confronto (`D-77`).
+ *
+ * **Por que as seleções viajam no LINK, e não pelo canal:** o canal de M6 carrega `Move` e nada
+ * mais, e essa porta é congelada (`D-13`) — mandá-las por lá seria mudança de contrato de dois
+ * módulos para resolver um rótulo de tela. O link é de M7, e já atravessa o mensageiro de
+ * qualquer jeito. Foi `A-22` que cobrou: um aparelho mostrava "Espanha × Argentina" e o outro
+ * "Brasil × Argentina" na MESMA disputa, com as mesmas cobranças e o mesmo placar.
+ *
+ * **Elas são rótulo, não regra.** Nenhuma decisão de disputa deriva daqui: M5 valida os códigos
+ * e M2 nunca os lê. Link adulterado com código inexistente cai no ramo de erro da tela — não há
+ * o que um código forjado ganhe.
+ */
+export const PARAM_TIMES = 't';
+
+/**
+ * O separador dos dois códigos: `_`, e não `-`.
+ *
+ * `-` já é parte de código de seleção — `GB-ENG` é a exceção de `D-52`/`D-61`, alfa-2 mais
+ * subdivisão. Com hífen, `GB-ENG_AR` seria partido no lugar errado e a Inglaterra viraria "GB"
+ * em metade dos convites.
+ */
+const SEPARADOR_TIMES = '_';
+
+/**
  * A forma do ID de sala, espelhada de M6 (26 caracteres do alfabeto Crockford base32).
  *
  * **É cópia declarada, não segunda fonte de verdade.** M5 é quem recusa o ID malformado — e
@@ -44,11 +68,18 @@ export const FORMATO_SALA = /^[0-9ABCDEFGHJKMNPQRSTVWXYZ]{26}$/;
  * um endereço limpo, e carregar junto o que estava na barra é como o link de um jogador acaba
  * levando o estado do outro.
  */
-export function linkDaSala(endereco: string, sala: string): string {
+export function linkDaSala(
+  endereco: string,
+  sala: string,
+  times?: Readonly<Record<'A' | 'B', string>>,
+): string {
   const url = new URL(endereco);
   url.hash = '';
   url.search = '';
   url.searchParams.set(PARAM_SALA, sala);
+  if (times !== undefined) {
+    url.searchParams.set(PARAM_TIMES, `${times.A}${SEPARADOR_TIMES}${times.B}`);
+  }
   return url.toString();
 }
 
@@ -71,6 +102,40 @@ export function salaDoEndereco(endereco: string): string | null {
   if (bruto === null) return null;
   const sala = bruto.trim().toUpperCase();
   return FORMATO_SALA.test(sala) ? sala : null;
+}
+
+/**
+ * As duas seleções que vieram no link, ou `null` quando o convite não as traz.
+ *
+ * `null` é caminho normal, não falha: link de uma versão anterior a `D-77` não tem o parâmetro, e
+ * quem o receber continua entrando na sala — só volta a ver as seleções do próprio aparelho, que
+ * é o comportamento que `T-21` entregou. Por isso esta função nunca lança.
+ *
+ * A validação é contra o **catálogo de M4**, e não contra uma segunda lista escrita aqui: código
+ * que não existe devolve `null` inteiro, e não um lado bom com o outro escrito "undefined".
+ *
+ * @param existe `findTeam` de M4, injetado. Recebido por parâmetro para que este módulo continue
+ *               puro — é o que deixa o teste rodar sem depender do catálogo do dia.
+ */
+export function timesDoEndereco(
+  endereco: string,
+  existe: (code: string) => boolean,
+): Readonly<Record<'A' | 'B', string>> | null {
+  let bruto: string | null;
+  try {
+    bruto = new URL(endereco).searchParams.get(PARAM_TIMES);
+  } catch {
+    return null;
+  }
+  if (bruto === null) return null;
+
+  const partes = bruto.trim().toUpperCase().split(SEPARADOR_TIMES);
+  if (partes.length !== 2) return null;
+
+  const [a, b] = partes;
+  if (a === undefined || b === undefined) return null;
+  if (!existe(a) || !existe(b)) return null;
+  return { A: a, B: b };
 }
 
 /**

@@ -47,7 +47,8 @@ import { createSession } from '../session/index';
 import type { LinkStatus, Session, SessionConfig } from '../session/index';
 import { newRoomId } from '../session/index';
 import { botao, el, focar, limpar } from './dom';
-import { linkDaSala, salaLegivel } from './convite';
+import { linkDaSala, salaLegivel, timesDoEndereco } from './convite';
+import { ehDoCatalogo } from './rotulos';
 import { nomeSelecao } from './rotulos';
 import { marca } from './tela_selecoes';
 import type { Contexto, Partida, Tela } from './rotas';
@@ -61,6 +62,9 @@ export const telaConvite =
   (partida: Partida): Tela =>
   (raiz: HTMLElement, ctx: Contexto) => {
     const anfitriao = partida.ladoLocal === 'A';
+    // `D-77`: o convidado só vê o confronto do anfitrião se o link o trouxe. Quem lê o endereço é
+    // `main.ts`, na abertura — aqui basta saber se o que está em `partida.times` veio de lá.
+    const temTimesDoLink = !anfitriao && timesDoEndereco(enderecoAtual(), ehDoCatalogo) !== null;
 
     const tela = el('section', { classe: 'tela' });
     raiz.append(tela);
@@ -108,7 +112,9 @@ export const telaConvite =
     }
 
     const daSala: string = sala;
-    const link = linkDaSala(enderecoAtual(), daSala);
+    // As seleções vão no link (`D-77`): é o que faz o convidado ver o MESMO confronto. Só o
+    // anfitrião as manda — o link do convidado nunca é montado para ninguém.
+    const link = linkDaSala(enderecoAtual(), daSala, partida.times);
     const config: SessionConfig = {
       mode: 'online',
       seed: partida.semente,
@@ -347,11 +353,17 @@ export const telaConvite =
       // `state().turn` de M5 — é o portão de `QA-15`, e ele vale para esta tela também: no dia
       // em que o sorteio do `online` for semeado pelo `roomId`, uma promessa escrita aqui viraria
       // mentira sem que ninguém tocasse neste arquivo.
+      //
+      // A frase sobre as seleções mudou em `D-77`: elas viajam no link, então o confronto acima é
+      // o mesmo nos dois aparelhos. O ramo do convidado só existe para o link antigo, sem `t=` —
+      // aí ele cai nas seleções do próprio aparelho, e a tela diz isso em vez de fingir.
       el('p', {
         classe: 'lacuna',
-        texto:
-          'Cada aparelho mostra as seleções escolhidas nele — o outro pode estar vendo outras. ' +
-          'Quem cobra é anunciado quando a disputa começa.',
+        texto: anfitriao
+          ? 'O link leva estas duas seleções — o outro aparelho vai ver o mesmo confronto. Quem cobra é anunciado quando a disputa começa.'
+          : temTimesDoLink
+            ? 'Este é o confronto que quem convidou montou. Quem cobra é anunciado quando a disputa começa.'
+            : 'O convite não trouxe as seleções, então estas são as deste aparelho — o outro pode estar vendo outras.',
       }),
       aviso,
       carregando,

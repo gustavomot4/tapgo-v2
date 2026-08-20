@@ -7,6 +7,17 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-20] — `A-22` em campo: online conecta, e os dois achados que ele trouxe (`D-77`, `QA-23`)
+- **Skill:** frontend-uiux (mesma sessão de `T-21`)
+- **O que passou:** dois aparelhos reais conectaram pelo link e jogaram a disputa inteira. As duas listas de cobranças saíram **idênticas** e o placar bateu (3×4 nos dois) — a sincronia do motor está provada em campo, não só em teste.
+- **`D-77` (ADOTADO, do dono):** as duas seleções passam a viajar **no link** (`&t=ES_AR`). Em campo, um aparelho mostrava "Espanha × Argentina" e o outro "Brasil × Argentina" na MESMA disputa — as seleções nunca viajaram, porque o canal de M6 carrega só `Move` (`D-13`). O link é de M7 e já atravessa o mensageiro: zero byte em `src/net`, porta `Session` intacta. Separador `_`, e não `-`, porque `GB-ENG` é código (`D-52`).
+- **Ramo de trás preservado:** link sem `t=` continua entrando na sala, com as seleções do próprio aparelho — e a tela **diz** que foi isso que aconteceu, em vez de fingir.
+- **Código forjado no link não ganha nada:** as seleções são rótulo, nunca regra — M2 não as lê. Um lado fora do catálogo derruba os dois (meio confronto na tela é pior que nenhum).
+- **`QA-23` (achado e corrigido):** o resumo do fim é `<ol>` com `.grupo`, que é `display: flex` — o marcador do `<li>` fica a critério do navegador e somava ao número escrito no texto. A mesma disputa saiu "1. 1. Espanha" num aparelho e "1. Brasil" no outro. Agora quem numera é o texto e `.resumo` apaga o marcador; dois testes seguram os dois lados.
+- **`Q-14` aberta:** **não existe tempo por cobrança** no online — o único relógio é o de 20 s de M6, que cobre o aperto de mão e é desarmado em `'connected'` (`D-75`). Se a outra pessoa larga o aparelho com a aba aberta, a espera é infinita e a única saída é "Sair da disputa". O dono quer limite; faltam o número e o que acontece ao estourar, e inventar regra de disputa não é da tela.
+- **Portões:** camada de M7 = 0 · suíte **553/553** (6 testes novos) · `tsc` limpo · build **415.505 B** (+678 sobre a linha de `T-21`).
+- **O registro fechou em 15.972/16.000 — 28 caracteres.** `D-77`+`Q-14` custaram 284. A próxima decisão do projeto não cabe: `A-21` virou bloqueio.
+
 ## [2026-08-20] — `T-21`: a tela de convite do `online`, e a lacuna de `D-72` fechada em código
 - **Skill:** frontend-uiux
 - **A 1 linha de `D-73`:** `src/session/index.ts` reexporta `newRoomId`. Valor, não tipo — é o que deixa M7 sortear o ID **antes** de existir canal sem importar `src/net` (portão de camada). `src/net` não mudou um byte, e a porta `Session` continua com os 4 métodos de `D-13`.

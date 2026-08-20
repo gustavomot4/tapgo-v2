@@ -19,7 +19,8 @@
 import type { CountryCode, Side } from '../core/index';
 import { newSeed } from '../core/index';
 import { el, limpar } from './dom';
-import { salaDoEndereco } from './convite';
+import { salaDoEndereco, timesDoEndereco } from './convite';
+import { ehDoCatalogo } from './rotulos';
 import { lerPreferencias, gravarPreferencias, selecaoInicial } from './preferencias';
 import type { Preferencias } from './preferencias';
 import { criarSom } from './som';
@@ -134,12 +135,18 @@ export function bootGame(container: HTMLElement): void {
  * então o que volta do torneio é a próxima disputa do jogador.
  *
  * O convidado não passa pela tela de seleções: o fluxo dele fecha em 1 toque, e as seleções vêm
- * da preferência do aparelho (a mesma que a tela de seleções gravou da última vez). Sem catálogo
- * não há seleção possível, e aí a abertura é o menu, que já tem o estado vazio escrito.
+ * **do link** (`D-77`) — é o que faz os dois aparelhos mostrarem o mesmo confronto, defeito que
+ * `A-22` pegou em campo. Link antigo, sem o parâmetro, cai na preferência do aparelho, que é o
+ * comportamento que `T-21` entregou. Sem catálogo não há seleção possível, e aí a abertura é o
+ * menu, que já tem o estado vazio escrito.
  */
 function abertura(prefs: Preferencias, temTorneio: boolean): Rota {
-  const sala = salaDoEndereco(window.location.href);
-  const escolha = sala === null ? null : selecaoInicial(prefs);
+  const endereco = window.location.href;
+  const sala = salaDoEndereco(endereco);
+  // `D-77`: as seleções do anfitrião vêm no link. A preferência do aparelho é o ramo de trás —
+  // link antigo, sem `t=`, continua entrando na sala. Sem os dois, não há confronto a montar.
+  const doLink = sala === null ? null : timesDoEndereco(endereco, ehDoCatalogo);
+  const escolha = doLink ?? (sala === null ? null : selecaoInicial(prefs));
 
   if (sala !== null && escolha !== null) {
     const times: Readonly<Record<Side, CountryCode>> = { A: escolha.A, B: escolha.B };

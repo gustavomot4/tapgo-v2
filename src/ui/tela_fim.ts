@@ -27,9 +27,20 @@ import { desfecho, nomeSelecao, nomeZona, placar } from './rotulos';
 import { marca } from './tela_selecoes';
 import type { Contexto, Partida, Tela } from './rotas';
 
-/** Uma linha por cobrança: quem cobrou, para onde, e no que deu. */
+/**
+ * Uma linha por cobrança: quem cobrou, para onde, e no que deu.
+ *
+ * **`QA-23`: o número aparece UMA vez.** A lista é `<ol>` com `.grupo`, que é `display: flex` —
+ * e aí o marcador do `<li>` fica a critério do navegador: no aparelho do dono um dos dois o
+ * desenhou e o outro não, então a mesma disputa saiu "1. 1. Espanha" numa foto e "1. Brasil" na
+ * outra. Quem numera é o TEXTO, que renderiza igual em todo lugar; `.resumo` apaga o marcador.
+ * A semântica de lista ordenada continua no `<ol>`, para quem ouve a tela.
+ */
 function resumo(estado: MatchState, partida: Partida): HTMLElement {
-  const lista = el('ol', { classe: 'grupo', attrs: { 'aria-label': 'Cobranças da disputa' } });
+  const lista = el('ol', {
+    classe: 'grupo resumo',
+    attrs: { 'aria-label': 'Cobranças da disputa' },
+  });
 
   estado.kicks.forEach((kick, i) => {
     lista.append(

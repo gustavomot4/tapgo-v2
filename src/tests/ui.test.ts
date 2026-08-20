@@ -12,12 +12,21 @@ import type { Side, Zone } from '../core/index';
 import { listTeams } from '../data/teams';
 
 import { criarDerivacao, outroLado } from '../ui/derivacao';
-import { FORMATO_SALA, PARAM_SALA, linkDaSala, salaDoEndereco, salaLegivel } from '../ui/convite';
+import {
+  FORMATO_SALA,
+  PARAM_SALA,
+  PARAM_TIMES,
+  linkDaSala,
+  salaDoEndereco,
+  salaLegivel,
+  timesDoEndereco,
+} from '../ui/convite';
 import { newRoomId } from '../session/index';
 import type { Vez } from '../ui/derivacao';
 import {
   descricaoFase,
   desfecho,
+  ehDoCatalogo,
   instrucao,
   instrucaoDoSorteio,
   marcaSelecao,
@@ -1142,9 +1151,72 @@ describe('link do convite (T-21 / D-73)', () => {
     expect(salaDoEndereco(`${BASE}?${PARAM_SALA}=${SALA.toLowerCase()}`)).toBe(SALA);
   });
 
+  // ── `D-77`: as seleções viajam no link, porque o canal não as leva (A-22) ───────────────
+  it('as duas seleções vão e voltam pelo link, e o convidado vê o MESMO confronto', () => {
+    const times = { A: 'ES', B: 'AR' } as const;
+    const link = linkDaSala(BASE, SALA, times);
+    expect(timesDoEndereco(link, ehDoCatalogo)).toEqual({ A: 'ES', B: 'AR' });
+    // E a sala continua chegando junto: um parâmetro não pode comer o outro.
+    expect(salaDoEndereco(link)).toBe(SALA);
+  });
+
+  it('o código com subdivisão sobrevive ao separador (GB-ENG, a exceção de D-52)', () => {
+    // O motivo de o separador ser `_` e não `-`. Com hífen, a Inglaterra viraria "GB" em metade
+    // dos convites — e "GB" não está no catálogo, então o convite inteiro cairia fora.
+    const link = linkDaSala(BASE, SALA, { A: 'GB-ENG', B: 'BR' });
+    expect(timesDoEndereco(link, ehDoCatalogo)).toEqual({ A: 'GB-ENG', B: 'BR' });
+  });
+
+  it('convite sem as seleções, ou com código fora do catálogo, devolve null e não lança', () => {
+    // Link de antes de `D-77` — continua entrando na sala, só sem o confronto.
+    expect(timesDoEndereco(linkDaSala(BASE, SALA), ehDoCatalogo)).toBeNull();
+    // Adulterado: um lado bom e outro inexistente derruba os DOIS. Meio confronto na tela é
+    // pior que nenhum — é o lado que sobra virando "undefined" ao lado de um nome de verdade.
+    expect(timesDoEndereco(`${BASE}?${PARAM_TIMES}=ES_ZZ`, ehDoCatalogo)).toBeNull();
+    expect(timesDoEndereco(`${BASE}?${PARAM_TIMES}=ES`, ehDoCatalogo)).toBeNull();
+    expect(timesDoEndereco(`${BASE}?${PARAM_TIMES}=`, ehDoCatalogo)).toBeNull();
+    expect(timesDoEndereco('isto não é endereço nenhum', ehDoCatalogo)).toBeNull();
+  });
+
+  it('as seleções do link saem do catálogo de verdade, não de uma lista escrita na tela', () => {
+    // O predicado é o de M4. Se o catálogo mudar, o convite muda junto — sem segunda lista.
+    const [primeiro, segundo] = listTeams();
+    expect(primeiro, 'catálogo vazio: o teste passaria por vácuo').toBeDefined();
+    expect(segundo).toBeDefined();
+    if (primeiro === undefined || segundo === undefined) return;
+    const link = linkDaSala(BASE, SALA, { A: primeiro.code, B: segundo.code });
+    expect(timesDoEndereco(link, ehDoCatalogo)).toEqual({ A: primeiro.code, B: segundo.code });
+  });
+
   it('o código legível quebra de 4 em 4 sem perder nem inventar caractere', () => {
     expect(salaLegivel(SALA).replace(/ /g, '')).toBe(SALA);
     expect(salaLegivel(SALA).split(' ')[0]).toHaveLength(4);
+  });
+});
+
+describe('resumo das cobranças: o número aparece uma vez (QA-23)', () => {
+  // O defeito veio das duas fotos do dono: a MESMA disputa saiu "1. 1. Espanha" num aparelho e
+  // "1. Brasil" no outro. A causa é `.grupo` deixar o `<ol>` em `display: flex`, e o marcador do
+  // `<li>` nesse caso ficar a critério do navegador. Aqui se cobra a correção pelos dois lados,
+  // que é a única forma de ela não voltar: o texto numera, e a folha apaga o marcador.
+  it('a lista leva a classe que apaga o marcador, e a folha tem a regra', () => {
+    const fonte = readFileSync(join(DIR_UI, 'tela_fim.ts'), 'utf8');
+    expect(fonte, 'o resumo deixou de marcar a lista com `.resumo`').toMatch(
+      /classe:\s*'grupo resumo'/,
+    );
+
+    const folha = readFileSync(fileURLToPath(new URL('../ui/estilo.css', import.meta.url)), 'utf8');
+    const regra = /\.resumo\s*\{([^}]*)\}/.exec(folha)?.[1];
+    expect(regra, '.resumo sumiu da folha').toBeDefined();
+    expect(regra, 'o marcador voltou a ser desenhado pelo navegador').toMatch(
+      /list-style:\s*none/,
+    );
+  });
+
+  it('o texto numera — apagar o número do texto deixaria a lista sem número nenhum', () => {
+    // Com o marcador desligado, o `${i + 1}.` do texto é a ÚNICA numeração que sobra.
+    const fonte = readFileSync(join(DIR_UI, 'tela_fim.ts'), 'utf8');
+    expect(fonte).toMatch(/\$\{i \+ 1\}\./);
   });
 });
 
