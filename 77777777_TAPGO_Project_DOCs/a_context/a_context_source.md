@@ -30,9 +30,9 @@ Partida de ~1 minuto: contra a CPU ou contra alguém no mesmo aparelho. O online
 - **Pronto:** M1..M9 e a medição, com **E-1..E-6 fechadas**; suíte **563/563**. Módulo a módulo, e a tarefa que fechou cada um: [[estado_modulos]]
 - **Bundle:** **415.713 B** (5,2% de 8 MB) lido de `dist/` no sandbox — não reconferido na máquina do dono; `D-80` somou **+208 B**, zero asset novo; 278.646 B são os 32 SVGs de T-19, asset do chunk de M4 (`QA-06`); Phaser e Trystero fora, por `import()` (D-27)
 - **Em andamento (máx 1):** nada
-- **Próximo:** `A-24` — campo em dois aparelhos: reabrir o link no meio da disputa e os **dois** saírem da tela travada (`D-80`, o 5º item do portão de `A-23`); é ele que destrava devolver ao Objetivo a promessa que `D-72` tirou · `A-21` — cobrar por script as 2 frases por linha, `D-NN` do dono
+- **Próximo:** **`QA-26`** — os dois aparelhos que abrem o MESMO link viram lado B e a disputa trava; porta é M7 e/ou M5, `D-NN` do dono · `T-22` — o contador de segundos na tela (pedido do dono) · `A-21` — cobrar por script as 2 frases por linha, `D-NN` do dono · a promessa que `D-72` tirou do Objetivo passou de `QA-25` para **`QA-26`**, que é do próprio link de convite
 - **Bloqueado/pendente:** nada trava — registro **15.743/16.000 (98%)**, sobram **257** (menos de 1 decisão — `scripts/check.py` diz o que `D-43` ainda libera): `A-21` (a inclinação, +638/sessão) é a dívida que voltou
-- **Questões abertas:** Q-08, Q-09, Q-13, **Q-14** (respondida: 15 s e quem demorou perde — falta o `D-NN` e a sessão de M2) · **QA abertos:** QA-04..QA-07, QA-10, QA-17, QA-20, QA-21, **QA-24** · respondidas e fechados: [[decisions_archive]]
+- **Questões abertas:** Q-08, Q-09, Q-13, **Q-14** (respondida: 15 s e quem demorou perde — falta o `D-NN` e a sessão de M2) · **QA abertos:** QA-04..QA-07, QA-10, QA-17, QA-20, QA-21, **QA-24**, **QA-26** · respondidas e fechados: [[decisions_archive]]
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)
 - [[portao_de_aceite]] — **antes de fechar tarefa, declarar etapa fechada ou entregar**

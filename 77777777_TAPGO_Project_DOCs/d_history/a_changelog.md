@@ -7,6 +7,15 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-20] — `A-24` verde em campo: `D-80` confirmado nos dois aparelhos, e dois achados novos
+
+- **Skill:** backend-domain (sessão de registro; `src/` intocado nesta metade). **Medição do dono, em dois aparelhos reais.**
+- **`D-80` confirmado em campo, os dois itens do que faltava.** (1) Com uma cobrança fechada, navegador do aparelho 2 encerrado e o MESMO link reaberto dentro dos 20 s, o aparelho 1 virou **no instante do toque de zona** — não pelo relógio, que é o que separa esta medição do caminho já medido em `A-22`. Texto de `D-35` inteiro, sem placar inventado. (2) O aparelho 2 escolheu, ficou em "Esperando o outro jogador…" e recebeu a mesma tela segundos depois: a metade que a porta M5 prometia de graça pelo `close()` → `onPeerLeave` → 20 s.
+- **Lacuna declarada:** a queda-e-volta do modo avião (~5 s, o número que matou `D-78`) **não foi re-medida em campo depois de `D-80`**. Hoje quem a cobre é só o teste "portão (3)", que roda em rede perfeita.
+- **`QA-26` ABERTO (ALTO)** — os DOIS aparelhos abrindo o mesmo link de convite. `abertura()` (`src/ui/main.ts:162`) dá `ladoLocal: 'B'` a quem quer que chegue com `?sala=`, inclusive o anfitrião que toca no próprio link. Sintoma visível: as duas telas com a mesma seleção. Defeito real: os dois defendem primeiro (`first` é `'A'`), cada `Move` chega com `side` igual ao do receptor e `aoMove` o descarta — **trava permanente**, do mesmo tipo que `QA-25`, e que `D-80` não pega porque os dois estão em `kicks.length=0`. O discriminador barato existe e é outro (`m.side === localSide` é impossível num pareamento são). Porta é M7 e/ou M5: `D-NN` do dono.
+- **Consequência de produto:** a promessa "por link de convite" que `D-72` tirou do Objetivo **não volta ainda**. Ela esperava `QA-25`, que fechou; passa a esperar `QA-26`, que é defeito do próprio link.
+- **`T-22` aberta** — pedido do dono: mostrar os segundos que faltam antes de a conexão cair. A dificuldade é de onde vem o número (M7 não pode importar `src/net`), e `D-80` acrescentou a tensão de que `'failed'` agora pode ser sintetizado com o transporte de pé.
+
 ## [2026-08-20] — `QA-25` FECHADO por `D-80`: a porta M5, a reentrada de sessão zerada cai em `D-35`
 
 - **Skill:** backend-domain. **Escopo:** `src/session/index.ts` + `src/tests/session_online.test.ts`. **`src/net` e `src/ui` com 0 byte alterado** — o custo que a porta M5 prometia em `A-23`, confirmado por `git diff --stat`.
