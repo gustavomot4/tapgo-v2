@@ -27,12 +27,12 @@ Partida de ~1 minuto: contra a CPU ou contra alguém no mesmo aparelho. O online
 
 ## Estado atual (formato fixo — 1 linha por item, SEM prosa corrida)
 - **Versão:** v2.0.0 — entregue em 2026-08-19 (a v1 é baseline morto: reescrita total, nenhum código reaproveitado)
-- **Pronto:** M1 (T-04) · M9 esqueleto (T-05) · M2 (T-06) · M3 (T-07) · **M4 fechado (T-08 + T-18 + T-19)** · M5 (T-09 + `online` T-13) · M7 (T-10 + T-17b + QA-19 + T-20 + **T-14: as 3 telas do torneio**) · M6 (T-11) · **M8 (T-12)** · medição (T-15, T-16) · A-08 · **A-14** · **A-17** · **A-18** · **T-17 em `cpu`/`local`** — **E-1..E-6 fechadas** (prova de cada critério em [[entrega_e6]]), suíte **531/531**; PLANO em D-13 (M4 e M8 alterados por D-51..D-62)
+- **Pronto:** M1..M9 e a medição, com **E-1..E-6 fechadas**; suíte **531/531**. Módulo a módulo, e a tarefa que fechou cada um: [[estado_modulos]]
 - **Bundle:** **408.094 B** (5,1% de 8 MB) lido de `dist/` na máquina do dono; T-14 ligou M8 (+18.750 B, zero asset novo) — 278.646 B são os 32 SVGs de T-19, asset do chunk de M4 (`QA-06`); Phaser e Trystero fora, por `import()` (D-27)
 - **Em andamento (máx 1):** nada
-- **Próximo:** `A-20` (os dois registros no teto) e `T-21`, a tela de convite, com o `roomId` vindo do `newRoomId` que M5 reexporta (`D-73`); `QA-22` a trava
-- **Bloqueado/pendente:** QA **7.933/8.000** e registro **15.690/16.000** fecharam juntos — é `A-20` · CONTEXT no limite · `QA-22` trava `T-21`, não a entrega
-- **Questões abertas:** Q-08, Q-09, Q-13 (metade da tela caiu em `D-67`; porta do dono) · respondidas: Q-03..Q-05, Q-07, Q-10..Q-12, Q-14 · **QA abertos:** QA-04..QA-07, QA-10, QA-17, QA-20..QA-22 · fechados: QA-08, QA-09, QA-11..QA-16, QA-18, QA-19
+- **Próximo:** `T-21`, a tela de convite, com o `roomId` vindo do `newRoomId` que M5 reexporta (`D-73`); `QA-22` a trava · `A-21`: a inclinação do registro, que `D-74` não muda
+- **Bloqueado/pendente:** os três orçamentos cortados por `D-74` — registro 14.229/16.000, QA 4.292/8.000, CONTEXT com folga · `QA-22` trava `T-21`, não a entrega
+- **Questões abertas:** Q-08, Q-09, Q-13 (porta do dono; a metade da tela caiu em `D-67`) · **QA abertos:** QA-04..QA-07, QA-10, QA-17, QA-20..QA-22 · respondidas e fechados: [[decisions_archive]]
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)
 - [[portao_de_aceite]] — **antes de fechar tarefa, declarar etapa fechada ou entregar**
@@ -41,6 +41,4 @@ Partida de ~1 minuto: contra a CPU ou contra alguém no mesmo aparelho. O online
 - [[regras_partida]] — ao mexer no motor de regras da disputa ou na CPU
 - [[stack]] — ao escolher biblioteca, mexer no build ou publicar
 - [[entrega_e6]] — o que a entrega de v2.0.0 incluiu, e o que ficou declarado de fora
-
-> Mapa de leitura completo e protocolo do agente: [[CLAUDE]]. Ficam lá, e não aqui, porque a
-> ferramenta os carrega sozinha — dentro deste arquivo custariam 20% do orçamento em toda sessão.
+- [[estado_modulos]] — qual tarefa fechou qual módulo, e quais cards já passaram no aparelho

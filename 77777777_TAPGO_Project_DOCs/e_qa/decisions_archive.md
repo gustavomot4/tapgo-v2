@@ -290,3 +290,64 @@ respondeu, **com a mesma data**, então a tabela viva guardava o fato duas vezes
 | Q-07 | ~~Nas alternadas, a ordem de cobrança alterna entre rodadas?~~ | **RESPONDIDA 2026-08-12 → D-48** |
 | Q-10 | ~~TURN entra como camada gratuita ou fica fora de escopo?~~ | **RESPONDIDA 2026-08-12 → D-47** |
 | Q-12 | ~~IPv6 fim-a-fim conta para o corte de 70% de E-4?~~ | **RESPONDIDA 2026-08-08 → D-46** |
+
+
+## A-20 — a duplicata sai da tabela viva (2026-08-19)
+
+`D-74`. Estas linhas não foram **arquivadas** agora: elas já estavam, com a íntegra nas seções
+acima desta página, e a tabela viva guardava um SEGUNDO resumo da mesma decisão. Sai a cópia,
+fica a fonte — as íntegras de `D-01`, `D-02`, `D-04`, `D-09`, `D-10`, `D-13`, `D-22`, `D-27`,
+`D-35`, `D-36`, `D-37` e `D-38` continuam onde sempre estiveram, e `check.py` resolve o ID por
+esta página (a checagem 10 aceita ID definido só aqui). As **REJEITADAS** `D-06`, `D-07` e `D-08`
+**ficaram** na tabela viva de propósito: são a lista-morta que a fase de evolução varre sem abrir
+o arquivo, e foi o motivo pelo qual `A-16` recusou a saída (i).
+
+O resumo que saiu, como estava, para quem quiser a linha exata que o registro exibia:
+
+| # | Data | Status | Decisão (curta) | Evidência (número-chave + link) |
+|---|---|---|---|---|
+| D-01 | 2026-08-06 | ADOTADO · ARQUIVADO | Forma = SPA estática, sem backend |  |
+| D-02 | 2026-08-06 | ADOTADO · ARQUIVADO | Stack = TypeScript + Vite + Phaser 3 |  |
+| D-04 | 2026-08-06 | ADOTADO · ARQUIVADO | Online = P2P WebRTC (Trystero) |  |
+| D-09 | 2026-08-06 | ADOTADO · ARQUIVADO | Alternadas = morte súbita em rodadas de 1 cobrança por lado, decidida ao FIM da rodada. Responde Q-01 | regra em [[regras_partida]] |
+| D-10 | 2026-08-06 | ADOTADO · ARQUIVADO | CPU em 3 níveis por peso do histórico de zonas: 0% / 50% / 70%, teto absoluto 70%. Responde Q-02 | regra em [[regras_partida]] |
+| D-13 | 2026-08-07 | ADOTADO · ARQUIVADO | **PLANO congelado**: M1..M9 com porta única, dono de estado e portão objetivo; etapas E-1..E-6. Mudança de rumo é D-NN novo | o plano em si é o [[b_plan\|PLANO]] |
+| D-22 | 2026-08-07 | ADOTADO · ARQUIVADO | `Team.flag` passa a `string \| null`; `null` = bandeira sem arquivo, até `A-04` |  |
+| D-27 | 2026-08-07 | ADOTADO · ARQUIVADO | M7 = DOM no menu/placar/zonas; Phaser só na cobrança, por `import()` |  |
+| D-35 | 2026-08-08 | ADOTADO · ARQUIVADO | `Q-04`: peer que some no meio = disputa **sem resultado**; M5 para de aceitar escolha e `winner` segue `null` |  |
+| D-36 | 2026-08-08 | ADOTADO · ARQUIVADO | Notificação vinda da REDE não propaga exceção de assinante (loga); a de `choose()` propaga |  |
+| D-37 | 2026-08-08 | ADOTADO · ARQUIVADO | Critério de aceite sai do CONTEXT e vira [[portao_de_aceite]], lido sob demanda pelo Mapa |  |
+| D-38 | 2026-08-08 | ADOTADO · ARQUIVADO | `QA-08`: na medição os DOIS lados entram por `joinRoom(idDaTentativa(base,n))`; a porta de `D-13` não muda um byte |  |
+
+### As duas questões RESPONDIDAS (mesmo corte de `D-63`)
+
+`Q-11` e `Q-14` seguem o precedente de `A-15`: a resposta vive na linha do `D-NN` que a respondeu
+(`D-73` e `D-71`), com a mesma data, e a fila do dono no `c_decisions.md` volta a mostrar só o que
+ainda espera resposta.
+
+| # | Questão | Decidir quando |
+|---|---|---|
+| Q-11 | **RESPONDIDA por `D-73`** — Como M7 recebe o `roomId` do anfitrião, se a porta de M5 (`D-13`) não o devolve e M7 não pode importar `src/net`? | saída (1) de [[m5_sessao_notas]]: M5 reexporta `newRoomId` e a porta congelada não ganha método |
+| Q-14 | **RESPONDIDA por `D-71`** — Os **4 STUN padrão** do `trystero@0.25.3` (`stun*.l.google.com`, `stun.cloudflare.com`) vão ao ar no `dist/` — são a **segunda** exceção nominal do portão de privacidade de M9, ou M6 passa a fixar `iceServers` próprios? | **trava E-6**: achado na varredura de entrega; a linha já está na tabela de custo de [[stack]] (grátis, sem conta), o que falta é a política — o portão de M9 hoje só isenta sinalização e relay |
+
+### Os 10 achados de QA FECHADOS (íntegra — esta é a fonte, não uma cópia)
+
+Aqui é o contrário das decisões acima: `QA-11`, `QA-13`, `QA-14`, `QA-15`, `QA-16`, `QA-18` e
+`QA-19` **nunca** tinham sido arquivados, então a íntegra abaixo é a única que existe — foi movida,
+não duplicada. `QA-08`, `QA-09` e `QA-12` já tinham a íntegra na seção de `A-12` desta página, e o
+que saiu do `d_qa.md` foi o resumo. Os 9 achados **ABERTOS** continuam inteiros no `d_qa.md`:
+achado aberto não se arquiva, e foi por isso que `D-50` deu orçamento próprio a eles.
+
+| # | Data | Sev. | Onde | O que quebrava | Correção | Fechado em |
+|---|---|---|---|---|---|---|
+| QA-08 | 2026-08-08 | CRÍTICO · ARQUIVADO | `src/medicao.ts` | Anfitrião sorteava sala nova a cada toque: medição de `A-08` daria 0% | `D-38` | ✔ `T-15` 2026-08-08 (`bd68d0f`) |
+| QA-09 | 2026-08-08 | CRÍTICO · ARQUIVADO | `src/medicao.ts` | Índice da rotação por aparelho dessincronizava as salas e não ressincronizava | Índice e 6 chars do ID na tela dos dois | ✔ `T-15` 2026-08-08 (`31b39d9`) |
+| QA-11 | 2026-08-08 | CRÍTICO | Árvore de trabalho × git | **T-13 nunca foi commitada:** `src/session/index.ts` tem 208 linhas fora do git e `src/tests/session_online.test.ts` é untracked, mas o CONTEXT lista `online` T-13 como Pronto e a suíte como 220/220 | O dono commita e empurra T-13 (`D-35`/`D-36`), ou diz por que está segurando — `origin/main` é o que o Pages publica | ✔ 2026-08-13 — **sem objeto**: `T-13` entrou no git em `a227db1` (08/08) e `src/session/index.ts` mudou de novo em `7f4ad8b`; conferido por `git ls-files` |
+| QA-12 | 2026-08-08 | CRÍTICO · ARQUIVADO | `src/medicao.ts` | Sortear sala nova não zerava a rotação — achado em campo | Índice separado da estatística | ✔ `T-15` 2026-08-08 |
+| QA-13 | 2026-08-08 | CRÍTICO | `src/medicao.ts` (`D-44`) | A Trystero reaproveita um pool de 20 conexões entre salas, e esvaziar a lista observada por tentativa descartava justamente a que conectava: **11 de 12 pares não lidos** em campo (o 12º era leitura boa: IPv6, ver `QA-14`) | Escolher a conexão pelo **estado vivo**, não pela janela de criação; e "par não lido" passa a dizer o que faltou | ✔ 2026-08-12 (17/17 lidos em campo) |
+| QA-14 | 2026-08-08 | ALTO | `src/medicao_par.ts` (`D-44`) | `host↔host` era classificado como "mesma rede local" pelo TIPO do candidato, ignorando a FAIXA do endereço: em IPv6 não há NAT e o `host` já é global, então o melhor resultado possível saía rotulado como o mais inútil (`P2P direto em 0 de 1`) | Classificar pela faixa: público × público com prefixos /64 diferentes é `host-direto`; 100.64/10 é `host-cgnat`; privado segue local | ✔ 2026-08-08 |
+| QA-15 | 2026-08-12 | MÉDIO | `src/ui/rotas.ts` (M7) | Promete que `A` cobra primeiro; com o sorteio de `T-17` o humano pode começar defendendo e a tela mente | Tela da moeda, metade `frontend-uiux` de `T-17` | ✔ `T-17b` 2026-08-12 (3 promessas, não 1) |
+| QA-16 | 2026-08-12 | MÉDIO | `src/ui/estilo.css` (M7, desde `T-10`) | `.aviso { display: flex }` é regra de autor e vence o `[hidden]` do navegador: a caixa de erro **vazia** fica visível nas 3 telas que a usam | `.aviso[hidden] { display: none }` — de outra sessão (regra 4), ver [[t17b_sorteio_na_tela]] | ✔ 2026-08-13 — `[hidden] { display: none !important }` global, e não por classe: alcançava também `.campo__sem-canvas`, fora das 3 telas listadas |
+| QA-18 | 2026-08-12 | MÉDIO | `src/ui/estilo.css` + `src/ui/rotulos.ts` (M7, desde `T-10`) | `.marca` é disco fixo de 34px sem `overflow`, e o texto dele é o próprio código: com `GB-ENG` (`D-52`) são **6 caracteres onde cabiam 2**, e a tela de seleções passou de 4 para 32 cartões por lado | Some quando `T-19` trocar o disco pela bandeira (`marcaSelecao` já devolve `ehBandeira`); até lá é de M7 e de outra sessão (regra 4) | ✔ 2026-08-13 — as 32 caem no ramo da bandeira, e o ramo do código virou cápsula com `overflow` em vez de disco fixo |
+| QA-19 | 2026-08-12 | MÉDIO | `src/ui/rotulos.ts` + `src/ui/tela_selecoes.ts` (M7, desde `T-10`) | `marca()` escreve `flag` como TEXTO dentro do disco: com as bandeiras de `T-19`, os 32 cartões passam a mostrar o **caminho do SVG** onde mostravam o código, e `ehBandeira` (que existe para isso) é ignorado | Trocar o texto por `<img>` na tela — de M7 e de outra sessão (regra 4). É o mesmo conserto que fecha `QA-18`, que **não** some sozinho como aquela linha previa | ✔ 2026-08-13 — `marca()` lê `ehBandeira` e pinta `<img alt="">`; varredura de fonte cobra a leitura, que o vitest sem DOM não alcança |
+

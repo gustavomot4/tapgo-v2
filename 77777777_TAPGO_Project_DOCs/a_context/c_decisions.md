@@ -7,28 +7,16 @@ status: atual
 > **Append-only:** decisão nova = linha nova; reversão = linha nova com `SUPERSEDE D-XX`, nunca editar a antiga.
 > **Teto: 2 frases por linha.** Evidência longa vira nota em `e_qa/<slug>.md` ou tema em `a_context/`.
 > **Registre as rejeições.** A lista de rejeitados é o que impede a IA de re-propor o que já morreu.
-> **`ARQUIVADO`:** íntegra em [[decisions_archive]] — o ponteiro é este, e não se repete por linha.
-> **Retirados da tabela** (ID preservado, nada revertido): `D-03` `D-05` `D-11` `D-12` `D-14`..`D-21` `D-23`..`D-26` `D-28`..`D-34` · `Q-01`..`Q-07` `Q-10` `Q-12`.
+> **`ARQUIVADO`:** íntegra em [[decisions_archive]] — o ponteiro é este, e não se repete por linha. Desde `D-74` só as REJEITADAS guardam linha viva com esse status: são a lista-morta que a fase de evolução varre sem abrir o arquivo.
+> **Retirados da tabela** (ID preservado, nada revertido): `D-01`..`D-05` · `D-09`..`D-38` · `Q-01`..`Q-07` `Q-10`..`Q-12` `Q-14`.
 > **Achados de QA moram em [[d_qa|QA]]** desde `D-50` — este arquivo não define mais `QA-NN`.
 
 ## Decisões
 | # | Data | Status | Decisão (curta) | Evidência (número-chave + link) |
 |---|---|---|---|---|
-| D-01 | 2026-08-06 | ADOTADO · ARQUIVADO | Forma = SPA estática, sem backend |  |
-| D-02 | 2026-08-06 | ADOTADO · ARQUIVADO | Stack = TypeScript + Vite + Phaser 3 |  |
-| D-04 | 2026-08-06 | ADOTADO · ARQUIVADO | Online = P2P WebRTC (Trystero) |  |
 | D-06 | 2026-08-06 | REJEITADO · ARQUIVADO | Reaproveitar o backend Node/Express/MySQL da v1 |  |
 | D-07 | 2026-08-06 | REJEITADO · ARQUIVADO | Clubes reais ou escudo de federação |  |
 | D-08 | 2026-08-06 | REJEITADO · ARQUIVADO | Godot 4 como engine |  |
-| D-09 | 2026-08-06 | ADOTADO · ARQUIVADO | Alternadas = morte súbita em rodadas de 1 cobrança por lado, decidida ao FIM da rodada. Responde Q-01 | regra em [[regras_partida]] |
-| D-10 | 2026-08-06 | ADOTADO · ARQUIVADO | CPU em 3 níveis por peso do histórico de zonas: 0% / 50% / 70%, teto absoluto 70%. Responde Q-02 | regra em [[regras_partida]] |
-| D-13 | 2026-08-07 | ADOTADO · ARQUIVADO | **PLANO congelado**: M1..M9 com porta única, dono de estado e portão objetivo; etapas E-1..E-6. Mudança de rumo é D-NN novo | o plano em si é o [[b_plan\|PLANO]] |
-| D-22 | 2026-08-07 | ADOTADO · ARQUIVADO | `Team.flag` passa a `string \| null`; `null` = bandeira sem arquivo, até `A-04` |  |
-| D-27 | 2026-08-07 | ADOTADO · ARQUIVADO | M7 = DOM no menu/placar/zonas; Phaser só na cobrança, por `import()` |  |
-| D-35 | 2026-08-08 | ADOTADO · ARQUIVADO | `Q-04`: peer que some no meio = disputa **sem resultado**; M5 para de aceitar escolha e `winner` segue `null` |  |
-| D-36 | 2026-08-08 | ADOTADO · ARQUIVADO | Notificação vinda da REDE não propaga exceção de assinante (loga); a de `choose()` propaga |  |
-| D-37 | 2026-08-08 | ADOTADO · ARQUIVADO | Critério de aceite sai do CONTEXT e vira [[portao_de_aceite]], lido sob demanda pelo Mapa |  |
-| D-38 | 2026-08-08 | ADOTADO · ARQUIVADO | `QA-08`: na medição os DOIS lados entram por `joinRoom(idDaTentativa(base,n))`; a porta de `D-13` não muda um byte |  |
 | D-39 | 2026-08-08 | REJEITADO | `hostRoom(ice?, roomId?)` — saída (a) de `QA-08` | Compra o que `D-38` dá de graça, pagando com precedente em porta congelada — e `Q-09`/`Q-11` esperam esse precedente |
 | D-40 | 2026-08-08 | REJEITADO | Exportar `createChannel` — saída (b) de `QA-08` | `createChannel` não valida `roomId`: exportá-lo permite abrir sala sem o portão do defeito 6 |
 | D-41 | 2026-08-08 | REJEITADO | Uma sala para a medição inteira — saída (c) de `QA-08` | `leave()` é assíncrono: peer da tentativa anterior pode virar `'connected'` sem conexão nova, enviesando a taxa PARA CIMA — [[m6_transporte_notas]] |
@@ -66,6 +54,7 @@ status: atual
 | D-68 | 2026-08-19 | ADOTADO | `T-14`: M7 grava `{v, humana, nivel, estado}` — o retrato de M8 atravessa **opaco**, e os dois campos de fora são de M7 | Íntegra em [[m7_tela_notas]] |
 | D-73 | 2026-08-19 | ADOTADO | `Q-11` pela saída (1): **M5 reexporta `newRoomId`** de M6, M7 sorteia o ID, monta o link e **sempre** passa `roomId`; a porta `Session` segue com os 4 métodos de `D-13`, e o ramo `roomId` ausente ⇒ `hostRoom()` fica onde está, sem virar contrato | É a forma que já rodou em campo: `src/medicao.ts` sorteia o ID **antes** da sala e os dois lados entram por `joinRoom` (`D-38`) — os 17/17 de `A-08` saíram dela, e `newRoomId` já é exportado por M6 de propósito, então nada da superfície que `D-40` fechou se abre. A saída (2) (`roomId()` na porta) custaria o **5º método** na interface congelada — o precedente que `D-39` recusou comprar, e que `Q-09` herdaria — e ainda entregaria o ID **depois** do canal, logo depois de o relógio de 20 s já ter armado (`QA-22`); custo completo da adotada: 1 linha de export em `src/session/index.ts`, zero byte em `src/net`, e bundle inalterado até `T-21` existir |
 
+| D-74 | 2026-08-19 | ADOTADO · SUPERSEDE D-43 no critério de corte | `A-20`: **nenhum dos três tetos sobe** — sai da tabela viva a linha cuja íntegra JÁ está no arquivo (as REJEITADAS ficam, são a lista-morta), e o CONTEXT paga em relocação de tema, nunca em prosa comprimida. Folga em linhas: **3,5 decisões** aqui (5,4 se a linha voltar ao teto de 2 frases), **10,6 achados** no QA, **21 sessões** no CONTEXT | Pool de `D-43` ZERO pela 3ª vez, mas o de duplicata rende **2.229** aqui, **3.736** no QA e **628** no CONTEXT. `D-69` projetou 7,5 sessões porque mediu +466/sessão; a curva real desde ele é **+638**, e a parede voltou em 5 — íntegra em [[a20_tres_orcamentos]] |
 > **Gatilhos de revisão** (`D-43`): moram no tema que cada um mede — `D-01` em [[online_p2p]], `D-02` em [[stack]].
 
 ## Questões abertas (Q-NN — decisões do DONO, não do agente)
@@ -74,5 +63,3 @@ status: atual
 | Q-09 | No modo `local`, de quem é a escolha pendente, se a porta congelada de M5 não a expõe? | antes de T-10 (**prazo vencido — `QA-07`**); hoje M7 deriva de `kicks.length` e a saída definitiva está em [[questoes_abertas_notas]] |
 | Q-08 | `pick(role)` lê o histograma do **mesmo** papel — é essa a intenção, ou quem defende deveria ler o histograma `shooter` do humano? | antes de E-3 (**prazo vencido — `QA-07`**); as duas leituras e o custo de inverter em [[questoes_abertas_notas]] |
 | Q-13 | Mudar `report(winner)` para trazer o placar é porta congelada (`D-13`/`D-58`) | segue do dono; `T-14` fechou com `D-67`, que mostra a ausência em vez de inventar zero |
-| Q-11 | **RESPONDIDA por `D-73`** — Como M7 recebe o `roomId` do anfitrião, se a porta de M5 (`D-13`) não o devolve e M7 não pode importar `src/net`? | saída (1) de [[m5_sessao_notas]]: M5 reexporta `newRoomId` e a porta congelada não ganha método |
-| Q-14 | **RESPONDIDA por `D-71`** — Os **4 STUN padrão** do `trystero@0.25.3` (`stun*.l.google.com`, `stun.cloudflare.com`) vão ao ar no `dist/` — são a **segunda** exceção nominal do portão de privacidade de M9, ou M6 passa a fixar `iceServers` próprios? | **trava E-6**: achado na varredura de entrega; a linha já está na tabela de custo de [[stack]] (grátis, sem conta), o que falta é a política — o portão de M9 hoje só isenta sinalização e relay |

@@ -7,6 +7,16 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-19] — `A-20`: os três orçamentos cortados sem subir um teto sequer (`D-74`)
+- **Skill:** evolution-auditor
+- Decisão: **`D-74`** (SUPERSEDE `D-43` no critério de corte) — **nenhum dos três tetos sobe**. Sai da tabela viva a linha cuja **íntegra já está** em [[decisions_archive]]; as REJEITADAS ficam, porque são a lista-morta que a fase de evolução varre sem abrir o arquivo.
+- **O pool que ninguém tinha medido:** 15 linhas `ARQUIVADO` guardavam um SEGUNDO resumo do que o arquivo já tinha inteiro — **15/15 conferidas**. Retiradas as 12 não-rejeitadas (**1.536**) e `Q-11`/`Q-14` respondidas (**693**, precedente de `D-63`); no QA saíram os 10 achados **FECHADOS** (**3.736**) e ficaram os 9 abertos; no CONTEXT a linha "Pronto" virou [[estado_modulos]] e a nota de rodapé saiu (**446** líquidos).
+- **`A-16` foi remedida, e o número dela estava incompleto:** a saída (i) de lá rendia 788 porque mantinha a linha viva como "ponteiro puro"; retirar a linha inteira rende **1.536**. `D-69` subiu o teto com o argumento "o pool acabou" — não tinha acabado.
+- **Resultado:** registro **15.690 → 14.229** · QA **7.933 → 4.292** · CONTEXT **4.000 → 3.554**. Os três abaixo do **aviso** pela primeira vez desde 2026-08-12, e `check.py` sem um aviso sequer. Folga em linhas, que era o portão de `A-20`: 3,5 decisões · 10,6 achados · ~21 sessões.
+- **O que este corte NÃO conserta, declarado:** a inclinação. Medida commit a commit desde `D-69`, é **+638/sessão** contra os +466 projetados — por isso a parede voltou em **5** sessões e não em 7,5, e por isso 1.771 de folga são 3,5 decisões mas só **2,8 sessões**. Virou **`A-21`** (cobrar o teto de 2 frases por script), com portão escrito antes do experimento.
+- Backlog: `A-20` fechada, **`A-21`** aberta. Íntegra e método em [[a20_tres_orcamentos]].
+- **Zero byte de código nesta sessão** — o corte foi de documentação, e `A-21` é o que mexeria no `check.py`.
+
 ## [2026-08-19] — `Q-11` respondida: M5 reexporta `newRoomId` e a porta congelada não ganha método (`D-73`)
 - **Skill:** evolution-auditor
 - Decisões: **`D-73`** — das duas saídas de [[m5_sessao_notas]], vale a **(1)**: M7 sorteia o ID com o `newRoomId` que M5 reexporta de M6, monta o link e **sempre** passa `roomId` a `createSession`. A interface `Session` de `D-13` segue com 4 métodos, e `src/net/index.ts` não muda um byte.
