@@ -17,6 +17,7 @@ status: atual
 - **Um teste pegou defeito antes do commit:** `avisoDePressa(NaN)` escrevia "Faltam NaN segundos" na faixa — justamente a região que o leitor de tela anuncia —, porque `Math.max(0, Math.trunc(NaN))` é `NaN`. Guarda de `Number.isFinite` entrou junto.
 - **Sandbox:** suíte **574 → 580/580** (6 testes novos), `tsc` limpo, bundle **416.549 → 417.664 B (+1.115 B)** lido de `dist/`, zero asset novo.
 - **Registro:** **17.125/20.000** (+344: `D-84` mais a linha de `Q-15` reescrita para fechada). **CONTEXT:** 3.833/4.000 (95%).
+- **✔ Os três portões de sandbox rodados na MÁQUINA DO DONO em 2026-08-20, e os números batem com o declarado:** `tsc --noEmit` limpo, `npm run build` com **417.664 B** iniciais (5,22% do teto, lido de `dist/`) e `vitest run` **580/580** em 12 arquivos. O bundle deixa de ser número só de sandbox — é a primeira vez desde `T-22` que a linha do CONTEXT não carrega "não reconferido".
 - **O que falta, e é do dono:** `A-27` — dois aparelhos reais, um parado de propósito por 15 s, e as duas telas terminando com o MESMO placar. Nenhuma tela de M7 tem teste; sandbox não produz esse número.
 
 ## [2026-08-20] — o ID reciclado desempatado em três registros: `T-24`, `Q-15` e o título do arquivo (`QA-28`/`QA-24`/`QA-30`)
