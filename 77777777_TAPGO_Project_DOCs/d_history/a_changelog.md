@@ -16,6 +16,7 @@ status: atual
 - **O corte de `D-74` rodou de novo, no QA.** Os três achados fechados foram para [[decisions_archive]] com íntegra e ID preservados: QA **6.450 → 4.935/8.000**, e o aviso de 80% que as três linhas de fechamento tinham acabado de acender some.
 - **`check.py`: a tupla `ISENTAS_LINHA_MAX` caiu de 14 para 12 IDs.** `QA-24` e `QA-28` estavam isentos por serem linha VIVA que o append-only proíbe reescrever; arquivados, deixaram de ser linha viva — é a própria regra escrita no comentário de `D-83`, aplicada pela primeira vez.
 - **Teste negativo do portão, rodado nesta sessão:** tirando `D-62` da tupla, o `check.py` reprova com o número (`D-62 (460)`) e volta a passar quando ele retorna.
+- **Quantas das 10 do portão de `D-83` esta sessão gastou: UMA.** `D-83` conta linha de `D-NN`/`QA-NN`, e só `QA-30` (390) é dessas. A checagem 16 do `check.py` é mais larga que a decisão — o regex casa `Q-NN` também —, então `Q-15` (241) passou pelo script sem entrar na contagem do portão; se o dono quiser o contrário, é `D-NN` novo.
 - **Registro:** **16.781/20.000** (+105, só a linha de `Q-15` sobre a de `Q-14`). **CONTEXT:** 3.921/4.000 (98%). **Nenhum byte em `src/`; suíte não foi tocada.**
 - **O que continua do dono, e não avançou aqui:** o `D-NN` que autoriza a saída (b) de `T-24` (15 s, o estouro resolvido dentro do aparelho). Sem ele o card não abre.
 
