@@ -49,13 +49,14 @@
 
 import type { Side, Zone } from '../core/index';
 import type { LinkStatus, MatchState, Session, SessionConfig } from '../session/index';
-import { createSession } from '../session/index';
+import { CONNECT_TIMEOUT_MS, createSession } from '../session/index';
 import type { Cena } from './cena';
 import { criarDerivacao } from './derivacao';
 import type { Vez } from './derivacao';
 import { botao, el, focar, limpar } from './dom';
 import { marca } from './tela_selecoes';
 import {
+  AVISO_PEER_SUMIU,
   ZONAS,
   descricaoFase,
   instrucao,
@@ -64,6 +65,8 @@ import {
   nomeSelecao,
   nomeZona,
   placar,
+  segundosRestantes,
+  textoDaEspera,
   resultadoUltimaCobranca,
   rotuloZona,
   sorteioDoPrimeiro,
@@ -153,6 +156,16 @@ export const telaCobranca =
     let emChoose = false;
     /** O peer caiu depois de conectado: `D-35`, disputa encerrada SEM resultado. */
     let caiu = false;
+    /**
+     * `T-22`: o instante (relógio local) em que o prazo de M6 acaba, ou `null` fora da espera.
+     *
+     * Ele nasce quando M5 avisa `'waiting'` — o peer saiu e M6 rearmou o timer — e morre quando
+     * o peer volta (`'connected'`) ou quando a disputa acaba. O relógio daqui não é o de M6: os
+     * dois começam no mesmo evento, e é isso que faz o número da tela valer. Não é sincronizado
+     * ao milissegundo, e não precisa ser — a tela nunca decide o fim, só o conta.
+     */
+    let prazoDaEspera: number | null = null;
+    let tiqueDaEspera: ReturnType<typeof setInterval> | null = null;
 
     // ── Esqueleto ─────────────────────────────────────────────────────────────────────────
     const numeros = el('span', { classe: 'placar__numeros', texto: placar(estado) });
@@ -193,6 +206,11 @@ export const telaCobranca =
 
     const fase = el('p', { classe: 'sub' });
     const faixa = el('p', { classe: 'faixa', attrs: { role: 'status', 'aria-live': 'polite' } });
+    // O contador de `T-22`. `aria-live` **desligado** de propósito: uma região viva que muda a
+    // cada segundo faria o leitor de tela recitar o número sem parar por cima de tudo. Quem usa
+    // leitor ouve a faixa acima, que anuncia UMA vez que o outro jogador parou de responder.
+    const contador = el('p', { classe: 'sub', attrs: { 'aria-live': 'off' } });
+    contador.hidden = true;
     const erro = el('div', { classe: 'aviso', dados: { tom: 'erro' } });
     erro.hidden = true;
 
@@ -211,6 +229,7 @@ export const telaCobranca =
       sorteio,
       campo,
       faixa,
+      contador,
       erro,
       el('div', { classe: 'empurra' }, [sair]),
     );
@@ -271,6 +290,18 @@ export const telaCobranca =
         // Modo `local`, entre chute e defesa. Nenhuma pista da zona escolhida — ver o cabeçalho.
         faixa.dataset['tom'] = 'atencao';
         faixa.textContent = `Passe o aparelho: ${nomeSelecao(partida.times[vez.lado])} defende.`;
+        return;
+      }
+
+      if (prazoDaEspera !== null) {
+        // ── `T-22` ────────────────────────────────────────────────────────────────────────
+        // Sobrepõe "Escolha enviada. Esperando o outro jogador…" **de propósito**: quando o
+        // peer sumiu, a frase de espera vira mentira por omissão — ela sugere alguém pensando
+        // do outro lado. As zonas NÃO são trancadas aqui: o peer ainda pode voltar dentro do
+        // prazo, e M6 escoa a fila de jogadas na volta.
+        faixa.dataset['tom'] = 'atencao';
+        faixa.textContent = AVISO_PEER_SUMIU;
+        pintarContador();
         return;
       }
 
@@ -397,6 +428,13 @@ export const telaCobranca =
         return;
       }
 
+      // `T-22`: o peer sumiu (`'waiting'`) ou voltou (`'connected'`). Nada disso mexe na
+      // disputa — só no que a tela conta. `'failed'` já saiu acima, e `D-80`/`D-81` chegam
+      // por ele **sem passar por `'waiting'`**: a queda sintetizada não espera relógio nenhum,
+      // e é por isso que ela nunca mostra prazo em tela.
+      if (status === 'waiting') comecarEspera();
+      else if (status === 'connected') pararEspera();
+
       // Cobrança nova já animada, ou animação em curso: nada a fazer. `apresentados` só avança
       // no fim de `apresentar()`, então esta comparação não dispara duas animações da mesma.
       if (apresentando || estado.kicks.length === apresentados) {
@@ -406,6 +444,48 @@ export const telaCobranca =
 
       apresentando = true;
       void apresentar().then(seguir, seguir);
+    }
+
+    // ── `T-22`: o contador do prazo ───────────────────────────────────────────────────────
+
+    /** Pinta os segundos que faltam. Em zero para o tique e deixa a frase de encerramento. */
+    function pintarContador(): void {
+      if (!vivo || prazoDaEspera === null) return;
+
+      const faltam = segundosRestantes(prazoDaEspera, Date.now());
+      contador.textContent = textoDaEspera(faltam);
+      contador.hidden = false;
+
+      if (faltam === 0) pararTique();
+    }
+
+    function pararTique(): void {
+      if (tiqueDaEspera === null) return;
+      clearInterval(tiqueDaEspera);
+      tiqueDaEspera = null;
+    }
+
+    /**
+     * O peer saiu e o prazo de M6 começou a correr.
+     *
+     * Um `'waiting'` repetido **não** reinicia o relógio: M6 rearma o timer dele no
+     * `onPeerLeave`, e cada reinício aqui daria à pessoa um prazo maior do que o que existe.
+     * O tique é de 250 ms para a virada do segundo na tela não atrasar até um segundo inteiro
+     * atrás do relógio real — o número vem de `Date.now()`, não de uma contagem acumulada.
+     */
+    function comecarEspera(): void {
+      if (prazoDaEspera !== null) return;
+      prazoDaEspera = Date.now() + CONNECT_TIMEOUT_MS;
+      tiqueDaEspera = setInterval(pintarContador, 250);
+      pintarContador();
+    }
+
+    /** O peer voltou, ou a disputa acabou: nenhum número fica preso na tela. */
+    function pararEspera(): void {
+      pararTique();
+      prazoDaEspera = null;
+      contador.hidden = true;
+      contador.textContent = '';
     }
 
     /**
@@ -418,6 +498,7 @@ export const telaCobranca =
      */
     function mostrarQueda(): void {
       caiu = true;
+      pararEspera();
       aguardandoPeer = false;
       travado = true;
       travarZonas(true);
@@ -534,6 +615,7 @@ export const telaCobranca =
 
     return () => {
       vivo = false;
+      pararEspera();
       document.removeEventListener('keydown', naTeclaGlobal);
       cancelarAssinatura();
       sessao.dispose();

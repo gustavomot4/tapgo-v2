@@ -245,3 +245,41 @@ export function desfechoDoJogador(campeao: CountryCode, humano: CountryCode): st
     ? `${nomeSelecao(humano)} é campeã. O título é seu.`
     : `${nomeSelecao(humano)} não ficou com o título desta vez.`;
 }
+
+// ── `T-22`: o silêncio da espera vira número ────────────────────────────────────────────────
+// Entre o peer sumir e M6 desistir dele há o prazo de `CONNECT_TIMEOUT_MS`, e até aqui a tela
+// não dizia nada sobre ele: "Esperando o outro jogador…" servia igual para "ele está pensando"
+// e para "ele caiu e o relógio está correndo". As duas frases abaixo separam os dois casos, e
+// nenhuma delas fala de **conexão**: desde `D-80`/`D-81` o `'failed'` pode ser sintetizado por
+// M5 com o transporte de pé, e um "reconectando…" mentiria exatamente nesse caso.
+
+/**
+ * Quantos segundos INTEIROS ainda faltam — nunca negativo, nunca `NaN`.
+ *
+ * `Math.ceil` e não `Math.floor`: no primeiro tique o prazo cheio ainda não foi gasto, e
+ * mostrar "19 s" ao ligar um relógio de 20 s seria a tela roubando um segundo de quem espera.
+ * Relógio parado (`agora` depois do prazo) e prazo não-finito caem no mesmo `0`, que é o pior
+ * caso honesto: "acabou", jamais um número inventado.
+ */
+export function segundosRestantes(prazoMs: number, agoraMs: number): number {
+  const falta = prazoMs - agoraMs;
+  if (!Number.isFinite(falta) || falta <= 0) return 0;
+  return Math.ceil(falta / 1000);
+}
+
+/** O que a faixa diz quando o peer parou de responder. Fala da PESSOA, não do transporte. */
+export const AVISO_PEER_SUMIU = 'O outro jogador parou de responder.';
+
+/**
+ * A linha do contador.
+ *
+ * Ela promete o que o código cumpre e nada além: o prazo é o mesmo `CONNECT_TIMEOUT_MS` que M6
+ * arma no `onPeerLeave`, e o desfecho no fim dele é a disputa terminar sem resultado (`D-35`).
+ * Em zero a frase para de contar em vez de piscar "0 s" — o veredito de M6 chega logo atrás, e
+ * um número congelado na tela pareceria travamento justo no instante em que ele não é.
+ */
+export function textoDaEspera(segundos: number): string {
+  return segundos <= 0
+    ? 'Encerrando a disputa…'
+    : `A disputa termina em ${segundos} s se ele não voltar.`;
+}

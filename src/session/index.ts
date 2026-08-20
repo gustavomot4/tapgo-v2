@@ -57,7 +57,13 @@ export type { Level } from '../cpu/index';
 // da pessoa que decide quando a sessão nasce (`D-75`). A porta `Session` continua com os quatro
 // métodos de `D-13`: nada aqui devolve o ID depois; ele é sorteado antes e entra por `roomId`.
 // Valor, não tipo: `newRoomId` é função, e a tela a chama sem importar `src/net` (portão de M7).
-export { newRoomId } from '../net/index';
+//
+// `T-22` põe o prazo na mesma carona, e pela mesma razão: M7 precisa dizer na tela quantos
+// segundos faltam antes de M6 desistir do peer, e a alternativa era M7 repetir o `20_000` de
+// `src/net/index.ts` como constante local — a cópia que passa a mentir sozinha no dia em que
+// alguém revir `D-75`. Reexportar não abre porta nova: `Session` segue com os quatro métodos de
+// `D-13`, e o valor é o mesmo que M6 arma no timer, não uma segunda fonte.
+export { newRoomId, CONNECT_TIMEOUT_MS } from '../net/index';
 
 export type Mode = 'cpu' | 'local' | 'online';
 

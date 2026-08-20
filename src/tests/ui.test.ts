@@ -21,9 +21,10 @@ import {
   salaLegivel,
   timesDoEndereco,
 } from '../ui/convite';
-import { newRoomId } from '../session/index';
+import { CONNECT_TIMEOUT_MS, newRoomId } from '../session/index';
 import type { Vez } from '../ui/derivacao';
 import {
+  AVISO_PEER_SUMIU,
   descricaoFase,
   desfecho,
   ehDoCatalogo,
@@ -33,6 +34,8 @@ import {
   nomeSelecao,
   nomeZona,
   placar,
+  segundosRestantes,
+  textoDaEspera,
   resultadoUltimaCobranca,
   rotuloZona,
   sorteioDoPrimeiro,
@@ -1278,5 +1281,48 @@ describe('derivação da vez no modo `online` (T-21)', () => {
     local.aoNotificar(primeiro);
     local.aoNotificar(primeiro);
     expect(local.vez(primeiro)?.pendente).toBe(true);
+  });
+});
+
+// ── `T-22`: o contador do prazo da espera ──────────────────────────────────────────────────
+describe('contador dos segundos que faltam (T-22)', () => {
+  it('o prazo vem de M5, e é o MESMO valor que M6 arma — não uma cópia', () => {
+    // É a saída (b) do card, e é isto que ela compra: se alguém mudar o prazo em `src/net`, o
+    // número da tela muda junto. A cópia local que a saída (a) pediria passaria neste teste
+    // no dia em que fosse escrita e mentiria em silêncio no dia seguinte.
+    expect(CONNECT_TIMEOUT_MS).toBe(20_000);
+    expect(segundosRestantes(CONNECT_TIMEOUT_MS, 0)).toBe(20);
+  });
+
+  it('conta para baixo em segundos inteiros, e o primeiro tique mostra o prazo cheio', () => {
+    expect(segundosRestantes(20_000, 0)).toBe(20);
+    expect(segundosRestantes(20_000, 1)).toBe(20);
+    expect(segundosRestantes(20_000, 500)).toBe(20);
+    expect(segundosRestantes(20_000, 1_000)).toBe(19);
+    expect(segundosRestantes(20_000, 19_999)).toBe(1);
+  });
+
+  it('nunca negativo, nunca `NaN` — relógio passado do prazo é zero', () => {
+    expect(segundosRestantes(20_000, 20_000)).toBe(0);
+    expect(segundosRestantes(20_000, 999_999)).toBe(0);
+    expect(segundosRestantes(Number.NaN, 0)).toBe(0);
+    expect(segundosRestantes(Number.POSITIVE_INFINITY, 0)).toBe(0);
+  });
+
+  it('a frase promete o fim da DISPUTA, e nunca reconexão', () => {
+    // A tensão que `D-80`/`D-81` criaram: o `'failed'` que M7 recebe pode ser sintetizado por
+    // M5 com o transporte de pé. Um texto sobre "conexão" ou "reconectando" mentiria ali.
+    const frases = [textoDaEspera(20), textoDaEspera(1), textoDaEspera(0), AVISO_PEER_SUMIU];
+    for (const frase of frases) {
+      expect(frase).not.toMatch(/conex[ãa]o|reconect|sinal|rede|internet/i);
+      expect(frase).not.toMatch(/undefined|NaN/);
+    }
+    expect(textoDaEspera(20)).toContain('20 s');
+    expect(textoDaEspera(20)).toContain('disputa');
+  });
+
+  it('em zero a frase para de contar em vez de congelar "0 s"', () => {
+    expect(textoDaEspera(0)).not.toMatch(/\d/);
+    expect(textoDaEspera(-3)).toBe(textoDaEspera(0));
   });
 });

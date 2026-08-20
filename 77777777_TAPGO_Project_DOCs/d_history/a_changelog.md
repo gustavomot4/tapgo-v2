@@ -7,6 +7,15 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-20] — `T-22`: o silêncio da espera vira número — o contador de segundos em M7
+
+- **Skill:** frontend-uiux. **Saída escolhida pelo dono: (b)** — M5 reexporta `CONNECT_TIMEOUT_MS` como valor, do mesmo jeito que já reexporta `newRoomId` por `D-73`. A saída (a) (M7 contando sozinho com o `20` copiado) foi recusada pelo motivo escrito no card: cópia de constante mente sozinha no dia em que `D-75` for revisto.
+- **O defeito que fecha:** "Esperando o outro jogador…" servia igual para *ele está pensando* e para *ele caiu e o relógio está correndo*. Foi o pedido do dono em `A-24`, e é o mesmo silêncio que fez a medição de `A-25` estimar "~10 s" a olho, sem número em tela.
+- **Delta:** `src/session/index.ts` (uma linha de export, a porta de 4 métodos de `D-13` intacta) · `src/ui/rotulos.ts` (`segundosRestantes`, `textoDaEspera`, `AVISO_PEER_SUMIU` — puros, e é por isso que a suíte os alcança sem DOM) · `src/ui/tela_cobranca.ts` (o `<p>` do contador, e o relógio que nasce no `'waiting'` e morre no `'connected'`).
+- **A tensão de `D-80`/`D-81`, resolvida no texto:** o `'failed'` que M7 recebe pode ser **sintetizado** por M5 com o transporte de pé, então nenhuma frase fala de conexão — há teste que reprova "reconectando", "sinal", "rede" e "internet". E a queda sintetizada **não passa por `'waiting'`**: o caso de `D-80` continua sem prazo em tela, como o portão exigiu.
+- **Portão de sandbox:** suíte **569 → 574/574**, `tsc` limpo, bundle **415.817 → 416.549 B (+732 B**, zero asset novo; 0,009% do teto de 8 MB). **Três falseamentos rodados:** `ceil` → `floor` reprova 1 · texto com "Reconectando…" reprova 2 · guarda do negativo removida reprova 1.
+- **Falta o campo:** `A-26` — o contador só existe quando um peer some no meio da disputa, e isso pede dois aparelhos.
+
 ## [2026-08-20] — `A-25` metade 1: `D-81` medido em campo — o aparelho que NÃO tocou cai em `D-35`
 
 - **Skill:** backend-domain (registro da medição do dono, na mesma sessão que entregou `T-23`; `src/` intocado aqui).
