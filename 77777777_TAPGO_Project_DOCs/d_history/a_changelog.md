@@ -7,6 +7,17 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-20] — `QA-25` estreitado por duas medições: o rearme carrega peso, e o defeito é trava, não placar mentiroso
+
+- **Skill:** evolution-auditor (mesma sessão)
+- **Medição nova do dono:** aparelho 2 em modo avião ~5 s durante a disputa e ela **se recuperou sozinha**. Isso mata a saída barata de `QA-25`: parar de rearmar o relógio de `D-31` fecharia a janela sem tocar M5 nem M7, mas custaria a recuperação de queda momentânea, que hoje funciona em campo.
+- **A hipótese que abriu o achado está REFUTADA pelo código:** `aoMove` guarda por igualdade exata (`session/index.ts:345`), então veterano em `seq=3` e recém-chegado em `seq=0` **descartam tudo um do outro**. Não há placar mentiroso nem estado corrompido — as guardas de `D-32` seguram.
+- **O que sobra é pior de outro jeito:** o canal fica `'connected'`, `onPeerJoin` limpou o timer, e nada mais emite `'failed'`. Os dois lados ficam em "Esperando o outro jogador…" **para sempre**, com placares divergentes na tela. Severidade segue ALTO, mas pelo motivo trocado: o docstring de M6 diz que tela travada sem explicação é o que o PLANO proibiu para o módulo.
+- **Consequência para o conserto:** reconciliar estado para evitar corrupção é desnecessário; o que falta é o lado preso **descobrir** que quem voltou é sessão nova e cair em `D-35`.
+- **Lacuna declarada, e é ela que trava a decisão:** o discriminador barato (`seq=0` pós-conexão) não é à prova de bala — `aoMove` registra que `seq` menor também é reenvio legítimo da fila de M6. Ninguém mediu se esse reenvio chega a produzir `seq=0` numa disputa em andamento. Sem o número, a saída barata é palpite.
+- **Evidência longa em [[qa25_reentrada_na_janela]]** (nota nova), e a linha de `QA-25` no registro encolheu para o ponteiro — a disciplina que `A-21` quer cobrar por script.
+- **Nenhum byte de código mudou.**
+
 ## [2026-08-20] — `A-22` 2ª rodada: `D-77` confirmado em campo, e o peer que sai reprova (`QA-25`)
 
 - **Skill:** evolution-auditor (mesma sessão do corte)
