@@ -243,6 +243,42 @@ Reprova de verdade: algum dos dois seguir em "Esperando o outro jogador…" **pa
 qualquer placar aparecer. Essa releitura do item 1 é do dono — o registro está em **15.982/16.000**
 e **não cabe** um `D-NN` para ela nesta sessão (`A-21`).
 
+## `A-25` em campo — a metade degenerada PASSOU (2026-08-20)
+
+Dois aparelhos reais, os dois abrindo o **mesmo link**. Relato do dono, na ordem:
+
+1. os dois entram pelo link e a tela dá **"oponente encontrado"**; os dois tocam em iniciar;
+2. **um aparelho toca numa zona**. O OUTRO — que não tocou em nada — mostra a mensagem de
+   `D-35` inteira: *"O outro jogador saiu da disputa. / A disputa terminou sem resultado — o
+   placar até aqui não vale como vitória."*;
+3. o aparelho que **tocou** fica esperando a resposta do adversário e, **passados ~10 s**, a
+   conexão cai e ele chega à **mesma** mensagem.
+
+**Isto é `D-81` funcionando, e a leitura é literal:** o aparelho 2 nunca tocou em zona nenhuma.
+A única coisa que chegou a ele foi o `Move` do aparelho 1 assinado com o lado dele próprio — a
+guarda nova. Antes de `T-23` esse aparelho não tinha caminho nenhum até a tela de `D-35` neste
+cenário: os dois ficavam em "Esperando o outro jogador…" **para sempre**.
+
+| item do portão (na releitura de `T-23`) | medido |
+|---|---|
+| quem **recebe** a jogada espelhada cai em `D-35` na hora | **sim**, e sem ter tocado |
+| quem **tocou** sai da frase "Esperando…" em até 20 s | **sim, ~10 s** |
+| nenhum dos dois fica preso para sempre | **sim** — os dois saíram |
+| nenhum placar inventado | **sim** — o texto diz que o placar não vale |
+| falsificador: tocou antes de travar? | **sim**, confirmado de novo |
+
+**Sobre os ~10 s:** `armarTimer` arma exatamente `CONNECT_TIMEOUT_MS = 20_000` a partir do
+`onPeerLeave` (`net/index.ts:290`), então o número do código é 20 s. O ~10 s é estimativa a olho,
+não cronômetro, e provavelmente conta a partir do instante em que o dono olhou de volta para o
+aparelho. Não muda veredito nenhum: qualquer valor **≤ 20 s** passa. Quem daria o número exato na
+tela é `T-22`.
+
+**O que ainda NÃO foi medido, e `QA-26` não fecha sem isso:** a segunda metade do portão de
+`A-25` — **o par são não regride**. Anfitrião entrando pelo **MENU** (não pelo próprio link) e
+convidado pelo link, completando **5 cobranças** sem descarte. É o item que prova que `D-81` não
+matou a disputa legítima; em sandbox ele está verde (5 cobranças, zero descarte, e a mutação que
+o quebraria reprova 17 testes), mas em campo é o que custa caro se estiver errado.
+
 ## O que a decisão custa à promessa de `D-72`
 
 `D-72` tirou *"por link de convite"* do Objetivo e escreveu quando ela volta: **quando `Q-11`

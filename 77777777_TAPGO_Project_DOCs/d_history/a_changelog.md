@@ -7,6 +7,16 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-20] — `A-25` metade 1: `D-81` medido em campo — o aparelho que NÃO tocou cai em `D-35`
+
+- **Skill:** backend-domain (registro da medição do dono, na mesma sessão que entregou `T-23`; `src/` intocado aqui).
+- **Medição do dono, dois aparelhos reais**, os dois abrindo o MESMO link.
+- **A cadeia observada:** "oponente encontrado" nos dois → **um** aparelho toca numa zona → o **OUTRO, sem ter tocado em nada**, mostra a mensagem de `D-35` inteira ("O outro jogador saiu / o placar até aqui não vale como vitória") → o que tocou fica esperando e cai na **mesma** mensagem em **~10 s**.
+- **Por que isso É `D-81`, e não outra coisa:** o aparelho que mostrou a mensagem nunca tocou; a única coisa que chegou a ele foi o `Move` do outro assinado com o **lado dele próprio**, que é exatamente a guarda nova. Antes de `T-23` esse aparelho não tinha caminho nenhum até essa tela neste cenário — os dois ficavam em "Esperando o outro jogador…" para sempre.
+- **Portão, na releitura de `T-23`:** quem recebe cai na hora ✔ · quem tocou sai em até 20 s ✔ (~10 s) · nenhum preso para sempre ✔ · nenhum placar inventado ✔ · falsificador "tocou antes de travar" ✔.
+- **Sobre os ~10 s:** o código arma `CONNECT_TIMEOUT_MS = 20_000` a partir do `onPeerLeave`; ~10 s é estimativa a olho, não cronômetro, e qualquer valor ≤20 s passa. O número exato na tela é `T-22`.
+- **`QA-26` SEGUE ABERTO:** falta a metade 2 do portão de `A-25` — o **par são** (anfitrião pelo **MENU** + convidado pelo link) completando **5 cobranças** sem descarte, que é o item que prova que `D-81` não matou a disputa legítima.
+
 ## [2026-08-20] — `T-23`: `D-81` no código — o par espelhado vira falha honesta, +104 B, 569/569
 
 - **Skill:** backend-domain. **Delta de UM arquivo de produção:** `src/session/index.ts` (+ o teste). `git diff --stat` fecha em `src/session/index.ts` e `src/tests/session_online.test.ts` — **zero byte em `src/net` e `src/ui`**, como o item 4 do portão exigiu.
