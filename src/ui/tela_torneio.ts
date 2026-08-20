@@ -150,7 +150,10 @@ export const telaTorneio: Tela = (raiz: HTMLElement, ctx: Contexto) => {
   // um resumo do desfecho daria duas versões da mesma notícia para manter.
   if (proxima === null) return telaCampeao(raiz, ctx);
 
-  const tela = el('section', { classe: 'tela' });
+  // `tela--largo` (`D-86`): acima de 1024px a próxima disputa e a tabela do grupo ficam lado a
+  // lado — que é como elas se leem, já que a tabela é o resultado do que a disputa vai mudar.
+  // O estado VAZIO acima fica com a `.tela` de sempre: lá não há par nenhum a formar.
+  const tela = el('section', { classe: 'tela tela--largo' });
   raiz.append(tela);
 
   const ladoLocal: Side = proxima.teams.A === humana ? 'A' : 'B';
@@ -193,7 +196,7 @@ export const telaTorneio: Tela = (raiz: HTMLElement, ctx: Contexto) => {
   tela.append(
     el('h1', { classe: 'titulo', texto: NOME_TORNEIO }),
     el('p', { classe: 'sub', texto: nomeFase(proxima.stage, proxima.round) }),
-    el('div', { classe: 'grupo' }, [
+    el('div', { classe: 'grupo par' }, [
       el('p', { classe: 'legenda', texto: 'Sua próxima disputa' }),
       proximaDisputa(proxima.teams),
       jogarBotao,
@@ -213,14 +216,14 @@ export const telaTorneio: Tela = (raiz: HTMLElement, ctx: Contexto) => {
 
   if (linhas === null) {
     tela.append(
-      el('div', { classe: 'aviso' }, [
+      el('div', { classe: 'aviso par' }, [
         el('p', { texto: 'Não foi possível mostrar a tabela do seu grupo.' }),
         el('p', { classe: 'sub', texto: 'A disputa acima continua valendo — dá para jogar.' }),
       ]),
     );
   } else {
     tela.append(
-      el('div', { classe: 'grupo' }, [
+      el('div', { classe: 'grupo par' }, [
         el('p', { classe: 'legenda', texto: 'Sua chave' }),
         tabelaDoGrupo(linhas, humana),
         // A nota de `P-2`: vem ANTES da de gols porque explica a coluna que a pessoa lê

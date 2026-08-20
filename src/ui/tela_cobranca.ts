@@ -138,7 +138,11 @@ function configDaPartida(p: Partida): SessionConfig {
 export const telaCobranca =
   (partida: Partida, pronta: Session | null = null): Tela =>
   (raiz: HTMLElement, ctx: Contexto) => {
-    const tela = el('section', { classe: 'tela' });
+    // `tela--disputa` é a declaração de largura de desktop desta tela (`D-86`): acima de 1024px
+    // a folha vai a 760px e o campo cresce pela ALTURA disponível, não pela largura. O número é
+    // menor que o das telas de duas colunas de propósito — `.campo` tem proporção fixa, e numa
+    // folha de 1040px ele sozinho passaria da dobra de um monitor de 800.
+    const tela = el('section', { classe: 'tela tela--disputa' });
     raiz.append(tela);
 
     const online = partida.modo === 'online';

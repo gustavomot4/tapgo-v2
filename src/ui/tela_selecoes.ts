@@ -161,7 +161,10 @@ export const telaSelecoes =
   (raiz: HTMLElement, ctx: Contexto) => {
     ctx.aquecerCena();
 
-    const tela = el('section', { classe: 'tela' });
+    // `tela--largo` é a declaração de largura de desktop desta tela (`D-86`): acima de 1024px a
+    // folha vai a 1040px e `.tela` vira grade de duas colunas. Esta é a tela que mais pedia isso
+    // — são 64 cartões, e em 420px eles eram uma rolagem só (`P-7`).
+    const tela = el('section', { classe: 'tela tela--largo' });
     raiz.append(tela);
 
     const escolha = selecaoInicial(ctx.prefs());
@@ -246,6 +249,21 @@ export const telaSelecoes =
 
     const iniciar = botao('Começar', 'botao botao--principal', comecar);
 
+    // As duas grades são o par de `D-86`: no desktop elas ficam lado a lado, e o confronto acima
+    // cai em cima delas — a metade esquerda do confronto sobre a grade da esquerda. A classe
+    // `par` fica AQUI e não dentro de `grade()` porque a tela de torneio novo usa a mesma função
+    // com UMA grade só, e uma grade sozinha numa das colunas deixaria a outra vazia.
+    const gradeA = grade('A', rotuloA, times.A, (code) => {
+      times.A = code;
+      atualizarAvisos();
+    });
+    const gradeB = grade('B', rotuloB, times.B, (code) => {
+      times.B = code;
+      atualizarAvisos();
+    });
+    gradeA.classList.add('par');
+    gradeB.classList.add('par');
+
     avisoErro.hidden = true;
 
     tela.append(
@@ -260,14 +278,8 @@ export const telaSelecoes =
               : 'Escolha as seleções e mande o convite na tela seguinte. O outro aparelho escolhe as dele.',
       }),
       duelo.node,
-      grade('A', rotuloA, times.A, (code) => {
-        times.A = code;
-        atualizarAvisos();
-      }),
-      grade('B', rotuloB, times.B, (code) => {
-        times.B = code;
-        atualizarAvisos();
-      }),
+      gradeA,
+      gradeB,
       avisoRepetida,
       avisoErro,
       el('div', { classe: 'grupo empurra' }, [

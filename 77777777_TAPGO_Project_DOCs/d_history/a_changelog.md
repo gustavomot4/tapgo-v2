@@ -7,6 +7,23 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-20] — `T-27`: o desktop deixa de ser a coluna de 420px, e são duas colunas (`D-86`)
+
+- **Skill:** frontend-uiux. Card `T-27`, nascido de `P-1`+`P-7` no mesmo card, o terceiro da lista que o dono escolheu em 2026-08-20.
+- **A direção foi escolhida ANTES da primeira linha de CSS, e é do dono.** A sessão apresentou três, com custo e limite medidos de cada uma: (A) a mesma coluna mais larga, ~15 linhas e zero TypeScript, mas em 1280 ainda sobravam ~560px; (B) duas colunas na mesma folha; (C) trilho fixo de 320px, que custava TypeScript nas 8 telas e deixava trilho vazio em `campeao` e `torneio_novo`. O dono escolheu **B**, e ela virou `D-86`.
+- **A regra numa frase:** a largura da folha passa a ser declarada pela TELA, não por um teto global — `.tela--largo` vai a 1040px em duas colunas (seleções, torneio), `.tela--disputa` a 760px (cobrança), e o que não emparelha fica em 460px. `:has(> .tela--…)` no `.tapgo` é o que deixa a filha declarar a largura da mãe; a folha já usava `:has()` desde `T-20`.
+- **Adicionado:** um bloco `@media (min-width: 1024px)` em `src/ui/estilo.css`, e quatro classes nas telas — `tela--largo` em `tela_selecoes.ts` e `tela_torneio.ts`, `tela--disputa` em `tela_cobranca.ts`, e `par` nos blocos que emparelham. Nenhum arquivo novo, nenhum teste novo — `vitest` roda em Node sem DOM e nenhuma tela de M7 é alcançável por lá.
+- **Não reabre `D-65`:** zero asset novo, nenhuma cor fora da paleta, e o bloco novo não anima nada — só coloca caixa.
+- **A cobrança é mais estreita de propósito, e o motivo é de ALTURA:** `.campo` tem `aspect-ratio: 36/26`, então numa folha de 1040px ele teria ~720px de altura sozinho e a disputa começaria fora da dobra de um monitor de 800. O campo passou a ser limitado pela altura disponível, com `min(100%, …)` de guarda contra rolagem lateral em janela baixa e larga.
+- **Duas armadilhas pagas, e as duas foram medidas:** `margin-inline: auto` desliga o esticamento do item de grade e de flex — com ela o "Começar" saiu com **100px** de largura, alvo MENOR que o do celular dentro de uma folha três vezes maior; e o seletor da cobrança pedia `.grupo.empurra`, onde o bloco é `<div class="empurra">` sem `grupo`, logo não casava com nada.
+- **Números, lidos de `dist/`:** seleções vão de 2 para **4 cartões por linha** e de 2.719 para **1.590 px** de altura; o campo sai de 336x243 para **642x464**, com a base em 709 e a dobra em 800; o torneio põe a próxima disputa e a tabela lado a lado, as duas em `y = 137`.
+- **Em 360x640 nada mudou, e isso foi medido:** 2 cartões por linha, folha de 360, campo 336x243. Tudo o que a sessão escreveu está dentro de `@media (min-width: 1024px)`.
+- **Portão:** `check.py` verde, suíte **582/582**, `tsc --noEmit` limpo, bundle **418.526 -> 419.200 B** (+674 B, zero asset novo) lido de `dist/`, e `scrollWidth == clientWidth` em 360, 1023, 1024, 1280 e 1920.
+- **Achado sem conserto de carona (regra 4):** `QA-31` — o "Sair da disputa" tem 144px num bloco de 336, porque o pai é um `<div>` de bloco e não um `.grupo` de flex. Medido igual antes e depois desta sessão.
+- **Lacuna declarada, e vira `A-30`:** o sandbox não compõe quadros e **nenhuma captura de tela foi feita** — geometria não diz se está bonito. O card pede **UM inteiro** (quantos cartões lado a lado), e não quatro sins: é a lição de `A-25`..`A-29` aplicada pela primeira vez.
+- **Fica declarado de fora:** início, convite, fim, campeão e torneio novo continuam coluna centrada, e `P-6` não entrou — pede decisão de cor E forma, e nenhuma das três direções o tocava.
+- **Decisões:** `D-86`. Achados: `QA-31`. Evidência inteira em `e_qa/t27_desktop_duas_colunas.md`.
+
 ## [2026-08-20] — `A-28` e `A-29` fechadas: `T-25` e `T-26` passam a ter campo
 
 - **Skill:** frontend-uiux (mesma sessão de `T-26`, fechando as duas conferências de aparelho).

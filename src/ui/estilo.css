@@ -1186,8 +1186,9 @@
   }
 }
 
-/* Acima de 420px o jogo não estica: um alvo de toque de 300px de largura não fica melhor, fica
-   estranho. A largura máxima é a mesma, e a folga vira margem. */
+/* Entre 480 e 1024 o jogo não estica: um alvo de toque de 300px de largura não fica melhor, fica
+   estranho. A largura máxima é a mesma, e a folga vira margem. Acima de 1024 a decisão muda, e
+   ela é `D-86` — o bloco logo abaixo. */
 @media (min-width: 480px) {
   .tapgo {
     min-height: auto;
@@ -1195,5 +1196,141 @@
     border: 1px solid var(--borda);
     border-radius: 22px;
     box-shadow: 0 32px 64px -28px rgb(0 0 0 / 90%), var(--realce);
+  }
+}
+
+/*
+ * ── O desktop (`D-86`, `T-27`: `P-1`+`P-7`) ─────────────────────────────────────────────
+ *
+ * Até aqui a folha tinha UM teto — 420px — e um ponto de quebra que só desenhava a borda do
+ * cartão (`:1190`). Em 1280x800 sobravam ~860px por construção, e a queixa de `P-1` é essa: o
+ * desktop era a tela do celular esticada. `D-86` é a direção que faltava, e ela cabe inteira
+ * dentro de `D-65` — nenhum asset novo, nenhuma cor fora da paleta, e nada que anime além de
+ * `opacity`/`transform` (este bloco não anima nada; só coloca caixa).
+ *
+ * ## A regra, e ela é uma frase
+ *
+ * **A largura da folha é declarada PELA TELA, não pela folha.** O teto deixa de ser um número
+ * global e passa a ser uma pergunta: esta tela tem conteúdo que EMPARELHA?
+ *
+ *   - tem  → `.tela--largo`, e a folha vai a 1040px em duas colunas (seleções, torneio)
+ *   - não, mas o campo é o conteúdo → `.tela--disputa`, 760px (cobrança)
+ *   - não tem nada a emparelhar → 460px, o cartão de sempre com um dedo a mais de ar
+ *
+ * `:has(>` no `.tapgo` é o que permite a filha declarar a largura da mãe. A folha já usa `:has()`
+ * em `.cartao` e `.segmento` desde `T-20`, então não é técnica nova aqui.
+ *
+ * ## O que este bloco NÃO faz, de propósito
+ *
+ * As telas de início, convite, fim, campeão e torneio novo continuam coluna centrada. Não é
+ * esquecimento: um menu de 4 botões não tem o que pôr em duas colunas, e alargar o botão é
+ * exatamente o que o bloco de 480px acima recusou — pela mesma razão, que continua valendo.
+ *
+ * ## 360x640 sai daqui intacto
+ *
+ * Tudo neste arquivo, deste comentário para baixo, está dentro de `@media (min-width: 1024px)`.
+ * O viewport mínimo não lê uma linha disto — é o que torna o portão de `A-30` uma conferência de
+ * desktop, e não uma releitura do celular.
+ */
+@media (min-width: 1024px) {
+  /* O chão: 460px, e não 420. A folga é do CARTÃO, não do conteúdo — 40px a mais de respiro no
+     desktop sem tocar em alvo de toque nenhum. */
+  .tapgo {
+    max-width: 460px;
+    padding: 24px;
+  }
+
+  .tapgo:has(> .tela--largo) {
+    max-width: 1040px;
+  }
+
+  /*
+   * A cobrança é mais estreita que as duas colunas por um motivo que é de ALTURA, não de largura:
+   * `.campo` tem `aspect-ratio: 36/26`, então cada pixel de largura vira 0,72 de altura. Numa
+   * folha de 1040px o campo teria 720px de altura sozinho, e a tela inteira passaria dos 800 do
+   * monitor — a disputa começaria fora da dobra. 760px é o teto que deixa o campo grande e a
+   * tela em pé.
+   */
+  .tapgo:has(> .tela--disputa) {
+    max-width: 760px;
+  }
+
+  /* ── Duas colunas ──────────────────────────────────────────────────────────────────── */
+
+  /*
+   * `.tela` deixa de ser coluna e vira grade. `minmax(0, 1fr)` e não `1fr`: o mínimo automático
+   * de um item de grade é `min-content`, e o nome de seleção mais longo do catálogo dentro de
+   * `.cartao__nome` empurraria a coluna para além da metade — que é rolagem horizontal, o único
+   * defeito que o portão desta tarefa não perdoa.
+   */
+  .tela--largo {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-content: start;
+    gap: 14px 20px;
+  }
+
+  /* O padrão é atravessar as duas colunas: quem emparelha é a exceção, e ela se declara. */
+  .tela--largo > * {
+    grid-column: 1 / -1;
+  }
+
+  /* `.par` é a marca que a TELA põe no bloco que tem um irmão para ficar ao lado — as duas
+     grades de seleção (`P-7`), a próxima disputa e a tabela do grupo. Uma classe, e não uma
+     regra estrutural por `nth-child`: a tela de torneio troca a tabela por uma caixa de aviso
+     no estado de erro, e contar filhos quebraria exatamente nesse estado. */
+  .tela--largo > .par {
+    grid-column: auto;
+  }
+
+  /*
+   * O confronto NÃO é capado, e isso é escolha: com as duas grades lado a lado, as suas duas
+   * metades (`1fr auto 1fr`) caem em cima da grade correspondente. Ele deixa de ser um cartão
+   * solto no topo e vira o cabeçalho das duas colunas.
+   */
+
+  /*
+   * O que é AÇÃO não estica. Um "Começar" de 992px de largura é o mesmo erro que o bloco de
+   * 480px recusou, só que quatro vezes maior. O `.botao` solto entra na lista por causa do
+   * estado VAZIO das seleções, que não tem `.grupo` nenhum — só título, aviso e "Voltar".
+   *
+   * `justify-self: center` e NÃO `margin-inline: auto`, e isto foi medido, não suposto: margem
+   * automática desliga o esticamento do item de grade, que passa a se dimensionar pelo conteúdo.
+   * Com `margin-inline: auto` o "Começar" saiu com 100px de largura — um alvo MENOR que o do
+   * celular, dentro de uma folha três vezes maior. `width: 100%` com teto devolve os 420.
+   */
+  .tela--largo > .grupo.empurra,
+  .tela--largo > .botao {
+    justify-self: center;
+    width: 100%;
+    max-width: 420px;
+  }
+
+  /* ── A disputa ─────────────────────────────────────────────────────────────────────── */
+
+  /*
+   * O campo cresce até onde a ALTURA deixa, não até onde a largura deixa. `58vh` de altura, e a
+   * largura sai da própria proporção 36:26 — em 1280x800 dá ~642px de largura por 464 de altura,
+   * contra os ~396 de hoje. `min(100%, …)` é o guarda: numa janela baixa e larga o campo volta a
+   * ser limitado pela folha, e nunca ultrapassa os 100% que causariam rolagem lateral.
+   */
+  .tela--disputa > .campo {
+    width: min(100%, calc(58vh * 36 / 26));
+    margin-inline: auto;
+  }
+
+  /*
+   * `align-self` e não `justify-self`: `.tela--disputa` continua sendo flex de COLUNA, e ali o
+   * eixo cruzado é o horizontal. Mesma armadilha da margem automática, mesma saída.
+   *
+   * E o seletor é `.empurra` puro, não `.grupo.empurra`: nesta tela o bloco da saída é
+   * `<div class="empurra">` sem `grupo` (`tela_cobranca.ts`). A primeira escrita desta regra
+   * pedia as duas classes e não casava com nada — regra morta é pior que regra ausente, porque
+   * parece cobertura.
+   */
+  .tela--disputa > .empurra {
+    align-self: center;
+    width: 100%;
+    max-width: 420px;
   }
 }
