@@ -9,6 +9,7 @@ status: atual
 
 ## [2026-08-20] — o falsificador de `D-81` medido em campo: a porta M5 passou, `T-23` liberada
 
+- **Skill:** evolution-auditor (registro da medição do dono; `src/` intocado).
 - **Medição do dono, dois aparelhos reais**, com os DOIS abrindo o mesmo link de convite.
 - **As 3 previsões do modelo bateram:** (1) os dois aparelhos na **mesma seleção** (os dois receberam `ladoLocal: 'B'`, logo `teams.B`); (2) os dois no papel de **defesa** — com `first = 'A'` e `localSide = 'B'` dos dois lados, `derivacao.vez()` devolve `'defender'` em ambos; (3) o toque numa zona é aceito e leva a "esperando o outro jogador", ou seja **o `Move` sai**, que é a pré-condição da guarda de `D-81`.
 - **O que isso resolve:** o portão de `T-23` declarava que a porta inteira reprovaria se a trava aparecesse **antes de qualquer toque** — não aparece. `D-81` age no lugar certo, e a porta do `peerId` deixa de ser alternativa desta rodada (segue viva só como a única que faria os 3 casos de abertura funcionarem, ainda sem dado).
