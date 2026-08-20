@@ -35,6 +35,30 @@
  *    resultado, e não há vencedor a inventar. Reentrar na sala aqui seria o peer fantasma de
  *    `D-41`.
  *
+ * ## Modo `online`: 15 s por cobrança, e o estouro não sai deste aparelho (`T-24`/`D-84`)
+ * A regra do dono (`Q-15`) é "15 s por cobrança, e quem demorou perde". A forma óbvia — cada
+ * aparelho contar 15 s e **resolver** a cobrança sozinho — reprova antes de compilar: são dois
+ * relógios sem árbitro, e uma jogada que chega a 15,05 s aqui e 14,90 s lá faz os dois lados
+ * resolverem a MESMA cobrança de formas diferentes, com os `MatchState` divergindo em silêncio.
+ *
+ * O que esta tela faz no lugar disso: aos 15 s ela **escolhe uma zona sozinha**, por
+ * `createRng(newSeed())` de M1, e a manda por `choose()` como qualquer toque. O outro aparelho
+ * nunca sabe que houve estouro — para ele chegou uma jogada normal —, então não há o que
+ * divergir. "Perde a cobrança" vira "cobra no escuro", que pune de fato: zona sorteada contra um
+ * goleiro que escolheu.
+ *
+ * Três consequências que valem estar escritas:
+ *
+ * 1. **Zero byte em `src/net` e `D-13` intacto.** Nenhum tipo novo no fio, nenhum método novo na
+ *    porta congelada de M5/M6. O prazo inteiro vive em M7 — é o que torna esta a saída barata.
+ * 2. **O relógio conta a escolha DESTE aparelho, não a do outro.** Depois de escolher, ele para:
+ *    quem está devendo é o outro lado, e lá corre o relógio dele. Esperar é limitado por eles
+ *    dois, nunca por nada que esta tela precise cronometrar.
+ * 3. **Com o peer sumido (`T-22`), o relógio para.** Ali já corre o prazo de M6 e a disputa pode
+ *    acabar sem resultado (`D-35`); somar um segundo contador seria cobrar pressa de quem não
+ *    tem com quem jogar. Se o peer voltar dentro do prazo, a cobrança recomeça com os 15 s
+ *    cheios — generoso e inofensivo, porque nada aqui decide placar.
+ *
  * ## Os 4 estados
  * - **carregando** — a cena Phaser chegando por `import()`. O campo aparece sem animação e os
  *   botões já funcionam: esperar o cenário para deixar jogar seria trocar jogabilidade por enfeite.
@@ -48,6 +72,7 @@
  */
 
 import type { Side, Zone } from '../core/index';
+import { createRng, newSeed } from '../core/index';
 import type { LinkStatus, MatchState, Session, SessionConfig } from '../session/index';
 import { CONNECT_TIMEOUT_MS, createSession } from '../session/index';
 import type { Cena } from './cena';
@@ -56,7 +81,10 @@ import type { Vez } from './derivacao';
 import { botao, el, focar, limpar } from './dom';
 import { marca } from './tela_selecoes';
 import {
+  AVISO_COBRANCA_SORTEADA,
   AVISO_PEER_SUMIU,
+  PRAZO_COBRANCA_MS,
+  SEGUNDOS_DE_PRESSA,
   ZONAS,
   descricaoFase,
   instrucao,
@@ -65,8 +93,10 @@ import {
   nomeSelecao,
   nomeZona,
   placar,
+  avisoDePressa,
   segundosRestantes,
   textoDaEspera,
+  textoDoPrazo,
   resultadoUltimaCobranca,
   rotuloZona,
   sorteioDoPrimeiro,
@@ -167,6 +197,25 @@ export const telaCobranca =
     let prazoDaEspera: number | null = null;
     let tiqueDaEspera: ReturnType<typeof setInterval> | null = null;
 
+    /**
+     * `T-24`: o instante (relógio local) em que os 15 s desta cobrança acabam, ou `null` quando
+     * não há prazo correndo — porque a vez não é de escolher, porque este aparelho já escolheu,
+     * ou porque o peer sumiu e quem conta agora é `prazoDaEspera`.
+     */
+    let prazoDaCobranca: number | null = null;
+    let tiqueDaCobranca: ReturnType<typeof setInterval> | null = null;
+    /**
+     * Qual cobrança o relógio vigia — `estado.kicks.length` no instante em que ele armou.
+     *
+     * É o que torna `armarRelogio()` idempotente: `desenhar()` roda a cada notificação de M5, e
+     * sem esta marca cada notificação sem novidade devolveria o prazo cheio a quem já gastou 14 s.
+     */
+    let cobrancaDoRelogio: number | null = null;
+    /** O aviso falado dos últimos segundos já saiu nesta cobrança. */
+    let avisouDaPressa = false;
+    /** A última escolha deste aparelho saiu do relógio, não do dedo. */
+    let sorteada = false;
+
     // ── Esqueleto ─────────────────────────────────────────────────────────────────────────
     const numeros = el('span', { classe: 'placar__numeros', texto: placar(estado) });
     const ladoA = el('span', { classe: 'placar__lado' }, [
@@ -211,6 +260,11 @@ export const telaCobranca =
     // leitor ouve a faixa acima, que anuncia UMA vez que o outro jogador parou de responder.
     const contador = el('p', { classe: 'sub', attrs: { 'aria-live': 'off' } });
     contador.hidden = true;
+    // O relógio de `T-24`, pelo mesmo motivo com `aria-live` desligado: número que muda a cada
+    // segundo faz o leitor de tela recitar sem parar. Quem usa leitor ouve a faixa, que avisa
+    // UMA vez quando faltam poucos segundos (`avisouDaPressa`).
+    const relogio = el('p', { classe: 'sub', attrs: { 'aria-live': 'off' } });
+    relogio.hidden = true;
     const erro = el('div', { classe: 'aviso', dados: { tom: 'erro' } });
     erro.hidden = true;
 
@@ -230,6 +284,7 @@ export const telaCobranca =
       campo,
       faixa,
       contador,
+      relogio,
       erro,
       el('div', { classe: 'empurra' }, [sair]),
     );
@@ -269,6 +324,7 @@ export const telaCobranca =
       if (vez === null) {
         sorteio.hidden = true;
         travarZonas(true);
+        pararRelogio();
         return;
       }
 
@@ -287,6 +343,7 @@ export const telaCobranca =
       travarZonas(travado);
 
       if (vez.pendente) {
+        pararRelogio();
         // Modo `local`, entre chute e defesa. Nenhuma pista da zona escolhida — ver o cabeçalho.
         faixa.dataset['tom'] = 'atencao';
         faixa.textContent = `Passe o aparelho: ${nomeSelecao(partida.times[vez.lado])} defende.`;
@@ -301,6 +358,8 @@ export const telaCobranca =
         // prazo, e M6 escoa a fila de jogadas na volta.
         faixa.dataset['tom'] = 'atencao';
         faixa.textContent = AVISO_PEER_SUMIU;
+        // `T-24`: o relógio da cobrança cala enquanto o de `T-22` conta. Ver o cabeçalho.
+        pararRelogio();
         pintarContador();
         return;
       }
@@ -310,8 +369,11 @@ export const telaCobranca =
         // A escolha já foi enviada; o que falta é a do outro aparelho. Zonas continuam
         // trancadas: M5 recusa a segunda escolha da mesma cobrança, e um segundo toque aqui
         // viraria estado de erro por algo que a pessoa não fez de errado.
+        // `T-24`: escolhido, o prazo deste aparelho acabou de existir — quem deve agora é o
+        // outro lado, e o relógio que o cobra corre no aparelho dele.
+        pararRelogio();
         faixa.dataset['tom'] = 'atencao';
-        faixa.textContent = 'Escolha enviada. Esperando o outro jogador…';
+        faixa.textContent = sorteada ? AVISO_COBRANCA_SORTEADA : 'Escolha enviada. Esperando o outro jogador…';
         return;
       }
 
@@ -321,6 +383,10 @@ export const telaCobranca =
         apresentados > 0 && resultado !== null
           ? `${resultado} ${instrucao(vez.papel)}.`
           : instrucao(vez.papel) + '.';
+
+      // A vez é de escolher e ninguém está esperando animação: é aqui, e só aqui, que os 15 s
+      // de `T-24` começam a correr.
+      armarRelogio();
     }
 
     function mostrarErroDeToque(): void {
@@ -360,6 +426,10 @@ export const telaCobranca =
       if (travado || !vivo) return;
       travado = true;
       travarZonas(true);
+      // `T-24`: o toque chegou dentro do prazo — o relógio não tem mais o que cobrar. Se
+      // `choose()` recusar, `desenhar()` arma um prazo novo e cheio: erro que a pessoa não
+      // cometeu não pode comer o tempo dela.
+      pararRelogio();
       erro.hidden = true;
 
       const antes = estado.kicks.length;
@@ -403,6 +473,7 @@ export const telaCobranca =
       if (!vivo) return;
       travado = false;
       aguardandoPeer = false;
+      sorteada = false;
 
       if (estado.phase === 'finished') {
         ctx.ir({ nome: 'fim', partida, estado });
@@ -444,6 +515,82 @@ export const telaCobranca =
 
       apresentando = true;
       void apresentar().then(seguir, seguir);
+    }
+
+    // ── `T-24`: o relógio dos 15 s da cobrança (só `online`) ──────────────────────────────
+
+    /**
+     * Arma o prazo desta cobrança, se ainda não estiver armado.
+     *
+     * Idempotente por `cobrancaDoRelogio`: chamada de novo para a MESMA cobrança não devolve
+     * segundos a quem já os gastou. Tique de 250 ms pelo motivo de `T-22` — a virada do segundo
+     * na tela não pode atrasar até um segundo inteiro atrás do relógio real.
+     */
+    function armarRelogio(): void {
+      if (!online || !vivo || caiu || travado) {
+        pararRelogio();
+        return;
+      }
+      const cobranca = estado.kicks.length;
+      if (prazoDaCobranca !== null && cobrancaDoRelogio === cobranca) return;
+
+      pararRelogio();
+      cobrancaDoRelogio = cobranca;
+      avisouDaPressa = false;
+      prazoDaCobranca = Date.now() + PRAZO_COBRANCA_MS;
+      tiqueDaCobranca = setInterval(pintarRelogio, 250);
+      pintarRelogio();
+    }
+
+    function pararRelogio(): void {
+      if (tiqueDaCobranca !== null) {
+        clearInterval(tiqueDaCobranca);
+        tiqueDaCobranca = null;
+      }
+      prazoDaCobranca = null;
+      cobrancaDoRelogio = null;
+      relogio.hidden = true;
+      relogio.textContent = '';
+      delete relogio.dataset['tom'];
+    }
+
+    /** Pinta os segundos que faltam; em zero, cobra no escuro. */
+    function pintarRelogio(): void {
+      if (!vivo || prazoDaCobranca === null) return;
+
+      const faltam = segundosRestantes(prazoDaCobranca, Date.now());
+      relogio.textContent = textoDoPrazo(faltam);
+      relogio.hidden = false;
+
+      if (faltam <= SEGUNDOS_DE_PRESSA) {
+        relogio.dataset['tom'] = 'atencao';
+        if (!avisouDaPressa) {
+          // UMA vez, e na faixa — que é a região viva. É o que quem não está olhando o número
+          // recebe; repetir a cada tique tornaria o leitor de tela inútil no resto da tela.
+          avisouDaPressa = true;
+          faixa.dataset['tom'] = 'atencao';
+          faixa.textContent = avisoDePressa(faltam);
+        }
+      }
+
+      if (faltam === 0) cobrarNoEscuro();
+    }
+
+    /**
+     * O estouro, resolvido DENTRO deste aparelho: zona sorteada, mandada como jogada normal.
+     *
+     * `newSeed()` e não a semente da partida: a semente da disputa é acordada entre os dois
+     * aparelhos e reproduzir a sequência dela aqui daria ao outro lado como adivinhar a zona. O
+     * acaso do estouro é local e descartável, e por isso nasce e morre nesta linha.
+     */
+    function cobrarNoEscuro(): void {
+      pararRelogio();
+      if (!vivo || !online || caiu || travado || apresentando || aguardandoPeer) return;
+
+      const zona = ZONAS[createRng(newSeed()).int(ZONAS.length)];
+      if (zona === undefined) return;
+      sorteada = true;
+      escolher(zona);
     }
 
     // ── `T-22`: o contador do prazo ───────────────────────────────────────────────────────
@@ -499,6 +646,7 @@ export const telaCobranca =
     function mostrarQueda(): void {
       caiu = true;
       pararEspera();
+      pararRelogio();
       aguardandoPeer = false;
       travado = true;
       travarZonas(true);
@@ -616,6 +764,7 @@ export const telaCobranca =
     return () => {
       vivo = false;
       pararEspera();
+      pararRelogio();
       document.removeEventListener('keydown', naTeclaGlobal);
       cancelarAssinatura();
       sessao.dispose();

@@ -9,6 +9,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createSession } from '../session/index';
 import type { Level, MatchState, Session } from '../session/index';
 import type { Side, Zone } from '../core/index';
+import { createRng, newSeed } from '../core/index';
 import { listTeams } from '../data/teams';
 
 import { criarDerivacao, outroLado } from '../ui/derivacao';
@@ -34,8 +35,14 @@ import {
   nomeSelecao,
   nomeZona,
   placar,
+  AVISO_COBRANCA_SORTEADA,
+  PRAZO_COBRANCA_MS,
+  ZONAS,
+  SEGUNDOS_DE_PRESSA,
+  avisoDePressa,
   segundosRestantes,
   textoDaEspera,
+  textoDoPrazo,
   resultadoUltimaCobranca,
   rotuloZona,
   sorteioDoPrimeiro,
@@ -1324,5 +1331,57 @@ describe('contador dos segundos que faltam (T-22)', () => {
   it('em zero a frase para de contar em vez de congelar "0 s"', () => {
     expect(textoDaEspera(0)).not.toMatch(/\d/);
     expect(textoDaEspera(-3)).toBe(textoDaEspera(0));
+  });
+});
+
+// ── `T-24`: o prazo de 15 s por cobrança no `online` (`Q-15`/`D-84`) ────────────────────────
+describe('prazo da cobrança no online (T-24)', () => {
+  it('são os 15 s que o dono decidiu, e o mesmo relógio de `T-22` os conta', () => {
+    expect(PRAZO_COBRANCA_MS).toBe(15_000);
+    expect(segundosRestantes(PRAZO_COBRANCA_MS, 0)).toBe(15);
+  });
+
+  it('vence ANTES do prazo que M6 dá ao peer sumido — senão o sorteio chegaria tarde', () => {
+    // O invariante que sustenta a saída (b): aos 15 s este aparelho ainda tem canal para mandar
+    // a jogada. Se o prazo passasse de `CONNECT_TIMEOUT_MS`, a disputa já teria acabado por
+    // abandono (`D-35`) e o sorteio nunca sairia daqui.
+    expect(PRAZO_COBRANCA_MS).toBeLessThan(CONNECT_TIMEOUT_MS);
+    expect(SEGUNDOS_DE_PRESSA).toBeLessThan(PRAZO_COBRANCA_MS / 1000);
+  });
+
+  it('a frase promete SORTEIO, nunca cobrança perdida nem placar', () => {
+    // "Quem demorou perde" é a regra do dono; o que a TELA faz é sortear a zona. Prometer perda
+    // aqui seria a UI antecipando um placar que só o motor escreve.
+    const frases = [textoDoPrazo(15), textoDoPrazo(1), textoDoPrazo(0), AVISO_COBRANCA_SORTEADA];
+    for (const frase of frases) {
+      expect(frase).not.toMatch(/undefined|NaN/);
+      expect(frase).not.toMatch(/perde|perdeu|perdida|gol|placar|conex[ãa]o|rede/i);
+      expect(frase).toMatch(/sorte/i);
+    }
+    expect(textoDoPrazo(15)).toContain('15 s');
+  });
+
+  it('em zero para de contar em vez de congelar um número', () => {
+    expect(textoDoPrazo(0)).not.toMatch(/\d/);
+    expect(textoDoPrazo(-2)).toBe(textoDoPrazo(0));
+  });
+
+  it('o aviso falado sai com segundo inteiro, nunca negativo nem fracionário', () => {
+    expect(avisoDePressa(5)).toContain('5 segundos');
+    expect(avisoDePressa(4.7)).toContain('4 segundos');
+    expect(avisoDePressa(-1)).toContain('0 segundos');
+    expect(avisoDePressa(Number.NaN)).not.toMatch(/NaN/);
+  });
+
+  it('o sorteio do estouro sai do gerador de M1, e cai sempre numa das três zonas', () => {
+    // A zona nasce de `createRng(newSeed()).int(ZONAS.length)` — o mesmo caminho que a tela usa.
+    // O que este teste cobra é o índice: `int` inclui o 0 (defeito 3 da v1) e nunca alcança o 3.
+    const vistas = new Set<string>();
+    for (let i = 0; i < 2_000; i++) {
+      const zona = ZONAS[createRng(newSeed()).int(ZONAS.length)];
+      expect(zona).toBeDefined();
+      vistas.add(String(zona));
+    }
+    expect(vistas).toEqual(new Set(['L', 'C', 'R']));
   });
 });

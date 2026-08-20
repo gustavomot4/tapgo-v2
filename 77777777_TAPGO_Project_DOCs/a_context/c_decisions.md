@@ -61,6 +61,7 @@ status: atual
 | D-81 | 2026-08-20 | ADOTADO · VETÁVEL | `QA-26`, porta M5: `m.side === localSide` é par espelhado, tratado na forma de `D-80`. Portão, custo e as 4 mortas em [[qa26_lado_do_convite]] | `D-80` não alcança: `kicks.length=0` nos dois lados, sempre |
 | D-82 | 2026-08-20 | ADOTADO · SUPERSEDE D-69 no número | `A-21`: o teto do registro sobe de 16.000 para **20.000** (aviso 18.000) — os TRÊS pools estão em zero ao mesmo tempo, medido, e nem o veredito de `A-21` coube | É rejeição adiada e o prazo é declarado: ~9 decisões a 438, ~11 se `D-83` valer. Números em [[a21_limite_por_linha]] |
 | D-83 | 2026-08-20 | ADOTADO | `A-21` reparado: `check.py` reprova linha de `D-NN`/`QA-NN` acima de **400** medidos, com as 14 vivas isentas por ID congelado; o que sai da linha entra em `e_qa/<slug>.md` | Portão: das próximas 10 linhas, todas ≤ 400 e nenhuma perde evidência. O §8 de [[a20_tres_orcamentos]] reprovou como escrito — 3 números em [[a21_limite_por_linha]] |
+| D-84 | 2026-08-20 | ADOTADO | `Q-15` pela saída (b): 15 s por cobrança no `online`, e no estouro o próprio aparelho sorteia a zona com `createRng(newSeed())` e a manda como jogada normal — só M7, zero byte em `src/net`, `D-13` intacto | Dois relógios sem árbitro divergem se cada um RESOLVER a cobrança; jogada sorteada não tem o que divergir. Campo em dois aparelhos: `A-27` |
 > **Gatilhos de revisão** (`D-43`): moram no tema que cada um mede — `D-01` em [[online_p2p]], `D-02` em [[stack]].
 
 ## Questões abertas (Q-NN — decisões do DONO, não do agente)
@@ -68,5 +69,5 @@ status: atual
 |---|---|---|
 | Q-09 | No modo `local`, de quem é a escolha pendente, se a porta congelada de M5 não a expõe? | antes de T-10 (**prazo vencido — `QA-07`**); hoje M7 deriva de `kicks.length` e a saída definitiva está em [[questoes_abertas_notas]] |
 | Q-08 | `pick(role)` lê o histograma do **mesmo** papel — é essa a intenção, ou quem defende deveria ler o histograma `shooter` do humano? | antes de E-3 (**prazo vencido — `QA-07`**); as duas leituras e o custo de inverter em [[questoes_abertas_notas]] |
-| Q-15 | Tempo por cobrança no `online` — ID novo porque `Q-14` já é o STUN de `D-71` (`QA-24`) | **respondida**: 15 s, quem demorou perde — regra de M2, exige `D-NN` (relógio sem árbitro diverge). A tarefa é `T-24`, e a saída (b) já é a do dono |
+| Q-15 | Tempo por cobrança no `online` — ID novo porque `Q-14` já é o STUN de `D-71` (`QA-24`) | **fechada por `D-84`** (saída (b), 15 s, estouro resolvido dentro do aparelho) — `T-24` entregou; falta o campo de `A-27` |
 | Q-13 | Mudar `report(winner)` para trazer o placar é porta congelada (`D-13`/`D-58`) | segue do dono; `T-14` fechou com `D-67`, que mostra a ausência em vez de inventar zero |

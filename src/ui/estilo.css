@@ -626,6 +626,16 @@
   color: var(--atencao);
 }
 
+/*
+ * `T-24`: os últimos segundos do prazo da cobrança. Mesmo par de tokens da faixa em atenção —
+ * a mudança é de peso e cor, nunca de posição: linha que salta de lugar no fim da contagem
+ * empurra os botões de zona debaixo do dedo de quem está prestes a tocar.
+ */
+.sub[data-tom='atencao'] {
+  color: var(--atencao);
+  font-weight: 700;
+}
+
 .aviso {
   display: flex;
   flex-direction: column;

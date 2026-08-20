@@ -7,6 +7,18 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-20] — `T-24`: 15 s por cobrança no `online`, e o estouro resolvido dentro do aparelho (`D-84`/`Q-15`)
+
+- **Skill:** frontend-uiux. Portão: `python scripts/check.py` verde, `tsc --noEmit` limpo, suíte verde e a linha nova de `D-NN` ≤ 400 medidos — verde nos quatro.
+- **`D-84` adotado — `Q-15` pela saída (b), e ela é a que não pode divergir.** Aos 15 s o próprio aparelho sorteia a zona por `createRng(newSeed())` de M1 e a manda por `choose()` como jogada normal: o outro lado nunca sabe que houve estouro, então não há o que divergir. A saída (a) (o estouro virando evento no fio) reabriria a porta congelada de `D-13`; a saída ingênua (cada aparelho **resolver** a cobrança sozinho aos 15 s) racha a disputa em silêncio, porque são dois relógios sem árbitro. A linha mede **369**: é a **2ª das 10** do portão de `D-83`, e passou sem isenção.
+- **`T-24` entregue, só em M7.** Três arquivos de produção: `rotulos.ts` (o prazo e os textos, PUROS — é como a suíte os alcança sem DOM), `tela_cobranca.ts` (o relógio) e **uma** regra em `estilo.css`. **`src/net` com 0 byte alterado** e portão de camada de M7 em 0 ocorrências no padrão do CI.
+- **O relógio conta a escolha DESTE aparelho, e só.** Para no toque aceito (quem deve agora é o outro lado, e o relógio dele corre lá), para quando o peer some — ali já corre o prazo de M6 (`T-22`) e a disputa pode acabar sem resultado (`D-35`) —, e é idempotente por cobrança: notificação de M5 sem novidade não devolve segundos a quem já gastou 14.
+- **Invariante que a suíte cobra:** `PRAZO_COBRANCA_MS` **< `CONNECT_TIMEOUT_MS`** (15 s contra 20 s). Prazo maior faria o sorteio chegar depois de a disputa já ter acabado por abandono.
+- **Um teste pegou defeito antes do commit:** `avisoDePressa(NaN)` escrevia "Faltam NaN segundos" na faixa — justamente a região que o leitor de tela anuncia —, porque `Math.max(0, Math.trunc(NaN))` é `NaN`. Guarda de `Number.isFinite` entrou junto.
+- **Sandbox:** suíte **574 → 580/580** (6 testes novos), `tsc` limpo, bundle **416.549 → 417.664 B (+1.115 B)** lido de `dist/`, zero asset novo.
+- **Registro:** **17.125/20.000** (+344: `D-84` mais a linha de `Q-15` reescrita para fechada). **CONTEXT:** 3.833/4.000 (95%).
+- **O que falta, e é do dono:** `A-27` — dois aparelhos reais, um parado de propósito por 15 s, e as duas telas terminando com o MESMO placar. Nenhuma tela de M7 tem teste; sandbox não produz esse número.
+
 ## [2026-08-20] — o ID reciclado desempatado em três registros: `T-24`, `Q-15` e o título do arquivo (`QA-28`/`QA-24`/`QA-30`)
 
 - **Skill:** planner (nenhum byte em `src/`). Portão: `python scripts/check.py` verde **e** toda linha nova de `D-NN`/`QA-NN` ≤ 400 medidos — é o portão de `D-83` correndo pela primeira vez. Verde nos dois.

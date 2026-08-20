@@ -283,3 +283,51 @@ export function textoDaEspera(segundos: number): string {
     ? 'Encerrando a disputa…'
     : `A disputa termina em ${segundos} s se ele não voltar.`;
 }
+
+// ── `T-24`: o prazo de cada cobrança no `online` (`Q-15`, saída (b) de `D-84`) ───────────────
+// A regra do dono é "15 s por cobrança, e quem demorou perde". O que a torna implementável sem
+// árbitro é o desfecho escolhido: no estouro **este** aparelho sorteia a própria zona e a manda
+// como jogada normal. Nada de novo trafega, nada há a divergir — e por isso todo o prazo mora
+// aqui, em M7, e não no fio. Os textos abaixo prometem exatamente isso: escolha sorteada, nunca
+// "cobrança perdida", que seria placar decidido pela tela.
+
+/**
+ * Prazo de cada cobrança no modo `online`, em milissegundos (`D-84`).
+ *
+ * **Menor que `CONNECT_TIMEOUT_MS` de propósito**, e há teste sobre isso: o prazo da cobrança tem
+ * de vencer ANTES do prazo que M6 dá ao peer sumido, senão a disputa acabaria por abandono
+ * (`D-35`) justamente nos casos em que o sorteio a manteria viva.
+ */
+export const PRAZO_COBRANCA_MS = 15_000;
+
+/** A partir de quantos segundos restantes a tela avisa em voz alta — UMA vez, não a cada tique. */
+export const SEGUNDOS_DE_PRESSA = 5;
+
+/**
+ * A linha do relógio da cobrança.
+ *
+ * Diz o prazo **e** a consequência na mesma frase: um número solto na tela não informa que o
+ * silêncio tem desfecho. Em zero para de contar em vez de congelar "0 s", como `textoDaEspera`.
+ */
+export function textoDoPrazo(segundos: number): string {
+  return segundos <= 0
+    ? 'Tempo esgotado — sorteando a escolha…'
+    : `Escolha em ${segundos} s, ou ela será sorteada.`;
+}
+
+/** O aviso falado uma vez, para quem não está olhando o número (leitor de tela). */
+export function avisoDePressa(segundos: number): string {
+  // `Number.isFinite` antes do `trunc`: `Math.trunc(NaN)` é `NaN`, e `Math.max(0, NaN)` também —
+  // a palavra "NaN" chegaria à faixa, que é justamente a região que o leitor de tela anuncia.
+  const s = Number.isFinite(segundos) ? Math.max(0, Math.trunc(segundos)) : 0;
+  return `Faltam ${s} segundos para escolher.`;
+}
+
+/**
+ * O que a faixa diz depois de o relógio ter cobrado no lugar da pessoa.
+ *
+ * "Sorteada" e não "perdida": a cobrança acontece, com zona sorteada contra um goleiro que
+ * escolheu — o placar continua saindo do motor, e nenhuma frase daqui o antecipa.
+ */
+export const AVISO_COBRANCA_SORTEADA =
+  'O tempo acabou: sua escolha foi sorteada. Esperando o outro jogador…';
