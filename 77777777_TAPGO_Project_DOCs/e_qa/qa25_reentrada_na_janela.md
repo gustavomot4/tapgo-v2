@@ -92,3 +92,52 @@ reconexão legítima, e nesse caso não há divergência a detectar.
 
 **A saída continua sendo `D-NN` do dono** (regra 6): esta medição tira uma opção da lista de
 palpites, não escolhe entre elas.
+
+## As portas vivas, com o portão escrito ANTES do experimento (2026-08-20)
+
+A medição acima não escolhe: ela **tira opções da mesa**. Duas saíram por `D-78` e `D-79`; o que
+resta são duas portas e a de não mexer. O portão abaixo vale para as duas, e o extra é por porta.
+
+**Portão comum (5 itens).** (1) O lado preso recebe `'failed'` no **mesmo tick** da chegada do
+`seq=0`, sem esperar relógio. (2) O lado que voltou sai da tela travada — hoje ele também fica
+preso, porque descarta o `seq=3` do veterano por "fora de ordem". (3) **Nada regride:** os 4
+testes de `escoarFila` seguem verdes, e a queda-e-volta que se recupera sozinha (modo avião de
+`A-22`, o número que matou `D-78`) continua terminando a disputa. (4) Suíte verde, `tsc` limpo,
+bundle relido de `dist/`. (5) Campo, em dois aparelhos: reabrir o link no meio da disputa e os
+**dois** saírem da tela travada — sem isso o conserto é de meia tela. Uma mudança por vez: a
+porta escolhida entra sozinha, sem carona de `QA-24` nem de `A-21`.
+
+### Porta M5 — `src/session/index.ts` só
+
+M5 lê `m.seq === 0 && match.kicks.length > 0` (a igualdade de `:347` já separa o caso), marca
+`abandonada`, **sintetiza** `'failed'` no `link` que M7 já pinta (`tela_cobranca.ts:395`) e chama
+`canal.close()`. O item (2) sai de graça: o `leave()` vira `onPeerLeave` no outro lado, que
+emite `'waiting'` e rearma os 20 s — e aí `D-35` chega lá também.
+
+- **Custo completo:** guarda + docstring em M5. Zero byte em `src/net` e em `src/ui`, nenhum
+  método novo em porta nenhuma, bundle praticamente inalterado, zero migração de dado.
+- **O preço que não é código:** `LinkStatus` no vínculo M5→M7 deixa de significar "estado do
+  transporte" e passa a significar "estado do **vínculo da disputa**". Isso **tem** de estar
+  escrito na porta: a próxima sessão que ler `'failed'` como "M6 desistiu" erra por causa disto.
+- **P(passar): 65%** — acima da taxa-base porque a única objeção conhecida (a fila) foi medida e
+  caiu, o discriminador chega de graça, e o destino (`D-35`) já existe e já foi visto em campo.
+
+### Porta M6 — `Channel.fail()`, o 5º método
+
+Mesma detecção em M5, mas em vez de sintetizar, M5 pede a M6 que falhe de verdade: `fail()`
+público chamando o `falhar()` que já existe (`net/index.ts:310`). `LinkStatus` continua sendo o
+que diz ser, e o item (2) sai igual, porque `falhar()` solta a sala.
+
+- **Custo completo:** o 5º método na porta de M6 — parente do precedente que `D-73` recusou
+  comprar para `Session`, e que `D-39` recusou antes. `src/net` deixa de ser o "não muda um byte"
+  de `D-75`, `net.test.ts` ganha caso de idempotência, e a porta cresce para sempre.
+- **P(passar): 25%** — na taxa-base. Compra honestidade de tipo pagando com superfície de porta;
+  é a mesma troca que o registro já recusou duas vezes, sem ângulo novo além do conforto.
+
+### Não mexer
+
+- **Custo:** `QA-25` fica ALTO e aberto, com travamento permanente e as duas telas divergentes; e
+  a promessa "por link de convite" que `D-72` tirou do Objetivo **não volta**, porque é ela que o
+  achado pesa contra.
+- **P(passar): 15%** — só se o dono decidir que reabrir o link no meio da disputa é raro o
+  bastante para conviver, e aí isso precisa virar lacuna declarada, não silêncio.

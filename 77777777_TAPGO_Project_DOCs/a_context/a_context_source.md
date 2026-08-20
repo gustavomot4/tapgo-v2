@@ -30,8 +30,8 @@ Partida de ~1 minuto: contra a CPU ou contra alguém no mesmo aparelho. O online
 - **Pronto:** M1..M9 e a medição, com **E-1..E-6 fechadas**; suíte **559/559**. Módulo a módulo, e a tarefa que fechou cada um: [[estado_modulos]]
 - **Bundle:** **415.505 B** (5,2% de 8 MB) lido de `dist/` no sandbox — não reconferido na máquina do dono; T-21 somou **+7.411 B**, zero asset novo; 278.646 B são os 32 SVGs de T-19, asset do chunk de M4 (`QA-06`); Phaser e Trystero fora, por `import()` (D-27)
 - **Em andamento (máx 1):** nada
-- **Próximo:** `A-21` — cobrar por script as 2 frases por linha; portão no card, é `D-NN` do dono · `QA-25` (ALTO): lacuna da fila MEDIDA (a saída barata deixou de ser palpite), a escolha é `D-NN` · **`A-22` FECHADA em 2026-08-20**, e devolver ao Objetivo a promessa que `D-72` tirou é `D-NN` do dono — `QA-25` é o que pesa contra
-- **Bloqueado/pendente:** nada trava — registro **14.534/16.000 (90%)**, sobram **1.466** (≈2,9 decisões): o corte de `D-74` liberou 1.459, e `A-21` (a inclinação, +638/sessão) volta a ser dívida
+- **Próximo:** `A-23` — a porta que fecha `QA-25` (M5 **65%** × M6 25% × não mexer 15%), `D-NN` do dono; `D-78`/`D-79` já mataram duas saídas com número · `A-21` — cobrar por script as 2 frases por linha, também `D-NN` · devolver ao Objetivo a promessa que `D-72` tirou espera `QA-25`
+- **Bloqueado/pendente:** nada trava — registro **15.229/16.000 (95%)**, sobram **771** (≈2 decisões): `A-21` (a inclinação, +638/sessão) é a dívida que voltou
 - **Questões abertas:** Q-08, Q-09, Q-13, **Q-14** (respondida: 15 s e quem demorou perde — falta o `D-NN` e a sessão de M2) · **QA abertos:** QA-04..QA-07, QA-10, QA-17, QA-20, QA-21, **QA-24**, **QA-25** (reentrada dentro dos 20 s) · respondidas e fechados: [[decisions_archive]]
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)

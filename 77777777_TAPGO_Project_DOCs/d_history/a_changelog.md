@@ -7,6 +7,16 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-20] — auditoria de `QA-25`: duas saídas mortas (`D-78`, `D-79`), duas portas vivas com portão e P
+
+- **Skill:** evolution-auditor. **Escopo:** só documento — `src/` intocado (nenhum experimento rodou; o portão foi escrito ANTES, que é a regra da fase).
+- **Lista-morta percorrida:** `D-06`..`D-08`, `D-39`, `D-40`, `D-41`, `D-76`, mais as recusas embutidas em `D-58` e `D-73`. O que ela ensina aqui: `D-39` recusou comprar o que a porta já dá de graça, e `D-73` recusou o 5º método na porta congelada.
+- **`D-78` REJEITADO** — matar o rearme de `D-31` em `onPeerLeave`. Era a saída mais barata (fecha a janela sem tocar M5 nem M7), e o que a mata é número de campo de `A-22`: aparelho ~5 s em modo avião e a disputa seguiu. Cobra o caso comum (queda que se recupera) para pegar o raro.
+- **`D-79` REJEITADO** — identificador de sessão no fio. Agora que a fila foi medida, `seq=0` × `kicks.length>0` já discrimina; pagar um 2º tipo de payload contra o `isMove` de `D-32` compra o que o fio dá de graça — e nem cobre cliente modificado, que mentiria no identificador.
+- **As portas vivas, com custo completo e P(passar):** **M5** (guarda + docstring em `src/session/index.ts`; zero byte em `src/net` e `src/ui`; o preço é `LinkStatus` passar a significar vínculo da disputa, e isso tem de estar escrito na porta) — **65%** · **M6** (`Channel.fail()`, o 5º método; tipo honesto pagando superfície de porta) — **25%** · **não mexer** (ALTO aberto, e a promessa de `D-72` fora do Objetivo) — **15%**.
+- **Portão escrito antes do experimento, 5 itens comuns às duas portas:** `'failed'` no mesmo tick no lado preso · o lado que voltou também sai da tela travada (hoje ele também fica preso) · os 4 testes de `escoarFila` e a queda-e-volta que se recupera seguem verdes · suíte verde, `tsc` limpo, bundle relido de `dist/` · campo em dois aparelhos, reabrindo o link no meio da disputa. Uma mudança por vez.
+- **`A-23` aberta:** a escolha é do dono (regra 6) e a implementação é outra sessão. Suíte conferida no sandbox: **559/559**, nada mudou em produção. Íntegra em [[qa25_reentrada_na_janela]].
+
 ## [2026-08-20] — a lacuna declarada de `QA-25` foi MEDIDA: a fila de M6 não produz `seq=0` em disputa andada
 
 - **Skill:** testing. **Escopo:** só `src/tests/` — `src/net` e `src/session` intocados (o `git status` confirma).
