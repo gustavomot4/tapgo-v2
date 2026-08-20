@@ -7,6 +7,15 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-20] — `A-26`: o contador de `T-22` visto em campo — `T-22` deixa de ser só sandbox
+
+- **Skill:** backend-domain (registro da medição do dono; `src/` intocado nesta sessão).
+- **Relato do dono, dois aparelhos reais:** *"já testei aqui e deu tudo certo, apareceu a contagem e tudo"*.
+- **O item 1 do portão está confirmado com palavra sobre o observável:** a contagem **aparece** na tela do aparelho 1 quando o peer some. É o defeito que `A-24` pediu para fechar — "Esperando o outro jogador…" servia igual para *ele está pensando* e para *ele caiu e o relógio está correndo*, e agora o relógio tem número.
+- **Lacuna declarada, e é de forma:** os itens 2 (avião desligado antes do fim → o número **some** e a disputa segue) e 3 (prazo esgotado → `D-35`) vieram cobertos pelo **"deu tudo certo"** global, não como observações separadas. O card foi fechado assim, de propósito e por escrito.
+- **O que isso custa, nomeado antes de doer:** se um dia aparecer número **preso** na tela depois da volta do peer, o suspeito já está apontado no card — o item 2 é o único dos três que teste de sandbox não cobre sozinho, porque depende de peer real sumindo e voltando.
+- **O que fecha:** `A-26`, e com ele `T-22` passa a ter campo. A estimativa "~10 s a olho" que `A-25` registrou era exatamente a falta que este contador tapa.
+
 ## [2026-08-20] — `A-25` metade 2: o par são não regride — `QA-26` FECHADO por `D-81`
 
 - **Skill:** backend-domain (registro da medição do dono; `src/` intocado nesta sessão).
