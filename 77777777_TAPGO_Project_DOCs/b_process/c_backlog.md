@@ -125,6 +125,11 @@ _(vazio)_
 > existe, o custo real e o que o trava. Vira `T-NN` quando o dono escolher a direção — a maioria
 > é gosto e produto, logo `D-NN` dele (regra 6). Ordem aqui é de leitura, não de prioridade.
 > **`T-24` está reservado** para o desempate de `QA-28`, não usar.
+> **ESCOLHIDOS pelo dono em 2026-08-20, nesta ordem:** `P-2` (pontos, quase de graça) · `P-5`
+> (moeda animada dentro do painel de `D-49`) · `P-1`+`P-7` **no mesmo card** (desktop e
+> seleções disputam a mesma folha) · `P-6` entra junto de `P-1` se couber, senão é card
+> próprio. `P-3` (chaveamento) e `P-4` (emoção) ficam para depois: os dois pedem decisão de
+> contrato ou reabertura de `D-65`, e a folga do registro não comporta `D-NN` até `A-21`.
 
 - **(P-1) Desktop é a tela do celular esticada.** Medido: `.tapgo` tem `max-width: 420px`
   (`src/ui/estilo.css:69`) e o **único** ponto de quebra de layout, `min-width: 480px`
@@ -164,11 +169,16 @@ _(vazio)_
   já existe**, sem toque a mais e sem tela nova, não é o que `D-49` matou · **Custo:** só
   `opacity`/`transform` para caber em `D-65`; `A-14` já confirmou no aparelho que o painel
   aparece antes do 1º toque e some depois
-- **(P-6) Não dá para ver quem ataca e quem defende no lance.** É o mais próximo de defeito da
-  lista: hoje o papel vem só do texto da faixa e do `aria-label` das zonas
-  (`src/ui/tela_cobranca.ts:265`), e o destaque no placar aponta o lado **deste** aparelho,
-  não o papel · **Se o dono confirmar que confundiu em partida real, isto vira `QA-NN`**, não
-  ideia — é usabilidade de gameplay, e nenhum portão de M7 cobre "papel legível em 1 olhada"
+- **(P-6) O papel (ataca/defende) tem de ser lido numa olhada, sem texto.** **NÃO é `QA-NN`:**
+  o dono esclareceu em 2026-08-20 que não chegou a confundir em partida — o defeito é de
+  intuição, não de correção. Hoje o papel vem **só de texto**: a faixa (`tela_cobranca.ts:290`)
+  e o `aria-label` das zonas (`:265`); o destaque no placar aponta o **lado deste aparelho**,
+  não o papel · **O pedido:** cor e/ou imagem carregando o papel, para não ser preciso parar e
+  ler · **Duas restrições que a proposta tem de respeitar, e elas são portão, não gosto:**
+  (1) **cor não pode ser o único canal** — daltonismo; precisa vir com forma, ícone ou rótulo
+  junto; (2) o contraste ≥4,5:1 é **cobrado por teste** sobre o produto cartesiano da paleta
+  (`T-20`), então cor nova entra na paleta, não ao lado dela · **Onde encostar sem inventar
+  tela:** as três zonas já mudam de `aria-label` por papel, e o painel de `D-49` já existe
 - **(P-7) Seleção de time melhor organizada no desktop.** Filha de (P-1): a grade é
   `repeat(2, 1fr)` (`estilo.css:318`) dentro da mesma coluna de 420px. Decidir junto com (P-1),
   senão são duas mudanças disputando a mesma folha
