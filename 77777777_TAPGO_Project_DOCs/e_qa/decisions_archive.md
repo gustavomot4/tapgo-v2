@@ -352,7 +352,10 @@ achado aberto não se arquiva, e foi por isso que `D-50` deu orçamento próprio
 | QA-19 | 2026-08-12 | MÉDIO | `src/ui/rotulos.ts` + `src/ui/tela_selecoes.ts` (M7, desde `T-10`) | `marca()` escreve `flag` como TEXTO dentro do disco: com as bandeiras de `T-19`, os 32 cartões passam a mostrar o **caminho do SVG** onde mostravam o código, e `ehBandeira` (que existe para isso) é ignorado | Trocar o texto por `<img>` na tela — de M7 e de outra sessão (regra 4). É o mesmo conserto que fecha `QA-18`, que **não** some sozinho como aquela linha previa | ✔ 2026-08-13 — `marca()` lê `ehBandeira` e pinta `<img alt="">`; varredura de fonte cobra a leitura, que o vitest sem DOM não alcança |
 
 
-## A-21 — as linhas com íntegra em nota saem da tabela viva (2026-08-20)
+## Corte de `D-74` no registro — as linhas com íntegra em nota saem da tabela viva (2026-08-20)
+
+Feito na sessão de evolução de `A-21`, que não é o assunto desta passagem: até 2026-08-20 ela se
+chamava `## A-21`, e quem varria o arquivo lia um card ABERTO como feito (`QA-30`).
 
 `D-74` autorizou o corte e ele para aqui: sai da tabela viva a linha cuja íntegra JÁ está escrita
 fora dela. `A-20` aplicou isso à duplicata cuja íntegra estava NESTA página; estas quatro apontavam
@@ -393,3 +396,23 @@ cabeçalho o QA cai de **7.988** para **5.430** — 2.558 líquidos, 6,4 achados
 | QA-23 | 2026-08-20 | BAIXO | `src/ui/tela_fim.ts` (M7, desde `T-10`) | O resumo é `<ol>` com `.grupo`, que é `display: flex`: o marcador do `<li>` fica a critério do navegador e soma ao número já escrito no texto. Pego em campo por `A-22` — a mesma disputa saiu "1. 1. Espanha" num aparelho e "1. Brasil" no outro | Quem numera é o texto; `.resumo` apaga o marcador, e o `<ol>` guarda a semântica. Dois testes: a classe no TS e a regra na folha | 2026-08-20 (`T-21`) |
 | QA-25 | 2026-08-20 | ALTO | `src/session/index.ts:313` (M5, desde `T-13`) | `D-35` só era traduzido em `'failed'`, e `onPeerJoin` (`net/index.ts:379`) aceita quem reabre o link dentro dos 20 s: sessão zerada vestindo o mesmo `roomId` mandava `seq=0` contra uma disputa andada, os dois lados descartavam tudo do outro e nada mais emitia `'failed'`. Trava permanente com as telas divergentes, **não** placar mentiroso — as guardas de `D-32` seguravam | `D-80` (porta M5): `aoMove` lê `seq=0` com `kicks.length>0` como sessão zerada — discriminador medido em [[qa25_reentrada_na_janela]] —, marca `abandonada`, sintetiza `'failed'` e fecha o canal, o que tira o outro lado da tela travada. 5 testes novos, os 4 da fila intactos | 2026-08-20 (`D-80`) — campo em dois aparelhos é `A-24` |
 | QA-26 | 2026-08-20 | ALTO | `src/ui/main.ts:162` (M7, desde `T-21`) | `abertura()` dá `ladoLocal: 'B'` a **quem quer que** abra um endereço com `?sala=` — inclusive o anfitrião que toca no próprio link. Os dois viram lado B: mostram a mesma seleção (`teams.B`), os dois defendem primeiro (`first` é `'A'` no online) e cada `Move` chega com `side` igual ao do receptor, que `aoMove` descarta por "não é o do peer" | **Não é só o rótulo do time: é trava permanente** — nenhuma jogada atravessa, o canal fica `'connected'`, e `D-80` não pega porque os dois estão em `kicks.length=0`. O discriminador barato existe e é outro: `m.side === localSide` é impossível num pareamento são. `D-81` audita e escolhe a porta M5 (falha honesta na forma de `D-80`); as 4 portas mortas, o portão escrito antes do experimento e o preço para `D-72` estão em [[qa26_lado_do_convite]] | 2026-08-20 (`D-81`) — campo nas 2 metades em `A-25` |
+
+
+## Corte de `D-74` no QA — os 3 achados de ID RECICLADO saem da tabela viva (2026-08-20)
+
+Fechados na sessão que desempatou `QA-28`, e os três são o mesmo defeito em três registros: ID
+reusado. `QA-24` era `Q-14` valendo por duas questões, `QA-28` era `T-22` valendo por dois cards, e
+`QA-30` era uma passagem deste arquivo titulada com o ID de um card ABERTO. O corte segue `D-74`
+sem decisão nova — *"os FECHADOS saem, os abertos ficam"* — e `check.py` resolve os três por aqui
+(checagem 10 aceita ID definido só nesta página).
+
+Os dois primeiros saem também da tupla `ISENTAS_LINHA_MAX` do `check.py`, que cai de **14** para
+**12** IDs: a isenção de `D-83` vale para linha VIVA que a regra append-only proíbe reescrever, e
+linha arquivada não é linha viva. O terceiro nunca esteve lá — `QA-30` fechou medindo 390, dentro
+dos 400 de `D-83`, e é a primeira das 10 linhas do portão dele.
+
+| # | Data | Sev. | Onde | O que quebrava | Correção | Fechado em |
+|---|---|---|---|---|---|---|
+| QA-24 | 2026-08-20 | MÉDIO | `a_context/c_decisions.md` (desde 2026-08-20) | `Q-14` está definida **duas vezes**: a do STUN, respondida por `D-71` e arquivada, e a de tempo por cobrança, aberta na tabela viva — a checagem 11 do `check.py` só olha tabela viva, então não pega | ID não se recicla: a questão nova vira `Q-15`, e `T-22`, CONTEXT e CHANGELOG passam a citá-la. Achado na sessão do corte de `D-74`, de outra sessão (regra 4) | ✔ 2026-08-20 — a questão viva virou `Q-15`; `Q-14` fica só com o STUN de `D-71`, arquivado, e `T-24`, CONTEXT e CHANGELOG citam o ID novo |
+| QA-28 | 2026-08-20 | MÉDIO | `b_process/c_backlog.md` (desde 2026-08-20) | `T-22` está definido **duas vezes**: o contador de segundos (linha 47, aberto em `A-24`) e o tempo por cobrança do `Q-14` respondido (linha 83). É `QA-24` de novo, um dia depois, agora em ID de tarefa — e o `check.py` não cobre `T-NN` | ID não se recicla: o card mais novo vira `T-24`, e CONTEXT e CHANGELOG passam a citá-lo. Achado na auditoria de `QA-26`, de outra sessão (regra 4) | ✔ 2026-08-20 — o card novo virou `T-24` e foi para "A fazer", onde já devia estar; `T-22` fica só com o contador de `A-24`, fechado |
+| QA-30 | 2026-08-20 | BAIXO | `e_qa/decisions_archive.md` (desde 2026-08-20) | A passagem do corte de `D-74` foi titulada **`## A-21`**, ID de card ABERTO e de outro assunto: quem varre o arquivo lê `A-21` como feita | Retitular sem ID de card — ID não se recicla. É `QA-24`/`QA-28` pela terceira vez; de outra sessão (regra 4) | ✔ 2026-08-20 — retitulado "Corte de `D-74` no registro", sem ID de card |

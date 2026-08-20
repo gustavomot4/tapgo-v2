@@ -7,6 +7,18 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-20] — o ID reciclado desempatado em três registros: `T-24`, `Q-15` e o título do arquivo (`QA-28`/`QA-24`/`QA-30`)
+
+- **Skill:** planner (nenhum byte em `src/`). Portão: `python scripts/check.py` verde **e** toda linha nova de `D-NN`/`QA-NN` ≤ 400 medidos — é o portão de `D-83` correndo pela primeira vez. Verde nos dois.
+- **`QA-28` fechado — o card novo virou `T-24`.** O "tempo por cobrança no `online`" disputava o ID `T-22` com o contador de segundos, que fechou em campo no mesmo dia (`A-26`): ID não se recicla, e quem muda é o mais novo. De carona, o card **saiu de "Feito" para "A fazer"**, onde sempre foi o lugar dele — estava aberto embaixo do cabeçalho errado.
+- **`QA-24` fechado — a questão viva virou `Q-15`.** `Q-14` já era o STUN de `D-71`, respondido e arquivado em 19/08; a linha viva era a segunda questão com o mesmo número. `Q-15` mede **241** e cita `T-24`; `T-24`, o CONTEXT e este log passam a citar o ID novo.
+- **`QA-30` fechado — a passagem do corte de `D-74` no registro perdeu o título `## A-21`.** Ela agora se chama "Corte de `D-74` no registro", e o corpo diz em uma frase que a sessão foi a de `A-21` — a evidência ficou, o ID de card ABERTO saiu do título. A linha fechada mede **390**: é a **1ª das 10** do portão de `D-83`, e passou sem isenção.
+- **O corte de `D-74` rodou de novo, no QA.** Os três achados fechados foram para [[decisions_archive]] com íntegra e ID preservados: QA **6.450 → 4.935/8.000**, e o aviso de 80% que as três linhas de fechamento tinham acabado de acender some.
+- **`check.py`: a tupla `ISENTAS_LINHA_MAX` caiu de 14 para 12 IDs.** `QA-24` e `QA-28` estavam isentos por serem linha VIVA que o append-only proíbe reescrever; arquivados, deixaram de ser linha viva — é a própria regra escrita no comentário de `D-83`, aplicada pela primeira vez.
+- **Teste negativo do portão, rodado nesta sessão:** tirando `D-62` da tupla, o `check.py` reprova com o número (`D-62 (460)`) e volta a passar quando ele retorna.
+- **Registro:** **16.781/20.000** (+105, só a linha de `Q-15` sobre a de `Q-14`). **CONTEXT:** 3.921/4.000 (98%). **Nenhum byte em `src/`; suíte não foi tocada.**
+- **O que continua do dono, e não avançou aqui:** o `D-NN` que autoriza a saída (b) de `T-24` (15 s, o estouro resolvido dentro do aparelho). Sem ele o card não abre.
+
 ## [2026-08-20] — `A-21` executado: o teto sobe (`D-82`) e o limite por linha passa a reprovar (`D-83`)
 
 - **Skill:** evolution-auditor (execução da decisão de [[a21_limite_por_linha]] §5.3; `src/` intocado). Portão: `python scripts/check.py` verde na hora — verde.

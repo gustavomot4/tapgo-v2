@@ -311,12 +311,14 @@ LINHA_MAX = 400
 # adotado e o registro é append-only (`D-43`) — reescrevê-las é proibido pela própria regra.
 # Checagem que nasce vermelha em linha que ninguém pode consertar ensina a ignorar o script
 # (`A-21` §2.2). A tupla fica visível no diff: ID novo aqui é decisão do dono, não descuido.
-# Medidas em 2026-08-20, contra o disco DEPOIS do corte de `D-74` no QA — por isso são 14 e
-# não as 18 da tabela do §2.2, que ainda contava `QA-22`/`QA-23`/`QA-25`/`QA-26`, já
+# Medidas em 2026-08-20, contra o disco DEPOIS do corte de `D-74` no QA — por isso nasceram
+# 14 e não as 18 da tabela do §2.2, que ainda contava `QA-22`/`QA-23`/`QA-25`/`QA-26`, já
 # arquivados naquela mesma sessão. Linha arquivada não é linha viva, e não se isenta.
+# Caíram para 12 no mesmo dia, pela mesma regra: `QA-24` e `QA-28` fecharam e foram para
+# [[decisions_archive]] na sessão que desempatou `QA-28`, e a tupla acompanha o corte.
 ISENTAS_LINHA_MAX = (
     "D-62", "D-65", "D-70", "D-71", "D-72", "D-73", "D-75", "D-76", "D-80",
-    "QA-20", "QA-21", "QA-24", "QA-27", "QA-28",
+    "QA-20", "QA-21", "QA-27",
 )
 longas = []
 for nome_reg, texto_reg in ((DECISOES, texto_dec), (QA_REG, texto_qa)):
