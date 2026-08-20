@@ -7,6 +7,14 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-20] — `Q-14` respondida (15 s, quem demorou perde) e o problema que ela destapa
+- **Skill:** frontend-uiux (mesma sessão)
+- **A resposta do dono:** 15 s por cobrança, e quem estourar **perde a cobrança**. Registrada em `Q-14`; a implementação é `T-22` e **não foi feita nesta sessão**.
+- **Por que não foi feita:** "perde a cobrança" é regra de disputa, e regra de disputa mora em M2 — esta sessão é de tela. Mas o impedimento maior não é de escopo: **são dois relógios e não há árbitro**. Cada aparelho contando 15 s e resolvendo localmente faz uma jogada de fronteira (15,05 s aqui, 14,90 s lá) ser resolvida de formas diferentes nos dois — os `MatchState` divergem em silêncio, e a sincronia que `A-22` acabou de provar em campo some.
+- **A saída recomendada em `T-22` não mexe em contrato nenhum:** aos 15 s o próprio aparelho escolhe uma zona sozinho (por `createRng(newSeed())` de M1) e a manda como jogada normal. O outro lado nunca sabe que houve estouro, então não há o que divergir — e "perde" continua verdadeiro na prática: chute aleatório contra goleiro que escolheu. Só M7, `D-13` intacto.
+- **A alternativa que reabre `D-13`** (o estouro virando evento no canal) fica escrita no card, com o custo declarado, para que a escolha seja do dono e não da próxima sessão.
+- **Nenhum byte de código mudou por `Q-14`.**
+
 ## [2026-08-20] — `A-22` em campo: online conecta, e os dois achados que ele trouxe (`D-77`, `QA-23`)
 - **Skill:** frontend-uiux (mesma sessão de `T-21`)
 - **O que passou:** dois aparelhos reais conectaram pelo link e jogaram a disputa inteira. As duas listas de cobranças saíram **idênticas** e o placar bateu (3×4 nos dois) — a sincronia do motor está provada em campo, não só em teste.

@@ -66,5 +66,5 @@ status: atual
 |---|---|---|
 | Q-09 | No modo `local`, de quem é a escolha pendente, se a porta congelada de M5 não a expõe? | antes de T-10 (**prazo vencido — `QA-07`**); hoje M7 deriva de `kicks.length` e a saída definitiva está em [[questoes_abertas_notas]] |
 | Q-08 | `pick(role)` lê o histograma do **mesmo** papel — é essa a intenção, ou quem defende deveria ler o histograma `shooter` do humano? | antes de E-3 (**prazo vencido — `QA-07`**); as duas leituras e o custo de inverter em [[questoes_abertas_notas]] |
-| Q-14 | Tempo por cobrança no `online`: quantos segundos e o que faz ao estourar? | dono quer (`A-22`); falta o número |
+| Q-14 | Tempo por cobrança no `online` | **respondida**: 15 s, quem demorou perde — regra de M2, exige `D-NN` (relógio sem árbitro diverge) |
 | Q-13 | Mudar `report(winner)` para trazer o placar é porta congelada (`D-13`/`D-58`) | segue do dono; `T-14` fechou com `D-67`, que mostra a ausência em vez de inventar zero |

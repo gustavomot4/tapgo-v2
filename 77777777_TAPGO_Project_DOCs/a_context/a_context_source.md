@@ -32,7 +32,7 @@ Partida de ~1 minuto: contra a CPU ou contra alguém no mesmo aparelho. O online
 - **Em andamento (máx 1):** nada
 - **Próximo:** `A-22` — a 1ª rodada em campo **conectou e jogou**, e trouxe dois achados já corrigidos (`D-77`, `QA-23`); falta reconferir com o link novo, e aí o Objetivo recupera a promessa que `D-72` tirou · `A-21`: a inclinação do registro
 - **Bloqueado/pendente:** registro **15.972/16.000 (99%)** — sobram **28 caracteres**: a próxima decisão do projeto NÃO cabe, e `A-21` deixou de ser dívida para virar bloqueio
-- **Questões abertas:** Q-08, Q-09, Q-13, **Q-14** (tempo por cobrança no `online`: o dono quer limite, falta o número) · **QA abertos:** QA-04..QA-07, QA-10, QA-17, QA-20, QA-21 (`QA-22` fechada por `D-75`) · respondidas e fechados: [[decisions_archive]]
+- **Questões abertas:** Q-08, Q-09, Q-13, **Q-14** (respondida: 15 s e quem demorou perde — falta o `D-NN` e a sessão de M2) · **QA abertos:** QA-04..QA-07, QA-10, QA-17, QA-20, QA-21 (`QA-22` fechada por `D-75`) · respondidas e fechados: [[decisions_archive]]
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)
 - [[portao_de_aceite]] — **antes de fechar tarefa, declarar etapa fechada ou entregar**
