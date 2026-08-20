@@ -351,3 +351,24 @@ achado aberto não se arquiva, e foi por isso que `D-50` deu orçamento próprio
 | QA-18 | 2026-08-12 | MÉDIO | `src/ui/estilo.css` + `src/ui/rotulos.ts` (M7, desde `T-10`) | `.marca` é disco fixo de 34px sem `overflow`, e o texto dele é o próprio código: com `GB-ENG` (`D-52`) são **6 caracteres onde cabiam 2**, e a tela de seleções passou de 4 para 32 cartões por lado | Some quando `T-19` trocar o disco pela bandeira (`marcaSelecao` já devolve `ehBandeira`); até lá é de M7 e de outra sessão (regra 4) | ✔ 2026-08-13 — as 32 caem no ramo da bandeira, e o ramo do código virou cápsula com `overflow` em vez de disco fixo |
 | QA-19 | 2026-08-12 | MÉDIO | `src/ui/rotulos.ts` + `src/ui/tela_selecoes.ts` (M7, desde `T-10`) | `marca()` escreve `flag` como TEXTO dentro do disco: com as bandeiras de `T-19`, os 32 cartões passam a mostrar o **caminho do SVG** onde mostravam o código, e `ehBandeira` (que existe para isso) é ignorado | Trocar o texto por `<img>` na tela — de M7 e de outra sessão (regra 4). É o mesmo conserto que fecha `QA-18`, que **não** some sozinho como aquela linha previa | ✔ 2026-08-13 — `marca()` lê `ehBandeira` e pinta `<img alt="">`; varredura de fonte cobra a leitura, que o vitest sem DOM não alcança |
 
+
+## A-21 — as linhas com íntegra em nota saem da tabela viva (2026-08-20)
+
+`D-74` autorizou o corte e ele para aqui: sai da tabela viva a linha cuja íntegra JÁ está escrita
+fora dela. `A-20` aplicou isso à duplicata cuja íntegra estava NESTA página; estas quatro apontavam
+para um tema — `D-67` e `D-68` para [[m7_tela_notas]], `D-69` para [[a16_teto_do_registro]] e `D-74`
+para [[a20_tres_orcamentos]] — e o resumo na tabela era o segundo lugar em que a decisão morava.
+
+Nada foi revertido e nada foi reescrito: as íntegras seguem nos três temas, o ponteiro curto é a
+linha "Retirados da tabela" do cabeçalho de `c_decisions.md`, e `check.py` resolve os quatro IDs por
+esta página (a checagem 10 aceita ID definido só aqui). `D-74` continua valendo como critério de
+corte mesmo tendo saído da tabela — status arquivado não é status revogado.
+
+O resumo que saiu, como estava, para quem quiser a linha exata que o registro exibia:
+
+| # | Data | Status | Decisão (curta) | Evidência (número-chave + link) |
+|---|---|---|---|---|
+| D-67 | 2026-08-19 | ADOTADO | `T-14`/`Q-13`: na tabela do grupo, a linha do jogador mostra `—` nos gols — nunca `0` | Íntegra em [[m7_tela_notas]] |
+| D-68 | 2026-08-19 | ADOTADO | `T-14`: M7 grava `{v, humana, nivel, estado}` — o retrato de M8 atravessa **opaco**, e os dois campos de fora são de M7 | Íntegra em [[m7_tela_notas]] |
+| D-69 | 2026-08-19 | ADOTADO | `A-16`: o teto do registro sobe de 12.000 para **16.000** e o aviso de 10.800 para 14.400 — arquivar deixou de ser saída, não o teto é que ficou grande | Medido: o pool de `D-43` é **ZERO** linha, e as duas saídas restantes rendem 788 e 821, menos que as 3 decisões do portão. O pedágio de manifesto já foi pago em `D-50`. Folga de **3.501** (10,8 decisões) já com esta linha, e prazo declarado: a parede volta em ~7,5 sessões, a +466 cada — íntegra em [[a16_teto_do_registro]] |
+| D-74 | 2026-08-19 | ADOTADO · SUPERSEDE D-43 no critério de corte | `A-20`: **nenhum dos três tetos sobe** — sai da tabela viva a linha cuja íntegra JÁ está no arquivo (as REJEITADAS ficam, são a lista-morta), e o CONTEXT paga em relocação de tema, nunca em prosa comprimida. Folga em linhas: **3,5 decisões** aqui (5,4 se a linha voltar ao teto de 2 frases), **10,6 achados** no QA, **21 sessões** no CONTEXT | Pool de `D-43` ZERO pela 3ª vez, mas o de duplicata rende **2.229** aqui, **3.736** no QA e **628** no CONTEXT. `D-69` projetou 7,5 sessões porque mediu +466/sessão; a curva real desde ele é **+638**, e a parede voltou em 5 — íntegra em [[a20_tres_orcamentos]] |

@@ -7,6 +7,17 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-20] — o corte que `D-74` autorizou: 4 linhas saem da tabela viva (1.459 caracteres)
+
+- **Skill:** evolution-auditor
+- **O que saiu:** `D-67`, `D-68` (íntegra em [[m7_tela_notas]]), `D-69` ([[a16_teto_do_registro]]) e `D-74` ([[a20_tres_orcamentos]]) — as quatro linhas cujo resumo na tabela era o SEGUNDO lugar em que a decisão morava. É o critério de `D-74`, aplicado ao pool que `A-20` mediu mas não cortou (ele cortou a duplicata cuja íntegra estava no próprio `decisions_archive.md`).
+- **Nada revertido, nada reescrito, nenhum `D-NN` novo.** `D-74` já era a decisão; esta sessão é execução. As íntegras seguem nos três temas, o ponteiro é a linha "Retirados da tabela" do cabeçalho, e `check.py` resolve os quatro IDs por [[decisions_archive]] (checagem 10 aceita ID definido só lá).
+- **`D-74` arquivada continua valendo:** status arquivado não é status revogado — o critério de corte que ela fixou é o que este corte usou.
+- **O registro foi de 15.993 para 14.534/16.000 (99% → 90%):** folga de **1.466**, ou ~2,9 decisões na mediana recente de 509 caracteres/linha que `A-21` mediu. A próxima decisão do projeto volta a caber, e `T-22` deixa de estar travada por orçamento.
+- **`A-21` deixa de ser bloqueio e volta a ser dívida.** Este corte moveu o intercepto, não a inclinação (+638/sessão): sem o script que cobra as 2 frases por linha, a parede volta em ~2 sessões de escrita.
+- **`QA-24` aberto, não consertado de carona (regra 4):** `Q-14` está definida **duas vezes** — a do STUN, respondida por `D-71` e arquivada em 19/08, e a de tempo por cobrança, aberta na tabela viva em 20/08. A checagem 11 do `check.py` compara só as tabelas VIVAS, de propósito (senão a convenção `ADOTADO · ARQUIVADO` viraria duplicata falsa), então o par passa despercebido. A questão nova deveria ser `Q-15`, e `T-22`, CONTEXT e CHANGELOG citam o ID errado.
+- **Nenhum byte de código mudou.**
+
 ## [2026-08-20] — `Q-14` respondida (15 s, quem demorou perde) e o problema que ela destapa
 - **Skill:** frontend-uiux (mesma sessão)
 - **A resposta do dono:** 15 s por cobrança, e quem estourar **perde a cobrança**. Registrada em `Q-14`; a implementação é `T-22` e **não foi feita nesta sessão**.
