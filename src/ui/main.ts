@@ -16,14 +16,18 @@
  * visível e rótulo lido por leitor de tela, e `<canvas>` não entrega nenhum dos três.
  */
 
+import type { CountryCode, Side } from '../core/index';
+import { newSeed } from '../core/index';
 import { el, limpar } from './dom';
-import { lerPreferencias, gravarPreferencias } from './preferencias';
+import { salaDoEndereco } from './convite';
+import { lerPreferencias, gravarPreferencias, selecaoInicial } from './preferencias';
 import type { Preferencias } from './preferencias';
 import { criarSom } from './som';
 import type { Contexto, Rota, Tela } from './rotas';
 import { telaInicio } from './tela_inicio';
 import { telaSelecoes } from './tela_selecoes';
 import { telaCobranca } from './tela_cobranca';
+import { telaConvite } from './tela_convite';
 import { telaFim } from './tela_fim';
 import { telaTorneio } from './tela_torneio';
 import { telaTorneioNovo } from './tela_torneio_novo';
@@ -35,7 +39,8 @@ import './estilo.css';
 function escolherTela(rota: Rota): Tela {
   if (rota.nome === 'inicio') return telaInicio;
   if (rota.nome === 'selecoes') return telaSelecoes(rota.modo, rota.nivel);
-  if (rota.nome === 'cobranca') return telaCobranca(rota.partida);
+  if (rota.nome === 'convite') return telaConvite(rota.partida);
+  if (rota.nome === 'cobranca') return telaCobranca(rota.partida, rota.sessao ?? null);
   if (rota.nome === 'torneio_novo') return telaTorneioNovo;
   if (rota.nome === 'torneio') return telaTorneio;
   if (rota.nome === 'campeao') return telaCampeao;
@@ -111,10 +116,52 @@ export function bootGame(container: HTMLElement): void {
     },
   };
 
-  // Fechar e reabrir o navegador continua de onde parou (`D-57`): havendo torneio salvo, a
-  // abertura é a tela dele. A disputa em andamento NÃO é retomada — ela nunca é gravada, por
-  // contrato de privacidade —, então o que volta é a próxima disputa do jogador.
-  ctx.ir(torneio === null ? { nome: 'inicio' } : { nome: 'torneio' });
+  ctx.ir(abertura(prefs, torneio !== null));
+}
+
+/**
+ * Em que tela o jogo abre (`T-21`).
+ *
+ * Três caminhos, nesta ordem de precedência:
+ *
+ * 1. **Convite no endereço** (`?sala=`) — quem chegou por link quer entrar NAQUELA sala, e nada
+ *    mais. Vence até o torneio salvo: o link é o que a pessoa acabou de tocar, e o torneio
+ *    continua guardado, esperando, sem perder nada.
+ * 2. **Torneio salvo** (`D-57`) — fechar e reabrir continua de onde parou.
+ * 3. O menu.
+ *
+ * A disputa em andamento NUNCA é retomada — ela nunca é gravada, por contrato de privacidade —,
+ * então o que volta do torneio é a próxima disputa do jogador.
+ *
+ * O convidado não passa pela tela de seleções: o fluxo dele fecha em 1 toque, e as seleções vêm
+ * da preferência do aparelho (a mesma que a tela de seleções gravou da última vez). Sem catálogo
+ * não há seleção possível, e aí a abertura é o menu, que já tem o estado vazio escrito.
+ */
+function abertura(prefs: Preferencias, temTorneio: boolean): Rota {
+  const sala = salaDoEndereco(window.location.href);
+  const escolha = sala === null ? null : selecaoInicial(prefs);
+
+  if (sala !== null && escolha !== null) {
+    const times: Readonly<Record<Side, CountryCode>> = { A: escolha.A, B: escolha.B };
+    return {
+      nome: 'convite',
+      partida: {
+        modo: 'online',
+        torneio: false,
+        nivel: null,
+        times,
+        // O convidado é sempre o lado B: quem convida é o A, e é ele quem cobra primeiro
+        // enquanto o sorteio do `online` não for semeado pelo `roomId` (ver M5, em `first`).
+        ladoLocal: 'B',
+        // Semente do aparelho, e ela não é lida no `online`: quem sorteia lá é ninguém. Passar
+        // uma semente de verdade mesmo assim mantém a configuração igual à dos outros modos.
+        semente: newSeed(),
+        sala,
+      },
+    };
+  }
+
+  return temTorneio ? { nome: 'torneio' } : { nome: 'inicio' };
 }
 
 /** Última rede: tela quebrada vira frase em português com uma saída, nunca página em branco. */

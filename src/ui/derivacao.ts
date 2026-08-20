@@ -17,6 +17,11 @@
  * `kicks.length` da anterior significa escolha pendente**. Duas notificações por cobrança em
  * `local` (a primeira sem cobrança nova), uma só em `cpu`.
  *
+ * **No `online` a regra do `local` não vale, e por isso ele NÃO entra nesse ramo** (`T-21`): lá
+ * chegam notificações com o mesmo `kicks.length` que não são vez de ninguém — a própria escolha
+ * esperando o peer, e cada troca de status do canal. Tratá-las como "pendente" mandaria o
+ * aparelho do jogador passar o aparelho para o adversário, que está em outra cidade.
+ *
  * Resolver de vez é `pending(): Side | null` na `Session` — contrato congelado, logo `D-NN` do
  * dono. Enquanto `Q-09` estiver aberta, é aqui que a lacuna mora, declarada e testada.
  *
@@ -30,20 +35,24 @@ import type { Side } from '../core/index';
 import type { MatchState, Mode } from '../session/index';
 
 /**
- * Os dois modos que M5 aceita hoje. `online` é T-13 e `createSession` o recusa em voz alta.
+ * Os modos que uma tela do jogo pode estar mostrando — **os três**, desde `T-21`.
  *
- * Derivado de `Mode` em vez de reescrito como literal por **dois** motivos. O primeiro é tipo:
- * o dia em que M5 ganhar um modo, esta linha acompanha sozinha. O segundo é o portão de camada,
- * que o CI cobra com `grep -rnoE "^\s*(import|export)[^;]*(engine|cpu|net)" src/ui/` — padrão
- * largo de propósito, e por isso a palavra `cpu` escrita numa linha de `export` reprova a
- * fronteira mesmo sem haver import nenhum do motor — foi o que o CI pegou em T-10.
+ * Era `Exclude<Mode, 'online'>` enquanto o online não tinha tela de convite (`D-72`): a exclusão
+ * dizia "M7 não sabe criar esta sessão", e dizia certo. `D-73` deu à tela o `roomId`, e `T-21`
+ * deu a tela — manter a exclusão agora seria o tipo mentindo sobre o que o jogo faz.
+ *
+ * Continua derivado de `Mode`, e não reescrito como literal, pelo mesmo segundo motivo de antes:
+ * o portão de camada, que o CI cobra com o padrão largo
+ * `grep -rnoE "^\s*(import|export)[^;]*(engine|cpu|net)" src/ui/` — a palavra `cpu` escrita numa
+ * linha de `export` reprova a fronteira mesmo sem haver import nenhum do motor, e foi o que o CI
+ * pegou em T-10. O nome fica: quem lê `ModoJogavel` quer os modos que dão para jogar.
  */
-export type ModoJogavel = Exclude<Mode, 'online'>;
+export type ModoJogavel = Mode;
 
 export type Papel = 'chutar' | 'defender';
 
 export interface Vez {
-  /** Quem escolhe agora. No modo `cpu` é sempre o lado do humano deste aparelho. */
+  /** Quem escolhe agora. Em `cpu` e `online` é sempre o lado do humano deste aparelho. */
   readonly lado: Side;
   readonly papel: Papel;
   /** `true` só no modo `local`, entre o chute e a defesa da MESMA cobrança. */
@@ -63,7 +72,7 @@ export function outroLado(lado: Side): Side {
 
 /**
  * @param modo   modo da sessão — muda a derivação inteira, e por isso é obrigatório.
- * @param ladoLocal  o lado do humano deste aparelho. Só é lido no modo `cpu`; em `local` os dois
+ * @param ladoLocal  o lado do humano deste aparelho. Lido em `cpu` e `online`; em `local` os dois
  *                   lados são deste aparelho e quem escolhe sai de `match.turn`.
  */
 export function criarDerivacao(modo: ModoJogavel, ladoLocal: Side): Derivacao {
@@ -93,7 +102,12 @@ export function criarDerivacao(modo: ModoJogavel, ladoLocal: Side): Derivacao {
       // custa nada e deixa a tela imune a um estado que chegue torto de qualquer caminho.
       if (estado.phase === 'finished' || estado.turn === null) return null;
 
-      if (modo === 'cpu') {
+      // `cpu` e `online` caem no mesmo ramo, e não por economia: nos dois, ESTE aparelho escolhe
+      // uma vez por cobrança e o papel sai de quem cobra. A diferença é só quem fornece a outra
+      // zona — a CPU aqui dentro, o peer no outro aparelho —, e isso não muda de quem é a vez.
+      // O que o `online` tem a mais (esperar o peer depois de escolher) não é vez de ninguém:
+      // é a tela travada, e mora na tela.
+      if (modo !== 'local') {
         return {
           lado: ladoLocal,
           papel: estado.turn === ladoLocal ? 'chutar' : 'defender',

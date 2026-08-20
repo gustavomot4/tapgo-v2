@@ -7,6 +7,18 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-20] — `T-21`: a tela de convite do `online`, e a lacuna de `D-72` fechada em código
+- **Skill:** frontend-uiux
+- **A 1 linha de `D-73`:** `src/session/index.ts` reexporta `newRoomId`. Valor, não tipo — é o que deixa M7 sortear o ID **antes** de existir canal sem importar `src/net` (portão de camada). `src/net` não mudou um byte, e a porta `Session` continua com os 4 métodos de `D-13`.
+- **Telas novas:** `src/ui/tela_convite.ts` (anfitrião e convidado, os 4 estados) e `src/ui/convite.ts` — as duas funções puras do link (`?sala=`, o mesmo formato que a medição usou em campo), testáveis sem navegador porque nenhuma tela é montável em `vitest`.
+- **Os dois portões de `D-75`, escritos como código:** nenhuma `createSession` na montagem — todo caminho até `criarSessao()` começa num toque; e a retentativa depois de `'failed'` é sessão NOVA no MESMO `roomId`, guardada por `conectou`. Depois do primeiro `'connected'`, queda deixa de ser retentativa e vira `D-35` (disputa sem resultado), que é o peer fantasma de `D-41` fora do caminho.
+- **A sessão viaja viva do convite para a cobrança.** No `online`, criar É conectar: a espera pertence ao convite, e criar uma segunda sessão na cobrança abriria um segundo canal na mesma sala. Por isso a rota `cobranca` ganhou `sessao?`, e o desmonte do convite não dá `dispose()` no que entregou.
+- **`ModoJogavel` deixou de excluir `online`** — a exclusão dizia "M7 não sabe criar esta sessão", e passou a mentir. `cpu` e `online` derivam a vez pelo MESMO ramo (um toque por cobrança); só o `local` tem "passe o aparelho". A cobrança ganhou a espera pelo peer, que destrava por notificação de REDE e não pelo retorno de `choose()`.
+- **Nenhum `D-NN` novo, de propósito:** o registro tem 312 caracteres de folga e `D-73`+`D-75` já decidiram o que havia para decidir. O que esta sessão escolheu (a sessão viajando pronta, o 3º toque do `online`, "Convidar de novo" no lugar de "Jogar de novo") está justificado no comentário de cada arquivo.
+- **`QA-15` respeitada na tela nova:** o convite NÃO promete quem cobra primeiro — quem anuncia é a cobrança, lendo `state().turn`.
+- **Portões verdes aqui:** camada de M7 = 0 no padrão do CI · suíte **547/547** (9 testes novos) · `tsc --noEmit` limpo · build **414.827 B** (+6.733, zero asset novo).
+- **Aberto:** `A-22` — dois aparelhos reais pelo link. É o último portão de `T-21`, e nenhum sandbox o produz.
+
 ## [2026-08-20] — `QA-22` decidida: o prazo de M6 fica, e `T-21` destrava (`D-75`, `D-76`)
 - **Skill:** evolution-auditor
 - **A pergunta:** `armarTimer()` roda na criação do canal e `'failed'` é terminal — o convite por link cabe nos 20 s, ou o prazo de M6 tem de mudar? Portão: um `D-NN` do dono, porque M6 é porta congelada de `D-13`.

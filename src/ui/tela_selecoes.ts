@@ -207,28 +207,42 @@ export const telaSelecoes =
       }
 
       ctx.salvarPrefs({ ...ctx.prefs(), selecao: { A: times.A, B: times.B } });
-      ctx.ir({
-        nome: 'cobranca',
-        partida: {
-          modo,
-          nivel,
-          times: { A: times.A, B: times.B },
-          ladoLocal: LADO_DO_HUMANO,
-          // Semente nova a cada disputa: mesma semente daria a mesma CPU toda partida. A
-          // reprodutibilidade que os testes exigem é por semente FIXADA, não por semente única.
-          semente: newSeed(),
-          // Disputa avulsa: nada a devolver a M8. A do torneio nasce em `tela_torneio.ts`.
-          torneio: false,
-        },
-      });
+      const partida = {
+        modo,
+        nivel,
+        times: { A: times.A, B: times.B },
+        ladoLocal: LADO_DO_HUMANO,
+        // Semente nova a cada disputa: mesma semente daria a mesma CPU toda partida. A
+        // reprodutibilidade que os testes exigem é por semente FIXADA, não por semente única.
+        semente: newSeed(),
+        // Disputa avulsa: nada a devolver a M8. A do torneio nasce em `tela_torneio.ts`.
+        torneio: false,
+        // A sala é sorteada na tela de convite, e só no `online` (`D-73`). Sorteá-la aqui
+        // adiantaria o ID para os dois modos que não têm sala — e, no online, sem nenhum ganho:
+        // o que importa é que ela nasça antes do canal, não antes desta tela.
+        sala: null,
+      };
+
+      // No `online` a próxima tela é o convite, e é ela que decide QUANDO a sessão nasce
+      // (`D-75`). Mandar direto para a cobrança abriria o canal — e armaria o relógio de 20 s —
+      // antes de o outro aparelho existir.
+      ctx.ir(modo === 'online' ? { nome: 'convite', partida } : { nome: 'cobranca', partida });
     }
 
     // Em `local` os rótulos dizem ONDE cada seleção aparece, não em que ordem ela cobra: com o
     // sorteio de `D-48` a ordem só existe depois que a disputa é criada, e esta tela é anterior a
     // ela. "Quem cobra primeiro" aqui seria uma promessa que a tela seguinte desmentiria em
     // metade das partidas (`QA-15`). Esquerda e direita são as posições do placar da cobrança.
-    const rotuloA = modo === 'cpu' ? 'Sua seleção' : 'Seleção da esquerda';
-    const rotuloB = modo === 'cpu' ? 'Adversário (computador)' : 'Seleção da direita';
+    // No `online` os dois lados também são escolhidos aqui, e o outro aparelho escolhe os dele:
+    // o canal de M6 carrega `Move` e nada mais (`D-13`), então seleção não viaja. A tela de
+    // convite diz isso à pessoa; aqui os rótulos só evitam prometer que o adversário verá o mesmo.
+    const rotuloA = modo === 'local' ? 'Seleção da esquerda' : 'Sua seleção';
+    const rotuloB =
+      modo === 'local'
+        ? 'Seleção da direita'
+        : modo === 'cpu'
+          ? 'Adversário (computador)'
+          : 'Adversário (neste aparelho)';
 
     const iniciar = botao('Começar', 'botao botao--principal', comecar);
 
@@ -241,7 +255,9 @@ export const telaSelecoes =
         texto:
           modo === 'cpu'
             ? 'Um sorteio decide quem começa. Você e o computador se revezam a cada cobrança.'
-            : 'Os dois jogam neste aparelho, revezando o toque. Um sorteio decide quem começa.',
+            : modo === 'local'
+              ? 'Os dois jogam neste aparelho, revezando o toque. Um sorteio decide quem começa.'
+              : 'Escolha as seleções e mande o convite na tela seguinte. O outro aparelho escolhe as dele.',
       }),
       duelo.node,
       grade('A', rotuloA, times.A, (code) => {

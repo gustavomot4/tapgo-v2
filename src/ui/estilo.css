@@ -708,6 +708,39 @@
   font-size: 0.86rem;
 }
 
+/* ── O convite do modo online (T-21) ───────────────────────────────────────────────────── */
+
+/*
+ * O código da sala e o link, em fonte de largura fixa.
+ *
+ * `word-break: break-all` não é gosto: o link tem 26 caracteres de ID depois do endereço e, em
+ * 360px, sem quebrar em qualquer ponto ele empurra a tela inteira para o lado — barra de rolagem
+ * horizontal numa tela cujo único trabalho é deixar copiar um texto.
+ *
+ * `user-select: all` para o dedo pegar o link inteiro num toque longo: é o caminho de quem não
+ * tem `navigator.clipboard` (endereço sem https, ou permissão negada), e a tela promete esse
+ * caminho por escrito.
+ */
+.codigo {
+  padding: 12px;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  background: var(--superficie);
+  color: var(--texto);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 1rem;
+  letter-spacing: 0.08em;
+  text-align: center;
+  word-break: break-all;
+  user-select: all;
+}
+
+.codigo--link {
+  font-size: 0.8rem;
+  letter-spacing: normal;
+  text-align: left;
+}
+
 .lacuna {
   padding: 10px 12px;
   border-left: 3px solid var(--foco);

@@ -12,6 +12,8 @@ import type { Side, Zone } from '../core/index';
 import { listTeams } from '../data/teams';
 
 import { criarDerivacao, outroLado } from '../ui/derivacao';
+import { FORMATO_SALA, PARAM_SALA, linkDaSala, salaDoEndereco, salaLegivel } from '../ui/convite';
+import { newRoomId } from '../session/index';
 import type { Vez } from '../ui/derivacao';
 import {
   descricaoFase,
@@ -1033,17 +1035,33 @@ describe('a direção visual não afrouxa portão de M7 (T-20 fatia 2 / D-65)', 
     expect(bloco).toMatch(/::after/);
   });
 
-  // ── O fluxo crítico continua em 2 toques ─────────────────────────────────────────────────
-  it('o menu não ganhou passo: as telas do fluxo crítico só levam às três rotas de sempre', () => {
+  // ── O fluxo crítico continua em 2 toques (3 no `online`, e por decisão) ──────────────────
+  it('o menu não ganhou passo: as telas do fluxo crítico só levam às rotas declaradas', () => {
     // Este é o portão que uma tela mais rica quebra sem querer — "só mais um passo para escolher
     // X" custa o 3º toque, e o número declarado em `tela_inicio.ts` é 2. A varredura pega uma
     // rota nova nas duas telas do fluxo, que é a forma que o passo a mais teria.
+    //
+    // `convite` entrou em `T-21` e é a ÚNICA rota a mais permitida: ela é o 3º toque do modo
+    // `online`, exigido por `D-75` (nenhuma sessão antes do toque que declara o outro lado a
+    // postos). O teste seguinte é o que impede esse passo de vazar para `cpu` e `local`.
     const rotas = new Set<string>();
     for (const arquivo of ['tela_inicio.ts', 'tela_selecoes.ts']) {
       const fonte = readFileSync(join(DIR_UI, arquivo), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
       for (const m of fonte.matchAll(/nome:\s*'([a-z]+)'/g)) rotas.add(m[1] ?? '');
     }
-    expect([...rotas].sort()).toEqual(['cobranca', 'inicio', 'selecoes']);
+    expect([...rotas].sort()).toEqual(['cobranca', 'convite', 'inicio', 'selecoes']);
+  });
+
+  it('o passo do convite é só do `online`: cpu e local continuam indo direto à cobrança', () => {
+    // Sem esta linha, o teste acima passaria a aceitar o convite no caminho de TODO mundo — que
+    // é exatamente o 3º toque que o portão de 2 toques existe para barrar.
+    const fonte = readFileSync(join(DIR_UI, 'tela_selecoes.ts'), 'utf8').replace(
+      /\/\*[\s\S]*?\*\//g,
+      '',
+    );
+    expect(fonte, 'a rota de convite deixou de ser condicionada ao modo online').toMatch(
+      /modo === 'online'\s*\?\s*\{\s*nome:\s*'convite'/,
+    );
   });
 
   it('o confronto é espelho, não controle: sem rádio, sem botão e fora do leitor de tela', () => {
@@ -1068,5 +1086,125 @@ describe('a direção visual não afrouxa portão de M7 (T-20 fatia 2 / D-65)', 
     for (const classe of ['.capa', '.capa__marca', '.confronto', '.resultado']) {
       expect(seletores, `${classe} sumiu da folha`).toContain(classe);
     }
+  });
+});
+
+
+// ── T-21: o link do convite, e a derivação do modo `online` ────────────────────────────────
+//
+// A tela de convite não é montável aqui (`document` não existe), e a conexão de verdade é do
+// dono em dois aparelhos. O que dá para cobrar sem navegador são as duas coisas que erram em
+// silêncio: o endereço que o convidado vai abrir, e a derivação de quem escolhe no `online`.
+describe('link do convite (T-21 / D-73)', () => {
+  const BASE = 'https://gustavomot4.github.io/tapgo-v2/';
+  const SALA = 'ABCDEFGHJKMNPQRSTVWXYZ0123';
+
+  it('o formato copiado de M6 aceita o que M6 sorteia, e recusa o que ela recusaria', () => {
+    // O elo que impede a cópia de envelhecer: quem gera é M6 de verdade, por `newRoomId` — o
+    // reexport de `D-73`, que é a linha que `T-21` comprou em M5.
+    for (let i = 0; i < 200; i += 1) expect(newRoomId()).toMatch(FORMATO_SALA);
+
+    // As letras que Crockford base32 não tem, e o tamanho errado dos dois lados.
+    expect(FORMATO_SALA.test('ABCDEFGHIJKMNPQRSTVWXYZ012')).toBe(false); // tem I
+    expect(FORMATO_SALA.test('ABCDEFGHJKMNPQRSTVWXYZ012')).toBe(false); // 25
+    expect(FORMATO_SALA.test(`${SALA}0`)).toBe(false); // 27
+  });
+
+  it('o link preserva a subpasta do GitHub Pages — montá-lo da raiz seria 404 no convidado', () => {
+    const link = linkDaSala(BASE, SALA);
+    expect(link.startsWith('https://gustavomot4.github.io/tapgo-v2/')).toBe(true);
+    expect(link).toContain(`${PARAM_SALA}=${SALA}`);
+  });
+
+  it('o que foi montado é o que é lido de volta', () => {
+    expect(salaDoEndereco(linkDaSala(BASE, SALA))).toBe(SALA);
+  });
+
+  it('o link não carrega junto o que estava na barra do anfitrião', () => {
+    // Um convite montado a partir de um endereço que já tinha sala (o anfitrião convidando de
+    // novo depois de uma partida) não pode sair com as DUAS — a última venceria em silêncio.
+    const sujo = `${BASE}?${PARAM_SALA}=0000000000000000000000000&outro=1#topo`;
+    const link = linkDaSala(sujo, SALA);
+    expect(salaDoEndereco(link)).toBe(SALA);
+    expect(link).not.toContain('outro=1');
+    expect(link).not.toContain('#topo');
+  });
+
+  it('endereço sem convite, ou com convite truncado, devolve null e não lança', () => {
+    expect(salaDoEndereco(BASE)).toBeNull();
+    expect(salaDoEndereco(`${BASE}?${PARAM_SALA}=`)).toBeNull();
+    // Truncado no mensageiro — o caso que a tela traduz para "peça o link de novo".
+    expect(salaDoEndereco(`${BASE}?${PARAM_SALA}=${SALA.slice(0, 20)}`)).toBeNull();
+    expect(salaDoEndereco('isto não é endereço nenhum')).toBeNull();
+  });
+
+  it('minúsculas do teclado do convidado ainda entram na sala certa', () => {
+    expect(salaDoEndereco(`${BASE}?${PARAM_SALA}=${SALA.toLowerCase()}`)).toBe(SALA);
+  });
+
+  it('o código legível quebra de 4 em 4 sem perder nem inventar caractere', () => {
+    expect(salaLegivel(SALA).replace(/ /g, '')).toBe(SALA);
+    expect(salaLegivel(SALA).split(' ')[0]).toHaveLength(4);
+  });
+});
+
+describe('derivação da vez no modo `online` (T-21)', () => {
+  // Os estados vêm de uma sessão `cpu` — a única fonte de `MatchState` que não precisa de rede.
+  // O que está sob teste é a DERIVAÇÃO, e ela só lê `MatchState`: no `online` cada aparelho
+  // escolhe uma vez por cobrança, exatamente como em `cpu`.
+  function estados(): MatchState[] {
+    const sessao = createSession({
+      mode: 'cpu',
+      seed: 11,
+      level: 'medium',
+      teams: TIMES,
+      localSide: 'A',
+    });
+    const vistos: MatchState[] = [];
+    sessao.subscribe((s) => void vistos.push(s));
+    for (const zona of roteiro(12, 2)) {
+      if (sessao.state().phase === 'finished') break;
+      sessao.choose(zona);
+    }
+    sessao.dispose();
+    return vistos;
+  }
+
+  it('quem escolhe é sempre o lado DESTE aparelho, e o papel sai de quem cobra', () => {
+    const derivacao = criarDerivacao('online', 'B');
+
+    for (const estado of estados()) {
+      derivacao.aoNotificar(estado);
+      const vez = derivacao.vez(estado);
+      if (estado.phase === 'finished') {
+        expect(vez).toBeNull();
+        continue;
+      }
+      expect(vez?.lado).toBe('B');
+      expect(vez?.papel).toBe(estado.turn === 'B' ? 'chutar' : 'defender');
+      expect(vez?.pendente).toBe(false);
+    }
+  });
+
+  it('notificação sem cobrança nova NÃO vira "passe o aparelho"', () => {
+    // É a diferença que o `online` tem para o `local`, e a que quebraria em silêncio: lá chegam
+    // notificações com o mesmo `kicks.length` — a própria escolha esperando o peer, e cada troca
+    // de status do canal. Tratá-las como pendente mandaria passar o aparelho para alguém que
+    // está em outra cidade.
+    const derivacao = criarDerivacao('online', 'A');
+    const primeiro = estados()[0];
+    expect(primeiro).toBeDefined();
+    if (primeiro === undefined) return;
+
+    derivacao.aoNotificar(primeiro);
+    derivacao.aoNotificar(primeiro);
+    derivacao.aoNotificar(primeiro);
+    expect(derivacao.vez(primeiro)?.pendente).toBe(false);
+
+    // E a prova de que o teste não é vácuo: no `local`, a MESMA sequência é pendente.
+    const local = criarDerivacao('local', 'A');
+    local.aoNotificar(primeiro);
+    local.aoNotificar(primeiro);
+    expect(local.vez(primeiro)?.pendente).toBe(true);
   });
 });

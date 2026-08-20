@@ -135,12 +135,16 @@ export function sorteioDoPrimeiro(
 /**
  * O que o sorteio significa para quem está com o aparelho na mão.
  *
- * Em `cpu` o lado do humano é fixo e a frase pode dizer "você". Em `local` os dois lados são deste
- * mesmo aparelho: dizer "você" obrigaria a escolher um dos dois jogadores, então a frase fala do
- * aparelho, que é o objeto que muda de mão.
+ * Em `cpu` e em `online` o lado do humano é fixo e a frase pode dizer "você". Em `local` os dois
+ * lados são deste mesmo aparelho: dizer "você" obrigaria a escolher um dos dois jogadores, então
+ * a frase fala do aparelho, que é o objeto que muda de mão.
+ *
+ * O teste do ramo é `modo === 'local'`, e não `modo !== 'cpu'` como era até `T-21`: com o online
+ * entrando em `ModoJogavel`, a forma antiga mandaria passar o aparelho para um adversário que
+ * está em outro aparelho — a mesma armadilha da derivação, escrita com outras palavras.
  */
 export function instrucaoDoSorteio(modo: ModoJogavel, papel: Papel): string {
-  if (modo !== 'cpu') return 'Quem cobra fica com o aparelho.';
+  if (modo === 'local') return 'Quem cobra fica com o aparelho.';
   return papel === 'chutar' ? 'Você começa cobrando.' : 'Você começa defendendo.';
 }
 

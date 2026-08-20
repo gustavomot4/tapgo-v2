@@ -3,7 +3,8 @@
  *
  * Fecha o laço em um toque: "Jogar de novo" volta direto à cobrança com as MESMAS seleções e
  * semente nova. Mandar de volta ao início a cada partida de um minuto seria cobrar dois toques
- * por algo que quase todo mundo quer.
+ * por algo que quase todo mundo quer. No `online` o mesmo toque leva ao convite, com sala nova —
+ * ver a nota em `seguir`.
  *
  * ## A disputa do torneio termina aqui, e é daqui que ela volta para M8 (`T-14`)
  * `partida.torneio` diz que esta disputa é do torneio. Nesse caso a tela **devolve o vencedor**
@@ -128,14 +129,27 @@ export const telaFim =
       );
     }
 
+    /*
+     * "Jogar de novo" não existe no `online` (`T-21`), e a razão não é enfeite: ele recriaria a
+     * sessão sozinho, deste lado só, numa sala que M6 já soltou — e o outro aparelho, que
+     * também está nesta tela, não seria avisado de nada. O que existe lá é convidar de novo:
+     * sala nova, link novo, e este aparelho passando a ser o anfitrião (lado `A`).
+     */
     const seguir = partida.torneio
       ? botao('Continuar no torneio', 'botao botao--principal', () => ctx.ir({ nome: 'torneio' }))
-      : botao('Jogar de novo', 'botao botao--principal', () => {
-          ctx.ir({
-            nome: 'cobranca',
-            partida: { ...partida, semente: newSeed() },
+      : partida.modo === 'online'
+        ? botao('Convidar de novo', 'botao botao--principal', () => {
+            ctx.ir({
+              nome: 'convite',
+              partida: { ...partida, semente: newSeed(), ladoLocal: 'A', sala: null },
+            });
+          })
+        : botao('Jogar de novo', 'botao botao--principal', () => {
+            ctx.ir({
+              nome: 'cobranca',
+              partida: { ...partida, semente: newSeed() },
+            });
           });
-        });
 
     tela.append(
       el('div', { classe: 'grupo empurra' }, [

@@ -6,7 +6,7 @@
  */
 
 import type { CountryCode, Side } from '../core/index';
-import type { Level, MatchState } from '../session/index';
+import type { Level, MatchState, Session } from '../session/index';
 import type { ModoJogavel } from './derivacao';
 import type { Preferencias } from './preferencias';
 import type { Som } from './som';
@@ -33,12 +33,34 @@ export interface Partida {
   readonly times: Readonly<Record<Side, CountryCode>>;
   readonly ladoLocal: Side;
   readonly semente: number;
+  /**
+   * O ID da sala do modo `online` (`T-21`), e `null` nos outros dois.
+   *
+   * Quem o sorteia é a tela de convite, com `newRoomId` de M5 (`D-73`) — **antes** de existir
+   * canal, que é o que deixa o link ser mostrado sem que o relógio de 20 s de M6 tenha armado
+   * (`D-75`). Ele viaja aqui porque é o mesmo valor nos dois aparelhos: o anfitrião sorteia, o
+   * convidado o recebe pelo link, e os dois entram por `roomId`.
+   *
+   * `null` em `cpu`/`local` é literal, não "ainda não sei": esses modos não têm sala.
+   */
+  readonly sala: string | null;
 }
 
 export type Rota =
   | { readonly nome: 'inicio' }
   | { readonly nome: 'selecoes'; readonly modo: ModoJogavel; readonly nivel: Level | null }
-  | { readonly nome: 'cobranca'; readonly partida: Partida }
+  | { readonly nome: 'convite'; readonly partida: Partida }
+  /**
+   * A cobrança, e — só no `online` — a sessão **já conectada** que a tela de convite criou.
+   *
+   * Por que a sessão viaja pronta, em vez de a cobrança criá-la como nos outros modos: no
+   * `online` a criação É a conexão (é ela que abre o canal e arma o relógio de M6), e os dois
+   * portões de `D-75` moram exatamente aí — nenhuma sessão antes do toque que declara o outro
+   * lado a postos, e retentar depois de `'failed'` só enquanto o canal nunca conectou. Os dois
+   * pertencem à espera, e a espera é a tela de convite. O que chega aqui já conectou; se cair
+   * depois disso, é o peer que saiu, e aí `D-35` manda terminar sem resultado — nunca retentar.
+   */
+  | { readonly nome: 'cobranca'; readonly partida: Partida; readonly sessao?: Session }
   | { readonly nome: 'fim'; readonly partida: Partida; readonly estado: MatchState }
   | { readonly nome: 'torneio_novo' }
   | { readonly nome: 'torneio' }

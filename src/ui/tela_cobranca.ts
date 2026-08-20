@@ -19,18 +19,36 @@
  * chega em `state().turn` antes da 1ª cobrança. A tela lê e mostra. É o que `QA-15` cobrava — a
  * versão anterior repetia a constante do motor e teria passado a mentir no dia do sorteio.
  *
+ * ## Modo `online`: a sessão chega pronta, e conectada (`T-21`)
+ * Nos outros dois modos esta tela cria a sessão. No `online` ela **recebe** a que a tela de
+ * convite criou e conectou — porque lá criar é conectar, e é lá que moram os dois portões de
+ * `D-75` (nenhuma sessão antes do toque, retentativa só antes do primeiro `'connected'`). Criar
+ * outra aqui abriria um segundo canal na mesma sala.
+ *
+ * Duas consequências que valem estar escritas:
+ *
+ * 1. **Depois de escolher, este aparelho espera o outro.** No `online` cada aparelho escolhe uma
+ *    vez por cobrança, e M5 recusa a segunda escolha da mesma cobrança em voz alta. Então o
+ *    toque tranca as zonas e só as destranca quando a cobrança fecha — o que chega por
+ *    notificação de REDE, não pelo retorno de `choose()`.
+ * 2. **Queda depois de conectado não retenta.** É `D-35`: o peer saiu, a disputa terminou sem
+ *    resultado, e não há vencedor a inventar. Reentrar na sala aqui seria o peer fantasma de
+ *    `D-41`.
+ *
  * ## Os 4 estados
  * - **carregando** — a cena Phaser chegando por `import()`. O campo aparece sem animação e os
  *   botões já funcionam: esperar o cenário para deixar jogar seria trocar jogabilidade por enfeite.
+ *   No `online` há um segundo: a espera pela escolha do outro aparelho, entre um toque e a
+ *   cobrança fechar.
  * - **vazio** — não existe: uma disputa sempre tem cobrança a fazer até `phase === 'finished'`,
  *   e aí a tela troca. Lacuna declarada, não esquecida.
- * - **erro** — `createSession` recusou a configuração, ou `choose` recusou o toque. Mensagem em
- *   português, com o que fazer, e uma saída.
+ * - **erro** — `createSession` recusou a configuração, `choose` recusou o toque, ou (no `online`)
+ *   o outro jogador caiu. Mensagem em português, com o que fazer, e uma saída.
  * - **sucesso** — a disputa correndo.
  */
 
 import type { Side, Zone } from '../core/index';
-import type { MatchState, Session, SessionConfig } from '../session/index';
+import type { LinkStatus, MatchState, Session, SessionConfig } from '../session/index';
 import { createSession } from '../session/index';
 import type { Cena } from './cena';
 import { criarDerivacao } from './derivacao';
@@ -70,19 +88,33 @@ function configDaPartida(p: Partida): SessionConfig {
   if (p.modo === 'cpu' && p.nivel !== null) {
     return { mode: 'cpu', seed: p.semente, level: p.nivel, teams: p.times, localSide: p.ladoLocal };
   }
+  // `online` sem sessão pronta não é caminho do jogo — a tela de convite sempre entrega a dela
+  // (`T-21`). Ainda assim a configuração é montada com `roomId`, e nunca sem: o ramo sem
+  // `roomId` de M5 abriria uma sala que ninguém consegue convidar.
+  if (p.modo === 'online' && p.sala !== null) {
+    return { mode: 'online', seed: p.semente, teams: p.times, localSide: p.ladoLocal, roomId: p.sala };
+  }
   return { mode: 'local', seed: p.semente, teams: p.times, localSide: p.ladoLocal };
 }
 
+/**
+ * @param pronta a sessão que a tela de convite já conectou (`online`), ou `null` para esta tela
+ *               criar a sua. `null` no `online` cai no estado de erro — e cai de propósito, em
+ *               vez de abrir um canal por conta própria fora do controle de `D-75`.
+ */
 export const telaCobranca =
-  (partida: Partida): Tela =>
+  (partida: Partida, pronta: Session | null = null): Tela =>
   (raiz: HTMLElement, ctx: Contexto) => {
     const tela = el('section', { classe: 'tela' });
     raiz.append(tela);
 
+    const online = partida.modo === 'online';
+
     // ── Estado de ERRO na criação ─────────────────────────────────────────────────────────
     let sessao: Session;
     try {
-      sessao = createSession(configDaPartida(partida));
+      if (online && pronta === null) throw new Error('online sem sessão conectada');
+      sessao = pronta ?? createSession(configDaPartida(partida));
     } catch {
       tela.append(
         el('h1', { classe: 'titulo', texto: 'Não foi possível começar' }),
@@ -104,6 +136,23 @@ export const telaCobranca =
     // Com o diálogo de saída aberto, os atalhos de teclado precisam calar: `ArrowLeft` chegaria
     // ao `document` por cima do modal e cobraria um pênalti atrás dele.
     let dialogoAberto = false;
+
+    // ── Só o modo `online` usa daqui para baixo ───────────────────────────────────────────
+    /** Este aparelho já escolheu nesta cobrança e espera a do outro. */
+    let aguardandoPeer = false;
+    /** Uma cobrança está sendo animada agora — nem a rede nem o toque começam outra por cima. */
+    let apresentando = false;
+    /**
+     * `true` enquanto a pilha de `choose()` está aberta.
+     *
+     * M5 notifica de dentro de `choose()` **e** de dentro da rede, pelo mesmo assinante. Sem esta
+     * marca, a notificação da própria escolha seria tratada como jogada do peer e a tela
+     * destrancaria as zonas antes de a cobrança fechar — que é exatamente o toque a mais que M5
+     * recusa em voz alta.
+     */
+    let emChoose = false;
+    /** O peer caiu depois de conectado: `D-35`, disputa encerrada SEM resultado. */
+    let caiu = false;
 
     // ── Esqueleto ─────────────────────────────────────────────────────────────────────────
     const numeros = el('span', { classe: 'placar__numeros', texto: placar(estado) });
@@ -206,8 +255,10 @@ export const telaCobranca =
 
       anunciarSorteio(vez);
 
-      // Quem está com o aparelho na mão, em destaque no placar.
-      const emFoco: Side = partida.modo === 'cpu' ? partida.ladoLocal : vez.lado;
+      // Quem está com o aparelho na mão, em destaque no placar. Em `online` é sempre o lado
+      // deste aparelho — o outro está em outro aparelho, e destacá-lo aqui seria apontar para
+      // uma pessoa que não está na sala.
+      const emFoco: Side = partida.modo === 'local' ? vez.lado : partida.ladoLocal;
       ladoA.dataset['vez'] = emFoco === 'A' ? 'sim' : 'nao';
       ladoB.dataset['vez'] = emFoco === 'B' ? 'sim' : 'nao';
 
@@ -220,6 +271,16 @@ export const telaCobranca =
         // Modo `local`, entre chute e defesa. Nenhuma pista da zona escolhida — ver o cabeçalho.
         faixa.dataset['tom'] = 'atencao';
         faixa.textContent = `Passe o aparelho: ${nomeSelecao(partida.times[vez.lado])} defende.`;
+        return;
+      }
+
+      if (aguardandoPeer) {
+        // ── Estado de CARREGANDO do `online` ────────────────────────────────────────────
+        // A escolha já foi enviada; o que falta é a do outro aparelho. Zonas continuam
+        // trancadas: M5 recusa a segunda escolha da mesma cobrança, e um segundo toque aqui
+        // viraria estado de erro por algo que a pessoa não fez de errado.
+        faixa.dataset['tom'] = 'atencao';
+        faixa.textContent = 'Escolha enviada. Esperando o outro jogador…';
         return;
       }
 
@@ -272,6 +333,7 @@ export const telaCobranca =
 
       const antes = estado.kicks.length;
       try {
+        emChoose = true;
         sessao.choose(zona);
       } catch {
         // ── Estado de ERRO no toque ───────────────────────────────────────────────────────
@@ -279,27 +341,100 @@ export const telaCobranca =
         mostrarErroDeToque();
         desenhar();
         return;
+      } finally {
+        emChoose = false;
       }
 
       const houveCobranca = estado.kicks.length > antes;
-      const seguir = (): void => {
-        if (!vivo) return;
-        travado = false;
-
-        if (estado.phase === 'finished') {
-          ctx.ir({ nome: 'fim', partida, estado });
-          return;
-        }
-        desenhar();
-      };
 
       if (!houveCobranca) {
+        if (online) {
+          // A jogada foi para o canal e a cobrança fecha quando a do peer chegar — por
+          // notificação de rede, em `aoNotificacaoDeRede`. `travado` FICA ligado: destravar
+          // aqui deixaria a pessoa tocar de novo, e a segunda escolha da mesma cobrança é
+          // erro que M5 lança.
+          aguardandoPeer = true;
+          desenhar();
+          return;
+        }
         // Modo `local`, chute guardado dentro de M5: nada a animar, só a troca de mãos.
         seguir();
         return;
       }
 
+      apresentando = true;
       void apresentar().then(seguir, seguir);
+    }
+
+    /** O que roda quando a cobrança fechou — vinda do toque ou da rede — e a tela pode andar. */
+    function seguir(): void {
+      apresentando = false;
+      if (!vivo) return;
+      travado = false;
+      aguardandoPeer = false;
+
+      if (estado.phase === 'finished') {
+        ctx.ir({ nome: 'fim', partida, estado });
+        return;
+      }
+      desenhar();
+    }
+
+    // ── Rede: a outra metade da cobrança chega por aqui (modo `online`) ────────────────────
+
+    /**
+     * Uma notificação de M5 que NÃO veio do toque deste aparelho.
+     *
+     * Três coisas chegam por aqui, e só a primeira mexe na disputa: a jogada do peer fechando a
+     * cobrança, a troca de status do canal, e notificação sem novidade nenhuma. A terceira é
+     * comum e é de propósito — M5 notifica por evento, não por mudança de placar.
+     */
+    function aoNotificacaoDeRede(status: LinkStatus): void {
+      if (!vivo || !online) return;
+
+      if (status === 'failed' && !caiu) {
+        mostrarQueda();
+        return;
+      }
+
+      // Cobrança nova já animada, ou animação em curso: nada a fazer. `apresentados` só avança
+      // no fim de `apresentar()`, então esta comparação não dispara duas animações da mesma.
+      if (apresentando || estado.kicks.length === apresentados) {
+        desenhar();
+        return;
+      }
+
+      apresentando = true;
+      void apresentar().then(seguir, seguir);
+    }
+
+    /**
+     * O peer caiu depois de conectado — `D-35`: a disputa terminou **sem resultado**.
+     *
+     * Não vai para a tela de fim: lá o desfecho sem vencedor é tratado como o que não deveria
+     * acontecer ("Isso não deveria acontecer"), e aqui ele é o caso normal de uma conexão P2P
+     * sem árbitro — a lacuna que [[online_p2p]] declara. Nada de "tentar de novo": a sala já foi
+     * solta por M6 (`'failed'` é terminal, `D-31`) e reentrar nela é o peer fantasma de `D-41`.
+     */
+    function mostrarQueda(): void {
+      caiu = true;
+      aguardandoPeer = false;
+      travado = true;
+      travarZonas(true);
+      sorteio.hidden = true;
+      faixa.hidden = true;
+
+      limpar(erro);
+      erro.hidden = false;
+      erro.append(
+        el('p', { texto: 'O outro jogador saiu da disputa.' }),
+        el('p', {
+          classe: 'sub',
+          texto: 'A disputa terminou sem resultado — o placar até aqui não vale como vitória.',
+        }),
+        botao('Voltar ao início', 'botao botao--principal', () => ctx.ir({ nome: 'inicio' })),
+      );
+      focar(erro.querySelector<HTMLButtonElement>('button'));
     }
 
     // ── Sair: ação irreversível, logo confirmação explícita ───────────────────────────────
@@ -346,9 +481,12 @@ export const telaCobranca =
 
     // ── Ligações ──────────────────────────────────────────────────────────────────────────
 
-    const cancelarAssinatura = sessao.subscribe((s: MatchState) => {
+    const cancelarAssinatura = sessao.subscribe((s: MatchState, status: LinkStatus) => {
       estado = s;
       derivacao.aoNotificar(s);
+      // Notificação de dentro do próprio `choose()` já tem quem a trate, logo abaixo dele. Só o
+      // que vem de FORA da pilha do toque — a jogada do peer, a queda do canal — passa daqui.
+      if (!emChoose) aoNotificacaoDeRede(status);
     });
 
     const naTeclaGlobal = (ev: KeyboardEvent): void => {

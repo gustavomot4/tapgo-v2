@@ -152,6 +152,9 @@ export const telaTorneio: Tela = (raiz: HTMLElement, ctx: Contexto) => {
         ladoLocal,
         semente: newSeed(),
         torneio: true,
+        // O torneio é offline por contrato ([[online_p2p]]: ele funciona sem rede nenhuma), e
+        // sala é coisa do modo `online`. `null` aqui é literal, não pendência.
+        sala: null,
       },
     });
   }

@@ -6,15 +6,19 @@
  * qualquer coisa que o aumente (uma confirmação a mais, um passo de nível obrigatório) precisa
  * pagar por si.
  *
+ * **O online custa 3** (modo · Começar · conectar), e o terceiro toque é o que `D-75` exige: é
+ * ele que declara o outro aparelho a postos e só então deixa o relógio de 20 s de M6 armar. Não
+ * é um toque de confirmação — é o toque que existe porque há outra pessoa do outro lado.
+ *
  * Por isso o nível da CPU está **aqui**, já marcado pela preferência, e não numa terceira tela:
  * quem não liga para o nível não toca nele, e quem liga muda antes de escolher o modo.
  *
  * ## Os 4 estados
  * - **carregando** — não há: o catálogo de M4 resolve em build, sem rede.
- * - **vazio** — catálogo sem nenhuma seleção. Os dois modos ficam desligados, com o motivo dito.
+ * - **vazio** — catálogo sem nenhuma seleção. Nenhum modo é oferecido, com o motivo dito.
  * - **erro** — não há erro possível aqui; o erro de configuração aparece na tela de seleções,
  *   que é onde a sessão é criada. Lacuna declarada, não esquecida.
- * - **sucesso** — os dois modos disponíveis.
+ * - **sucesso** — os quatro modos disponíveis.
  */
 
 import type { Level } from '../session/index';
@@ -140,6 +144,21 @@ export const telaInicio: Tela = (raiz: HTMLElement, ctx: Contexto) => {
   );
 
   /*
+   * O online (`T-21`). Terceiro modo, e o único que depende de rede — por isso ele NÃO é o botão
+   * de cima: o jogo que funciona sem nada continua sendo o primeiro da lista ([[online_p2p]]:
+   * "o jogo nunca depende de rede para ser jogável").
+   *
+   * O caminho é o mesmo dos outros dois — seleções e depois a tela do modo —, e a diferença
+   * mora na tela seguinte à de seleções: o convite, que é quem sorteia a sala e decide quando a
+   * sessão nasce (`D-75`).
+   */
+  const comAmigo = botao(
+    'Jogar com um amigo',
+    'botao',
+    () => ctx.ir({ nome: 'selecoes', modo: 'online', nivel: null }),
+  );
+
+  /*
    * O torneio (`T-14`). O rótulo muda com o que existe no aparelho: havendo torneio salvo, o
    * botão CONTINUA o que está em andamento — começar um novo por engano apagaria o outro, e a
    * tela não pode oferecer isso com o mesmo texto que oferece continuar.
@@ -155,6 +174,7 @@ export const telaInicio: Tela = (raiz: HTMLElement, ctx: Contexto) => {
     el('p', { classe: 'legenda', texto: 'Como jogar' }),
     contraCpu,
     doisNoAparelho,
+    comAmigo,
     torneio,
   ]);
 

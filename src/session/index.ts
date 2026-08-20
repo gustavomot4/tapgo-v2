@@ -27,10 +27,12 @@
  * tela não é fonte de acaso). Vale em `cpu` e `local`; em `online` a lacuna é `Q-11` — ver a
  * justificativa completa na declaração de `first`, dentro de `createSession`.
  *
- * **A que este módulo NÃO responde:** como o anfitrião publica o `roomId` que M6 sorteou. A porta
- * congelada em `D-13` tem quatro métodos e nenhum devolve o ID, e M7 não pode importar `src/net`
- * (portão de camada). Está declarado como `Q-11` — não contornado com um quinto método por
- * conta própria. É a mesma lacuna que impede o sorteio no modo `online`: uma resposta serve às duas.
+ * **Como o anfitrião publica o `roomId` (`Q-11`, respondida por `D-73`):** ele não sai daqui —
+ * ele ENTRA. M7 sorteia com `newRoomId`, reexportado logo abaixo, monta o link e passa o ID em
+ * `cfg.roomId` nos dois aparelhos. A porta congelada de `D-13` segue com quatro métodos, e o
+ * quinto que devolveria o ID não foi comprado. O que `D-73` **não** fechou é o sorteio de quem
+ * cobra primeiro no `online`: ele exigiria M5 semear o sorteio pelo `roomId`, o que é mudança de
+ * regra desta camada e não de uma linha de export — segue em `'A'`, declarado abaixo em `first`.
  */
 
 import type { CountryCode, Side, Zone } from '../core/index';
@@ -49,6 +51,13 @@ import { findTeam } from '../data/teams';
 export type { MatchState } from '../engine/index';
 export type { LinkStatus } from '../net/index';
 export type { Level } from '../cpu/index';
+
+// ── `D-73`: o sorteio do ID de sala sai por M5 (`Q-11` respondida) ─────────────────────────
+// M7 precisa do ID **antes** de existir canal — é ele que vira o link do convite, e é o toque
+// da pessoa que decide quando a sessão nasce (`D-75`). A porta `Session` continua com os quatro
+// métodos de `D-13`: nada aqui devolve o ID depois; ele é sorteado antes e entra por `roomId`.
+// Valor, não tipo: `newRoomId` é função, e a tela a chama sem importar `src/net` (portão de M7).
+export { newRoomId } from '../net/index';
 
 export type Mode = 'cpu' | 'local' | 'online';
 
@@ -165,11 +174,14 @@ export function createSession(cfg: SessionConfig): Session {
    *    linha para depois do primeiro `pick` quebraria a equivalência sem quebrar nenhum tipo.
    * 3. **O modo `online` não sorteia, e isso é lacuna declarada, não esquecimento.** Os dois
    *    aparelhos precisariam tirar o MESMO lado, e hoje não têm semente em comum: `cfg.seed` é de
-   *    quem chama, um por aparelho. O valor que os dois já compartilham é o `roomId`, que M5 não
-   *    recebe do anfitrião — é exatamente `Q-11`, aberta. Sortear com sementes independentes faria
+   *    quem chama, um por aparelho. O valor que os dois já compartilham é o `roomId`, que desde
+   *    `D-73` chega em `cfg.roomId` nos DOIS aparelhos — semeá-lo por ele é possível hoje, e é
+   *    mudança de regra desta camada, não a linha de export que `T-21` comprou. Sortear com
+   *    sementes independentes faria
    *    os dois aparelhos começarem com cobradores diferentes e divergirem na primeira cobrança:
-   *    seria trocar um lado fixo por uma disputa quebrada. Até `Q-11` ser respondida, `online`
-   *    segue com `'A'` — o mesmo comportamento que `T-13` já entregou e testou.
+   *    seria trocar um lado fixo por uma disputa quebrada. Enquanto ninguém decidir semear pelo
+   *    `roomId`, `online` segue com `'A'` — o mesmo comportamento que `T-13` entregou e testou, e
+   *    a tela de convite (`T-21`) o diz em voz alta: quem convida cobra primeiro.
    */
   const first: Side = mode === 'online' ? 'A' : rng.int(2) === 0 ? 'A' : 'B';
 
@@ -342,9 +354,10 @@ export function createSession(cfg: SessionConfig): Session {
   }
 
   if (mode === 'online') {
-    // Sem `roomId` este aparelho é o anfitrião e M6 sorteia o ID; com `roomId`, ele entra na sala
-    // do link. O ID sorteado **fica aqui dentro** — a porta congelada não tem por onde devolvê-lo,
-    // e é exatamente essa a lacuna registrada em `Q-11`. Declarada, não contornada.
+    // Com `roomId`, este aparelho entra na sala do link — e desde `D-73` é por aqui que os DOIS
+    // entram: M7 sorteia o ID com `newRoomId` e sempre o passa. O ramo sem `roomId` fica onde
+    // está e **não vira contrato**: nele M6 sorteia um ID que a porta congelada não tem por onde
+    // devolver, então quem cair aqui abre uma sala que ninguém consegue convidar.
     canal = cfg.roomId === undefined ? hostRoom().channel : joinRoom(cfg.roomId);
     canal.onStatus(aoStatus);
     canal.onMove(aoMove);
