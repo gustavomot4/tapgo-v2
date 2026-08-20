@@ -7,6 +7,13 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-19] — v2.0.0: os três comandos verdes na máquina do dono, e o bump de versão (`A-19`)
+- **Skill:** delivery-review (mesma sessão). `package.json` (só a linha `version`), CONTEXT, [[entrega_e6]], backlog.
+- **O que o dono rodou, e o que a saída provou:** `npm run typecheck` sem uma linha de saída · `npm test` **531/531 em 12 arquivos** (4,29 s) · `npm run build` com 93 módulos transformados e **408.094 B = 5,10%** do teto impressos pelo `bundle-size.mjs`. Os dois primeiros critérios de [[portao_de_aceite]] deixam de ser afirmação e passam a ter a saída datada; o número do bundle bateu **exatamente** com o que o CONTEXT já declarava.
+- **`2.0.0-dev` → `2.0.0`** em `package.json` e na linha **Versão** do CONTEXT.
+- **`A-19` saiu mais barata do que o card supunha:** a string de versão **não entra no build** — `grep` por `2.0.0-dev` no `dist/` publicado não acha nada. Logo o bump não muda um byte da página no ar, dispensa a reconferência dos três sinais no celular que o card exigia, e sobra `commit` + `push`.
+- **Número novo que vale registrar:** o `dist/` inteiro dá **1.692.813 B**, contra os 408.094 B iniciais. A diferença é o que carrega depois — o chunk `cena` (Phaser) sozinho é 1.215.740 B, e é ele que o `import()` de `D-27` mantém fora da primeira tela.
+
 ## [2026-08-19] — **E-6 FECHADA: v2.0.0 entregue**, com o online declarado fora (`D-72`)
 - **Skill:** delivery-review (mesma sessão). Documentação + `README.md`. Nenhum arquivo de `src/` tocado, nenhuma lógica alterada.
 - **`D-72` (porta do dono):** a entrega sai **sem a tela de convite**, com a lacuna declarada. O critério de aceite do online é a **medição**, e ela passou (`A-08`: 17/17, limite inferior 95% de 83,8% contra o corte de 70%, `D-47`) — o que falta é uma tela, travada por `Q-11`, cujas duas saídas mexem em porta congelada de M5. Segurar CPU, 2P local e o torneio por isso seria trocar uma entrega pronta por uma tela.
