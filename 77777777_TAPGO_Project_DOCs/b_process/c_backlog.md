@@ -119,6 +119,65 @@ _(vazio)_
   · **`Q-08` sai intacta:** T-09 chama `observe`/`pick` com a semântica que T-07 entregou; `D-26` só fixa a ordem entre eles, e o teste que a cobre declara que hoje não a distingue
 - [x] T-05 — esqueleto de build e publicação no Pages · **Módulo:** M9 · **Etapa:** E-1 (portão completo só em E-6) · **Portão:** `tsc --noEmit`, suíte verde, bundle inicial 4.599 B de 8 MB lido de `dist/`, 1 `Math.random` em `src/` e 0 imports de motor; página no ar por A-07 · `D-16`, `D-17`, `D-18`, `QA-04`
 
+## Pedidos do dono — 2026-08-20 (frontend/M7, ainda SEM compromisso)
+
+> Levantados pelo dono depois de `A-24`. **Nenhum deles é card ainda**: cada um traz o que já
+> existe, o custo real e o que o trava. Vira `T-NN` quando o dono escolher a direção — a maioria
+> é gosto e produto, logo `D-NN` dele (regra 6). Ordem aqui é de leitura, não de prioridade.
+> **`T-24` está reservado** para o desempate de `QA-28`, não usar.
+
+- **(P-1) Desktop é a tela do celular esticada.** Medido: `.tapgo` tem `max-width: 420px`
+  (`src/ui/estilo.css:69`) e o **único** ponto de quebra de layout, `min-width: 480px`
+  (`:1122`), não alarga nada — só vira cartão com borda e sombra. Em 1920px sobram ~1500px
+  **por construção** · **Não é defeito de CSS, é decisão que nunca houve:** o portão de `T-20`
+  cobrava "360x640 **e** no desktop", mas o que ele cobra no desktop é ausência de rolagem
+  horizontal, não composição · **Custo:** nenhuma tela de M7 tem teste (`vitest` roda em Node
+  sem DOM), então cada layout novo é conferência no aparelho; e `D-65` é a folha herdada, logo
+  a direção larga tem de nascer dentro dela · **Trava:** direção de layout é `D-NN` do dono
+- **(P-2) Pontos na tabela da TAP GO Cup.** Hoje `Standing` traz `wins`, `goalsFor`,
+  `goalsAgainst` (`src/tournament/tabela.ts:19`) · **É de graça e não muda ordenação:** a
+  disputa nunca empata (`D-09`), então **pontos = 3 x vitórias**, exatamente — render puro em
+  M7, zero byte em M8 · **O cuidado:** o desempate de `D-53` é confronto direto -> saldo -> gols
+  -> sorteio, e uma coluna "Pts" não pode sugerir que empate de pontos se resolve por outra
+  regra · **Trava:** nada. É o mais barato da lista
+- **(P-3) Ver o chaveamento inteiro, os resultados das outras disputas e quem passou.**
+  **O dado JÁ EXISTE inteiro:** `TournamentState` guarda `entrants` (as 32 já sorteadas, 4 por
+  grupo), `groupOrder`, `results`, `goalsA`, `goalsB` — as 64 disputas (`src/tournament/index.ts:47`)
+  · **O que falta é um leitor legítimo:** o retrato é declarado **opaco** ("M7 não interpreta
+  nenhum campo daqui", `:41`) e `Tournament` expõe 5 métodos, nenhum de leitura de fase ·
+  **Duas saídas, as duas `D-NN` do dono:** (a) M7 passa a interpretar `TournamentState` — barato
+  em código, caro em contrato, mata a opacidade que `D-68` grava; (b) 6º método em M8, que é o
+  precedente de superfície que `D-39` recusou comprar · **Limite a declarar ANTES de desenhar:**
+  as disputas **do jogador** não têm placar, só vencedor — `report(winner)` é porta congelada
+  (`D-13`/`D-58`) e `Q-13` é exatamente isso; a tela mostraria `—`, como `D-67` já faz
+- **(P-4) Emoção: torcida comemorando/lamentando, taça, medalha de 2º e 3º, trilha nos menus.**
+  **Precedente bom, e é melhor do que parece:** os 3 efeitos de áudio são **autorais e gerados
+  por script** (`src/scripts/gen-audio.mjs`, `src/ui/som.ts:3`), determinísticos e com linha de
+  procedência — trilha pelo mesmo caminho **não** compra licença de terceiro · **Bundle não é o
+  gargalo:** 415.713 B de 8 MB (5,2%) · **O gargalo é `D-65`**, que é restrição permanente:
+  "capa e profundidade feitas só de degradê (**zero asset**)" e "movimento restrito a
+  `opacity`/`transform`". Torcida e taça animadas **reabrem `D-65`** -> `D-NN` do dono ·
+  **E `prefers-reduced-motion` continua valendo**, e a preferência "som" já existe e desliga
+- **(P-5) A moeda do sorteio, animada.** **Atenção à lista-morta:** `D-49` já recusou a
+  **tela da moeda** — 3º toque num fluxo com portão de 2 toques —, e o sorteio virou painel
+  dentro da cobrança · **Ângulo novo, e ele é legítimo:** animar a moeda **dentro do painel que
+  já existe**, sem toque a mais e sem tela nova, não é o que `D-49` matou · **Custo:** só
+  `opacity`/`transform` para caber em `D-65`; `A-14` já confirmou no aparelho que o painel
+  aparece antes do 1º toque e some depois
+- **(P-6) Não dá para ver quem ataca e quem defende no lance.** É o mais próximo de defeito da
+  lista: hoje o papel vem só do texto da faixa e do `aria-label` das zonas
+  (`src/ui/tela_cobranca.ts:265`), e o destaque no placar aponta o lado **deste** aparelho,
+  não o papel · **Se o dono confirmar que confundiu em partida real, isto vira `QA-NN`**, não
+  ideia — é usabilidade de gameplay, e nenhum portão de M7 cobre "papel legível em 1 olhada"
+- **(P-7) Seleção de time melhor organizada no desktop.** Filha de (P-1): a grade é
+  `repeat(2, 1fr)` (`estilo.css:318`) dentro da mesma coluna de 420px. Decidir junto com (P-1),
+  senão são duas mudanças disputando a mesma folha
+
+> **Licenciamento, sobre a imagem de referência que o dono anexou:** o **layout** de chaveamento
+> é imitável à vontade. O que **não** entra, por restrição inegociável do CONTEXT e por
+> [[licenciamento]]: a **taça** (marca de federação), o nome "Copa do Mundo"/"FIFA" e a marca do
+> veículo. O torneio do jogo é a **TAP GO Cup** (`D-55`), e as bandeiras já entraram por `D-54`.
+
 ## Ideias (não comprometidas)
 - **Sala de 8 — torneio no modo `online`. Adiada por `D-56`**, não rejeitada: exigiria o chaveamento como estado compartilhado entre aparelhos, o que muda a camada 3 do PLANO. Volta à mesa como `D-NN` novo, nunca como "só ligar o online no torneio"
 - Ranking global (exige servidor autoritativo — hoje colide com "custo R$ 0"; ver [[online_p2p]])
