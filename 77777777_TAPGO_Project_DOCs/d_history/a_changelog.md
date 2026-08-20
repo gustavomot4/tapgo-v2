@@ -7,6 +7,17 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-20] — `A-25` metade 2: o par são não regride — `QA-26` FECHADO por `D-81`
+
+- **Skill:** backend-domain (registro da medição do dono; `src/` intocado nesta sessão).
+- **O que esta metade prova, e é o oposto da metade 1:** que a guarda de `D-81` não morde quem é inocente. Num par são cada `Move` chega assinado com o lado do **outro**, logo `m.side === localSide` é impossível e a guarda nunca roda. Sandbox já dizia isso (5 cobranças, zero descarte); faltava o campo.
+- **Procedimento:** aparelho 1 pelo **MENU** (`Jogar com um amigo` → seleções → "Convide quem vai jogar" → `Já mandei o link — conectar`), aparelho 2 **pelo link** ("Você foi convidado" → `Entrar na disputa`), os dois toques de conexão com os aparelhos na mão — os 20 s só começam ali (`D-75`).
+- **Os 5 pontos cobrados, todos verdes:** abertura menu+link ✔ · a disputa terminou com **placar final** ✔ · placar **igual nos dois aparelhos** ✔ · `D-35` **não** apareceu ✔ · bandeiras distintas e alternância de cobrança ✔.
+- **Por que o placar coincidente substitui o console** (que celular não tem): descarte de `Move` não é silencioso no resultado — é divergência de estado, o mecanismo de `QA-25`. Dois placares iguais no fim de uma disputa inteira só existem se nenhuma jogada tiver sido perdida.
+- **Lacuna declarada:** o relato veio como confirmação dos 5 pontos, não como números livres — o **valor** do placar não foi anotado, só a sua coincidência, que é o que este portão cobra.
+- **O que isto fecha:** `QA-26` (ALTO, aberto hoje de manhã na auditoria que produziu `D-81`) e o item 5 do portão de `T-23` — campo em dois aparelhos, agora nas duas metades. `D-81` está provado dos dois lados: mata o par espelhado, não mata a disputa legítima.
+- **O que isto NÃO fecha:** devolver "por link de convite" ao Objetivo. A condição de `D-72` está cumprida, mas a promessa volta **com a frase honesta junto** (o link é de uso único e do convidado), e isso é `D-NN` do dono — que não cabe no registro hoje (`A-21`). A porta C (`peerId`) segue viva e sem dado: é a única que faria as 3 aberturas degeneradas **funcionarem** em vez de falharem com honestidade.
+
 ## [2026-08-20] — `T-22`: o silêncio da espera vira número — o contador de segundos em M7
 
 - **Skill:** frontend-uiux. **Saída escolhida pelo dono: (b)** — M5 reexporta `CONNECT_TIMEOUT_MS` como valor, do mesmo jeito que já reexporta `newRoomId` por `D-73`. A saída (a) (M7 contando sozinho com o `20` copiado) foi recusada pelo motivo escrito no card: cópia de constante mente sozinha no dia em que `D-75` for revisto.

@@ -315,3 +315,48 @@ saída que resta é rever o teto — o que o próprio `check.py` agora escreve n
 
 Estado do registro ao fim desta sessão, medido: **15.982/16.000 — sobram 18 caracteres.** A
 próxima decisão de qualquer sessão não cabe.
+
+## `A-25` metade 2 — o par são NÃO regride (2026-08-20). `QA-26` fecha
+
+O portão da metade 2 é o item que prova o contrário da metade 1: que a guarda de `D-81` não morde
+quem é inocente. Num par são cada `Move` chega assinado com o lado do **outro**, logo
+`m.side === localSide` é impossível e a guarda nunca deveria rodar. Sandbox já dizia isso (5
+cobranças, zero descarte, e a mutação que quebraria reprova 17 testes) — o que faltava era campo.
+
+**Procedimento rodado, com os rótulos reais das telas:** aparelho 1 pelo **MENU** (`Jogar com um
+amigo` → seleções → tela *"Convide quem vai jogar"* → `Copiar link` → `Já mandei o link —
+conectar`); aparelho 2 **pelo link** (tela *"Você foi convidado"* → `Entrar na disputa`). Os dois
+toques de conexão com os dois aparelhos na mão, que é a condição de `D-75` — os 20 s só começam
+ali, e mandar o link antes de ter o outro aparelho mediria timeout, não a guarda.
+
+**Relato do dono, contra os 5 pontos cobrados — todos passaram:**
+
+| ponto | por que ele estava na lista | medido |
+|---|---|---|
+| abertura pelo MENU + link | link nos dois seria a metade 1 de novo | **sim** |
+| a disputa terminou com placar final | trava no meio é o sintoma de `QA-26` | **sim** |
+| placar final **igual** nos dois aparelhos | é o observável que substitui "zero descarte" | **sim** |
+| `D-35` **não** apareceu | num par são ela é regressão, não desfecho | **sim, não apareceu** |
+| bandeiras distintas e alternância de cobrança | os 2 sintomas que denunciaram o par espelhado | **sim** |
+
+**Por que o placar coincidente substitui o console:** o portão de `T-23` escreveu "sem um único
+descarte por lado no console", e console não existe em celular. Mas descarte de `Move` não é
+silencioso no resultado — é divergência de estado: a jogada que um lado conta e o outro não
+produz dois placares diferentes na mesma cobrança, que foi exatamente o mecanismo de `QA-25`. Dois
+placares iguais no fim de uma disputa inteira só existem se **nenhuma** jogada tiver sido perdida.
+
+**Lacuna declarada, e ela é de forma, não de mérito:** o relato veio como confirmação dos 5 pontos
+enumerados acima, não como números livres — **o placar final não foi anotado**, só a sua coincidência
+entre os dois aparelhos. Para o que este portão cobra, a coincidência é o dado; o valor não é.
+
+**Com isto o portão de `A-25` está inteiro:** metade 1 (degenerada) medida mais cedo hoje — quem
+RECEBE cai em `D-35` no tique, quem TOCOU sai em ~10 s, nenhum preso, nenhum placar inventado — e
+metade 2 (par são) medida agora. `QA-26` **fecha por `D-81`**, e o item 5 do portão de `T-23`
+(campo em dois aparelhos) está cumprido.
+
+**O que este fechamento NÃO faz, e é a mesma linha de sempre:** não devolve *"por link de convite"*
+ao Objetivo. A condição de `D-72` está cumprida e o caminho são está medido, mas a promessa volta
+**com a frase honesta junto** — *o link é de uso único e do convidado; quem convida não abre o
+próprio link* — e isso é `D-NN` do dono (regra 6), que **não cabe** no registro hoje (`A-21`). A
+porta C (`peerId`) segue viva e sem dado: ela é a única que faria as 3 aberturas degeneradas
+**funcionarem** em vez de falharem com honestidade.
