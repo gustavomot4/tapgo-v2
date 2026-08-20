@@ -16,6 +16,13 @@
  * disputas dela são justamente as que não têm placar, e as outras três mostram a soma do que se
  * sabe, com a nota dizendo o que ficou de fora. Ver `golsDaLinha` em `rotulos.ts`.
  *
+ * ## A coluna de pontos (`P-2`)
+ * "Pts" é derivação de render: `pontos = 3 x vitórias`, exatamente, porque a disputa nunca empata
+ * (`D-09`) e não há ponto de empate a distribuir. M8 não ganhou campo nenhum por causa dela, e a
+ * ordenação segue sendo a de `D-53` — empatar em pontos é empatar em vitórias, e é ali que
+ * confronto direto, saldo, gols e sorteio entram. `NOTA_PONTOS` diz isso embaixo da tabela para
+ * que a coluna não sugira uma segunda regra de desempate.
+ *
  * ## Os 4 estados
  * - **carregando** — não há: o torneio já está na memória (M8 resolve tudo em chamada síncrona).
  * - **vazio** — não há torneio em andamento. Acontece por entrada direta na rota; a tela oferece
@@ -31,11 +38,14 @@ import type { Standing } from '../tournament/index';
 import { botao, confirmar, el, focar } from './dom';
 import {
   NOME_TORNEIO,
+  NOTA_PONTOS,
   NOTA_SEM_GOLS,
   ROTULO_SEM_GOLS,
+  TITULO_PONTOS,
   golsDaLinha,
   nomeFase,
   nomeSelecao,
+  pontosDaLinha,
 } from './rotulos';
 import { marca } from './tela_selecoes';
 import { telaCampeao } from './tela_campeao';
@@ -59,7 +69,7 @@ function proximaDisputa(times: Readonly<Record<Side, CountryCode>>): HTMLElement
 }
 
 /**
- * A tabela do grupo: posição, seleção, vitórias e gols.
+ * A tabela do grupo: posição, seleção, pontos, vitórias e gols.
  *
  * `<table>` de verdade, com `<th scope>`: é o que faz o leitor de tela dizer "Vitórias, 2" em vez
  * de ler quatro números soltos. A linha do jogador leva `data-voce` e um texto para quem não vê
@@ -69,6 +79,11 @@ function tabelaDoGrupo(linhas: readonly Standing[], humana: CountryCode): HTMLEl
   const cabecalho = el('tr', {}, [
     el('th', { classe: 'tabela__pos', texto: '#', attrs: { scope: 'col' } }),
     el('th', { texto: 'Seleção', attrs: { scope: 'col' } }),
+    el('th', {
+      classe: 'tabela__num tabela__pts',
+      texto: 'Pts',
+      attrs: { scope: 'col', title: TITULO_PONTOS },
+    }),
     el('th', { classe: 'tabela__num', texto: 'V', attrs: { scope: 'col', title: 'Vitórias' } }),
     el('th', { classe: 'tabela__num', texto: 'Gols', attrs: { scope: 'col' } }),
   ]);
@@ -81,13 +96,14 @@ function tabelaDoGrupo(linhas: readonly Standing[], humana: CountryCode): HTMLEl
     corpo.append(
       el('tr', ehVoce ? { dados: { voce: 'sim' } } : {}, [
         el('th', { classe: 'tabela__pos', texto: `${String(i + 1)}º`, attrs: { scope: 'row' } }),
-        el('td', {}, [
+        el('td', { classe: 'tabela__celula-nome' }, [
           el('span', { classe: 'tabela__time' }, [
             marca(linha.code),
             nome,
             ...(ehVoce ? [el('span', { classe: 'tabela__voce', texto: 'você' })] : []),
           ]),
         ]),
+        el('td', { classe: 'tabela__num tabela__pts', texto: String(pontosDaLinha(linha)) }),
         el('td', { classe: 'tabela__num', texto: String(linha.wins) }),
         el('td', {
           classe: 'tabela__num',
@@ -207,6 +223,9 @@ export const telaTorneio: Tela = (raiz: HTMLElement, ctx: Contexto) => {
       el('div', { classe: 'grupo' }, [
         el('p', { classe: 'legenda', texto: 'Sua chave' }),
         tabelaDoGrupo(linhas, humana),
+        // A nota de `P-2`: vem ANTES da de gols porque explica a coluna que a pessoa lê
+        // primeiro, e porque é ela que impede "Pts" de sugerir um desempate que não existe.
+        el('p', { classe: 'lacuna', texto: NOTA_PONTOS }),
         // A nota de `Q-13`/`D-67`. Fica colada na tabela, e não no rodapé da tela: uma coluna
         // parcial sem a nota ao lado é a tela dizendo um número que ela não mediu.
         el('p', { classe: 'lacuna', texto: NOTA_SEM_GOLS }),

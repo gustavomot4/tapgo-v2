@@ -7,6 +7,16 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-20] — `T-25`: a coluna "Pts" na tabela da TAP GO Cup, sem um byte novo em M8
+
+- **Skill:** frontend-uiux. Card `T-25`, nascido do pedido `P-2` que o dono escolheu como primeiro da lista de 2026-08-20.
+- **Adicionado:** `PONTOS_POR_VITORIA`, `pontosDaLinha()`, `TITULO_PONTOS` e `NOTA_PONTOS` em `src/ui/rotulos.ts`; a coluna "Pts" e a nota em `src/ui/tela_torneio.ts`; dois testes em `src/tests/ui_torneio.test.ts`.
+- **A conta é exata, e é por isso que ela cabe em M7:** a disputa nunca empata (`D-09`), então não há ponto de empate a distribuir e `pontos = 3 x vitórias` sem resto. `Standing` não ganhou campo, `src/tournament/` não mudou um byte, e a ordenação continua sendo a de `D-53`.
+- **O cuidado que o card declarou, cumprido por texto E por teste:** uma coluna "Pts" sugere, por hábito de tabela de campeonato, que empate de pontos tenha regra própria. `NOTA_PONTOS` diz o contrário embaixo da tabela — empatar em pontos é empatar em vitórias, e o desempate segue confronto direto, saldo, gols e sorteio —, e um teste cobra os quatro termos dentro da frase. Um segundo teste prova, sobre um torneio real, que os pontos nunca sobem descendo a tabela já classificada: se subirem, ou a conta deixou de ser 3 x vitórias, ou M8 trocou de primeiro critério.
+- **Um conserto de layout entrou junto, porque é da própria coluna:** com cinco colunas, o nome mais longo do catálogo levava a tabela a 359px dentro de uma coluna de 336px em 360x640 — rolagem horizontal, que o portão de `T-20` proíbe. `max-width: 0` na célula do nome faz ela ceder ao `ellipsis` que já existia; os números nunca encolhem. Medido depois do conserto: **0 px** de estouro, no estado real e no pior caso injetado.
+- **Números:** suíte **582/582** (eram 580), `tsc` limpo, bundle 417.664 → **418.254 B** relido de `dist/` (+590 B, zero asset novo) — **5,23%** do teto de 8 MB. Registro e QA **inalterados**: nenhuma decisão nova foi precisa, porque a direção já era `P-2` do dono e nada aqui é regra de disputa.
+- **LACUNA DECLARADA:** a tabela foi conferida no navegador com o grupo **zerado** — o sandbox não compõe quadros, e a tela de cobrança não avança sem eles, então nenhuma disputa foi jogada até virar vitória. O pior caso de largura foi injetado por DOM, não jogado. Tabela com pontos reais (3, 6, 9) é `A-28`, do dono.
+
 ## [2026-08-20] — `A-27` fechada: o relógio de 15 s medido em dois aparelhos, e `T-24` fica sem pendência
 
 - **Skill:** frontend-uiux (ação do dono; nenhum byte em `src/`). Relato: *"testei e tudo já conforme o esperado, tudo está funcionando corretamente"*.

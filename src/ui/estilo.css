@@ -997,11 +997,16 @@
   border-bottom: 0;
 }
 
+/*
+ * Colunas estreitas. O respiro lateral caiu de 10px para 6px quando "Pts" entrou (`P-2`): são
+ * quatro colunas de número em 360px, e 4 x 8px de padding a menos é o que devolve a largura ao
+ * nome da seleção, que é o dado que a pessoa lê primeiro.
+ */
 .tabela__pos,
 .tabela__num {
   width: 1%;
-  padding-right: 10px;
-  padding-left: 10px;
+  padding-right: 6px;
+  padding-left: 6px;
   text-align: right;
   white-space: nowrap;
 }
@@ -1015,6 +1020,27 @@
 .tabela__pos {
   color: var(--texto-apagado);
   font-weight: 700;
+}
+
+/* Pontos é a coluna que resume a tabela: negrito no corpo para o olho parar nela antes de "V".
+   Peso é o único destaque — cor sozinha não distingue coluna para quem não a enxerga. */
+.tabela tbody .tabela__pts {
+  font-weight: 700;
+}
+
+/*
+ * A célula do nome é a que CEDE largura, e `max-width: 0` é o que a obriga a isso.
+ *
+ * Sem ela, o nome mais longo do catálogo (`Costa do Marfim`, com a etiqueta "você" ao lado)
+ * empurrava a tabela para 359px dentro de uma coluna de 336px em 360x640 — rolagem horizontal,
+ * que é justamente o que o portão de `T-20` proíbe. Medido com "Pts" na tabela: a quinta coluna
+ * é o que estourou a conta. `max-width: 0` não zera nada; ela diz ao `table-layout` automático
+ * que esta coluna não tem largura mínima própria, e o `text-overflow: ellipsis` de
+ * `.tabela__nome` faz o resto — os números nunca encolhem, o nome sim.
+ */
+.tabela__celula-nome {
+  max-width: 0;
+  overflow: hidden;
 }
 
 .tabela__time {

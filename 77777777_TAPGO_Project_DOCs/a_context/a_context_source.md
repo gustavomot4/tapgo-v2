@@ -27,11 +27,11 @@ Partida de ~1 minuto: contra a CPU ou contra alguém no mesmo aparelho. O online
 
 ## Estado atual (formato fixo — 1 linha por item, SEM prosa corrida)
 - **Versão:** v2.0.0 — entregue em 2026-08-19 (a v1 é baseline morto: reescrita total, nenhum código reaproveitado)
-- **Pronto:** M1..M9 e a medição, com **E-1..E-6 fechadas**; suíte **580/580**; **`QA-26` fechado** por `D-81`, `T-22` com campo (`A-25`/`A-26`) e **`T-24` fechado com campo** (`D-84`, `A-27`). Módulo a módulo, e a tarefa que fechou cada um: [[estado_modulos]]
-- **Bundle:** **417.664 B** (5,2% de 8 MB) lido de `dist/` e **reconferido na máquina do dono em 2026-08-20**, com `tsc` e a suíte; `T-24` somou **+1.115 B**, zero asset novo; 278.646 B são os 32 SVGs de T-19, asset do chunk de M4 (`QA-06`); Phaser e Trystero fora, por `import()` (D-27)
+- **Pronto:** M1..M9 e a medição, com **E-1..E-6 fechadas**; suíte **582/582**; **`T-24` fechado com campo** (`D-84`, `A-27`) e **`T-25` fechado no código** (`P-2`: coluna "Pts" = 3 x vitórias, render puro em M7, zero byte em M8). Módulo a módulo: [[estado_modulos]]
+- **Bundle:** **418.254 B** (5,2% de 8 MB) lido de `dist/`; `T-25` somou **+590 B**, zero asset novo (o número anterior, 417.664 B, foi reconferido na máquina do dono em 2026-08-20); 278.646 B são os 32 SVGs de T-19, asset do chunk de M4 (`QA-06`); Phaser e Trystero fora, por `import()` (D-27)
 - **Em andamento (máx 1):** nada
-- **Próximo:** `P-2` — pontos na tabela da TAP GO Cup (3 x vitórias, render puro em M7, zero byte em M8); nada o trava · portão de `D-83` correndo: **2 de 10** (`QA-30` 390, `D-84` 369) · a promessa que `D-72` tirou volta ao Objetivo quando couber
-- **Bloqueado/pendente:** **registro 17.125/20.000** com os TRÊS pools em zero (`D-43`, duplicata, critério de `D-74`) — `D-82` é rejeição adiada: ~9–11 decisões · QA **4.935/8.000** (o corte de `D-74` levou 3 fechados) · CONTEXT 96%
+- **Próximo:** `A-28` — a tabela de `T-25` com pontos reais no aparelho (o sandbox só a viu zerada); depois `P-5`, a moeda animada dentro do painel de `D-49` · portão de `D-83` correndo: **2 de 10** (`QA-30` 390, `D-84` 369) · a promessa que `D-72` tirou volta ao Objetivo quando couber
+- **Bloqueado/pendente:** **registro 17.125/20.000** com os TRÊS pools em zero (`D-43`, duplicata, critério de `D-74`) — `D-82` é rejeição adiada: ~9–11 decisões · QA **4.935/8.000** (o corte de `D-74` levou 3 fechados) · CONTEXT 97%
 - **Questões abertas:** Q-08, Q-09, Q-13 (**Q-15 fechada** por `D-84`) · **QA abertos:** QA-04..QA-07, QA-10, QA-17, QA-20, QA-21, QA-27, **QA-29** · respondidas e fechados: [[decisions_archive]]
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)

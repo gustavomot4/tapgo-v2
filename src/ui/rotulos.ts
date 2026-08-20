@@ -331,3 +331,39 @@ export function avisoDePressa(segundos: number): string {
  */
 export const AVISO_COBRANCA_SORTEADA =
   'O tempo acabou: sua escolha foi sorteada. Esperando o outro jogador…';
+
+// ── `P-2`: a coluna de pontos da tabela do grupo ────────────────────────────────────────────
+// Pontos aqui são **derivação de render**, não campo novo: M8 continua entregando `wins`, e
+// nenhum byte dele muda. A conta é exata porque a disputa nunca empata (`D-09`) — não existe
+// ponto de empate a distribuir, então `pontos = 3 x vitórias` sem resto e sem arredondamento.
+
+/** Pontos por vitória. Não há linha de empate porque não há empate (`D-09`). */
+export const PONTOS_POR_VITORIA = 3;
+
+/**
+ * Os pontos de uma linha da tabela.
+ *
+ * Inteiro, sempre: `wins` é inteiro e o fator é inteiro. Diferente da coluna de gols, esta não
+ * tem caso de ausente — o vencedor de toda disputa volta por `report(winner)` (`D-13`/`D-58`),
+ * inclusive nas do jogador, então vitória é dado medido em TODAS as quatro linhas.
+ */
+export function pontosDaLinha(linha: Standing): number {
+  return linha.wins * PONTOS_POR_VITORIA;
+}
+
+/** O que o cabeçalho abreviado quer dizer, para quem passa o cursor e para o leitor de tela. */
+export const TITULO_PONTOS = 'Pontos — 3 por vitória';
+
+/**
+ * A nota que impede a coluna de mentir sobre o desempate (o cuidado declarado em `P-2`).
+ *
+ * Uma coluna "Pts" carrega, de tabela de campeonato, a expectativa de que empate de pontos se
+ * resolva por regra própria. Aqui não: pontos são vitórias vezes três, então empatar em pontos é
+ * empatar em vitórias — exatamente o ponto em que `D-53` já entra com confronto direto, saldo,
+ * gols e, esgotados os três, o sorteio do `Rng`. A nota diz isso em vez de deixar a coluna
+ * sugerir uma segunda regra que não existe.
+ */
+export const NOTA_PONTOS =
+  'Pts é 3 por vitória — a disputa nunca empata, então não há ponto de empate. Pontos iguais ' +
+  'são vitórias iguais, e o desempate segue o de sempre: confronto direto, saldo, gols e, se ' +
+  'tudo empatar, sorteio.';

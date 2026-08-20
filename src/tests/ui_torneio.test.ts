@@ -36,9 +36,12 @@ import {
 import {
   GOLS_AUSENTES,
   NOME_TORNEIO,
+  NOTA_PONTOS,
   NOTA_SEM_GOLS,
+  PONTOS_POR_VITORIA,
   golsDaLinha,
   nomeFase,
+  pontosDaLinha,
 } from '../ui/rotulos';
 
 /** `localStorage` de mentira, com `removeItem` — o registro do torneio é apagado de verdade. */
@@ -310,6 +313,45 @@ describe('rótulos do torneio', () => {
 
     expect(NOTA_SEM_GOLS).toMatch(/gols/i);
     expect(NOTA_SEM_GOLS.length).toBeGreaterThan(20);
+  });
+
+  it('pontos são 3 x vitórias, exatamente, e a nota não promete outro desempate (P-2)', () => {
+    expect(PONTOS_POR_VITORIA).toBe(3);
+
+    // Inteiro em toda linha possível do grupo: são 3 disputas, logo 0..3 vitórias.
+    for (const wins of [0, 1, 2, 3]) {
+      const pts = pontosDaLinha({ code: 'BR', wins, goalsFor: 0, goalsAgainst: 0 });
+      expect(pts).toBe(wins * 3);
+      expect(Number.isInteger(pts)).toBe(true);
+    }
+
+    // A linha do jogador NÃO tem o caso de ausente da coluna de gols: vitória volta por
+    // `report(winner)`, então há ponto medido mesmo onde não há placar (`D-67` é só dos gols).
+    expect(pontosDaLinha({ code: 'BR', wins: 2, goalsFor: 0, goalsAgainst: 0 })).toBe(6);
+
+    // O cuidado declarado em `P-2`: a nota tem de citar a cascata de `D-53` inteira, senão a
+    // coluna sugere que empate de pontos se resolve por regra própria.
+    for (const termo of [/confronto direto/i, /saldo/i, /gols/i, /sorteio/i, /empat/i]) {
+      expect(NOTA_PONTOS).toMatch(termo);
+    }
+  });
+
+  it('a coluna de pontos nunca contradiz a ordem que M8 entrega (D-53)', () => {
+    // Pontos são monotônicos em vitórias, e vitórias é o 1º critério de `D-53`. Logo, descendo a
+    // tabela já classificada, os pontos nunca podem subir. Se um dia subirem, ou a conta de
+    // `P-2` deixou de ser 3 x vitórias, ou a ordenação de M8 mudou de primeiro critério.
+    const { torneio, humana } = torneioNovo();
+    torneio.report('A');
+
+    const linhas = torneio.group(humana);
+    expect(linhas.length).toBe(4);
+
+    let anterior = Number.POSITIVE_INFINITY;
+    for (const linha of linhas) {
+      const pts = pontosDaLinha(linha);
+      expect(pts).toBeLessThanOrEqual(anterior);
+      anterior = pts;
+    }
   });
 
   it('o nome da competição não é marca de terceiro', () => {
