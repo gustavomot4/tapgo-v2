@@ -7,6 +7,16 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-20] — `A-28` e `A-29` fechadas: `T-25` e `T-26` passam a ter campo
+
+- **Skill:** frontend-uiux (mesma sessão de `T-26`, fechando as duas conferências de aparelho).
+- **Quem mediu:** o dono, no aparelho. Relato: *"tudo certo o A 28 e A 29"*. Nenhum byte de código mudou — este é o fechamento das duas conferências que o sandbox não podia fazer.
+- **`A-28` dá campo a `T-25`:** a tabela da TAP GO Cup foi vista com pontos REAIS depois de disputas jogadas. O sandbox só a tinha visto com o grupo zerado, e o pior caso de largura tinha sido injetado por DOM.
+- **`A-29` dá campo a `T-26`:** a moeda gira em quadros de verdade. O sandbox mede geometria e estilo computado, não composição — a pane do navegador fica escondida e `animation.finished` nunca resolve lá.
+- **LACUNA DECLARADA de forma, e é a QUARTA seguida:** o relato veio como confirmação **global**, não item a item — `A-25`, `A-26`, `A-27` e agora as duas fecharam assim. Fica escrito o que segue sem número: em `A-29`, o item (4) — `prefers-reduced-motion` na preferência REAL do sistema, que no sandbox só foi simulado — e o item (2), toque aceito durante o giro; em `A-28`, o item (3), o nome da seleção não cortado com as quatro seleções que caíram no grupo do dono.
+- **Consequência de processo, não de código:** a lição está em `d_agent_learnings.md` — portão de 4 itens recebe confirmação de 1, e o card precisa pedir UM número, não quatro sins.
+- **Nenhuma ação de aparelho pendente.** Próximo card de código: `P-1`+`P-7` como `T-27`, travado por `D-NN` de direção de layout, que é do dono.
+
 ## [2026-08-20] — `T-26`: a moeda do sorteio gira dentro do painel, sem um toque a mais
 
 - **Skill:** frontend-uiux. Card `T-26`, nascido do pedido `P-5`, o segundo da lista que o dono escolheu em 2026-08-20.
