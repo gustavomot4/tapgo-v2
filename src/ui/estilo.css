@@ -503,9 +503,42 @@
 /* O `.sorteio[hidden]` que nascia aqui em `T-17b` saiu: a regra global de `[hidden]` no topo desta
    folha o cobre, e mantê-lo seria a lista por classe que `QA-16` provou não se manter sozinha. */
 
+/*
+ * A moeda do sorteio (`T-26`/`P-5`): a marca gira UMA vez ao aparecer e para na bandeira de quem
+ * cobra primeiro. Não é a tela da moeda que `D-49` recusou — aquela custava o 3º toque num fluxo
+ * com portão de 2 toques; esta gira dentro do painel que já nascia junto com a tela, e o fluxo
+ * continua fechando em 2 toques porque não há nada a tocar aqui.
+ *
+ * Só `opacity` e `transform`, como `D-65` manda. `perspective()` é FUNÇÃO de `transform`, não
+ * propriedade nova: o giro ganha profundidade sem sair das duas que o navegador anima sem
+ * recalcular layout — e `scale()` para baixo nunca alarga a linha, então 360px continua sem
+ * rolagem lateral. Quem pediu menos movimento cai no bloco de `prefers-reduced-motion` no fim
+ * desta folha, que zera duração E atraso de tudo dentro de `.tapgo`; o `both` daqui então entrega
+ * a marca parada e opaca, que é o quadro final.
+ */
+@keyframes tapgo-moeda {
+  from {
+    opacity: 0;
+    transform: perspective(320px) rotateY(-900deg) scale(0.7);
+  }
+
+  55% {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 1;
+    transform: perspective(320px) rotateY(0deg) scale(1);
+  }
+}
+
 .sorteio__marca {
   display: flex;
   flex: 0 0 auto;
+
+  /* O atraso é o da cascata de entrada da 3ª filha da tela (90ms): a moeda começa a girar quando
+     o painel já parou de subir, e não durante. */
+  animation: tapgo-moeda 760ms cubic-bezier(0.22, 0.61, 0.36, 1) 90ms both;
 }
 
 .sorteio__corpo {

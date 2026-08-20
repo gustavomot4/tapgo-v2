@@ -61,6 +61,36 @@ telas e é anterior a esta tarefa — regra 4, fica registrado e não consertado
 > um `[hidden] { display: none !important }` no topo, e o `.sorteio[hidden]` daqui saiu por
 > redundante. O portão virou "nenhuma OUTRA regra declara `display` com `!important`".
 
+## `T-26` — a moeda animada dentro do painel (`P-5`)
+
+`D-49` recusou a **tela** da moeda, não o movimento. O painel já nasce junto com a tela de
+cobrança e já sai sozinho: animar a marca dentro dele não acrescenta toque nenhum, e o portão de
+2 toques de `tela_inicio.ts` continua intacto — a tela de cobrança segue com 4 botões (as 3 zonas
+e "Sair da disputa"), conferido no navegador em 360x640.
+
+**Como o giro cabe em `D-65`.** A regra é "movimento restrito a `opacity`/`transform`".
+`perspective()` é **função de `transform`**, não propriedade nova: o giro ganha profundidade sem
+sair das duas propriedades que o navegador compõe sem recalcular layout. `scale()` só encolhe
+(0,7 -> 1), então a moeda nunca alarga a linha: em 360x640 e em 1280x800, `scrollWidth` mediu
+igual a `clientWidth` durante e depois do giro.
+
+| Medida | Valor |
+|---|---|
+| duração / atraso | 760 ms / 90 ms — o atraso é o da cascata de entrada da 3ª filha da tela, para a moeda começar quando o painel já parou de subir |
+| quadro final | `matrix3d` identidade, `opacity: 1`, marca em 44,875 x 34 px |
+| `prefers-reduced-motion` | com as três declarações do bloco global aplicadas à marca (duração 0,01 ms, atraso 0 s, 1 iteração), o quadro medido é o final acima — moeda parada e opaca, nunca invisível |
+
+**O guarda que evita o giro picotado, e por que ele é necessário.** `desenhar()` roda a cada
+notificação de M5, e no `online` `aoNotificacaoDeRede()` a chama até em "notificação sem novidade
+nenhuma" — várias vezes antes do 1º toque, com o painel na tela. A versão anterior refazia
+`limpar(sorteioMarca)` + `marca(...)` a cada passagem; com animação, cada passagem recomeçaria o
+giro do zero. Por isso a marca só é reconstruída na transição **escondido -> visível**
+(`sorteioNaTela`), e os dois textos seguem sendo reescritos sempre. O lado sorteado não muda
+enquanto o painel está na tela — M5 sorteia uma vez, na criação da sessão (`D-48`) —, então não há
+retrato velho a corrigir.
+
+**Custo:** +272 B no bundle inicial, zero asset novo, zero byte fora de `src/ui/`.
+
 ## O que esta sessão NÃO cobriu
 
 - **O modo `online`**, que segue em `'A'` por `Q-11`: sem semente compartilhada os dois aparelhos

@@ -7,6 +7,18 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-20] — `T-26`: a moeda do sorteio gira dentro do painel, sem um toque a mais
+
+- **Skill:** frontend-uiux. Card `T-26`, nascido do pedido `P-5`, o segundo da lista que o dono escolheu em 2026-08-20.
+- **Adicionado:** `@keyframes tapgo-moeda` e a animação em `.sorteio__marca` (`src/ui/estilo.css`); o guarda `sorteioNaTela` em `src/ui/tela_cobranca.ts`. Nenhum arquivo novo, nenhum teste novo — `vitest` roda em Node sem DOM e nenhuma tela de M7 é alcançável por lá.
+- **Não reabre `D-49`:** o que ele recusou foi a TELA da moeda, que custava o 3º toque num fluxo com portão de 2. O painel de `D-48` já nascia junto com a tela de cobrança, então animar a marca dentro dele não acrescenta toque nenhum: a tela de cobrança segue com 4 botões — as 3 zonas e "Sair da disputa".
+- **Não reabre `D-65`:** só `opacity` e `transform`. `perspective()` é FUNÇÃO de `transform`, não propriedade nova, e `scale()` só encolhe (0,7 -> 1) — a moeda nunca alarga a linha. Em 360x640 e em 1280x800, `scrollWidth` mediu igual a `clientWidth` durante e depois do giro.
+- **O guarda é o miolo da tarefa, não polimento:** `desenhar()` roda a cada notificação de M5, e no `online` `aoNotificacaoDeRede()` a chama até em notificação sem novidade — várias vezes antes do 1º toque, com o painel na tela. A marca passou a ser reconstruída só na transição escondido -> visível; sem isso, cada notificação recomeçaria o giro do zero.
+- **`prefers-reduced-motion` medido, não lido:** com as três declarações do bloco global aplicadas à marca (duração 0,01 ms, atraso 0 s, 1 iteração), o quadro é o final — `matrix3d` identidade, `opacity: 1`, marca em 44,875 x 34 px. Parada e opaca, nunca invisível.
+- **Portão:** `check.py` verde, suíte **582/582**, `tsc --noEmit` limpo, bundle **418.254 -> 418.526 B** (+272 B, zero asset novo) lido de `dist/`.
+- **Lacuna declarada, e vira `A-29`:** o sandbox mede geometria e estilo computado, não quadros — a pane do navegador fica escondida e não compõe (`animation.finished` nunca resolve lá). Se o giro agrada em movimento, e se ele não atrapalha quem já ia tocar, é olho do dono no aparelho.
+- **Decisões:** `D-85`. Evidência inteira em `e_qa/t17b_sorteio_na_tela.md`.
+
 ## [2026-08-20] — `T-25`: a coluna "Pts" na tabela da TAP GO Cup, sem um byte novo em M8
 
 - **Skill:** frontend-uiux. Card `T-25`, nascido do pedido `P-2` que o dono escolheu como primeiro da lista de 2026-08-20.

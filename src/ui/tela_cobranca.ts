@@ -244,6 +244,9 @@ export const telaCobranca =
       el('div', { classe: 'sorteio__corpo' }, [sorteioTexto, sorteioSub]),
     ]);
     sorteio.hidden = true;
+    // O painel está na tela AGORA? Só isso — e serve à moeda de `T-26`: a marca é reconstruída
+    // na transição escondido -> visível, nunca a cada desenho. Ver `anunciarSorteio`.
+    let sorteioNaTela = false;
 
     const canvasPai = el('div', { classe: 'campo__canvas' });
     const semCanvas = el('p', {
@@ -306,11 +309,22 @@ export const telaCobranca =
       const anuncio = sorteioDoPrimeiro(estado, partida.times);
       if (anuncio === null || vez.pendente) {
         sorteio.hidden = true;
+        sorteioNaTela = false;
         return;
       }
 
-      limpar(sorteioMarca);
-      sorteioMarca.append(marca(partida.times[anuncio.lado]));
+      // A marca só é RECONSTRUÍDA quando o painel entra na tela, e é isso que faz a moeda de
+      // `T-26` girar uma vez. `desenhar()` roda a cada notificação do motor — no `online` são
+      // várias antes do 1º toque —, e reconstruir aqui a cada passagem recomeçaria o giro no
+      // meio dele: movimento aparente onde `D-65` pede o mínimo. O lado sorteado não muda
+      // enquanto o painel está na tela (M5 sorteia uma vez, na criação da sessão, `D-48`), então
+      // não há retrato velho a corrigir; os dois textos abaixo seguem sendo reescritos sempre.
+      if (!sorteioNaTela) {
+        limpar(sorteioMarca);
+        sorteioMarca.append(marca(partida.times[anuncio.lado]));
+        sorteioNaTela = true;
+      }
+
       sorteioTexto.textContent = `Sorteio: ${anuncio.texto}.`;
       sorteioSub.textContent = instrucaoDoSorteio(partida.modo, vez.papel);
       sorteio.hidden = false;
@@ -323,6 +337,7 @@ export const telaCobranca =
       const vez = derivacao.vez(estado);
       if (vez === null) {
         sorteio.hidden = true;
+        sorteioNaTela = false;
         travarZonas(true);
         pararRelogio();
         return;
@@ -651,6 +666,7 @@ export const telaCobranca =
       travado = true;
       travarZonas(true);
       sorteio.hidden = true;
+      sorteioNaTela = false;
       faixa.hidden = true;
 
       limpar(erro);
