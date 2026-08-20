@@ -30,9 +30,9 @@ Partida de ~1 minuto: contra a CPU ou contra alguém no mesmo aparelho. O online
 - **Pronto:** M1..M9 e a medição, com **E-1..E-6 fechadas**; suíte **531/531**. Módulo a módulo, e a tarefa que fechou cada um: [[estado_modulos]]
 - **Bundle:** **408.094 B** (5,1% de 8 MB) lido de `dist/` na máquina do dono; T-14 ligou M8 (+18.750 B, zero asset novo) — 278.646 B são os 32 SVGs de T-19, asset do chunk de M4 (`QA-06`); Phaser e Trystero fora, por `import()` (D-27)
 - **Em andamento (máx 1):** nada
-- **Próximo:** `T-21`, a tela de convite, com o `roomId` vindo do `newRoomId` que M5 reexporta (`D-73`); `QA-22` a trava · `A-21`: a inclinação do registro, que `D-74` não muda
-- **Bloqueado/pendente:** os três orçamentos cortados por `D-74` — registro 14.229/16.000, QA 4.292/8.000, CONTEXT com folga · `QA-22` trava `T-21`, não a entrega
-- **Questões abertas:** Q-08, Q-09, Q-13 (porta do dono; a metade da tela caiu em `D-67`) · **QA abertos:** QA-04..QA-07, QA-10, QA-17, QA-20..QA-22 · respondidas e fechados: [[decisions_archive]]
+- **Próximo:** `T-21`, a tela de convite — **destravada por `D-75`**: M6 não muda, a tela sorteia o ID (`D-73`) e só cria a sessão com os dois lados prontos · `A-21`: a inclinação do registro
+- **Bloqueado/pendente:** nada trava `T-21` · registro **15.688/16.000 (98%)** — `D-75`+`D-76` custaram 1.459 e sobram **312**, menos de uma decisão: `A-21` virou a próxima parede, não daqui a 5 sessões
+- **Questões abertas:** Q-08, Q-09, Q-13 (porta do dono; a metade da tela caiu em `D-67`) · **QA abertos:** QA-04..QA-07, QA-10, QA-17, QA-20, QA-21 (`QA-22` fechada por `D-75`) · respondidas e fechados: [[decisions_archive]]
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)
 - [[portao_de_aceite]] — **antes de fechar tarefa, declarar etapa fechada ou entregar**
