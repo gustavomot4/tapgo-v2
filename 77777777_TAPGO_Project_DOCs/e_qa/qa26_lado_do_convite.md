@@ -153,6 +153,29 @@ toque**, nenhum `Move` foi enviado, a guarda nunca é acionada e a porta D não 
 defeito é de atribuição em M7 e só a porta **C** resolve. Este é o falsificador barato: anotar
 **se tocou antes de travar**.
 
+## O falsificador FOI MEDIDO em campo — 2026-08-20, dois aparelhos
+
+O portão acima declarou o que reprovaria a porta D: *"se a trava aparecer antes de qualquer
+toque, nenhum `Move` foi enviado e a guarda nunca roda"*. O dono rodou o procedimento com os
+dois aparelhos no MESMO link e relatou, nesta ordem:
+
+1. **os dois aparelhos na mesma seleção** — os dois receberam `ladoLocal: 'B'`, logo `teams.B`
+   nos dois. É a 1ª previsão do modelo;
+2. **os dois no papel de DEFESA** ("esperando o adversário escolher onde ele quer ir") — com
+   `first = 'A'` e `localSide = 'B'` nos dois, `estado.turn !== ladoLocal` dos dois lados, e
+   `derivacao.vez()` devolve `papel: 'defender'` em ambos (`derivacao.ts:113`). 2ª previsão;
+3. **o toque acontece e leva a "esperando"** — a escolha foi aceita por M5 e o `Move` **saiu**
+   (`session/index.ts:496`), que é exatamente a pré-condição da guarda de `D-81`. 3ª previsão.
+
+**A porta D não foi reprovada: a trava exige toque, e o toque acontece.** O que fica declarado
+como não cronometrado em campo é só a **permanência** (que nada mais tira os dois daquela tela)
+— e essa não é observação nova, é o caminho de código já lido: nenhuma jogada atravessa a guarda
+de lado, o timer foi limpo por `onPeerJoin`, e nada mais emite `'failed'`.
+
+**Consequência para `T-23`:** o item "o que REPROVA a porta inteira" do portão está **resolvido
+antes do código**, e a porta do `peerId` deixa de ser alternativa desta rodada — segue viva só
+como a única que faria os 3 casos funcionarem, ainda sem dado.
+
 ## O que a decisão custa à promessa de `D-72`
 
 `D-72` tirou *"por link de convite"* do Objetivo e escreveu quando ela volta: **quando `Q-11`

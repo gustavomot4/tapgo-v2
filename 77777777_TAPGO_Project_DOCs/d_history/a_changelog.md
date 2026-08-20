@@ -7,6 +7,14 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-20] — o falsificador de `D-81` medido em campo: a porta M5 passou, `T-23` liberada
+
+- **Medição do dono, dois aparelhos reais**, com os DOIS abrindo o mesmo link de convite.
+- **As 3 previsões do modelo bateram:** (1) os dois aparelhos na **mesma seleção** (os dois receberam `ladoLocal: 'B'`, logo `teams.B`); (2) os dois no papel de **defesa** — com `first = 'A'` e `localSide = 'B'` dos dois lados, `derivacao.vez()` devolve `'defender'` em ambos; (3) o toque numa zona é aceito e leva a "esperando o outro jogador", ou seja **o `Move` sai**, que é a pré-condição da guarda de `D-81`.
+- **O que isso resolve:** o portão de `T-23` declarava que a porta inteira reprovaria se a trava aparecesse **antes de qualquer toque** — não aparece. `D-81` age no lugar certo, e a porta do `peerId` deixa de ser alternativa desta rodada (segue viva só como a única que faria os 3 casos de abertura funcionarem, ainda sem dado).
+- **Declarado como não cronometrado:** a **permanência** da trava não foi medida com relógio; ela é o caminho de código já lido (nenhuma jogada atravessa a guarda de lado, o timer foi limpo por `onPeerJoin`, nada mais emite `'failed'`).
+- **Backlog:** `P-6` reenquadrado — **não** é `QA-NN`, o dono não chegou a confundir em partida; o pedido é papel legível numa olhada por cor/imagem, com duas restrições de portão (cor não pode ser canal único; o contraste ≥4,5:1 é cobrado por teste sobre a paleta). Ordem escolhida para o frontend: `P-2`, `P-5`, `P-1`+`P-7` num card só.
+
 ## [2026-08-20] — auditoria de `QA-26`: `D-81` escolhe a porta M5, quatro saídas mortas e os três orçamentos na parede
 
 - **Skill:** evolution-auditor (auditoria; **nada implementado** — `src/` intocado). Evidência colhida do disco, não de memória.
