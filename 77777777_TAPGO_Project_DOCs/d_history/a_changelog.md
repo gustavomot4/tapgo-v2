@@ -7,6 +7,17 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-19] — **E-6 FECHADA: v2.0.0 entregue**, com o online declarado fora (`D-72`)
+- **Skill:** delivery-review (mesma sessão). Documentação + `README.md`. Nenhum arquivo de `src/` tocado, nenhuma lógica alterada.
+- **`D-72` (porta do dono):** a entrega sai **sem a tela de convite**, com a lacuna declarada. O critério de aceite do online é a **medição**, e ela passou (`A-08`: 17/17, limite inferior 95% de 83,8% contra o corte de 70%, `D-47`) — o que falta é uma tela, travada por `Q-11`, cujas duas saídas mexem em porta congelada de M5. Segurar CPU, 2P local e o torneio por isso seria trocar uma entrega pronta por uma tela.
+- **O que a decisão obrigou a corrigir:** a linha **Objetivo** do CONTEXT prometia "por link de convite". Objetivo que promete o que o build no ar não faz é achado de entrega, não detalhe — reescrita para "online medido e não publicado".
+- **Portão de E-6, os 3 itens:** Critério de aceite inteiro verde · tabela de custo de [[stack]] com as 6 linhas preenchidas (a última lacuna era o STUN, fechada por `D-71`) · `check.py --historico-completo` verde, incluindo segredos na árvore **e** no histórico completo.
+- **Cada um dos 6 critérios com a sua prova foi para [[entrega_e6]]**, arquivo novo — doze linhas de comprovante não cabem nos 4.000 caracteres do CONTEXT, e o CONTEXT passa a dizer **que** E-6 fechou apontando para **por que** ela pôde fechar.
+- **Achado da varredura, consertado: o `README.md` ainda era o template em branco** — `<O que o sistema faz>`, `<comandos, do zero, copiáveis>`, `<comando do projeto>`. Num repositório que precisa ser **público** para o Pages funcionar (`D-21`), esse é o rosto da entrega. Preenchido com o que o jogo é, o não-objetivo, o estado real (incluindo o online que não foi), como rodar e a tabela de comandos.
+- **E o README preenchido mentia na primeira versão:** documentei `npm run dev`, que **não existe** — o `package.json` tem `test`, `test:watch`, `typecheck` e `build`, e o servidor sobe por `npx vite`. Conferido contra o arquivo e corrigido antes do commit. É exatamente o item 7 da skill (documentação × comportamento) pegando quem o estava aplicando.
+- **Sandbox (indicativo, não portão):** `npm run typecheck` limpo, suíte **531/531** em 12 arquivos — bate com o número declarado no CONTEXT.
+- **Aberto de propósito:** `A-19` (subir para `2.0.0` e republicar — o bump só vale com build e `push`, senão árvore e página no ar divergem) · `QA-04` e `QA-06`, que ficam escritos sob os critérios que eles arranham, em vez de consertados de carona · `Q-11`, agora trabalho de versão seguinte e não bloqueio.
+
 ## [2026-08-19] — `Q-14` respondida: os 4 STUN viram a segunda excecao nominal do portao de privacidade (`D-71`)
 - **Skill:** delivery-review (mesma sessão) — só documentação: `a_context/c_decisions.md`, `a_context/b_plan.md`, `a_context/stack.md`, `a_context/a_context_source.md`. Nenhum arquivo de `src/` tocado.
 - **`D-71` (saída a, escolhida pelo dono):** descoberta de endereço é parte da conexão de M6, não endpoint novo. Sem STUN não existe P2P — os 17/17 de `A-08` são candidatos `srflx`, e eles só existem porque um STUN respondeu.
