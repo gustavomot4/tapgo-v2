@@ -31,7 +31,7 @@ Partida de ~1 minuto: contra a CPU ou contra alguém no mesmo aparelho. O online
 - **Bundle:** **416.549 B** (5,2% de 8 MB) lido de `dist/` no sandbox — não reconferido na máquina do dono; `T-22` somou **+732 B**, zero asset novo; 278.646 B são os 32 SVGs de T-19, asset do chunk de M4 (`QA-06`); Phaser e Trystero fora, por `import()` (D-27)
 - **Em andamento (máx 1):** nada
 - **Próximo:** `T-24` (tempo por cobrança no `online`, `Q-15`) espera só o `D-NN` do dono — a saída (b) já é a dele, e `D-82` deu registro para ela · portão de `D-83` correndo: **1 de 10** (`QA-30`, 390) · a promessa que `D-72` tirou volta ao Objetivo quando couber
-- **Bloqueado/pendente:** **registro 16.781/20.000** com os TRÊS pools em zero (`D-43`, duplicata, critério de `D-74`) — `D-82` é rejeição adiada: ~9–11 decisões · QA **4.935/8.000** (o corte de `D-74` levou 3 fechados) · CONTEXT 98%
+- **Bloqueado/pendente:** **registro 16.781/20.000** com os TRÊS pools em zero (`D-43`, duplicata, critério de `D-74`) — `D-82` é rejeição adiada: ~9–11 decisões · QA **4.935/8.000** (o corte de `D-74` levou 3 fechados) · CONTEXT 97%
 - **Questões abertas:** Q-08, Q-09, Q-13, **Q-15** (respondida: 15 s e quem demorou perde — falta o `D-NN` e a sessão de M7; era `Q-14`, `QA-24`) · **QA abertos:** QA-04..QA-07, QA-10, QA-17, QA-20, QA-21, QA-27, **QA-29** · respondidas e fechados: [[decisions_archive]]
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)
