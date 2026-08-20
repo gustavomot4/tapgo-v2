@@ -144,3 +144,27 @@ Duas saídas, as duas mexendo em contrato congelado e portanto `D-NN` do dono:
 
 O teste de T-13 contorna lendo o ID do duplo de sinalização. É recurso de teste, e está comentado
 como tal no arquivo: a tela, em produção, não tem esse caminho.
+
+**FECHADA em 2026-08-19 por `D-73`: saída (1).** O que a decisão acrescentou às duas saídas
+descritas acima é evidência colhida no disco, não preferência:
+
+- A saída (1) é a forma que **já rodou em campo**. `src/medicao.ts` sorteia o ID antes da sala,
+  monta o link e faz os DOIS lados entrarem por `joinRoom` (`D-38`) — os 17/17 de `A-08` saíram
+  dessa forma. A única diferença é que a medição obtém o ID chamando `hostRoom()` e **fechando o
+  canal na hora** (`src/medicao.ts`, botão "Sortear sala"); com `newRoomId` reexportado, esse
+  descarte deixa de ser necessário.
+- Ela **não** reabre o que `D-40` fechou: `newRoomId` só sorteia, e já é exportado por M6 de
+  propósito (o portão do defeito 6 precisa de milhares de sorteios sem abrir canal). Quem valida
+  o ID continua sendo `joinRoom`, na entrada.
+- O portão de camada de M7 continua verde, e isso foi **conferido contra o padrão real** do CI
+  (`/^[ 	]*(import|export)[^;]*(engine|cpu|net)/`, copiado em `src/tests/ui.test.ts`):
+  `import { newRoomId } from '../session/index';` não casa.
+- A saída (2) perdeu por dois custos, não por um. O 5º método na interface congelada é o
+  precedente que `D-39` recusou comprar — e `Q-09` (`pending()`) seria o 6º. E ela só entrega o
+  ID **depois** de `createSession`, isto é, depois de `armarTimer()` ter armado o relógio de 20 s
+  dentro de `createChannel`: o anfitrião passaria a ter 20 s para mandar o link e o convidado
+  abri-lo. Isso é `QA-22`, e vale para as duas saídas — a (1) só devolve a M7 o controle de
+  **quando** o relógio começa.
+- O ramo `cfg.roomId === undefined ⇒ hostRoom().channel` (`src/session/index.ts`) **fica onde
+  está**. Torná-lo impossível exigiria `roomId` obrigatório no modo `online`, o que é mudar
+  `SessionConfig` — porta de `D-13`, e não era o que a saída (1) pedia.

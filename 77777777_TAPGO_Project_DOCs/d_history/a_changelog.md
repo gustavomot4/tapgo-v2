@@ -7,6 +7,15 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-19] — `Q-11` respondida: M5 reexporta `newRoomId` e a porta congelada não ganha método (`D-73`)
+- **Skill:** evolution-auditor
+- Decisões: **`D-73`** — das duas saídas de [[m5_sessao_notas]], vale a **(1)**: M7 sorteia o ID com o `newRoomId` que M5 reexporta de M6, monta o link e **sempre** passa `roomId` a `createSession`. A interface `Session` de `D-13` segue com 4 métodos, e `src/net/index.ts` não muda um byte.
+- **Por que a (1), com evidência de disco:** é a forma que já rodou em campo (`src/medicao.ts` sorteia o ID antes da sala e os dois lados entram por `joinRoom`, `D-38` — os 17/17 de `A-08`); `newRoomId` já é exportado por M6 de propósito, então nada da superfície que `D-40` fechou se abre; e o portão de camada de M7 foi conferido contra o **padrão real** do CI (`^[ 	]*(import|export)[^;]*(engine|cpu|net)`), que `newRoomId` não casa.
+- **Custo da recusada, declarado:** a saída (2) (`roomId()` na porta) é o **5º método** na interface congelada — o precedente que `D-39` recusou comprar, com `Q-09` (`pending()`) como 6º — e só entrega o ID depois do canal, isto é, depois do relógio de 20 s.
+- Achado: **`QA-22`** (ALTO) — `armarTimer()` roda na **criação** do canal em `src/net/index.ts` e `'failed'` é terminal (`onPeerJoin` ignora peer que chega depois), então convite por link não cabe nos 20 s. Vale para as duas saídas; `D-73` só devolve a M7 o controle de **quando** o relógio começa. Mexer no prazo é portão de M6 e `D-NN` do dono (regra 4).
+- Backlog: **`T-21`** (a tela de convite, bloqueada por `QA-22`) e **`A-20`** — os **três** orçamentos fecharam juntos: QA 7.933/8.000, registro 15.690/16.000 e CONTEXT **4.000/4.000**, folga zero.
+- **Zero byte de código nesta sessão** — a skill `evolution-auditor` decide, não implementa.
+
 ## [2026-08-19] — v2.0.0: os três comandos verdes na máquina do dono, e o bump de versão (`A-19`)
 - **Skill:** delivery-review (mesma sessão). `package.json` (só a linha `version`), CONTEXT, [[entrega_e6]], backlog.
 - **O que o dono rodou, e o que a saída provou:** `npm run typecheck` sem uma linha de saída · `npm test` **531/531 em 12 arquivos** (4,29 s) · `npm run build` com 93 módulos transformados e **408.094 B = 5,10%** do teto impressos pelo `bundle-size.mjs`. Os dois primeiros critérios de [[portao_de_aceite]] deixam de ser afirmação e passam a ter a saída datada; o número do bundle bateu **exatamente** com o que o CONTEXT já declarava.
