@@ -528,3 +528,130 @@ describe('T-13 — a configuração do online é conferida antes de existir sala
     expect(() => a.choose('R')).toThrowError(/uma vez por cobrança/);
   });
 });
+
+/* ──── `QA-25`: a fila de M6 chega a entregar `seq=0` numa disputa em andamento? ──── */
+
+describe('QA-25 — de onde vem um `seq=0` que chega com a disputa já andada', () => {
+  // A lacuna declarada em `e_qa/qa25_reentrada_na_janela.md`: o comentário de `aoMove` registra
+  // que "`seq` menor é reenvio da fila de M6", e ninguém mediu se esse reenvio chega a produzir
+  // `seq=0` numa disputa em andamento. É esse número que decide se "tratar `seq=0` pós-conexão
+  // como abandono" é conserto ou palpite. Estes testes MEDEM; a saída é `D-NN` do dono.
+
+  /** Toda jogada que chegou a um aparelho, com o nº da cobrança que ele vivia na chegada. */
+  function grampear(sala: SalaFake, quem: Session): Array<{ seq: number; kicksNaChegada: number }> {
+    const log: Array<{ seq: number; kicksNaChegada: number }> = [];
+    const original = sala.acao.onMessage;
+    sala.acao.onMessage = (d: unknown, ctx: unknown) => {
+      log.push({ seq: (d as Move).seq, kicksNaChegada: quem.state().kicks.length });
+      original?.(d, ctx);
+    };
+    return log;
+  }
+
+  it('a fila escoada na reentrada chega EM DIA: nenhum `seq=0` com a disputa andada', async () => {
+    const { a, b, salaB, linkA } = await doisAparelhos(77);
+    const salaA = salas[0];
+    if (salaA === undefined) throw new Error('QA-25: sala do anfitrião ausente');
+    const recebidasB = grampear(salaB, b);
+
+    // Cobrança 0 jogada com o canal são: o `seq=0` do anfitrião sai DIRETO, sem passar pela
+    // fila. É ele que um reenvio indevido ressuscitaria mais adiante.
+    cobrar(a, b, 'L', 'R');
+    await respirar();
+    expect(a.state().kicks.length).toBe(1);
+    expect(b.state().kicks.length).toBe(1);
+
+    // A queda momentânea de rede de `A-22`: só o anfitrião percebe. `'waiting'` não é terminal
+    // para M5 (`session/index.ts:313`), então a disputa continua deste lado.
+    await respirar();
+    salaA.onPeerLeave?.('peer');
+    await respirar();
+    expect(linkA.at(-1), 'a queda devia ter posto o anfitrião em waiting').toBe('waiting');
+
+    // Cobrança 1. `a.choose` vai para a FILA (canal em `'waiting'`); `b.choose` sai na hora,
+    // porque o convidado não viu queda nenhuma.
+    a.choose('C'); // represada: seq=1
+    b.choose('L'); // entregue: o anfitrião fecha a cobrança 1 sozinho
+    await respirar();
+
+    // O desencontro que a janela cria: o anfitrião andou, o convidado não.
+    expect(a.state().kicks.length, 'o anfitrião devia ter fechado a cobrança 1').toBe(2);
+    expect(b.state().kicks.length, 'o convidado não podia andar sem a jogada do anfitrião').toBe(1);
+
+    // A reentrada dentro dos 20 s — o `onPeerJoin` que `escoarFila` atende.
+    salaA.onPeerJoin?.('peer');
+    await respirar();
+
+    // ── A MEDIÇÃO ────────────────────────────────────────────────────────────────────
+    // O escoamento entregou `seq=1`, e só. O `seq=0` chegou uma vez, lá atrás, quando o
+    // convidado ainda vivia a cobrança 0: a fila entrega jogada ATRASADA, não jogada VELHA.
+    // O convidado só passa de uma cobrança consumindo aquele `seq`, que a fila entrega uma
+    // única vez (`shift`) — logo, pela fila, `seq=0` com `kicksNaChegada > 0` é inalcançável.
+    expect(recebidasB.map((r) => r.seq)).toEqual([0, 1]);
+    expect(
+      recebidasB.filter((r) => r.seq === 0 && r.kicksNaChegada > 0),
+      'a fila entregou seq=0 numa disputa andada — a lacuna de QA-25 se confirmaria aqui',
+    ).toEqual([]);
+
+    // E o desencontro se desfez: nada foi descartado, os dois estão na mesma cobrança.
+    expect(avisos.filter((m) => m.includes('fora de ordem'))).toEqual([]);
+    expect(b.state().kicks.length).toBe(2);
+    expect(b.state()).toEqual(a.state());
+  });
+
+  it('o `seq=0` que chega com a disputa andada vem de SESSÃO NOVA, não da fila', async () => {
+    const { a, b, linkA } = await doisAparelhos(77);
+    const salaA = salas[0];
+    if (salaA === undefined) throw new Error('QA-25: sala do anfitrião ausente');
+
+    cobrar(a, b, 'L', 'R');
+    await respirar();
+    expect(a.state().kicks.length).toBe(1);
+
+    // O navegador do convidado fecha. Dentro dos 20 s, alguém reabre o MESMO link: sessão
+    // zerada, `roomId` idêntico — a distinção que M6 não faz (`net/index.ts:379`).
+    b.dispose();
+    await respirar();
+    expect(linkA.at(-1)).toBe('waiting');
+
+    const c = nova(cfgOnline(77, 'B', salaA.roomId));
+    await ate(() => linkA.at(-1) === 'connected', 'a reentrada reconectar o anfitrião');
+
+    // A sessão nova está na cobrança 0 e manda `seq=0` — o caso que a fila NÃO produz.
+    expect(c.state().kicks.length).toBe(0);
+    c.choose('C');
+    await respirar();
+
+    expect(
+      avisos.some((m) => m.includes('fora de ordem') && m.includes('"seq":0')),
+      'o seq=0 da sessão nova devia ter sido descartado por M5',
+    ).toBe(true);
+    expect(a.state().kicks.length, 'M5 aceitou jogada de sessão zerada').toBe(1);
+  });
+
+  it('dentro da janela ninguém desiste: o canal fica `connected` e nada mais emite `failed`', async () => {
+    const { a, b, linkA } = await doisAparelhos(77);
+    const salaA = salas[0];
+    if (salaA === undefined) throw new Error('QA-25: sala do anfitrião ausente');
+
+    cobrar(a, b, 'L', 'R');
+    await respirar();
+    b.dispose();
+    await respirar();
+
+    const c = nova(cfgOnline(77, 'B', salaA.roomId));
+    await ate(() => linkA.at(-1) === 'connected', 'a reentrada reconectar o anfitrião');
+
+    // O timer de 20 s foi limpo por `onPeerJoin`. Passado MUITO mais que a janela, o canal
+    // segue `'connected'`: é o travamento que sustenta a severidade ALTO de `QA-25` — e é o
+    // fato medido, não a decisão de como sair dele.
+    await vi.advanceTimersByTimeAsync(120_000);
+    await respirar();
+
+    expect(linkA).not.toContain('failed');
+    expect(linkA.at(-1)).toBe('connected');
+    expect(a.state().winner, 'placar mentiroso: as guardas de D-32/M5 deviam ter segurado').toBeNull();
+    expect(c.state().kicks.length).toBe(0);
+    expect(a.state().kicks.length).toBe(1);
+  });
+});

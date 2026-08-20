@@ -51,12 +51,44 @@ sem explicação é o que o PLANO proibiu para o módulo. É essa proibição qu
 Reconciliar estado para **evitar corrupção** é desnecessário: as guardas já evitam. O que falta é
 o lado preso **descobrir** que quem voltou é sessão nova, e cair em `D-35`.
 
-O discriminador já chega no fio de graça — `seq=0` contra `kicks.length>0` — e **não é à prova de
-bala**: o comentário de `aoMove` registra que `seq` menor também é reenvio legítimo da fila de M6,
-que é seguro de repetir justamente porque morre ali. Distinguir "reenvio velho" de "peer novo"
-sem um identificador de sessão no fio é a pergunta aberta, e pôr identificador no fio custa um
-segundo tipo de payload, que `isMove` (`net/index.ts:370`) hoje descarta alto e logado.
+O discriminador já chega no fio de graça — `seq=0` contra `kicks.length>0`. O comentário de
+`aoMove` registra que `seq` menor "é reenvio legítimo da fila de M6", e era ISSO que tornava o
+discriminador suspeito. **Medido, e o reenvio está descartado como fonte** (abaixo). O que sobra
+em aberto é pôr identificador de sessão no fio, que custa um segundo tipo de payload — `isMove`
+(`net/index.ts:370`) hoje descarta alto e logado o que não for `Move`.
 
-**Lacuna declarada:** ninguém mediu se o reenvio de fila chega a produzir `seq=0` numa disputa já
-em andamento. Sem esse número, a saída barata (tratar `seq=0` pós-conexão como abandono) é
-palpite, não conserto.
+## A lacuna, medida (2026-08-20) — `escoarFila` não é fonte de `seq=0`
+
+A pergunta era: *o reenvio da fila de M6 chega a entregar a M5 um `seq=0` numa disputa já em
+andamento?* **Não chega.** Três fatos de código, cada um com teste que reprova se o fato cair:
+
+| fato | onde se lê | teste (`src/tests/net.test.ts`) |
+|---|---|---|
+| `escoarFila` consome com `shift`: o que escoou some da fila | `net/index.ts:407` | "o segundo escoamento não repete a jogada" |
+| com o canal `'connected'`, `send` nem passa pela fila | `net/index.ts:441` | "não há `seq=0` guardado para depois" |
+| a fila só anda para a frente: escoa o represado DEPOIS da queda | `net/index.ts:445` | "só o que foi represado DEPOIS da queda" |
+
+E a medição ponta a ponta, nos dois aparelhos do duplo (`session_online.test.ts` — "a fila
+escoada na reentrada chega EM DIA"): queda só do lado do anfitrião, ele anda uma cobrança
+sozinho, o convidado fica para trás, e a reentrada escoa. **Toda jogada que chegou ao convidado
+chegou com o `kicks.length` dele batendo** — nenhum `seq=0` com a disputa andada.
+
+O argumento fechado: um lado só passa da cobrança N consumindo o `seq=N` do outro, e a fila
+entrega esse `seq=N` **uma vez só**. Logo "peer com `kicks.length>0`" e "`seq=0` ainda por
+escoar" são estados mutuamente exclusivos. A fila entrega jogada **atrasada**, nunca **velha**.
+
+Falsificação conferida: com `escoarFila` mutado para reenviar o histórico (a hipótese literal do
+comentário), **os 4 testes de medição reprovam**. Não são testes que passariam de qualquer jeito.
+
+**O que continua verdade, e é o outro teste desta rodada:** sessão nova vestindo o mesmo `roomId`
+manda `seq=0` contra `kicks.length=1`, M5 descarta "fora de ordem", o canal fica `'connected'` e
+nem 120 s depois alguém emite `'failed'`. A trava é essa, e sustenta o ALTO.
+
+**Portanto:** dentro de um canal, `seq=0` depois de `onPeerJoin` com `kicks.length>0` **só** pode
+vir de sessão zerada. O discriminador barato deixou de ser palpite. O que ele NÃO cobre segue
+declarado: cliente modificado (que mentiria em qualquer identificador, inclusive num de sessão),
+e o inverso — sessão nova que reentra ANTES de qualquer cobrança fechar é indistinguível de
+reconexão legítima, e nesse caso não há divergência a detectar.
+
+**A saída continua sendo `D-NN` do dono** (regra 6): esta medição tira uma opção da lista de
+palpites, não escolhe entre elas.

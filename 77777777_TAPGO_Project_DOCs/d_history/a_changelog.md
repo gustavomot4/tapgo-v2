@@ -7,6 +7,17 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-20] — a lacuna declarada de `QA-25` foi MEDIDA: a fila de M6 não produz `seq=0` em disputa andada
+
+- **Skill:** testing. **Escopo:** só `src/tests/` — `src/net` e `src/session` intocados (o `git status` confirma).
+- **A pergunta que a nota deixou aberta:** o reenvio da fila (`escoarFila`) chega a entregar a M5 um `seq=0` numa disputa já em andamento? Sem esse número, tratar `seq=0` pós-conexão como abandono era palpite.
+- **Resposta medida: não chega.** `escoarFila` consome com `shift`, `send` com o canal `'connected'` nem passa pela fila, e a fila só anda para a frente. Um lado só passa da cobrança N consumindo o `seq=N` do outro, e a fila entrega esse `seq=N` uma vez só — "peer andado" e "`seq=0` por escoar" são mutuamente exclusivos. A fila entrega jogada **atrasada**, nunca **velha**.
+- **6 testes novos**, suíte 553 → **559/559**, `tsc --noEmit` limpo, duas execuções (uma com `--sequence.shuffle`) com o mesmo resultado. 3 em `net.test.ts` (mecânica da fila) e 3 em `session_online.test.ts` (os dois aparelhos do duplo ligado).
+- **Falsificados de propósito:** com `escoarFila` mutado para reenviar o histórico — a hipótese literal do comentário de `aoMove` —, **os 4 testes de medição reprovam**. A mutação foi revertida; nenhum arquivo de produção mudou.
+- **O que isso muda para `QA-25`:** dentro de um canal, `seq=0` depois de `onPeerJoin` com `kicks.length>0` só pode vir de sessão zerada. O discriminador barato deixou de ser palpite — mas **escolher a saída continua sendo `D-NN` do dono** (regra 6). A medição tira uma opção da lista, não decide.
+- **O terceiro teste confirma a trava, e ela segue ALTO:** sessão nova no mesmo `roomId` manda `seq=0` contra `kicks.length=1`, M5 descarta "fora de ordem", e nem 120 s depois alguém emite `'failed'`. Nenhum placar mentiroso — as guardas de `D-32`/M5 seguram, como a nota já dizia.
+- **Nenhum `QA-NN` novo.** Evidência longa em [[qa25_reentrada_na_janela]].
+
 ## [2026-08-20] — `QA-25` estreitado por duas medições: o rearme carrega peso, e o defeito é trava, não placar mentiroso
 
 - **Skill:** evolution-auditor (mesma sessão)

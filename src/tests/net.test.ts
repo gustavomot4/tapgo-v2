@@ -533,3 +533,72 @@ describe('invariante — sem sinalização, cpu e local seguem jogáveis', () =>
     expect(fonte).not.toContain(AGULHA);
   });
 });
+
+/* ─────────── `QA-25`: o que a fila de M6 pode — e não pode — escoar ─────────── */
+
+describe('QA-25 — a fila escoa jogada ATRASADA, não jogada REPETIDA', () => {
+  // A nota `e_qa/qa25_reentrada_na_janela.md` declarou a lacuna assim: "ninguém mediu se o
+  // reenvio de fila chega a produzir `seq=0` numa disputa já em andamento". Sem esse número,
+  // tratar `seq=0` pós-conexão como abandono é palpite. Estes três casos medem a metade de M6
+  // da pergunta — a mecânica da fila; a outra metade, a que chega a M5, está em
+  // `session_online.test.ts`. Nenhum deles decide nada: a saída de `QA-25` é `D-NN` do dono.
+
+  it('o segundo escoamento não repete a jogada: `shift` esvazia a fila', async () => {
+    const { sala, channel } = await abrirHost();
+
+    // Represada com o canal em `'waiting'` — é a única porta de entrada da fila.
+    channel.send({ seq: 0, side: 'A', zone: 'L' });
+    expect(sala?.enviadas).toEqual([]);
+
+    sala?.onPeerJoin?.('peer');
+    expect(sala?.enviadas).toEqual([{ seq: 0, side: 'A', zone: 'L' }]);
+
+    // A queda e o rearme de `D-31`: é exatamente a janela de 20 s de `QA-25`.
+    sala?.onPeerLeave?.('peer');
+    sala?.onPeerJoin?.('peer');
+
+    // O número que faltava: UM. `escoarFila` consome com `shift`, então a jogada escoada some
+    // da fila. A reentrada não fabrica um segundo `seq=0`.
+    expect(sala?.enviadas).toEqual([{ seq: 0, side: 'A', zone: 'L' }]);
+    expect(sala?.enviadas.filter((m) => (m as Move).seq === 0)).toHaveLength(1);
+    channel.close();
+  });
+
+  it('com o canal conectado a jogada nem entra na fila — não há `seq=0` guardado para depois', async () => {
+    const { sala, channel } = await abrirHost();
+    sala?.onPeerJoin?.('peer');
+
+    channel.send({ seq: 0, side: 'A', zone: 'L' });
+    expect(sala?.enviadas).toEqual([{ seq: 0, side: 'A', zone: 'L' }]);
+
+    // Toda a janela de `QA-25`, três vezes, sem nenhum `send` no meio: se a fila guardasse
+    // cópia do que já saiu, o peer receberia `seq=0` de novo aqui.
+    for (let i = 0; i < 3; i += 1) {
+      sala?.onPeerLeave?.('peer');
+      sala?.onPeerJoin?.('peer');
+    }
+    expect(sala?.enviadas).toHaveLength(1);
+    channel.close();
+  });
+
+  it('o que a fila escoa na reentrada é só o que foi represado DEPOIS da queda', async () => {
+    const { sala, channel } = await abrirHost();
+    sala?.onPeerJoin?.('peer');
+    channel.send({ seq: 0, side: 'A', zone: 'L' }); // sai na hora
+    channel.send({ seq: 1, side: 'A', zone: 'C' }); // sai na hora
+
+    sala?.onPeerLeave?.('peer');
+    channel.send({ seq: 2, side: 'A', zone: 'R' }); // represada: o canal está `'waiting'`
+
+    sala?.onPeerJoin?.('peer');
+    expect(sala?.enviadas).toEqual([
+      { seq: 0, side: 'A', zone: 'L' },
+      { seq: 1, side: 'A', zone: 'C' },
+      { seq: 2, side: 'A', zone: 'R' },
+    ]);
+    // O `seq` que a reentrada entregou é o MAIOR já enviado, não o menor: a fila anda para a
+    // frente. Um `seq=0` no fio depois de uma disputa andada não pode ter vindo daqui.
+    expect((sala?.enviadas.at(-1) as Move).seq).toBe(2);
+    channel.close();
+  });
+});
