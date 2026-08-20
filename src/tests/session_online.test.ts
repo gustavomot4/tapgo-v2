@@ -622,36 +622,170 @@ describe('QA-25 — de onde vem um `seq=0` que chega com a disputa já andada', 
     c.choose('C');
     await respirar();
 
+    // Desde `D-80` o descarte tem NOME próprio: não é mais "fora de ordem" genérico. O que este
+    // teste mede continua sendo o mesmo — a fonte do `seq=0` é sessão nova, e M5 não a aceita.
     expect(
-      avisos.some((m) => m.includes('fora de ordem') && m.includes('"seq":0')),
+      avisos.some((m) => m.includes('sessão zerada (D-80)') && m.includes('"seq":0')),
       'o seq=0 da sessão nova devia ter sido descartado por M5',
     ).toBe(true);
     expect(a.state().kicks.length, 'M5 aceitou jogada de sessão zerada').toBe(1);
   });
 
-  it('dentro da janela ninguém desiste: o canal fica `connected` e nada mais emite `failed`', async () => {
+});
+
+/* ──── `D-80`: a porta M5 que fecha `QA-25` — a reentrada de sessão zerada cai em `D-35` ──── */
+
+describe('D-80 — reentrada de sessão zerada dentro dos 20 s termina a disputa (QA-25)', () => {
+  // Antes de `D-80` este bloco media a TRAVA: o canal ficava `'connected'`, o timer de 20 s já
+  // tinha sido limpo por `onPeerJoin`, e nem 120 s depois alguém emitia `'failed'` — as duas
+  // telas presas em "Esperando o outro jogador…" com placares divergentes. É esse travamento
+  // que os testes abaixo agora proíbem, item por item do portão escrito em `A-23`.
+
+  /** O cenário do achado: uma cobrança fechada, o convidado morre, e alguém reabre o link. */
+  async function reentrada(): Promise<{
+    a: Session;
+    c: Session;
+    linkA: LinkStatus[];
+    linkC: LinkStatus[];
+  }> {
     const { a, b, linkA } = await doisAparelhos(77);
     const salaA = salas[0];
-    if (salaA === undefined) throw new Error('QA-25: sala do anfitrião ausente');
+    if (salaA === undefined) throw new Error('D-80: sala do anfitrião ausente');
 
     cobrar(a, b, 'L', 'R');
     await respirar();
+    expect(a.state().kicks.length).toBe(1);
+
+    // Navegador fechado. Dentro dos 20 s, o MESMO link é reaberto: sessão zerada, `roomId`
+    // idêntico — a distinção que M6 não faz (`net/index.ts:379`).
     b.dispose();
     await respirar();
 
     const c = nova(cfgOnline(77, 'B', salaA.roomId));
+    const linkC: LinkStatus[] = [];
+    c.subscribe((_s, l) => linkC.push(l));
     await ate(() => linkA.at(-1) === 'connected', 'a reentrada reconectar o anfitrião');
+    expect(linkA, 'antes do seq=0 ninguém desistiu — o canal está de pé').not.toContain('failed');
+    expect(c.state().kicks.length, 'a sessão nova devia nascer zerada').toBe(0);
+    return { a, c, linkA, linkC };
+  }
 
-    // O timer de 20 s foi limpo por `onPeerJoin`. Passado MUITO mais que a janela, o canal
-    // segue `'connected'`: é o travamento que sustenta a severidade ALTO de `QA-25` — e é o
-    // fato medido, não a decisão de como sair dele.
-    await vi.advanceTimersByTimeAsync(120_000);
+  it('portão (1): o lado preso vai a `failed` no MESMO tick do seq=0, sem relógio nenhum', async () => {
+    const { a, c, linkA } = await reentrada();
+    const antes = linkA.length;
+
+    // Sem `advanceTimers` e sem `respirar()` entre a escolha e a asserção: a entrega da rede
+    // falsa é síncrona, e o portão exige `'failed'` no tique da chegada — não daqui a 20 s.
+    c.choose('C');
+
+    expect(linkA.at(-1), 'D-80: `failed` devia sair no tique do seq=0').toBe('failed');
+    expect(linkA.length, 'M7 não foi notificado').toBeGreaterThan(antes);
+    expect(
+      avisos.some((m) => m.includes('sessão zerada (D-80)')),
+      'o descarte devia dizer POR QUE, e não "fora de ordem"',
+    ).toBe(true);
+
+    // `D-35` intacto: abandono não escreve vencedor, e nenhuma escolha é aceita depois.
+    expect(a.state().winner, 'abandono não pode escrever vencedor (D-35)').toBeNull();
+    expect(a.state().kicks.length, 'a jogada de sessão zerada não pode chegar a M2').toBe(1);
+    expect(() => a.choose('L')).toThrowError(/SEM RESULTADO/);
+  });
+
+  it('portão (1): o `closed` do próprio `close()` não apaga o `failed` que M7 pinta', async () => {
+    const { a, c, linkA } = await reentrada();
+    c.choose('C');
+    await respirar();
+    await vi.advanceTimersByTimeAsync(60_000);
     await respirar();
 
-    expect(linkA).not.toContain('failed');
-    expect(linkA.at(-1)).toBe('connected');
-    expect(a.state().winner, 'placar mentiroso: as guardas de D-32/M5 deviam ter segurado').toBeNull();
-    expect(c.state().kicks.length).toBe(0);
+    // `close()` avisa os assinantes com `'closed'` logo em seguida (`net/index.ts:467`). Se M5
+    // deixasse esse status passar, `tela_cobranca.ts:395` — que só pinta em `'failed'` — voltaria
+    // a mostrar tela travada, agora sem nem um timer para socorrê-la.
+    expect(linkA.at(-1), '`failed` é terminal para M5, venha de M6 ou sintetizado').toBe('failed');
+    expect(a.state().winner).toBeNull();
+  });
+
+  it('portão (2): o lado que VOLTOU também sai da tela travada, em 20 s', async () => {
+    const { c, linkC } = await reentrada();
+    c.choose('C');
+    await respirar();
+
+    // O `canal.close()` do lado preso solta a sala; o `leave()` vira `onPeerLeave` aqui, que
+    // emite `'waiting'` e rearma os 20 s — o caminho que `A-22` mediu em campo.
+    expect(linkC.at(-1), 'a saída do veterano devia ter chegado como waiting').toBe('waiting');
+
+    await vi.advanceTimersByTimeAsync(20_000);
+    await respirar();
+
+    expect(linkC.at(-1), 'QA-25: o lado que voltou ficaria preso para sempre').toBe('failed');
+    expect(c.state().winner, 'nem aqui o abandono escreve vencedor').toBeNull();
+    expect(() => c.choose('L')).toThrowError(/SEM RESULTADO/);
+  });
+
+  it('escrita repetida não duplica efeito: o segundo seq=0 não move mais nada', async () => {
+    const { a, c, linkA } = await reentrada();
+    c.choose('C');
+    await respirar();
+    const depoisDoPrimeiro = [...linkA];
+
+    // A sessão reentrante insiste (duplo toque, retry da fila, peer teimoso). `abandonada` já
+    // barra em `aoMove`, então nada é notificado de novo e nada regride.
+    c.dispose();
+    await respirar();
+
+    expect(linkA, 'o segundo evento moveu o status de novo').toEqual(depoisDoPrimeiro);
     expect(a.state().kicks.length).toBe(1);
+    expect(a.state().winner).toBeNull();
+  });
+
+  it('portão (3): a queda-e-volta de `A-22` se recupera sozinha e a disputa TERMINA', async () => {
+    // É o número que matou `D-78`: aparelho ~5 s em modo avião no meio da disputa, e ela seguiu.
+    // `D-80` não pode cobrar essa recuperação — aqui o `seq` que escoa é `1`, nunca `0`.
+    const seed = 7;
+    const referencia = createSession({ mode: 'local', seed, teams: { A: BR, B: AR }, localSide: 'A' });
+    const ZONAS: readonly Zone[] = ['L', 'C', 'R'];
+    const zona = (i: number): Zone => {
+      const z = ZONAS[((i % 3) + 3) % 3];
+      if (z === undefined) throw new Error('roteiro: índice fora da faixa');
+      return z;
+    };
+    for (let k = 0; referencia.state().phase !== 'finished' && k < 60; k += 1) {
+      referencia.choose(zona(k * 5 + seed));
+      referencia.choose(zona(k * k + 2 * seed));
+    }
+    const esperado: MatchState = referencia.state();
+    referencia.dispose();
+    expect(esperado.phase, 'a referência não terminou').toBe('finished');
+    expect(esperado.kicks[0]?.side, 'semente com sorteio B — ver a lacuna Q-11').toBe('A');
+
+    const { a, b, linkA } = await doisAparelhos(seed);
+    const salaA = salas[0];
+    if (salaA === undefined) throw new Error('D-80: sala do anfitrião ausente');
+
+    for (let i = 0; i < esperado.kicks.length; i += 1) {
+      const k = esperado.kicks[i];
+      if (k === undefined) throw new Error('roteiro: cobrança ausente');
+      // A queda cai na cobrança 1 e se desfaz logo depois — o anfitrião represa, o convidado
+      // fica para trás, e a reentrada escoa `seq=1`.
+      if (i === 1) {
+        salaA.onPeerLeave?.('peer');
+        await respirar();
+      }
+      cobrar(a, b, k.shot, k.dive);
+      await respirar();
+      if (i === 1) {
+        salaA.onPeerJoin?.('peer');
+        await respirar();
+      }
+    }
+
+    expect(a.state(), 'o anfitrião divergiu depois da queda-e-volta').toEqual(esperado);
+    expect(b.state(), 'o convidado divergiu depois da queda-e-volta').toEqual(esperado);
+    expect(a.state().phase).toBe('finished');
+    expect(
+      linkA,
+      'a queda que se recupera sozinha não pode virar D-35 — é o número que matou D-78',
+    ).not.toContain('failed');
+    expect(avisos.filter((m) => m.includes('sessão zerada (D-80)'))).toEqual([]);
   });
 });

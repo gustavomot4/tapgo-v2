@@ -7,6 +7,17 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-20] — `QA-25` FECHADO por `D-80`: a porta M5, a reentrada de sessão zerada cai em `D-35`
+
+- **Skill:** backend-domain. **Escopo:** `src/session/index.ts` + `src/tests/session_online.test.ts`. **`src/net` e `src/ui` com 0 byte alterado** — o custo que a porta M5 prometia em `A-23`, confirmado por `git diff --stat`.
+- **`D-80` ADOTADO** — o dono declarou `A-23` pela porta M5. `aoMove` lê `seq=0` com `kicks.length>0` como sessão zerada (o discriminador que a medição da véspera tirou da lista de palpites), marca `abandonada`, **sintetiza** `'failed'` e chama `canal.close()`.
+- **Três linhas que não são a guarda, e sem as quais ela não funciona:** `'failed'` virou **terminal** em `aoStatus` — senão o `'closed'` do próprio `close()` apagaria o único status que `tela_cobranca.ts:395` pinta, e a tela travaria de novo, agora sem timer para socorrê-la; `abandonarPorReentrada()` solta as escolhas represadas pelo motivo de `D-35`; e a docstring de `Session.subscribe` registra o preço — neste vínculo `LinkStatus` diz o estado da **disputa**, não o do transporte.
+- **O item (2) do portão saiu de graça, como previsto:** o `close()` solta a sala, o `leave()` vira `onPeerLeave` no outro lado, que emite `'waiting'` e rearma os 20 s — o lado que voltou também chega a `D-35`, pelo caminho que `A-22` mediu em campo.
+- **Portão, item a item:** (1) `'failed'` no mesmo tique do `seq=0`, com o teste asserindo **sem** `advanceTimers` no meio · (2) o lado que voltou sai em 20 s · (3) os 4 testes de `escoarFila` intactos, e a queda-e-volta do modo avião de `A-22` (o número que matou `D-78`) jogando a disputa **até `finished`** contra uma referência do modo `local`, sem um `'failed'` · (4) suíte **559 → 563/563**, `tsc` limpo, bundle **415.505 → 415.713 B** (+208) lido de `dist/` pelo `bundle-size.mjs` · (5) **campo em dois aparelhos: `A-24`, do dono.**
+- **Falsificação:** removida só a guarda de `aoMove`, **5 testes reprovam**. O de regressão do modo avião segue verde sob a mutação, e é o esperado — ele mede o que `D-80` não podia cobrar.
+- **Custo declarado:** o registro foi de 15.229 para **15.743/16.000 (98%)**; sobram 257, menos de uma decisão. `A-21` volta a ser a dívida do caminho.
+- **Segue declarado de fora:** cliente modificado · sessão nova que reentra ANTES de qualquer cobrança fechar (indistinguível de reconexão legítima, e sem divergência a detectar) · e a reentrada em que o lado que voltou **nunca escolhe** — sem `seq=0` chegando não há o que detectar. Este último não estava no portão de `A-23`, e ficou escrito em [[qa25_reentrada_na_janela]].
+
 ## [2026-08-20] — auditoria de `QA-25`: duas saídas mortas (`D-78`, `D-79`), duas portas vivas com portão e P
 
 - **Skill:** evolution-auditor. **Escopo:** só documento — `src/` intocado (nenhum experimento rodou; o portão foi escrito ANTES, que é a regra da fase).

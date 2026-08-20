@@ -27,12 +27,12 @@ Partida de ~1 minuto: contra a CPU ou contra alguém no mesmo aparelho. O online
 
 ## Estado atual (formato fixo — 1 linha por item, SEM prosa corrida)
 - **Versão:** v2.0.0 — entregue em 2026-08-19 (a v1 é baseline morto: reescrita total, nenhum código reaproveitado)
-- **Pronto:** M1..M9 e a medição, com **E-1..E-6 fechadas**; suíte **559/559**. Módulo a módulo, e a tarefa que fechou cada um: [[estado_modulos]]
-- **Bundle:** **415.505 B** (5,2% de 8 MB) lido de `dist/` no sandbox — não reconferido na máquina do dono; T-21 somou **+7.411 B**, zero asset novo; 278.646 B são os 32 SVGs de T-19, asset do chunk de M4 (`QA-06`); Phaser e Trystero fora, por `import()` (D-27)
+- **Pronto:** M1..M9 e a medição, com **E-1..E-6 fechadas**; suíte **563/563**. Módulo a módulo, e a tarefa que fechou cada um: [[estado_modulos]]
+- **Bundle:** **415.713 B** (5,2% de 8 MB) lido de `dist/` no sandbox — não reconferido na máquina do dono; `D-80` somou **+208 B**, zero asset novo; 278.646 B são os 32 SVGs de T-19, asset do chunk de M4 (`QA-06`); Phaser e Trystero fora, por `import()` (D-27)
 - **Em andamento (máx 1):** nada
-- **Próximo:** `A-23` — a porta que fecha `QA-25` (M5 **65%** × M6 25% × não mexer 15%), `D-NN` do dono; `D-78`/`D-79` já mataram duas saídas com número · `A-21` — cobrar por script as 2 frases por linha, também `D-NN` · devolver ao Objetivo a promessa que `D-72` tirou espera `QA-25`
-- **Bloqueado/pendente:** nada trava — registro **15.229/16.000 (95%)**, sobram **771** (≈2 decisões): `A-21` (a inclinação, +638/sessão) é a dívida que voltou
-- **Questões abertas:** Q-08, Q-09, Q-13, **Q-14** (respondida: 15 s e quem demorou perde — falta o `D-NN` e a sessão de M2) · **QA abertos:** QA-04..QA-07, QA-10, QA-17, QA-20, QA-21, **QA-24**, **QA-25** (reentrada dentro dos 20 s) · respondidas e fechados: [[decisions_archive]]
+- **Próximo:** `A-24` — campo em dois aparelhos: reabrir o link no meio da disputa e os **dois** saírem da tela travada (`D-80`, o 5º item do portão de `A-23`); é ele que destrava devolver ao Objetivo a promessa que `D-72` tirou · `A-21` — cobrar por script as 2 frases por linha, `D-NN` do dono
+- **Bloqueado/pendente:** nada trava — registro **15.743/16.000 (98%)**, sobram **257** (menos de 1 decisão — `scripts/check.py` diz o que `D-43` ainda libera): `A-21` (a inclinação, +638/sessão) é a dívida que voltou
+- **Questões abertas:** Q-08, Q-09, Q-13, **Q-14** (respondida: 15 s e quem demorou perde — falta o `D-NN` e a sessão de M2) · **QA abertos:** QA-04..QA-07, QA-10, QA-17, QA-20, QA-21, **QA-24** · respondidas e fechados: [[decisions_archive]]
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)
 - [[portao_de_aceite]] — **antes de fechar tarefa, declarar etapa fechada ou entregar**

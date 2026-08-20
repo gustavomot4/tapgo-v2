@@ -56,6 +56,7 @@ status: atual
 | D-77 | 2026-08-20 | ADOTADO | `A-22`: o link do convite leva as duas seleções (`&t=`); sem isso cada aparelho mostrava as suas. Só M7, `D-13` intacto | CHANGELOG 2026-08-20 |
 | D-78 | 2026-08-20 | REJEITADO | Matar o rearme de `D-31` em `onPeerLeave` (`net/index.ts:390`) — a saída barata de `QA-25`, que fecha a janela sem tocar M5 nem M7 | Medido em campo em `A-22`: aparelho ~5 s em modo avião e a disputa **seguiu**; sem o rearme, essa recuperação vira derrota. Cobra o caso comum para pegar o raro |
 | D-79 | 2026-08-20 | REJEITADO | Identificador de sessão no fio para M6 distinguir reconexão de sessão nova — 2º tipo de payload contra o `isMove` de `D-32` | É o argumento de `D-39`: compra o que o fio já dá de graça, agora que `seq=0` × `kicks.length>0` deixou de ser palpite (6 testes, [[qa25_reentrada_na_janela]]). E nem cobre cliente modificado, que mentiria no identificador |
+| D-80 | 2026-08-20 | ADOTADO | `A-23` fecha `QA-25` pela **porta M5**: `aoMove` lê `seq=0` com `kicks.length>0` como sessão zerada, marca `abandonada`, **sintetiza** `'failed'` e chama `canal.close()` — zero byte em `src/net` e `src/ui`. Preço escrito na porta: `LinkStatus` no vínculo M5→M7 diz o estado da **disputa**, não o do transporte | Discriminador de graça e já medido (`D-78`/`D-79` mortas com número); `close()` tira o OUTRO lado da tela travada pelo caminho que `A-22` mediu. Campo em dois aparelhos é `A-24` |
 
 > **Gatilhos de revisão** (`D-43`): moram no tema que cada um mede — `D-01` em [[online_p2p]], `D-02` em [[stack]].
 

@@ -5,7 +5,8 @@ status: atual
 # `QA-25` — a reentrada dentro da janela de 20 s
 
 > Nota de evidência de `QA-25`. O ID mora em [[d_qa|QA]]; aqui fica o que não cabe em 2 frases.
-> **Nada aqui é decisão.** A saída é `D-NN` do dono: muda a porta entre M5 e M6.
+> **Fechado por `D-80`** (porta M5) em 2026-08-20 — a seção final registra o que entrou e o que
+> segue declarado de fora. O que vem antes dela é a evidência que levou à decisão, íntegra.
 
 ## O mecanismo, lido do disco
 
@@ -141,3 +142,33 @@ que diz ser, e o item (2) sai igual, porque `falhar()` solta a sala.
   achado pesa contra.
 - **P(passar): 15%** — só se o dono decidir que reabrir o link no meio da disputa é raro o
   bastante para conviver, e aí isso precisa virar lacuna declarada, não silêncio.
+
+## Fechado por `D-80` — a porta M5, implementada em 2026-08-20
+
+O dono declarou `A-23` pela **porta M5**. O que entrou, em `src/session/index.ts` e mais nada:
+
+| onde | o que passou a fazer |
+|---|---|
+| `aoMove` | `seq=0` com `kicks.length>0` cai em `abandonarPorReentrada()` **antes** do "fora de ordem" |
+| `abandonarPorReentrada()` | marca `abandonada`, solta as escolhas represadas, põe `link='failed'` e chama `canal.close()` |
+| `aoStatus` | `'failed'` vira **terminal** para M5 — sem isso o `'closed'` do próprio `close()` apagaria o status que M7 pinta |
+| `Session.subscribe` | docstring do preço: neste vínculo, `LinkStatus` é o estado da **disputa**, não o do transporte |
+
+**Os 5 itens do portão, um a um.** (1) `'failed'` no mesmo tique do `seq=0`, sem relógio — teste
+"portão (1)", que assere **sem** `advanceTimers` entre a escolha e a asserção. (2) O lado que
+voltou sai da tela travada: o `close()` solta a sala, o `leave()` vira `onPeerLeave` lá, e os 20 s
+rearmados terminam em `'failed'` — teste "portão (2)". (3) Nada regride: os 4 testes de
+`escoarFila` seguem verdes em `net.test.ts`, e a queda-e-volta do modo avião de `A-22` **termina a
+disputa inteira** sem um `'failed'` — teste "portão (3)", com a disputa jogada até `finished`
+contra uma referência do modo `local`. (4) Suíte **563/563**, `tsc` limpo, bundle **415.713 B**
+lido de `dist/` pelo `bundle-size.mjs` (+208 B). (5) **Campo em dois aparelhos: `A-24`, do dono.**
+
+**Falsificação conferida:** removida só a guarda de `aoMove`, **5 testes reprovam** (os 4 novos de
+`D-80` mais o de `QA-25` que nomeia o descarte). O de regressão do modo avião segue verde sob a
+mutação, e isso é o esperado: ele mede o que `D-80` não podia cobrar.
+
+**O que segue declarado e NÃO foi consertado:** cliente modificado (mentiria em qualquer
+discriminador — o argumento de `D-79`); sessão nova que reentra ANTES de qualquer cobrança fechar,
+indistinguível de reconexão legítima, e onde não há divergência a detectar; e a reentrada em que
+o lado que voltou **nunca escolhe** — sem `seq=0` chegando, não há o que detectar, e o veterano
+segue esperando até alguém sair. Este último não estava no portão de `A-23`; fica aqui escrito.

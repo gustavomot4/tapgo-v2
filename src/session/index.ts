@@ -74,6 +74,14 @@ export interface Session {
   state(): MatchState;
   /** A escolha DESTE aparelho. Mesma assinatura nos três modos — ver `D-25`. */
   choose(zone: Zone): void;
+  /**
+   * O estado da disputa e o do **vínculo** com o outro aparelho.
+   *
+   * `D-80`: neste vínculo, `LinkStatus` diz o estado da **disputa**, não o do transporte. M5
+   * sintetiza `'failed'` quando a disputa acaba sem resultado mesmo com o canal de pé — é o
+   * caso da sessão zerada que reentra no mesmo `roomId` dentro dos 20 s (`QA-25`). Quem ler
+   * `'failed'` aqui como "o transporte de M6 desistiu" erra: leia como "não há mais disputa".
+   */
   subscribe(fn: (s: MatchState, link: LinkStatus) => void): () => void;
   dispose(): void;
 }
@@ -308,6 +316,13 @@ export function createSession(cfg: SessionConfig): Session {
   /** Status do canal chegando de M6. Só traduz — não reconecta, não repete, não desiste sozinho. */
   function aoStatus(s: LinkStatus): void {
     if (disposed) return;
+
+    // `'failed'` é terminal para M5, venha de M6 ou sintetizado por `D-80`. Sem esta linha o
+    // `'closed'` que o próprio `canal.close()` de `D-80` dispara chegaria logo em seguida e
+    // apagaria a única informação que M7 pinta — a mensagem de `D-35`. O `'closed'` do
+    // `dispose()` não passa por aqui: a porta o escreve direto, com `disposed` já ligado.
+    if (link === 'failed') return;
+
     link = s;
 
     if (s === 'failed') {
@@ -323,6 +338,26 @@ export function createSession(cfg: SessionConfig): Session {
   }
 
   /**
+   * `D-80` (`QA-25`): a reentrada de sessão zerada termina a disputa SEM RESULTADO, no tick da
+   * chegada do `seq=0` — sem esperar relógio nenhum.
+   *
+   * M5 **sintetiza** `'failed'` no `link`, que é o status que M7 já traduz na mensagem de `D-35`
+   * (`src/ui/tela_cobranca.ts:395`), e fecha o canal. Fechar não é enfeite: é o que tira o OUTRO
+   * lado da tela travada. O `leave()` de M6 vira `onPeerLeave` lá, que emite `'waiting'` e rearma
+   * os 20 s — o mesmo caminho que `A-22` mediu em campo, e que termina em `'failed'` também lá.
+   *
+   * Nada aqui toca `MatchState`: `winner` continua `null` pelo motivo de `abandonada`.
+   */
+  function abandonarPorReentrada(): void {
+    abandonada = true;
+    pending = null;
+    pendenteRemoto = null;
+    link = 'failed';
+    canal?.close();
+    notificarDaRede('reentrada');
+  }
+
+  /**
    * Jogada do peer.
    *
    * Cada guarda abaixo é um evento que **não pode chegar a M2**, e cada uma existe por um caso
@@ -330,6 +365,9 @@ export function createSession(cfg: SessionConfig): Session {
    * de repetir justamente porque morre aqui); `seq` maior é jogada de uma cobrança que ainda não
    * começou; segunda jogada na mesma cobrança é duplicata. Descartar é logar e sair — nunca
    * corrigir, nunca "aproveitar o que dá".
+   *
+   * A exceção é `D-80`: `seq=0` com cobrança já fechada também é descartado, mas NÃO só isso —
+   * é o único caso em que descartar em silêncio trava as duas telas para sempre.
    */
   function aoMove(m: Move): void {
     if (disposed || abandonada) return;
@@ -343,6 +381,27 @@ export function createSession(cfg: SessionConfig): Session {
     // inválida morre em M5. Guarda repetida na fronteira é barata; a que falta, não.
     if (!isZone(m.zone)) return descartar(`zona inválida ${String(m.zone)}`);
     if (match.phase === 'finished') return descartar('a disputa já terminou');
+    // ── `D-80` (`QA-25`): sessão zerada vestindo o mesmo `roomId` ───────────────────────────
+    // `seq=0` depois de uma cobrança fechada **não** é o reenvio da fila de M6: `escoarFila`
+    // consome com `shift` e só anda para a frente, então "peer com `kicks.length>0`" e "`seq=0`
+    // ainda por escoar" são estados mutuamente exclusivos — medido em 2026-08-20, com os 4
+    // testes de falsificação reprovando sob mutação (`e_qa/qa25_reentrada_na_janela.md`). Sobra
+    // uma fonte só: navegador fechado e reaberto no mesmo link dentro dos 20 s em que
+    // `onPeerJoin` (`net/index.ts:379`) aceita o peer de volta.
+    //
+    // Sem esta guarda o `seq=0` cairia no "fora de ordem" logo abaixo: os dois lados descartam
+    // tudo do outro, o canal segue `'connected'`, o timer já foi limpo por `onPeerJoin`, e
+    // ninguém mais emite `'failed'` — tela travada sem explicação, que é o que o PLANO proibiu
+    // para M6. Não há placar mentiroso a consertar: as guardas de `D-32` já seguram isso.
+    //
+    // O que a guarda NÃO cobre, e fica declarado: cliente modificado (que mentiria em qualquer
+    // discriminador, inclusive num identificador de sessão — o argumento de `D-79`), e a sessão
+    // nova que reentra ANTES de qualquer cobrança fechar, indistinguível de reconexão legítima
+    // — e nesse caso não há divergência a detectar.
+    if (m.seq === 0 && match.kicks.length > 0) {
+      descartar(`seq 0 com ${match.kicks.length} cobrança(s) fechada(s) — sessão zerada (D-80)`);
+      return abandonarPorReentrada();
+    }
     if (m.seq !== match.kicks.length) {
       return descartar(`seq ${m.seq} fora de ordem (a cobrança corrente é ${match.kicks.length})`);
     }
