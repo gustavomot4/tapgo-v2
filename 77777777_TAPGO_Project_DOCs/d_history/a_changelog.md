@@ -7,6 +7,14 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-20] — `A-27` fechada: o relógio de 15 s medido em dois aparelhos, e `T-24` fica sem pendência
+
+- **Skill:** frontend-uiux (ação do dono; nenhum byte em `src/`). Relato: *"testei e tudo já conforme o esperado, tudo está funcionando corretamente"*.
+- **O que isso prova, e é o que nenhum sandbox produz:** o relógio de `T-24` correndo numa tela real, o estouro virando cobrança sorteada e a disputa seguindo nos DOIS aparelhos. Nenhuma tela de M7 tem teste (`vitest` roda em Node sem DOM), então até aqui `D-84` só tinha prova de mecanismo, não de comportamento.
+- **LACUNA DECLARADA, a mesma forma de `A-26`:** o relato veio como confirmação **global**, não item a item, e **o placar final não foi anotado** — era o item 2 do portão e o pedido explícito do card. É a segunda vez que esse número escapa (`A-25` fechou igual), e fica escrito: se um dia aparecer divergência de placar no `online`, o item 2 é o que nunca teve número.
+- **Com `A-27`, `T-24` está fechado dos dois lados** — sandbox (580/580, `tsc`, bundle) e campo. O `online` agora tem prazo por cobrança sem árbitro, sem evento novo no fio e com `D-13` intacto.
+- **Próximo card de código:** `P-2` (pontos na tabela da TAP GO Cup), que não trava em nada — não pede `D-NN`, não pede campo e não toca porta congelada.
+
 ## [2026-08-20] — `T-24`: 15 s por cobrança no `online`, e o estouro resolvido dentro do aparelho (`D-84`/`Q-15`)
 
 - **Skill:** frontend-uiux. Portão: `python scripts/check.py` verde, `tsc --noEmit` limpo, suíte verde e a linha nova de `D-NN` ≤ 400 medidos — verde nos quatro.
