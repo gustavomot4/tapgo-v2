@@ -7,6 +7,15 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-20] — `A-22` 2ª rodada: `D-77` confirmado em campo, e o peer que sai reprova (`QA-25`)
+
+- **Skill:** evolution-auditor (mesma sessão do corte)
+- **O dono rodou os 4 itens em dois aparelhos reais, com o link novo.** Passaram três: o confronto é o **mesmo** nos dois aparelhos (`D-77`, que era o achado da 1ª rodada, confirmado onde só o aparelho prova) · o link aparece **antes** de qualquer contagem (`D-73`/`D-75`) · conectar sem o outro lado dá a falha honesta de `D-47` com o texto certo.
+- **Reprovou o peer que sai, e o código explica:** `D-35` está traduzido **só** para `'failed'` (`src/session/index.ts:313`). A saída do peer chega a M5 como `'waiting'` (`src/net/index.ts:390`), que **rearma** os 20 s de propósito, e nem M5 nem `tela_cobranca.ts:395` reagem a ele — logo a disputa segue normal e "O outro jogador saiu" nunca aparece na janela. Pior: `onPeerJoin` guarda só `'closed'`/`'failed'`, então quem reabre o link dentro da janela é **aceito**, com sessão zerada contra um lado no meio da disputa. É exatamente o "só quebra quando o jogador que saiu entra de novo" que o dono viu.
+- **Virou `QA-25` (ALTO), não consertado de carona (regra 4):** é porta entre M5 e M6, e a saída (M5 tratar `'waiting'` pós-conexão como abandono, ou M6 não rearmar) muda contrato — não é conserto de tela.
+- **`A-22` segue aberta.** Falta o dono reportar se "Tentar de novo" reconectou na **mesma** sala (2ª metade do portão de `D-75`) e se a espera do peer chegou a passar dos 20 s sem reabrir o link — é o que separa "M5 não traduz `'waiting'`" de "`onPeerLeave` nunca dispara".
+- **Nenhum byte de código mudou.**
+
 ## [2026-08-20] — o corte que `D-74` autorizou: 4 linhas saem da tabela viva (1.459 caracteres)
 
 - **Skill:** evolution-auditor
