@@ -7,6 +7,18 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-20] — auditoria de `QA-26`: `D-81` escolhe a porta M5, quatro saídas mortas e os três orçamentos na parede
+
+- **Skill:** evolution-auditor (auditoria; **nada implementado** — `src/` intocado). Evidência colhida do disco, não de memória.
+- **`D-81` ADOTADO · VETÁVEL — porta M5.** `aoMove` passa a ler `m.side === localSide` como pareamento espelhado e a tratá-lo na forma exata de `D-80` (`abandonada`, `'failed'` sintetizado, `close()`). O discriminador é de graça e **impossível num par são**: `aoMove` só é ligado no `online` (`session/index.ts:422`) e cada aparelho envia `side: localSide` (`:496`).
+- **A lacuna que `D-80` declarou é exatamente onde `QA-26` mora.** `D-80` exige `kicks.length > 0`; no par espelhado nenhuma jogada atravessa a guarda de lado, então `kicks.length` fica em **0 nos dois lados para sempre** e a pré-condição nunca chega. Os dois discriminadores são ortogonais — onde um vale, o outro é impossível.
+- **Quatro saídas mortas com número, íntegra em [[qa26_lado_do_convite]]:** lado no link `&l=` (cobre **0 dos 3** casos de abertura — o anfitrião e os dois convidados leem o mesmo parâmetro) · M7 lembrar a sala que sorteou (pede a **3ª exceção nominal** ao portão de privacidade de M9, o preço que `D-71` cobrou por uma, e cobre 1 de 3) · perguntar na tela (**+1 toque em 100%** dos convites, contra o portão de 2 toques de `D-49`) · negociar o lado por `peerId` do transporte — **reprovada por falta de dado**, não por mérito, e é a única que faria os 3 casos funcionarem.
+- **O preço para `D-72`, escrito:** a porta M5 **não** faz a disputa acontecer — troca trava permanente por falha honesta com saída. A promessa "por link de convite" pode voltar ao Objetivo com `A-25` verde, mas acompanhada da frase de verdade: **o link é de uso único e do convidado**. Sem D e sem a negociação, ela não volta.
+- **`QA-27` ABERTO (MÉDIO)** — o corte de `D-43` no `check.py` ainda oferece linha **REJEITADA** como candidata, e `D-74` mandou mantê-las vivas: são a lista-morta que esta fase varre. `D-76` só escapou porque a nota de `QA-26` passou a citá-lo — proteção por acidente, não por critério.
+- **`QA-28` ABERTO (MÉDIO)** — `T-22` está definido **duas vezes** no backlog (contador de segundos; tempo por cobrança). É `QA-24` de novo, um dia depois, agora em ID de tarefa, e o `check.py` não cobre `T-NN`.
+- **Os três orçamentos fecharam na parede na mesma sessão:** registro **15.982/16.000** (sobram 18), QA **7.984/8.000** (16), CONTEXT **3.983/4.000** (17). O corte de `D-43` está **esgotado** — nenhuma candidata. Por isso só **uma** decisão coube: as rejeições ficam na nota com o número que as matou e recebem `D-NN` quando `A-21` for paga.
+- **Abertas:** `T-23` (implementar `D-81`, M5 e só ele) e `A-25` (campo nos dois aparelhos, que também mede o falsificador: **se tocou numa zona antes de travar**).
+
 ## [2026-08-20] — `A-24` verde em campo: `D-80` confirmado nos dois aparelhos, e dois achados novos
 
 - **Skill:** backend-domain (sessão de registro; `src/` intocado nesta metade). **Medição do dono, em dois aparelhos reais.**

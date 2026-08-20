@@ -58,6 +58,7 @@ status: atual
 | D-79 | 2026-08-20 | REJEITADO | Identificador de sessão no fio para M6 distinguir reconexão de sessão nova — 2º tipo de payload contra o `isMove` de `D-32` | É o argumento de `D-39`: compra o que o fio já dá de graça, agora que `seq=0` × `kicks.length>0` deixou de ser palpite (6 testes, [[qa25_reentrada_na_janela]]). E nem cobre cliente modificado, que mentiria no identificador |
 | D-80 | 2026-08-20 | ADOTADO | `A-23` fecha `QA-25` pela **porta M5**: `aoMove` lê `seq=0` com `kicks.length>0` como sessão zerada, marca `abandonada`, **sintetiza** `'failed'` e chama `canal.close()` — zero byte em `src/net` e `src/ui`. Preço escrito na porta: `LinkStatus` no vínculo M5→M7 diz o estado da **disputa**, não o do transporte | Discriminador de graça e já medido (`D-78`/`D-79` mortas com número); `close()` tira o OUTRO lado da tela travada pelo caminho que `A-22` mediu. Campo em dois aparelhos é `A-24` |
 
+| D-81 | 2026-08-20 | ADOTADO · VETÁVEL | `QA-26`, porta M5: `m.side === localSide` é par espelhado, tratado na forma de `D-80`. Portão, custo e as 4 mortas em [[qa26_lado_do_convite]] | `D-80` não alcança: `kicks.length=0` nos dois lados, sempre |
 > **Gatilhos de revisão** (`D-43`): moram no tema que cada um mede — `D-01` em [[online_p2p]], `D-02` em [[stack]].
 
 ## Questões abertas (Q-NN — decisões do DONO, não do agente)
