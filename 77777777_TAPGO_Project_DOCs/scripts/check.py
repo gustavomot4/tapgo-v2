@@ -19,6 +19,7 @@ FALHAS (código 1)
                                        13. Tarefa apontando módulo que não existe no PLANO
                                        14. Skill fora do esquema (Contexto/Limites/Saída)
                                        15. Registro de QA inchado
+                                       16. Linha de registro acima de 400 medidos
 
 AVISOS (não reprovam; com --avisos-reprovam, reprovam)
   frontmatter ausente · placeholders · templates em rascunho · nota órfã ·
@@ -263,13 +264,13 @@ elif texto_qa and n_qa > 6400:
 dec = raiz / DECISOES
 texto_dec = corpo.get(dec, "")
 n_dec = medida(texto_dec)
-if texto_dec and n_dec > 16000:
+if texto_dec and n_dec > 20000:
     falhas.append(
-        f"{DECISOES} acima de 16.000 caracteres — arquive SUPERSEDIDAS/rejeitadas antigas "
+        f"{DECISOES} acima de 20.000 caracteres — arquive SUPERSEDIDAS/rejeitadas antigas "
         "em e_qa/decisions_archive.md (IDs preservados) e deixe um ponteiro. Se o corte de "
-        "`D-43` estiver esgotado, o teto é que precisa de decisão nova (`D-69`)."
+        "`D-43` estiver esgotado, o teto é que precisa de decisão nova (`D-82`)."
     )
-elif texto_dec and n_dec > 14400:
+elif texto_dec and n_dec > 18000:
     # O README declarava esta fraqueza com todas as letras: "o arquivamento é manual e
     # ninguém lembra". Portão que só roda quando alguém lembra não é portão — foi o
     # argumento do QA-04, e valia contra o próprio kit. O script não arquiva (a decisão
@@ -281,6 +282,10 @@ elif texto_dec and n_dec > 14400:
     # 2026-08-19, com o registro em 11.997: o pool de `D-43` era ZERO linhas, e as duas saídas
     # de arquivamento que sobravam rendiam 788 e 821 — menos que as 3 decisões que o portão
     # de `A-16` exige. Quando o pool é vazio, o aviso abaixo imprime isso em vez de mentir.
+    # `D-82`: teto 16.000 -> 20.000 e aviso 14.400 -> 18.000 (90%). Medido em 2026-08-20, com
+    # o registro em 15.982: os TRÊS pools em zero ao mesmo tempo — `D-43` (4ª vez), duplicata
+    # (gasta por `D-74`) e o critério de `D-74` (nada delegado, nada a cortar). Nem o veredito
+    # de `A-21` cabia nos 18 que sobravam. É rejeição adiada: quem para a corrida é `D-83`.
     vivos = "\n".join(txt for cam, txt in corpo.items()
                       if cam.name not in (Path(DECISOES).name, Path(ARQUIVO_MORTO).name)
                       and "d_history" not in cam.parts)
@@ -290,8 +295,45 @@ elif texto_dec and n_dec > 14400:
         "NENHUMA — todo D-NN vivo é citado por algum .md, então o corte de `D-43` está esgotado "
         "e o que resta é rever o teto")
     avisos.append(
-        f"{DECISOES} com {n_dec}/16.000 caracteres ({100*n_dec//16000}%) — "
+        f"{DECISOES} com {n_dec}/20.000 caracteres ({100*n_dec//20000}%) — "
         f"arquive o que `D-43` libera em e_qa/decisions_archive.md, preservando os IDs. Candidatas: {amostra}."
+    )
+
+# 16. Linha de registro acima de 400 caracteres medidos (`D-83`).
+# Por que por LINHA, e não só por arquivo: o teto do arquivo só morde quando já é tarde, e
+# quem está no meio de uma sessão corta o que estiver à mão — não o que devia sair. O custo
+# real está na linha que carrega a ÍNTEGRA da evidência em vez de delegá-la a `e_qa/<slug>.md`.
+# Medido no próprio registro (`A-21` §3): 141 (`D-67`), 175 (`D-68`), 238 (`D-81`) quando
+# delega; 922 (`D-73`), 978 (`D-75`) quando não delega. É também o que refaz o pool de corte
+# de `D-74`: sem delegação, o registro nunca mais tem o que arquivar.
+LINHA_MAX = 400
+# Isenção CONGELADA, não janela móvel. Estas linhas já estavam vivas quando `D-83` foi
+# adotado e o registro é append-only (`D-43`) — reescrevê-las é proibido pela própria regra.
+# Checagem que nasce vermelha em linha que ninguém pode consertar ensina a ignorar o script
+# (`A-21` §2.2). A tupla fica visível no diff: ID novo aqui é decisão do dono, não descuido.
+# Medidas em 2026-08-20, contra o disco DEPOIS do corte de `D-74` no QA — por isso são 14 e
+# não as 18 da tabela do §2.2, que ainda contava `QA-22`/`QA-23`/`QA-25`/`QA-26`, já
+# arquivados naquela mesma sessão. Linha arquivada não é linha viva, e não se isenta.
+ISENTAS_LINHA_MAX = (
+    "D-62", "D-65", "D-70", "D-71", "D-72", "D-73", "D-75", "D-76", "D-80",
+    "QA-20", "QA-21", "QA-24", "QA-27", "QA-28",
+)
+longas = []
+for nome_reg, texto_reg in ((DECISOES, texto_dec), (QA_REG, texto_qa)):
+    for linha in texto_reg.split("\n"):
+        achado = re.match(r"\|\s*((?:QA|Q|D)-\d+)\s*\|", linha.strip())
+        if not achado or achado.group(1) in ISENTAS_LINHA_MAX:
+            continue
+        # `medida()`, NUNCA `len()`: o padding de alinhamento das tabelas é do formatador
+        # do editor, não do texto (`D-50`) — e reprovaria linha correta por causa dele.
+        n_linha = medida(linha)
+        if n_linha > LINHA_MAX:
+            longas.append(f"{achado.group(1)} ({n_linha}) em {nome_reg}")
+if longas:
+    falhas.append(
+        f"Linha de registro acima de {LINHA_MAX} caracteres medidos (`D-83`): {', '.join(longas)}. "
+        "Mova a evidência para e_qa/<slug>.md e deixe o PONTEIRO na linha — como `D-67`, `D-68` e `D-79`. "
+        "Nada de prosa comprimida: o que sai da linha entra na nota, inteiro."
     )
 
 # 3. Fonte única (regra 6) — o mesmo nome em dois lugares é estado duplicado
@@ -670,7 +712,7 @@ if texto_ctx:
 # cortar por ESSE número; número velho manda cortar cedo demais ou tarde demais.
 # A chave do dicionário é o ORÇAMENTO, não o nome do arquivo: é o denominador que diz
 # de qual registro a linha fala, sem depender de como ela foi escrita.
-ORCAMENTOS = {4000: (CONTEXTO, texto_ctx), 16000: (DECISOES, texto_dec), 8000: (QA_REG, texto_qa)}
+ORCAMENTOS = {4000: (CONTEXTO, texto_ctx), 20000: (DECISOES, texto_dec), 8000: (QA_REG, texto_qa)}
 if texto_ctx:
     ja_avisado = set()
     # `**10.998**/16.000` e `10.998/16.000` são a mesma frase: o negrito sai antes de contar.

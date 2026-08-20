@@ -133,6 +133,15 @@ linha foi a causa da queda da curva?"* — pergunta que, medida como estava, já
 
 ### 5.3 As duas linhas, prontas para colar (medidas: 329 e 363 — ambas ≤ 400)
 
+> **Executado em 2026-08-20, no commit de `D-82`/`D-83` — uma correção de número.** A isenção
+> congelada ficou com **14** IDs, não 18. A tabela do §2.2 foi medida ANTES do corte de `D-74`
+> no QA descrito no §1, e ainda contava `QA-22`, `QA-23`, `QA-25` e `QA-26`, que naquela mesma
+> sessão saíram da tabela viva para [[decisions_archive]]. Linha arquivada não é linha viva, e
+> isentá-la abriria quatro IDs isentos em silêncio caso voltassem. Medido contra o disco de
+> hoje: 9 no DECISIONS (os do §2.2) + 5 no QA (`QA-20`, `QA-21`, `QA-24`, `QA-27`, `QA-28`).
+> A linha de `D-83` abaixo foi colada com `14`; nada mais nela mudou, e ela continua medindo 363.
+
+
 O número `20.000` é do dono; o resto da linha não muda com ele. As duas entram no MESMO commit em
 que o teto do `check.py` sobe, senão o portão reprova o commit que o conserta. Com elas o registro
 fica em **16.676**, e o aviso novo (18.000) não dispara.

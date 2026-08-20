@@ -30,8 +30,8 @@ Partida de ~1 minuto: contra a CPU ou contra alguém no mesmo aparelho. O online
 - **Pronto:** M1..M9 e a medição, com **E-1..E-6 fechadas**; suíte **574/574**; **`QA-26` fechado** por `D-81` e `T-22` com campo — `A-25` e `A-26` medidas nos dois aparelhos. Módulo a módulo, e a tarefa que fechou cada um: [[estado_modulos]]
 - **Bundle:** **416.549 B** (5,2% de 8 MB) lido de `dist/` no sandbox — não reconferido na máquina do dono; `T-22` somou **+732 B**, zero asset novo; 278.646 B são os 32 SVGs de T-19, asset do chunk de M4 (`QA-06`); Phaser e Trystero fora, por `import()` (D-27)
 - **Em andamento (máx 1):** nada
-- **Próximo:** **`A-21` auditado** — reprovado COMO ESCRITO (3 números) e reparado em [[a21_limite_por_linha]]; o **teto do registro vem antes**, e as duas viram `D-NN` do dono · a promessa que `D-72` tirou volta ao Objetivo quando couber: o campo passou inteiro, falta o `D-NN`
-- **Bloqueado/pendente:** **registro 15.982/16.000** (sobram **18**) com os TRÊS pools em zero — `D-43`, duplicata e o critério de `D-74`: nada a cortar, e nem o veredito desta sessão coube · QA destravado pelo corte de `D-74`: **6.141/8.000** · CONTEXT 98%
+- **Próximo:** `A-21` executado — `D-82` (teto 20.000) e `D-83` (400 por linha, 14 isentas congeladas) valendo no `check.py`; portão de `D-83`: das próximas 10 linhas, todas ≤ 400 · a promessa que `D-72` tirou volta ao Objetivo quando couber: o campo passou inteiro, falta o `D-NN`
+- **Bloqueado/pendente:** **registro 16.676/20.000** com os TRÊS pools ainda em zero (`D-43`, duplicata, critério de `D-74`) — `D-82` é rejeição adiada: ~9–11 decisões de prazo · QA **6.141/8.000** · CONTEXT 98%
 - **Questões abertas:** Q-08, Q-09, Q-13, **Q-14** (respondida: 15 s e quem demorou perde — falta o `D-NN` e a sessão de M2) · **QA abertos:** QA-04..QA-07, QA-10, QA-17, QA-20, QA-21, QA-24, QA-27, QA-28, **QA-29**, **QA-30** · respondidas e fechados: [[decisions_archive]]
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)

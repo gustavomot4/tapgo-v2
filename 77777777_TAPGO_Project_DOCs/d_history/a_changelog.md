@@ -7,6 +7,15 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-20] — `A-21` executado: o teto sobe (`D-82`) e o limite por linha passa a reprovar (`D-83`)
+
+- **Skill:** evolution-auditor (execução da decisão de [[a21_limite_por_linha]] §5.3; `src/` intocado). Portão: `python scripts/check.py` verde na hora — verde.
+- **`D-82` — teto do registro 16.000 → 20.000, aviso 14.400 → 18.000** (90%, mesma proporção de `D-63`/`D-69`). SUPERSEDE `D-69` no número. Registro depois das duas linhas novas: **16.676/20.000**, e o aviso de 99% some.
+- **`D-83` — falha 16 no `check.py`:** linha de `D-NN`/`QA-NN` acima de **400** medidos (`medida()`, nunca `len()`) reprova o commit, com isenção **congelada por ID** numa tupla visível no diff.
+- **A isenção é de 14 IDs, não 18:** a tabela do §2.2 da nota foi medida ANTES do corte de `D-74` no QA e ainda contava `QA-22`/`QA-23`/`QA-25`/`QA-26`, arquivados na mesma sessão. Medido contra o disco de hoje: 9 no DECISIONS (`D-62`,`D-65`,`D-70`,`D-71`,`D-72`,`D-73`,`D-75`,`D-76`,`D-80`) + 5 no QA (`QA-20`,`QA-21`,`QA-24`,`QA-27`,`QA-28`). A linha de `D-83` foi colada com **14**; o resto dela é o rascunho do §5.3, e ela mede 363.
+- **Custo pago junto:** docstring do `check.py` (15 → 16 falhas) e README linha 21 (teto e custo por linha) e linha 25 (**32 → 33** julgados, 15 → 16 reprovando). A linha 70 continua velha de propósito: é `QA-29`, e fechá-la custa decisão.
+- **Verificado:** as duas linhas novas medem **329** e **363**, ambas ≤ 400; tirando `D-62` da tupla à mão, o portão REPROVA com o número (460) e volta ao verde ao restaurar.
+
 ## [2026-08-20] — `A-21` auditado: o teto por linha reprova como escrito, e o QA se destrava sozinho
 
 - **Skill:** evolution-auditor (auditoria; `src/` intocado nesta sessão). Nota: [[a21_limite_por_linha]].

@@ -59,6 +59,8 @@ status: atual
 | D-80 | 2026-08-20 | ADOTADO | `A-23` fecha `QA-25` pela **porta M5**: `aoMove` lê `seq=0` com `kicks.length>0` como sessão zerada, marca `abandonada`, **sintetiza** `'failed'` e chama `canal.close()` — zero byte em `src/net` e `src/ui`. Preço escrito na porta: `LinkStatus` no vínculo M5→M7 diz o estado da **disputa**, não o do transporte | Discriminador de graça e já medido (`D-78`/`D-79` mortas com número); `close()` tira o OUTRO lado da tela travada pelo caminho que `A-22` mediu. Campo em dois aparelhos é `A-24` |
 
 | D-81 | 2026-08-20 | ADOTADO · VETÁVEL | `QA-26`, porta M5: `m.side === localSide` é par espelhado, tratado na forma de `D-80`. Portão, custo e as 4 mortas em [[qa26_lado_do_convite]] | `D-80` não alcança: `kicks.length=0` nos dois lados, sempre |
+| D-82 | 2026-08-20 | ADOTADO · SUPERSEDE D-69 no número | `A-21`: o teto do registro sobe de 16.000 para **20.000** (aviso 18.000) — os TRÊS pools estão em zero ao mesmo tempo, medido, e nem o veredito de `A-21` coube | É rejeição adiada e o prazo é declarado: ~9 decisões a 438, ~11 se `D-83` valer. Números em [[a21_limite_por_linha]] |
+| D-83 | 2026-08-20 | ADOTADO | `A-21` reparado: `check.py` reprova linha de `D-NN`/`QA-NN` acima de **400** medidos, com as 14 vivas isentas por ID congelado; o que sai da linha entra em `e_qa/<slug>.md` | Portão: das próximas 10 linhas, todas ≤ 400 e nenhuma perde evidência. O §8 de [[a20_tres_orcamentos]] reprovou como escrito — 3 números em [[a21_limite_por_linha]] |
 > **Gatilhos de revisão** (`D-43`): moram no tema que cada um mede — `D-01` em [[online_p2p]], `D-02` em [[stack]].
 
 ## Questões abertas (Q-NN — decisões do DONO, não do agente)
