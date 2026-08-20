@@ -7,6 +7,16 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-20] — `A-21` auditado: o teto por linha reprova como escrito, e o QA se destrava sozinho
+
+- **Skill:** evolution-auditor (auditoria; `src/` intocado nesta sessão). Nota: [[a21_limite_por_linha]].
+- **Veredito de `A-21`, contra o portão do §8 de [[a20_tres_orcamentos]]:** REPROVADO **como escrito**, por três números — o experimento pede ~1.200 caracteres de escrita e o registro tem **18**; o `400` reprova **18 linhas vivas** que o mesmo portão proíbe reescrever, sem isenção congelada escrita em lugar nenhum; e `≤ +400/sessão` é inalcançável por `400/linha` quando a sessão escreve duas linhas (retroativo: **+407**).
+- **O baseline do card envelheceu:** a curva desde `D-74` é **+535/sessão**, não +638, e o custo por linha caiu de **683** (`D-70`..`D-73`) para **438** (`D-75`..`D-81`) sem script nenhum — hipótese rival nomeada: encolheram **contra a parede**.
+- **Reparado e devolvido ao dono:** isenção por ID no `check.py`, limiar observável (as próximas 10 linhas ≤ 400, nenhuma perdendo evidência) e custo corrigido — a frase `14 falhas · 12 avisos` está no README, não no docstring.
+- **Corte de `D-74` no QA, sem decisão nova:** `QA-22`, `QA-23`, `QA-25` e `QA-26` (todos FECHADOS, os dois últimos com campo) saem da tabela viva para [[decisions_archive]] — **7.988 → 5.430**, e só então esta sessão conseguiu registrar achado.
+- **Registrado:** `QA-29` (dois números discordantes no README) e `QA-30` (a passagem do arquivo titulada `## A-21`, ID de card aberto — `QA-24`/`QA-28` pela terceira vez).
+- **O que NÃO coube:** as duas linhas de decisão (`A-21` reparado e o teto do registro). São `D-NN` do dono, e a demonstração mais curta do bloqueio é a auditoria não conseguir registrar o próprio veredito.
+
 ## [2026-08-20] — `A-26`: o contador de `T-22` visto em campo — `T-22` deixa de ser só sandbox
 
 - **Skill:** backend-domain (registro da medição do dono; `src/` intocado nesta sessão).
