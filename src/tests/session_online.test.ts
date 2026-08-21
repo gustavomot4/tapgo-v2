@@ -13,7 +13,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Como em `session.test.ts`: o que se importa de M5 é a porta. `Move` vem de M6 porque a rede
 // falsa injeta jogada crua — é o papel do duplo, não da tela.
-import { createSession } from '../session/index';
+import { CONNECT_TIMEOUT_MS, createSession } from '../session/index';
 import type { LinkStatus, MatchState, Session, SessionConfig } from '../session/index';
 import { setSignalingLoader } from '../net/index';
 import type { Move } from '../net/index';
@@ -139,6 +139,27 @@ function cfgOnline(seed: number, localSide: Side, roomId?: string): SessionConfi
   return roomId === undefined ? base : { ...base, roomId };
 }
 
+/**
+ * A configuração de `T-31`: este aparelho escolheu a SUA seleção; a do outro chega pelo fio.
+ *
+ * É a única forma nova de `SessionConfig` que `D-90` abriu — `null` no lado do peer, e só no
+ * `online`. `cfgOnline` acima segue existindo porque é o que a tela mandava antes de `T-31`, e
+ * o que ela ainda manda enquanto M7 não for feita: os dois formatos precisam continuar valendo.
+ */
+function cfgEscolhendo(seed: number, localSide: Side, roomId?: string): SessionConfig {
+  const teams: Record<Side, string | null> =
+    localSide === 'A' ? { A: BR, B: null } : { A: null, B: AR };
+  const base = { mode: 'online' as const, seed, teams, localSide };
+  return roomId === undefined ? base : { ...base, roomId };
+}
+
+/** A configuração torta que `D-90` recusa: `null` no lado DESTE aparelho. */
+function cfgOnlineComNull(seed: number, localSide: Side): SessionConfig {
+  const teams: Record<Side, string | null> =
+    localSide === 'A' ? { A: null, B: AR } : { A: BR, B: null };
+  return { mode: 'online', seed, teams, localSide };
+}
+
 /** Sessões abertas pelo teste corrente — canal que sobrevive ao teste aterrissa no seguinte. */
 const vivas: Session[] = [];
 
@@ -196,6 +217,12 @@ async function doisAparelhos(seed: number): Promise<{
  * Quem abre a sala aqui é o primeiro aparelho (`roomId` ausente ⇒ `hostRoom`), pelo mesmo motivo
  * de `doisAparelhos`: a porta congelada de M5 não devolve o ID que M6 sorteou (`Q-11`). Isso não
  * muda o que está sob teste — o que faz o par ser espelhado é o `localSide`, não quem hospedou.
+ *
+ * **Desde `T-31` (`D-90`) este helper devolve o par JÁ DESFEITO**, e é de propósito: os dois
+ * anunciam a seleção ao conectar, o anúncio de um chega assinado com o lado do outro, e a
+ * denúncia acontece antes de qualquer `choose`. Quem recebe primeiro cai no tique; o que sobra
+ * volta a `'waiting'` e cai pelo relógio de M6. Nenhum teste abaixo pode, portanto, contar com
+ * um `choose` atravessando o fio — `abandonada` já barra na primeira linha de `aoMove`.
  */
 async function parEspelhado(seed: number): Promise<{
   b1: Session;
@@ -585,12 +612,21 @@ describe('QA-25 — de onde vem um `seq=0` que chega com a disputa já andada', 
   // `seq=0` numa disputa em andamento. É esse número que decide se "tratar `seq=0` pós-conexão
   // como abandono" é conserto ou palpite. Estes testes MEDEM; a saída é `D-NN` do dono.
 
-  /** Toda jogada que chegou a um aparelho, com o nº da cobrança que ele vivia na chegada. */
+  /**
+   * Toda JOGADA que chegou a um aparelho, com o nº da cobrança que ele vivia na chegada.
+   *
+   * O filtro `'zone' in d` não é enfeite desde `D-90`: o fio carrega `Move` **ou** `Pick`, e o
+   * anúncio de seleção não tem `seq` nenhum. Sem o filtro, o `Pick` que o rearme de `D-31`
+   * reenvia a cada `'connected'` entrava aqui como `seq: undefined` e a medição de `QA-25`
+   * passava a falar de um payload que não é de cobrança nenhuma.
+   */
   function grampear(sala: SalaFake, quem: Session): Array<{ seq: number; kicksNaChegada: number }> {
     const log: Array<{ seq: number; kicksNaChegada: number }> = [];
     const original = sala.acao.onMessage;
     sala.acao.onMessage = (d: unknown, ctx: unknown) => {
-      log.push({ seq: (d as Move).seq, kicksNaChegada: quem.state().kicks.length });
+      if (typeof d === 'object' && d !== null && 'zone' in d) {
+        log.push({ seq: (d as Move).seq, kicksNaChegada: quem.state().kicks.length });
+      }
       original?.(d, ctx);
     };
     return log;
@@ -838,6 +874,208 @@ describe('D-80 — reentrada de sessão zerada dentro dos 20 s termina a disputa
   });
 });
 
+/* ──── `D-90` (`T-31`): cada aparelho escolhe a PRÓPRIA seleção, e ela viaja no fio ──── */
+
+describe('D-90 — a seleção do outro aparelho chega pelo `Pick`, não pelo link', () => {
+  // O que este bloco prova: que `null` em `teams[remoteSide]` é estado de ESPERA com prazo, que
+  // ele vira a seleção que o outro escolheu, e que nada disso abriu um 5º método na porta.
+  //
+  // O que ele deliberadamente NÃO prova, e nenhum teste em sandbox pode: que os dois aparelhos
+  // MOSTRAM o mesmo confronto. Isso é `A-NN`, medição do dono em dois aparelhos de verdade — o
+  // sandbox não compõe quadros. É o primeiro item do portão de `D-90`, e segue aberto.
+
+  /** Os dois aparelhos escolhendo cada um a sua, com o lado do peer nascendo `null`. */
+  async function doisEscolhendo(seed: number): Promise<{
+    a: Session;
+    b: Session;
+    vistoA: Array<Record<Side, string | null>>;
+    vistoB: Array<Record<Side, string | null>>;
+  }> {
+    const a = nova(cfgEscolhendo(seed, 'A'));
+    const vistoA: Array<Record<Side, string | null>> = [];
+    a.subscribe((_s, _l, t) => vistoA.push(t));
+
+    await ate(() => salas.length === 1, 'a sala do anfitrião abrir');
+    const salaA = salas[0];
+    if (salaA === undefined) throw new Error('D-90: sala do anfitrião ausente');
+
+    const b = nova(cfgEscolhendo(seed, 'B', salaA.roomId));
+    const vistoB: Array<Record<Side, string | null>> = [];
+    b.subscribe((_s, _l, t) => vistoB.push(t));
+
+    await ate(() => salas.length === 2, 'a sala do convidado abrir');
+    await ate(
+      () => vistoA.at(-1)?.B !== undefined && vistoA.at(-1)?.B !== null,
+      'a seleção do convidado chegar ao anfitrião',
+    );
+    await ate(
+      () => vistoB.at(-1)?.A !== undefined && vistoB.at(-1)?.A !== null,
+      'a seleção do anfitrião chegar ao convidado',
+    );
+    return { a, b, vistoA, vistoB };
+  }
+
+  it('portão: os dois aparelhos montam o MESMO confronto, cada um com a sua escolha', async () => {
+    const { a, b, vistoA, vistoB } = await doisEscolhendo(77);
+
+    // O confronto é o mesmo dos dois lados — e nenhum dos dois o recebeu pronto: o anfitrião
+    // nunca soube o que o convidado ia escolher, e vice-versa.
+    expect(vistoA.at(-1), 'o anfitrião não montou o confronto inteiro').toEqual({ A: BR, B: AR });
+    expect(vistoB.at(-1), 'o convidado não montou o confronto inteiro').toEqual({ A: BR, B: AR });
+
+    // E a disputa segue normal por cima disso: nada do `Pick` toca `MatchState`.
+    cobrar(a, b, 'L', 'R');
+    await respirar();
+    expect(a.state().kicks.length).toBe(1);
+    expect(b.state()).toEqual(a.state());
+  });
+
+  it('antes do anúncio o lado do peer é `null` — a tela espera, e não inventa seleção', async () => {
+    const a = nova(cfgEscolhendo(3, 'A'));
+    const visto: Array<{ link: LinkStatus; teams: Record<Side, string | null> }> = [];
+    a.subscribe((_s, link, teams) => visto.push({ link, teams }));
+
+    await ate(() => salas.length === 1, 'a sala abrir');
+    const salaA = salas[0];
+    if (salaA === undefined) throw new Error('D-90: sala ausente');
+
+    // Peer presente, anúncio ainda não: é o estado NOVO que `D-90` acrescentou aos quatro de
+    // `LinkStatus` que a tela já alcançava.
+    salaA.onPeerJoin?.('peer');
+    await respirar();
+
+    const conectado = visto.filter((v) => v.link === 'connected').at(-1);
+    expect(conectado, 'M7 não foi notificado do `connected`').toBeDefined();
+    expect(conectado?.teams, 'conectado com `Pick` pendente: o peer ainda é `null`').toEqual({
+      A: BR,
+      B: null,
+    });
+  });
+
+  it('peer que conecta e NUNCA anuncia vira `failed` em 20 s — nunca tela travada', async () => {
+    // O peer de versão anterior ao `Pick` no fio: conecta (e com isso apaga o relógio de M6,
+    // limpo por `onPeerJoin`) e não declara nada. Sem o rearme de `D-90`, a tela do outro lado
+    // ficaria em "escolhendo…" para sempre — a trava que o PLANO proibiu para M6.
+    const a = nova(cfgEscolhendo(4, 'A'));
+    const link: LinkStatus[] = [];
+    a.subscribe((_s, l) => link.push(l));
+
+    await ate(() => salas.length === 1, 'a sala abrir');
+    salas[0]?.onPeerJoin?.('peer');
+    await respirar();
+    expect(link.at(-1), 'o peer entrou: o canal devia estar conectado').toBe('connected');
+
+    await vi.advanceTimersByTimeAsync(CONNECT_TIMEOUT_MS - 1);
+    await respirar();
+    expect(link.at(-1), 'desistiu ANTES do prazo — o valor é o de M6, sem constante nova').toBe(
+      'connected',
+    );
+
+    await vi.advanceTimersByTimeAsync(1);
+    await respirar();
+    expect(link.at(-1), 'D-90: o silêncio do peer tem prazo').toBe('failed');
+    expect(
+      avisos.some((m) => m.includes('não declarou seleção')),
+      'o desfecho devia dizer POR QUE',
+    ).toBe(true);
+    expect(a.state().winner, 'abandono não escreve vencedor (D-35)').toBeNull();
+    expect(() => a.choose('L')).toThrowError(/SEM RESULTADO/);
+  });
+
+  it('anúncio repetido é idempotente: o mesmo valor não notifica M7 de novo', async () => {
+    const { vistoA } = await doisEscolhendo(5);
+    const salaA = salas[0];
+    if (salaA === undefined) throw new Error('D-90: sala do anfitrião ausente');
+    const antes = vistoA.length;
+
+    // É o rearme de `D-31`: a cada `'connected'` novo o peer reenvia o anúncio. O valor é o
+    // mesmo, então não há nada a contar a M7 — repintar a tela por causa disso seria efeito
+    // duplicado de escrita repetida.
+    salaA.acao.onMessage?.({ side: 'B', team: AR }, null);
+    salaA.acao.onMessage?.({ side: 'B', team: AR }, null);
+    await respirar();
+
+    expect(vistoA.length, 'o anúncio repetido notificou de novo').toBe(antes);
+    expect(vistoA.at(-1)).toEqual({ A: BR, B: AR });
+  });
+
+  it('código fora do catálogo de M4 é descartado, e a espera continua (D-61)', async () => {
+    const a = nova(cfgEscolhendo(6, 'A'));
+    const visto: Array<Record<Side, string | null>> = [];
+    a.subscribe((_s, _l, t) => visto.push(t));
+
+    await ate(() => salas.length === 1, 'a sala abrir');
+    const salaA = salas[0];
+    if (salaA === undefined) throw new Error('D-90: sala ausente');
+    salaA.onPeerJoin?.('peer');
+    await respirar();
+
+    // M6 conferiu a FORMA e deixou passar (é texto); quem pergunta se o código existe é M5.
+    salaA.acao.onMessage?.({ side: 'B', team: 'ZZ' }, null);
+    await respirar();
+
+    expect(
+      avisos.some((m) => m.includes('não está no catálogo de M4') && m.includes('ZZ')),
+      'o código inventado devia morrer em M5, em voz alta',
+    ).toBe(true);
+    expect(visto.at(-1)?.B, 'código inventado não pode virar seleção').toBeNull();
+
+    // E o prazo NÃO foi desarmado por um anúncio que não valeu: a espera segue contando.
+    await vi.advanceTimersByTimeAsync(CONNECT_TIMEOUT_MS);
+    await respirar();
+    expect(a.state().winner).toBeNull();
+    expect(() => a.choose('L')).toThrowError(/SEM RESULTADO/);
+  });
+
+  it('anúncio que chega depois do fim não pinta D-35 por cima de um resultado', async () => {
+    // Mesma ordem de `aoMove`: a guarda de fase vem ANTES da de `D-81`.
+    const { a, b } = await doisAparelhos(3);
+    for (let i = 0; i < 10 && a.state().phase !== 'finished'; i += 1) {
+      const vez = a.state().turn;
+      if (vez === 'A') {
+        a.choose('L');
+        b.choose('R');
+      } else {
+        b.choose('L');
+        a.choose('L');
+      }
+      await respirar();
+    }
+    expect(a.state().phase).toBe('finished');
+    const final = a.state();
+
+    salas[0]?.acao.onMessage?.({ side: 'A', team: BR }, null);
+    await respirar();
+
+    expect(a.state(), 'o anúncio atrasado mexeu numa disputa terminada').toEqual(final);
+    expect(avisos.some((m) => m.includes('par espelhado (D-81)'))).toBe(false);
+  });
+
+  it('a configuração recusa `null` onde ele não é espera: cpu, local e o lado deste aparelho', () => {
+    for (const mode of ['cpu', 'local'] as const) {
+      expect(
+        () =>
+          createSession({
+            mode,
+            seed: 1,
+            ...(mode === 'cpu' ? { level: 'easy' as const } : {}),
+            teams: { A: BR, B: null },
+            localSide: 'A',
+          }),
+        `${mode}: os dois lados são deste aparelho — null ali é lacuna, não espera`,
+      ).toThrowError(/não pode ser null no modo/);
+    }
+
+    expect(
+      () => createSession(cfgOnlineComNull(1, 'A')),
+      'o lado local sem seleção não teria o que anunciar ao outro',
+    ).toThrowError(/lado local não pode ser null/);
+
+    // E o que `D-90` abriu continua aberto: `null` no lado do PEER, no `online`, passa.
+    expect(() => nova(cfgEscolhendo(1, 'A'))).not.toThrow();
+  });
+});
+
 /* ──── `D-81`: os dois no MESMO link — o par espelhado vira falha honesta (`QA-26`) ──── */
 
 describe('D-81 — par espelhado: a jogada assinada com o NOSSO lado termina a disputa (QA-26)', () => {
@@ -849,31 +1087,36 @@ describe('D-81 — par espelhado: a jogada assinada com o NOSSO lado termina a d
   // `kicks.length` fica em 0 nos dois lados, e a pré-condição dele (`kicks.length > 0`) nunca
   // chega. É esse travamento que os testes abaixo proíbem.
 
-  it('portão (1): quem RECEBE a jogada espelhada vai a `failed` no mesmo tique, sem relógio', async () => {
-    const { b1, b2, link1 } = await parEspelhado(31);
-    const antes = link1.length;
+  // O que MUDOU em `T-31` (`D-90`): o par espelhado passou a se denunciar no ANÚNCIO de seleção,
+  // e não mais na 1ª jogada. Os dois aparelhos anunciam ao conectar, os dois assinam `side: 'B'`,
+  // e o `Pick` chega antes de qualquer toque na tela. O desfecho é o mesmo de `D-81` — falha
+  // honesta com saída, nos dois lados —, só que mais cedo: ninguém chega a cobrar. A guarda de
+  // `aoMove` continua onde estava, e continua conferida pelos falseamentos abaixo.
 
-    // Sem `advanceTimers` e sem `respirar()`: a entrega da rede falsa é síncrona, e o portão
-    // exige o desfecho no tique da chegada — não daqui a 20 s.
-    b2.choose('C');
+  it('portão (1): o par espelhado morre no ANÚNCIO, antes da 1ª cobrança, sem relógio', async () => {
+    // `parEspelhado` só conecta os dois — nenhum `choose`, nenhum `advanceTimers`. O desfecho
+    // já tem de estar posto quando ele devolve.
+    const { b1, link1 } = await parEspelhado(31);
 
-    expect(link1.at(-1), 'D-81: `failed` devia sair no tique da jogada espelhada').toBe('failed');
-    expect(link1.length, 'M7 não foi notificado').toBeGreaterThan(antes);
+    expect(link1.at(-1), 'D-90: `failed` devia sair no tique do anúncio espelhado').toBe('failed');
     expect(
       avisos.some((m) => m.includes('par espelhado (D-81)') && m.includes('"side":"B"')),
       'o descarte devia dizer POR QUE, e não "lado B não é o do peer"',
     ).toBe(true);
+    expect(
+      avisos.some((m) => m.includes('seleção remota descartada')),
+      'quem denuncia agora é o anúncio, não a jogada',
+    ).toBe(true);
 
     // `D-35` intacto: abandono não escreve vencedor, nada chega a M2, e nenhuma escolha é aceita.
     expect(b1.state().winner, 'abandono não pode escrever vencedor (D-35)').toBeNull();
-    expect(b1.state().kicks.length, 'a jogada espelhada não pode virar cobrança').toBe(0);
+    expect(b1.state().kicks.length, 'o anúncio espelhado não pode virar cobrança').toBe(0);
     expect(b1.state().phase).not.toBe('finished');
     expect(() => b1.choose('L')).toThrowError(/SEM RESULTADO/);
   });
 
-  it('portão (1): os DOIS saem da trava — o que enviou pelo `close()`, em até 20 s', async () => {
+  it('portão (1): os DOIS saem da trava — o outro lado pelo relógio, em até 20 s', async () => {
     const { b2, link2 } = await parEspelhado(31);
-    b2.choose('C');
     await respirar();
 
     // O `canal.close()` do lado que recebeu solta a sala; o `leave()` de M6 vira `onPeerLeave`
@@ -885,7 +1128,7 @@ describe('D-81 — par espelhado: a jogada assinada com o NOSSO lado termina a d
     await vi.advanceTimersByTimeAsync(20_000);
     await respirar();
 
-    expect(link2.at(-1), 'QA-26: o lado que enviou ficaria preso para sempre').toBe('failed');
+    expect(link2.at(-1), 'QA-26: o lado que sobrou ficaria preso para sempre').toBe('failed');
     expect(link2, 'ninguém pode passar por failed antes do relógio deste lado').toEqual([
       ...link2.slice(0, -1).filter((l) => l !== 'failed'),
       'failed',
@@ -895,15 +1138,18 @@ describe('D-81 — par espelhado: a jogada assinada com o NOSSO lado termina a d
     expect(() => b2.choose('L')).toThrowError(/SEM RESULTADO/);
   });
 
-  it('escrita repetida não duplica efeito: a segunda jogada espelhada não move mais nada', async () => {
-    const { b1, b2, link1 } = await parEspelhado(31);
-    b2.choose('C');
+  it('escrita repetida não duplica efeito: o segundo anúncio espelhado não move mais nada', async () => {
+    const { b1, link1 } = await parEspelhado(31);
     await respirar();
     const depoisDoPrimeiro = [...link1];
+    const sala1 = salas[0];
+    if (sala1 === undefined) throw new Error('D-81: sala do primeiro aparelho ausente');
 
-    // O aparelho espelhado insiste (retry da fila, peer teimoso). `abandonada` já barra na
-    // primeira linha de `aoMove`, então nada é notificado de novo e nada regride.
-    b2.dispose();
+    // O aparelho espelhado insiste — é o rearme de `D-31` reenviando o anúncio a cada
+    // `'connected'` novo. `abandonada` já barra na primeira linha de `aoMove`, então nada é
+    // notificado de novo e nada regride. Vale para os DOIS tipos do fio.
+    sala1.acao.onMessage?.({ side: 'B', team: AR }, null);
+    sala1.acao.onMessage?.({ seq: 0, side: 'B', zone: 'C' }, null);
     await respirar();
 
     expect(link1, 'o segundo evento moveu o status de novo').toEqual(depoisDoPrimeiro);
@@ -933,22 +1179,26 @@ describe('D-81 — par espelhado: a jogada assinada com o NOSSO lado termina a d
   it('lado de terceiro tipo nem chega a M5: morre na forma, em M6, e não abandona nada', async () => {
     // A guarda de `D-81` é `=== localSide`, e não "≠ remoteSide". A diferença entre as duas só
     // apareceria num `side` de terceiro tipo — e este teste mede que ele **não chega a M5**:
-    // `isMove` (`net/index.ts:370`) o derruba antes, então a guarda repetida de M5 sobre um
-    // `side` inexistente é inalcançável pelo fio. Fica declarado: essa borda é coberta em M6,
-    // não aqui. O que fecha o alargamento da guarda é o teste do `Move` legítimo, acima.
-    const { b1, link1 } = await parEspelhado(31);
-    const sala1 = salas[0];
-    if (sala1 === undefined) throw new Error('D-81: sala do primeiro aparelho ausente');
+    // `isMove`/`isPick` o derrubam antes, então a guarda repetida de M5 sobre um `side`
+    // inexistente é inalcançável pelo fio. Fica declarado: essa borda é coberta em M6, não aqui.
+    // O que fecha o alargamento da guarda é o teste do `Move` legítimo, acima.
+    //
+    // O par aqui é SÃO de propósito: desde `D-90` o par espelhado já morreu no anúncio, e um
+    // aparelho abandonado descarta tudo na primeira linha de `aoMove` — mediria a guarda errada.
+    const { a, linkA } = await doisAparelhos(31);
+    const salaA = salas[0];
+    if (salaA === undefined) throw new Error('D-81: sala do anfitrião ausente');
 
-    sala1.acao.onMessage?.({ seq: 0, side: 'C', zone: 'L' }, null);
+    salaA.acao.onMessage?.({ seq: 0, side: 'C', zone: 'L' }, null);
+    salaA.acao.onMessage?.({ side: 'C', team: BR }, null);
 
     expect(
-      avisos.some((m) => m.includes('payload descartado, não é Move')),
-      'o lado inexistente devia ter morrido na forma, em M6',
-    ).toBe(true);
-    expect(link1, 'lado inexistente não pode terminar a disputa').not.toContain('failed');
+      avisos.filter((m) => m.includes('payload descartado, não é Move nem Pick')),
+      'o lado inexistente devia ter morrido na forma, em M6 — nos DOIS tipos do fio',
+    ).toHaveLength(2);
+    expect(linkA, 'lado inexistente não pode terminar a disputa').not.toContain('failed');
     expect(avisos.some((m) => m.includes('par espelhado (D-81)'))).toBe(false);
-    expect(b1.state().kicks.length).toBe(0);
+    expect(a.state().kicks.length).toBe(0);
   });
 
   it('a guarda de `D-81` não rouba o evento da guarda de fase: disputa terminada não abandona', async () => {

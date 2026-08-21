@@ -102,15 +102,95 @@ fio, ele seria uma segunda fonte para o mesmo dado, e a que chega primeiro é a 
 
 ## Portão de `D-90` (o que aprova a implementação de `T-31`)
 
+> Marcado na sessão de construção de 2026-08-21 (M6+M5). O que segue aberto depende de M7 e do
+> aparelho do dono — ver "O que `T-31` implementou", no fim desta nota.
+
 - [ ] Os dois aparelhos mostram o **mesmo** confronto, com a seleção que **cada um** escolheu,
       medido em dois aparelhos de verdade (`A-NN`, como `A-22`) — o sandbox não compõe quadros.
-- [ ] Os 4 estados de `LinkStatus` que a tela alcança seguem cobertos, **mais** o novo: conectado
+- [x] Os 4 estados de `LinkStatus` que a tela alcança seguem cobertos, **mais** o novo: conectado
       com `Pick` pendente.
-- [ ] Teste de contrato do canal: `Pick` malformado é descartado como `Move` malformado é hoje.
-- [ ] `check.py`, `tsc`, a suíte inteira e o bundle **relido de `dist/`**.
+- [x] Teste de contrato do canal: `Pick` malformado é descartado como `Move` malformado é hoje.
+- [x] `check.py`, `tsc`, a suíte inteira e o bundle **relido de `dist/`**.
 
 ## Gatilho que reabre `D-90`
 
 Um terceiro tipo de payload. Dois tipos são uma união que M5 discrimina em uma linha; três são
 um protocolo, e protocolo pede versão no fio — que é o que `D-79` recusou. Se aparecer o terceiro,
 a decisão certa não é somar mais um: é `D-NN` de protocolo, com versão e com o custo declarado.
+
+---
+
+## O que `T-31` implementou — M6 + M5 (2026-08-21)
+
+> Sessão de construção, skill `backend-bff`. `src/ui/` **não foi tocado**: a parte de M7 é a
+> próxima sessão. O que segue é o delta real no disco, não o desenho — o desenho está acima.
+
+### M6 — `src/net/index.ts`
+
+| o que | como ficou |
+|---|---|
+| `Pick { side, team }` + `Payload = Move \| Pick` | exportados; `Channel` segue com **4 métodos**, agora tipados em `Payload` |
+| `isPick` | irmão de `isMove`, sob o mesmo descarte alto e logado de `D-32`; confere **forma** (texto não vazio, ≤ 16 — `GB-ENG` tem 6), nunca catálogo |
+| descarte da borda | a mensagem virou `payload descartado, não é Move nem Pick` |
+| fila de `PENDING_LIMIT` | represa e escoa os dois tipos, na ordem |
+| aviso de envio | `rotulo(p)` — `Pick` não tem `seq`, e `seq=undefined` num log manda alguém caçar defeito que não existe |
+
+**O tropeço que valeu comentário no código:** `Pick` é o nome do utilitário de tipos do
+TypeScript, e declará-lo aqui o **sombreia no arquivo inteiro**. `type Sinalizacao =
+Pick<typeof import('trystero'), 'joinRoom'>` parou de compilar. Reescrito à mão
+(`{ joinRoom: (typeof import('trystero'))['joinRoom'] }`), com a mesma garantia: a assinatura
+continua saindo do módulo REAL, e trocar de versão da Trystero segue reprovando em `tsc`.
+
+### M5 — `src/session/index.ts`
+
+- `SessionConfig.teams: Record<Side, CountryCode | null>`. `assertConfig` recusa `null` em `cpu` e
+  `local` (os dois lados são deste aparelho) e recusa `null` no `localSide` em qualquer modo.
+- `subscribe` ganhou o **3º argumento**, e o que sai nele é **cópia** — entregar o objeto vivo
+  deixaria um assinante de M7 reescrever o confronto pela tela.
+- Ao entrar em `'connected'`: anuncia o próprio `Pick` e **rearma `CONNECT_TIMEOUT_MS`** (o valor
+  importado de M6, sem constante nova — `D-76`). Peer que conecta e não anuncia em 20 s cai em
+  `D-35` pelo mecanismo de `D-80`.
+- `aoMove` discrimina em uma linha (`'zone' in p`) e entrega o `Pick` a `aoPick`, que recusa: par
+  espelhado (`D-81`), lado que não é o do peer, código fora do catálogo de M4, e anúncio depois do
+  fim (a guarda de fase vem **antes** da de `D-81`, como em `aoMove`).
+
+**Duas coisas que a implementação decidiu e que ficam declaradas:**
+
+1. **O anúncio sai DEPOIS de `notificarDaRede('status')`.** A resposta do outro aparelho pode
+   voltar dentro da mesma pilha — é o que o par espelhado faz. Anunciando antes de notificar, o
+   `'connected'` que M7 precisa pintar era sobrescrito pelo `'waiting'`/`'failed'` da resposta e
+   **nunca chegava à tela**. Medido: `link` do anfitrião saía `['waiting','failed']`, sem o
+   `'connected'` no meio.
+2. **A validação do código usa `findTeam`, não `assertCatalogCode`.** A porta do PLANO cita
+   `D-61`, e a fonte é a mesma (M4); o que muda é que `assertCatalogCode` **lança**, e isto roda
+   dentro da pilha de M6 — exceção ali interromperia o laço do transporte. Anúncio com código
+   inventado é **descartado e logado**, como todo evento remoto ilegal desta camada.
+
+### O par espelhado mudou de hora (`D-81` / `QA-26`)
+
+Antes de `T-31` a trava de `QA-26` era denunciada pela 1ª **jogada**. Agora ela é denunciada pelo
+**anúncio**, que acontece ao conectar — antes de qualquer toque na tela. O desfecho é o mesmo de
+`D-81` (falha honesta com saída nos dois lados, `D-35` intacto), só que mais cedo: ninguém chega a
+cobrar. A guarda de `aoMove` **continua onde estava** e segue conferida pelos falseamentos.
+Quatro testes do bloco `D-81` foram reescritos por isso, e o motivo está no `it` de cada um.
+
+### Portão — o que já está verde e o que falta
+
+- [x] **Teste de contrato do canal:** `Pick` malformado é descartado como `Move` malformado
+      (8 formas tortas, uma por descarte logado), `Pick` são atravessa pela mesma `onMove`, fila
+      represa os dois, e `Object.keys(channel)` continua sendo **quatro**.
+- [x] **Conectado com `Pick` pendente**, o estado novo: coberto, mais o prazo de 20 s que o fecha
+      (medido a `CONNECT_TIMEOUT_MS - 1` e a `CONNECT_TIMEOUT_MS`).
+- [x] **`check.py`, `tsc`, suíte inteira (628/628) e bundle relido de `dist/`** — 427.442 B, +1.592 B.
+- [ ] **Os dois aparelhos mostram o MESMO confronto, com a seleção que CADA um escolheu**, medido
+      em dois aparelhos de verdade (`A-NN`). **Depende de M7**, que esta sessão não tocou — e o
+      sandbox não compõe quadros.
+
+### O que M7 herda (e que M5 deliberadamente NÃO faz)
+
+`D-90` deu a M7 duas obrigações que M5 não cobra por ela, e não cobra de propósito — quem decide
+o que a tela deixa tocar é a tela: mostrar **"escolhendo…"** enquanto `teams[remoteSide]` for
+`null`, e **não deixar cobrar** nesse estado. `Session.choose` aceita a escolha com o anúncio
+pendente; travá-la aqui seria regra de tela nascendo na sessão. Hoje isso não tem efeito porque
+`src/ui/` ainda manda as duas seleções preenchidas (`tela_cobranca.ts:128`) — o `null` só nasce
+quando M7 passar a mandá-lo.

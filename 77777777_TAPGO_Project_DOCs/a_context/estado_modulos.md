@@ -19,8 +19,8 @@ status: atual
 | M2 | Motor de regras da disputa | `T-06` |
 | M3 | CPU em 3 níveis (`D-10`) | `T-07` |
 | M4 | Catálogo das 32 seleções e as bandeiras | `T-08` + `T-18` + `T-19` — alterado por `D-51`..`D-62` |
-| M5 | Sessão: `cpu`, `local` e `online` | `T-09` + `T-13` (o `online`) + `T-21` (a linha de `newRoomId`, `D-73`) + `T-23` (par espelhado vira falha honesta, `D-81`) |
-| M6 | Transporte P2P | `T-11` |
+| M5 | Sessão: `cpu`, `local` e `online` | `T-09` + `T-13` (o `online`) + `T-21` (a linha de `newRoomId`, `D-73`) + `T-23` (par espelhado vira falha honesta, `D-81`) + `T-31` (`teams` com `null`, 3º arg de `subscribe` e o prazo do anúncio, `D-90`) |
+| M6 | Transporte P2P | `T-11` + `T-31` (`Pick` no fio pelos mesmos 4 métodos, `D-90`) |
 | M7 | Telas (DOM) e a cobrança em Phaser | `T-10` + `T-17b` + `T-20` + `T-14` (as 3 telas do torneio) + `T-21` (o convite e o `online` na cobrança) + `T-24` (o prazo de 15 s no `online`) + `T-25` (a coluna "Pts" na tabela) + `T-32` (a série de revanches em `cpu` e `local`) |
 | M8 | Torneio: grupos, mata-mata, retrato | `T-12` — alterado por `D-57` |
 | M9 | Build, portões e publicação | `T-05` (esqueleto) |

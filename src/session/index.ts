@@ -41,8 +41,8 @@ import { createMatch, play } from '../engine/index';
 import type { MatchState } from '../engine/index';
 import { createCpu } from '../cpu/index';
 import type { Cpu, Level, Role } from '../cpu/index';
-import { hostRoom, joinRoom } from '../net/index';
-import type { Channel, LinkStatus, Move } from '../net/index';
+import { CONNECT_TIMEOUT_MS, hostRoom, joinRoom } from '../net/index';
+import type { Channel, LinkStatus, Move, Payload, Pick } from '../net/index';
 import { findTeam } from '../data/teams';
 
 // ── Os três reexports que o portão de M5 exige ────────────────────────────────────────────
@@ -71,7 +71,15 @@ export interface SessionConfig {
   mode: Mode;
   seed: number;
   level?: Level;
-  teams: Record<Side, CountryCode>;
+  /**
+   * As duas seleções. `null` é **estado de espera**, não valor ausente por descuido (`D-90`).
+   *
+   * Em `cpu` e `local` os dois lados são deste aparelho e `null` é recusado na criação. Em
+   * `online` só o lado do peer pode nascer `null`: a escolha dele nasce depois do link e chega
+   * pelo `Pick` do fio. O lado de `localSide` nunca pode ser `null` em modo nenhum — quem
+   * escolhe aqui é esta tela, e não haveria o que anunciar ao outro.
+   */
+  teams: Record<Side, CountryCode | null>;
   localSide: Side;
   roomId?: string;
 }
@@ -87,8 +95,20 @@ export interface Session {
    * sintetiza `'failed'` quando a disputa acaba sem resultado mesmo com o canal de pé — é o
    * caso da sessão zerada que reentra no mesmo `roomId` dentro dos 20 s (`QA-25`). Quem ler
    * `'failed'` aqui como "o transporte de M6 desistiu" erra: leia como "não há mais disputa".
+   *
+   * `D-90` (`T-31`): o 3º argumento é a **única** forma de M7 saber a seleção do OUTRO aparelho
+   * sem um 5º método na porta. `null` em `teams[remoteSide]` é o estado de espera — enquanto ele
+   * estiver ali, o peer conectou mas ainda não anunciou o que escolheu, e a tela mostra
+   * "escolhendo…" no lugar da marca em vez de inventar uma seleção. Nos modos `cpu` e `local`
+   * os dois vêm preenchidos desde a criação e nunca mudam.
    */
-  subscribe(fn: (s: MatchState, link: LinkStatus) => void): () => void;
+  subscribe(
+    fn: (
+      s: MatchState,
+      link: LinkStatus,
+      teams: Record<Side, CountryCode | null>,
+    ) => void,
+  ): () => void;
   dispose(): void;
 }
 
@@ -127,6 +147,20 @@ function assertConfig(cfg: SessionConfig): void {
   if (cfg.teams === null || typeof cfg.teams !== 'object') erro('teams ausente');
   for (const side of SIDES) {
     const code = cfg.teams[side];
+    // ── `D-90`: `null` é o estado de espera do `Pick`, e ele tem endereço ────────────────
+    // Só o lado do PEER, e só no `online`, pode nascer sem seleção: é a escolha que ainda vai
+    // chegar pelo fio. Em `cpu` e `local` os dois lados são deste aparelho — `null` ali é
+    // lacuna de quem chamou, não espera, e vira tela sem marca que nunca preenche. E o lado
+    // de `localSide` nunca pode ser `null`: sem ele não há o que anunciar ao outro aparelho.
+    if (code === null) {
+      if (cfg.mode !== 'online') {
+        erro(`seleção do lado ${side} não pode ser null no modo ${cfg.mode} — os dois lados são deste aparelho`);
+      }
+      if (side === cfg.localSide) {
+        erro('a seleção do lado local não pode ser null — é a escolha DESTE aparelho, e é ela que viaja no Pick (D-90)');
+      }
+      continue;
+    }
     // M4 é a fonte do catálogo; M5 não conhece país nenhum por conta própria. Duas seleções
     // IGUAIS passam de propósito: se isso é permitido ou não é regra de disputa, e regra de
     // disputa não é desta camada — não há linha em `regras_partida.md` proibindo.
@@ -204,6 +238,23 @@ export function createSession(cfg: SessionConfig): Session {
 
   let match: MatchState = createMatch(first);
 
+  /**
+   * As duas seleções do confronto (`D-90` / `T-31`).
+   *
+   * Cópia da configuração, e mutável de propósito: no `online` o lado do peer pode nascer `null`
+   * e só ganha valor quando o `Pick` dele atravessa o fio. Fora do `online` nasce completa e
+   * nunca muda — nenhum dos dois lados vem de fora.
+   */
+  const teams: Record<Side, CountryCode | null> = { A: cfg.teams.A, B: cfg.teams.B };
+
+  /**
+   * O que sai no 3º argumento de `subscribe`: uma CÓPIA, nunca o objeto vivo.
+   *
+   * Entregar o objeto interno faria um assinante de M7 poder reescrever a seleção do confronto
+   * a partir da tela — o caminho mais barato para dois aparelhos mostrarem marcas diferentes.
+   */
+  const selecoes = (): Record<Side, CountryCode | null> => ({ A: teams.A, B: teams.B });
+
   // Sem canal, o status é `'idle'` nos dois modos, e vira `'closed'` no `dispose()`. Não é
   // enfeite: M7 lê o mesmo campo nos três modos e não ganha um `if (mode === 'online')`.
   let link: LinkStatus = 'idle';
@@ -235,7 +286,9 @@ export function createSession(cfg: SessionConfig): Session {
 
   let disposed = false;
 
-  const subscribers = new Set<(s: MatchState, l: LinkStatus) => void>();
+  const subscribers = new Set<
+    (s: MatchState, l: LinkStatus, t: Record<Side, CountryCode | null>) => void
+  >();
 
   /**
    * Notifica todo mundo, mesmo que alguém exploda.
@@ -251,9 +304,10 @@ export function createSession(cfg: SessionConfig): Session {
 
     // Cópia: assinante que se desinscreve (ou inscreve) durante a notificação não muda o
     // conjunto que está sendo percorrido.
+    const t = selecoes();
     for (const fn of [...subscribers]) {
       try {
-        fn(match, link);
+        fn(match, link, t);
       } catch (e) {
         falhas += 1;
         if (falhas === 1) primeiraFalha = e;
@@ -319,6 +373,55 @@ export function createSession(cfg: SessionConfig): Session {
     else resolver(dela, minha);
   }
 
+  /**
+   * O relógio da espera do `Pick` do peer (`D-90`).
+   *
+   * É o MESMO prazo de M6 (`CONNECT_TIMEOUT_MS`, 20 s), importado e não copiado: `D-76` proíbe a
+   * constante nova, e uma cópia é a que passa a mentir sozinha no dia em que o número mudar. O
+   * que ele cobre é o buraco que só existe depois de `D-90`: peer que conecta — e portanto some
+   * o relógio de M6, limpo por `onPeerJoin` — e nunca declara seleção, por ser de uma versão
+   * anterior ao `Pick` no fio. Sem isto, a tela do outro lado ficaria em "escolhendo…" para
+   * sempre, que é exatamente o que o PLANO proibiu para M6.
+   */
+  let esperaDoPick: ReturnType<typeof setTimeout> | null = null;
+
+  function limparEsperaDoPick(): void {
+    if (esperaDoPick !== null) {
+      clearTimeout(esperaDoPick);
+      esperaDoPick = null;
+    }
+  }
+
+  /** Rearma o prazo — e não arma nada se a seleção do peer já está na mão. */
+  function armarEsperaDoPick(): void {
+    limparEsperaDoPick();
+    if (teams[remoteSide] !== null) return;
+    esperaDoPick = setTimeout(() => {
+      esperaDoPick = null;
+      if (disposed || abandonada || teams[remoteSide] !== null) return;
+      console.warn(
+        `[M5] o peer conectou e não declarou seleção em ${CONNECT_TIMEOUT_MS} ms — ` +
+          'provável versão anterior ao Pick no fio (D-90).',
+      );
+      abandonarSemResultado('sem-pick');
+    }, CONNECT_TIMEOUT_MS);
+  }
+
+  /**
+   * Anuncia ao outro aparelho a seleção DESTE (`D-90`).
+   *
+   * Sem ordem, sem resposta e sem aperto de mão: os dois mandam ao entrar em `'connected'`, cada
+   * um declarando só o **próprio** `side`, então não há conflito a resolver. Reenviar a cada
+   * `'connected'` novo (o rearme de `D-31`) é idempotente — o valor é o mesmo.
+   */
+  function anunciarSelecao(): void {
+    const minha = teams[localSide];
+    // `assertConfig` já recusou `null` no lado local; a guarda é a que sobra para o defeito
+    // interno, e calar seria inventar um anúncio que não existe.
+    if (minha === null || canal === null) return;
+    canal.send({ side: localSide, team: minha });
+  }
+
   /** Status do canal chegando de M6. Só traduz — não reconecta, não repete, não desiste sozinho. */
   function aoStatus(s: LinkStatus): void {
     if (disposed) return;
@@ -331,6 +434,10 @@ export function createSession(cfg: SessionConfig): Session {
 
     link = s;
 
+    // Fora de `'connected'` quem cobra o prazo é M6, com o próprio relógio: dois relógios
+    // contando o mesmo silêncio produziriam dois desfechos para um evento só.
+    if (s !== 'connected') limparEsperaDoPick();
+
     if (s === 'failed') {
       // `'failed'` é terminal em M6 (`D-31`): a sala já foi solta e nada reconecta. Para M5 isso
       // é a resposta de `Q-04` — sem resultado. Solta as escolhas represadas: elas pertenciam a
@@ -341,6 +448,17 @@ export function createSession(cfg: SessionConfig): Session {
     }
 
     notificarDaRede('status');
+
+    // ── `D-90`: o anúncio vem DEPOIS de M7 saber que conectou ───────────────────────────────
+    // A ordem não é estética. O anúncio sai pelo canal, e a resposta do outro aparelho pode
+    // voltar dentro desta mesma pilha (é o que o par espelhado faz: o `Pick` que chega derruba
+    // a disputa no tique). Anunciando antes de notificar, o `'connected'` que M7 precisa pintar
+    // era sobrescrito pelo `'waiting'`/`'failed'` da resposta e nunca chegava à tela.
+    if (s === 'connected' && !disposed) {
+      anunciarSelecao();
+      // Relido depois do anúncio de propósito: a resposta do peer pode ter mudado tudo acima.
+      if (link === 'connected' && !abandonada && !disposed) armarEsperaDoPick();
+    }
   }
 
   /**
@@ -358,11 +476,59 @@ export function createSession(cfg: SessionConfig): Session {
    */
   function abandonarSemResultado(origem: string): void {
     abandonada = true;
+    limparEsperaDoPick();
     pending = null;
     pendenteRemoto = null;
     link = 'failed';
     canal?.close();
     notificarDaRede(origem);
+  }
+
+  /**
+   * A seleção que o peer escolheu (`D-90` / `T-31`).
+   *
+   * Três coisas que esta função faz, e uma que ela não faz.
+   *
+   * Faz: recusa o par espelhado (`D-81` valendo igual para o `Pick` — os dois aparelhos entraram
+   * pelo MESMO lado, e aqui isso aparece no ANÚNCIO, antes de qualquer cobrança); recusa código
+   * que não está no catálogo de M4 (`D-61` — M6 conferiu só a forma, `D-32`); e desarma o
+   * relógio da espera assim que a seleção chega.
+   *
+   * Não faz: regra de disputa. Duas seleções iguais passam, pelo mesmo motivo de `assertConfig`
+   * — se isso é permitido ou não é regra, e regra não é desta camada.
+   *
+   * O anúncio repetido (o rearme de `D-31` reenvia a cada `'connected'`) é idempotente **e
+   * silencioso**: valor igual ao que já está na mão não notifica ninguém de novo.
+   */
+  function aoPick(p: Pick): void {
+    const descartar = (motivo: string): void => {
+      console.warn(`[M5] seleção remota descartada — ${motivo}: ${JSON.stringify(p)}`);
+    };
+
+    // Mesma ordem de `aoMove`, e pelo mesmo motivo: a guarda de fase vem ANTES da de `D-81`,
+    // para um anúncio atrasado não pintar `D-35` por cima de um resultado legítimo.
+    if (match.phase === 'finished') return descartar('a disputa já terminou');
+
+    // ── `D-81` no anúncio: par espelhado, denunciado antes da 1ª cobrança ───────────────────
+    // Os dois aparelhos no mesmo link nascem em `'B'` (`src/ui/main.ts:162`), os dois anunciam
+    // `side: 'B'`, e sem esta guarda os dois descartariam o anúncio do outro em silêncio: canal
+    // `'connected'`, relógio de M6 já limpo por `onPeerJoin`, ninguém emitindo `'failed'`. É a
+    // MESMA trava de `QA-26`, só que agora ela aparece no anúncio — mais cedo que a jogada.
+    if (p.side === localSide) {
+      descartar(`lado ${p.side} é o NOSSO — par espelhado (D-81)`);
+      return abandonarSemResultado('espelho');
+    }
+    if (p.side !== remoteSide) return descartar(`lado ${String(p.side)} não é o do peer`);
+    // M6 conferiu que é texto; quem pergunta se o código existe é M5, contra M4 (`D-61`). Sem
+    // isto, um código inventado viraria bandeira ausente na tela do outro lado.
+    if (findTeam(p.team) === undefined) {
+      return descartar(`seleção ${String(p.team)} não está no catálogo de M4`);
+    }
+
+    limparEsperaDoPick();
+    if (teams[remoteSide] === p.team) return; // reenvio: mesmo valor, nada a notificar
+    teams[remoteSide] = p.team;
+    notificarDaRede('pick');
   }
 
   /**
@@ -379,8 +545,15 @@ export function createSession(cfg: SessionConfig): Session {
    * as duas telas para sempre. Nunca disputam o mesmo evento: `D-80` exige cobrança fechada e no
    * par espelhado de `D-81` nenhuma jogada atravessa, então `kicks.length` fica em 0 nos dois.
    */
-  function aoMove(m: Move): void {
+  function aoMove(p: Payload): void {
     if (disposed || abandonada) return;
+
+    // ── `D-90`: o fio carrega DOIS tipos, e a discriminação é esta linha ────────────────────
+    // `Move` tem `zone`; `Pick` não tem. M6 carrega sem interpretar (ele nem sabe o que é
+    // seleção), então quem separa é esta camada — e separa aqui, na entrada, para que nenhuma
+    // guarda de cobrança abaixo receba um payload que não é de cobrança nenhuma.
+    if (!('zone' in p)) return aoPick(p);
+    const m: Move = p;
 
     const descartar = (motivo: string): void => {
       console.warn(`[M5] jogada remota descartada — ${motivo}: ${JSON.stringify(m)}`);
@@ -558,7 +731,9 @@ export function createSession(cfg: SessionConfig): Session {
       notify();
     },
 
-    subscribe(fn: (s: MatchState, l: LinkStatus) => void): () => void {
+    subscribe(
+      fn: (s: MatchState, l: LinkStatus, t: Record<Side, CountryCode | null>) => void,
+    ): () => void {
       if (typeof fn !== 'function') {
         throw new TypeError('Session.subscribe: assinante deve ser função');
       }
@@ -579,6 +754,7 @@ export function createSession(cfg: SessionConfig): Session {
 
       disposed = true;
       link = 'closed';
+      limparEsperaDoPick();
       pending = null;
       pendenteRemoto = null;
 

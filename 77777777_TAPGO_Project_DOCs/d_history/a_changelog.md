@@ -7,6 +7,18 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-21] — `T-31` (M6+M5): o `Pick` entra no fio, e a seleção do outro aparelho existe
+
+- **Skill:** backend-bff. **`src/ui/` não foi tocado** — a parte de M7 é a próxima sessão, e o card `T-31` segue aberto por causa dela.
+- **M6 (`src/net/index.ts`):** `Pick { side, team }` e `Payload = Move | Pick` exportados; `Channel` continua com os **4 métodos** de `D-13`, agora tipados em `Payload`. `isPick` entrou como irmão de `isMove`, sob o mesmo descarte alto e logado de `D-32` — payload que não é nem um nem outro morre na borda com `console.warn`. A fila de `PENDING_LIMIT` represa e escoa os dois tipos, e o log deixou de falar em `seq` para quem não tem `seq`.
+- **M5 (`src/session/index.ts`):** `teams` aceita `null` no lado do peer (e só no `online`); `subscribe` ganhou o 3º argumento, entregue como **cópia**; ao entrar em `'connected'` a sessão anuncia o próprio `Pick` e **rearma `CONNECT_TIMEOUT_MS`** — peer que conecta e não anuncia em 20 s cai em `D-35` pelo mecanismo de `D-80`. `aoMove` discrimina em uma linha (`'zone' in p`).
+- **O par espelhado de `QA-26` mudou de HORA, não de desfecho:** a trava passa a ser denunciada pelo **anúncio**, ao conectar, e não mais pela 1ª jogada — ninguém chega a cobrar. A guarda de `aoMove` continua onde estava; quatro testes de `D-81` foram reescritos por isso, com o motivo no `it` de cada um.
+- **Dois desvios declarados, com o porquê em [[t31_selecao_por_aparelho]]:** o anúncio sai **depois** de notificar M7 (senão o `'connected'` era sobrescrito pela resposta que volta na mesma pilha), e a validação do código usa `findTeam`, não `assertCatalogCode` — este **lança**, e lançar dentro da pilha de M6 interromperia o laço do transporte.
+- **Tropeço que virou comentário no código:** `Pick` sombreia o utilitário de tipos do TypeScript no arquivo inteiro. `type Sinalizacao = Pick<typeof import('trystero'), 'joinRoom'>` parou de compilar e foi reescrito à mão, com a mesma garantia contra a biblioteca real.
+- **Números:** suíte **628/628** (+15), `tsc` e `check.py` verdes, bundle **427.442 B** lido de `dist/` (**+1.592 B**, zero asset novo).
+- **Sem `D-NN` novo, de propósito:** esta sessão **executa** `D-90`, não decide nada por cima dele — e o registro está a 98% do teto sob `D-82`.
+- **Segue em aberto:** M7, e o portão de campo inteiro de `D-90` (os dois aparelhos mostrando o mesmo confronto é `A-NN`; o sandbox não compõe quadros).
+
 ## [2026-08-21] — `D-90`: o fio ganha `Pick`, e `T-31` sai da trava de contrato
 
 - **Skill:** architecture-monolith. **Nenhum arquivo de `src/` mudou** — sessão de arquitetura desenha porta, não implementa.

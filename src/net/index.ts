@@ -8,16 +8,23 @@
  * — inclusive a falha — e um ID de sala. Nada mais.
  *
  * **O que este módulo NÃO é:** ele não sabe o que é gol, placar, cobrança ou vencedor. Ele
- * carrega `Move` sem interpretá-lo. Quem decide se uma jogada vale é M5, contra o `MatchState`
+ * carrega `Payload` sem interpretá-lo. Quem decide se uma jogada vale é M5, contra o `MatchState`
  * de M2 (`D-19`). Se você sentir vontade de escrever `if (move.zone === ...)` aqui, o limite
  * entre M6 e M5 está sendo furado.
+ *
+ * **Dois tipos no fio, quatro métodos na porta (`D-90`)** — desde `T-31` o canal carrega `Move`
+ * **ou** `Pick`, pela MESMA `onMove`. M6 não sabe o que é seleção: ele confere a *forma* dos dois
+ * e entrega; quem discrimina (`'zone' in p`) e valida o código de país contra o catálogo de M4 é
+ * M5. Um 5º método (`onPick`) seria o precedente que `D-39` recusou e `D-73` recusou de novo.
+ * O gatilho que reabre isto está escrito em `D-90`: um TERCEIRO tipo não se soma aqui — vira
+ * `D-NN` de protocolo, com versão no fio.
  *
  * **Por que tudo é assíncrono:** ver `D-29`. Não existe request/response nesta borda — quem
  * cobra não fica bloqueado esperando o outro. `send` é disparo-e-esquece; a resposta, quando
  * vem, chega por `onMove`.
  */
 
-import type { Side, Zone } from '../core/index';
+import type { CountryCode, Side, Zone } from '../core/index';
 // `import type` é apagado na compilação (`verbatimModuleSyntax`): checa o contrato real da
 // biblioteca sem pôr um grama dela no bundle inicial — o `import()` de valor continua dinâmico.
 import type { JsonValue } from 'trystero';
@@ -64,6 +71,30 @@ export interface Move {
 }
 
 /**
+ * A seleção que ESTE aparelho escolheu, anunciada ao outro (`D-90` / `T-31`).
+ *
+ * Existe porque a escolha do convidado nasce **depois** do link, e não há segundo caminho entre
+ * os dois aparelhos além deste canal: o código de país do outro lado não existe aqui, em nenhuma
+ * forma, em nenhum momento. Note o que ela NÃO tem: `seq`. `Pick` não pertence a cobrança
+ * nenhuma — cada lado declara só o **próprio** `side`, os dois mandam ao conectar, sem ordem e
+ * sem resposta, e repetir é idempotente porque o valor é o mesmo.
+ *
+ * `team` é `CountryCode` (`D-52`), e M6 confere dele **só a forma**: quem pergunta se o código
+ * está no catálogo de M4 é M5 (`D-61`). M6 não sabe o que é seleção.
+ */
+export interface Pick {
+  side: Side;
+  team: CountryCode;
+}
+
+/**
+ * Tudo que atravessa o fio. União de dois, e dois é o teto declarado em `D-90`.
+ *
+ * Quem discrimina é M5, em uma linha (`'zone' in p`) — `Move` tem `zone` e `Pick` não tem.
+ */
+export type Payload = Move | Pick;
+
+/**
  * Configuração de relay. Existe para o TURN ser trocado sem tocar em mais nada.
  *
  * **Nunca preencha isto com credencial versionada.** A restrição "nenhum segredo versionado" do
@@ -74,9 +105,13 @@ export interface IceConfig {
   turn?: { urls: string; username: string; credential: string };
 }
 
+/**
+ * A porta congelada por `D-13`: **quatro** métodos, e `D-90` não comprou um quinto. O que mudou
+ * em `T-31` foi o que passa por eles (`Payload` no lugar de `Move`), não quantos são.
+ */
 export interface Channel {
-  send(m: Move): void;
-  onMove(fn: (m: Move) => void): void;
+  send(p: Payload): void;
+  onMove(fn: (p: Payload) => void): void;
   onStatus(fn: (s: LinkStatus) => void): void;
   close(): void;
 }
@@ -120,7 +155,10 @@ export function opened(c: Channel): Promise<LinkStatus> {
  * O pedaço da Trystero que M6 usa. Tipado a partir do módulo REAL, então trocar de versão e
  * quebrar a assinatura reprova em `tsc` — o duplo de teste não pode divergir da biblioteca.
  */
-type Sinalizacao = Pick<typeof import('trystero'), 'joinRoom'>;
+// Escrito à mão, e não com o utilitário `Pick<>` do TypeScript: desde `D-90` `Pick` é um tipo
+// DESTE módulo, e ele sombreia o utilitário global dentro deste arquivo. A garantia continua a
+// mesma — a assinatura sai do módulo REAL, então trocar de versão e quebrá-la reprova em `tsc`.
+type Sinalizacao = { joinRoom: (typeof import('trystero'))['joinRoom'] };
 
 const CARREGADOR_PADRAO = (): Promise<Sinalizacao> => import('trystero');
 
@@ -167,14 +205,25 @@ const ROOM_ID_RE = /^[0-9ABCDEFGHJKMNPQRSTVWXYZ]{26}$/;
  */
 const PENDING_LIMIT = 32;
 
-/** Erro de contrato do lado de fora: quem chamou passou algo que não é `Move`. */
-function assertMove(m: Move): void {
-  if (!isMove(m)) {
+/** Erro de contrato do lado de fora: quem chamou passou algo que não é `Move` nem `Pick`. */
+function assertPayload(p: Payload): void {
+  if (!isMove(p) && !isPick(p)) {
     throw new TypeError(
-      `Channel.send: jogada malformada (${JSON.stringify(m)}). ` +
-        'Esperado { seq: inteiro >= 0, side: "A"|"B", zone: "L"|"C"|"R" }.',
+      `Channel.send: payload malformado (${JSON.stringify(p)}). ` +
+        'Esperado { seq: inteiro >= 0, side: "A"|"B", zone: "L"|"C"|"R" } ' +
+        'ou { side: "A"|"B", team: código de país não vazio }.',
     );
   }
+}
+
+/**
+ * Como um payload aparece no log desta borda.
+ *
+ * `Pick` não tem `seq`, e escrever `seq=undefined` num aviso é o tipo de linha que faz alguém
+ * caçar um defeito de numeração que não existe.
+ */
+function rotulo(p: Payload): string {
+  return isMove(p) ? `jogada seq=${p.seq}` : `escolha de seleção do lado ${p.side}`;
 }
 
 /**
@@ -194,6 +243,28 @@ function isMove(m: unknown): m is Move {
     (c['seq'] as number) >= 0 &&
     (c['side'] === 'A' || c['side'] === 'B') &&
     (c['zone'] === 'L' || c['zone'] === 'C' || c['zone'] === 'R')
+  );
+}
+
+/**
+ * O irmão de `isMove`, sob o MESMO descarte alto e logado de `D-32`: payload que não é nem um
+ * nem outro morre na borda e nunca vira dado mentiroso rio abaixo.
+ *
+ * Confere **forma**, não catálogo: `team` precisa ser texto não vazio, e é só. Perguntar se `BR`
+ * existe é perguntar o que é seleção, e M6 não sabe — quem pergunta é M5, contra M4 (`D-61`).
+ * O teto de tamanho existe pela mesma razão que `PENDING_LIMIT`: dado de fora sem teto é dado de
+ * fora sem teto. O maior código real tem 6 caracteres (`GB-ENG`, `D-52`), e 16 dá folga sem
+ * abrir espaço para um megabyte de texto entrar como "seleção".
+ */
+function isPick(p: unknown): p is Pick {
+  if (typeof p !== 'object' || p === null) return false;
+  const c = p as Record<string, unknown>;
+  const team = c['team'];
+  return (
+    (c['side'] === 'A' || c['side'] === 'B') &&
+    typeof team === 'string' &&
+    team.length > 0 &&
+    team.length <= 16
   );
 }
 
@@ -242,9 +313,9 @@ function createChannel(roomId: string, ice: IceConfig | undefined): Channel {
   let room: Awaited<ReturnType<typeof abrirSala>> | null = null;
   let timer: ReturnType<typeof setTimeout> | null = null;
 
-  const moveHandlers: ((m: Move) => void)[] = [];
+  const moveHandlers: ((p: Payload) => void)[] = [];
   const statusHandlers: ((s: LinkStatus) => void)[] = [];
-  const pending: Move[] = [];
+  const pending: Payload[] = [];
 
   /**
    * Leitura do status atrás de função, e não `status` direto.
@@ -367,10 +438,11 @@ function createChannel(roomId: string, ice: IceConfig | undefined): Channel {
     const acao = sala.makeAction<Record<string, JsonValue>>(ACTION_MOVE);
 
     acao.onMessage = (d: unknown) => {
-      if (!isMove(d)) {
+      if (!isMove(d) && !isPick(d)) {
         // Erro de contrato do outro lado (peer de versão diferente, cliente modificado, dado
-        // corrompido). Morre aqui, alto e logado — nunca vira `Move` mentiroso rio abaixo.
-        console.warn(`${tag} payload descartado, não é Move: ${JSON.stringify(d)}`);
+        // corrompido). Morre aqui, alto e logado — nunca vira `Move` nem `Pick` mentiroso rio
+        // abaixo. É `D-32` valendo igual para os dois tipos do fio (`D-90`).
+        console.warn(`${tag} payload descartado, não é Move nem Pick: ${JSON.stringify(d)}`);
         return;
       }
       for (const fn of [...moveHandlers]) fn(d);
@@ -393,22 +465,22 @@ function createChannel(roomId: string, ice: IceConfig | undefined): Channel {
       armarTimer();
     };
 
-    enviarBruto = (m: Move) => {
-      void acao.send(m as unknown as Record<string, JsonValue>).catch((e: unknown) => {
-        console.warn(`${tag} envio da jogada seq=${m.seq} falhou: ${String(e)}`);
+    enviarBruto = (p: Payload) => {
+      void acao.send(p as unknown as Record<string, JsonValue>).catch((e: unknown) => {
+        console.warn(`${tag} envio de ${rotulo(p)} falhou: ${String(e)}`);
       });
     };
 
     return sala;
   }
 
-  let enviarBruto: ((m: Move) => void) | null = null;
+  let enviarBruto: ((p: Payload) => void) | null = null;
 
   function escoarFila(): void {
     if (enviarBruto === null) return;
     while (pending.length > 0) {
-      const m = pending.shift();
-      if (m !== undefined) enviarBruto(m);
+      const p = pending.shift();
+      if (p !== undefined) enviarBruto(p);
     }
   }
 
@@ -431,25 +503,29 @@ function createChannel(roomId: string, ice: IceConfig | undefined): Channel {
   })();
 
   const canal: Channel = {
-    send(m: Move): void {
-      assertMove(m);
+    send(p: Payload): void {
+      assertPayload(p);
       if (status === 'closed' || status === 'failed') {
-        console.warn(`${tag} jogada seq=${m.seq} descartada: canal ${status}.`);
+        console.warn(`${tag} ${rotulo(p)} descartada: canal ${status}.`);
         return;
       }
       if (status === 'connected' && enviarBruto !== null) {
-        enviarBruto(m);
+        enviarBruto(p);
         return;
       }
-      // Ainda não conectado (ou peer saiu): represa. Repetir é seguro — ver `Move.seq`.
+      // Ainda não conectado (ou peer saiu): represa. Repetir é seguro nos dois tipos — `Move`
+      // pelo `seq`, `Pick` porque o valor é o mesmo (`D-90`).
       if (pending.length >= PENDING_LIMIT) {
         const velha = pending.shift();
-        console.warn(`${tag} fila cheia (${PENDING_LIMIT}); descartada a jogada seq=${velha?.seq}.`);
+        console.warn(
+          `${tag} fila cheia (${PENDING_LIMIT}); descartada a ${velha === undefined ? 'nada' : rotulo(velha)}.`,
+        );
       }
-      pending.push(m);
+      pending.push(p);
     },
 
-    onMove(fn: (m: Move) => void): void {
+    /** Nome de `D-13`, carga de `D-90`: por aqui chega `Move` **ou** `Pick`. Quem discrimina é M5. */
+    onMove(fn: (p: Payload) => void): void {
       moveHandlers.push(fn);
     },
 

@@ -10,7 +10,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CONNECT_TIMEOUT_MS, hostRoom, joinRoom, newRoomId, opened, setSignalingLoader } from '../net/index';
-import type { Channel, IceConfig, LinkStatus, Move } from '../net/index';
+import type { Channel, IceConfig, LinkStatus, Move, Payload, Pick } from '../net/index';
 import { createSession } from '../session/index';
 import type { Zone } from '../core/index';
 
@@ -365,7 +365,7 @@ describe('status — a falha é um estado nomeado, não uma exceção', () => {
 describe('jogadas — M6 confere a FORMA; a regra é de M5', () => {
   it('payload que não é Move morre em M6 e nunca chega a quem assinou', async () => {
     const { sala, channel } = await abrirHost();
-    const recebidas: Move[] = [];
+    const recebidas: Payload[] = [];
     channel.onMove((m) => recebidas.push(m));
     sala?.onPeerJoin?.('peer');
 
@@ -432,6 +432,101 @@ describe('jogadas — M6 confere a FORMA; a regra é de M5', () => {
     const { channel } = await abrirHost();
     channel.close();
     expect(() => channel.send(MOVE)).not.toThrow();
+  });
+});
+
+/* ─────────────────── `D-90`: o segundo tipo do fio (`Pick`) ─────────────────── */
+
+describe('Pick — o mesmo fio, a mesma porta de 4 métodos, o mesmo descarte de D-32', () => {
+  const PICK: Pick = { side: 'A', team: 'BR' };
+
+  it('a porta continua com QUATRO métodos: `D-90` mudou a carga, não o contrato', async () => {
+    const { channel } = await abrirHost();
+    // O 5º método (`onPick`) é o precedente que `D-39` recusou e `D-73` recusou de novo. Contar
+    // aqui é o que impede alguém de acrescentá-lo "só desta vez" sem passar por uma `D-NN`.
+    expect(Object.keys(channel).sort()).toEqual(['close', 'onMove', 'onStatus', 'send']);
+    channel.close();
+  });
+
+  it('`Pick` bem formado atravessa e chega a quem assinou, pela MESMA onMove', async () => {
+    const { sala, channel } = await abrirHost();
+    const recebidas: Payload[] = [];
+    channel.onMove((p) => recebidas.push(p));
+    sala?.onPeerJoin?.('peer');
+
+    sala?.acao.onMessage?.({ side: 'B', team: 'AR' }, {});
+    sala?.acao.onMessage?.({ seq: 0, side: 'B', zone: 'L' }, {});
+
+    // Os dois tipos, na ordem, pelo mesmo caminho. Quem discrimina é M5 — M6 não sabe qual é
+    // qual, e é isso que o teste declara.
+    expect(recebidas).toEqual([
+      { side: 'B', team: 'AR' },
+      { seq: 0, side: 'B', zone: 'L' },
+    ]);
+    channel.close();
+  });
+
+  it('`Pick` malformado morre em M6, exatamente como `Move` malformado (D-32)', async () => {
+    const { sala, channel } = await abrirHost();
+    const recebidas: Payload[] = [];
+    channel.onMove((p) => recebidas.push(p));
+    sala?.onPeerJoin?.('peer');
+
+    for (const lixo of [
+      { side: 'A' },
+      { side: 'A', team: '' },
+      { side: 'A', team: 42 },
+      { side: 'A', team: null },
+      { side: 'A', team: { code: 'BR' } },
+      { side: 'C', team: 'BR' },
+      { team: 'BR' },
+      // Teto de tamanho: dado de fora sem teto é dado de fora sem teto.
+      { side: 'A', team: 'B'.repeat(17) },
+    ]) {
+      sala?.acao.onMessage?.(lixo, {});
+    }
+
+    expect(recebidas, 'payload torto chegou a quem assinou').toEqual([]);
+    expect(
+      avisos.filter((m) => m.includes('payload descartado, não é Move nem Pick')),
+      'cada descarte tem de ser LOGADO — descarte calado é dado mentiroso rio abaixo',
+    ).toHaveLength(8);
+
+    // E o caminho feliz continua funcionando depois de todo esse lixo.
+    sala?.acao.onMessage?.({ side: 'B', team: 'GB-ENG' }, {});
+    expect(recebidas).toEqual([{ side: 'B', team: 'GB-ENG' }]);
+    channel.close();
+  });
+
+  it('`send` com `Pick` malformado lança — erro de quem chamou, reportado alto', async () => {
+    const { sala, channel } = await abrirHost();
+    sala?.onPeerJoin?.('peer');
+    expect(() => channel.send({ side: 'A', team: '' })).toThrow(TypeError);
+    expect(() => channel.send({ side: 'Z', team: 'BR' } as unknown as Pick)).toThrow(TypeError);
+    expect(sala?.enviadas).toEqual([]);
+    channel.close();
+  });
+
+  it('`Pick` enviado antes de conectar é represado e escoado NA ORDEM, junto com as jogadas', async () => {
+    const { sala, channel } = await abrirHost();
+    channel.send(PICK);
+    channel.send({ seq: 0, side: 'A', zone: 'L' });
+    expect(sala?.enviadas).toEqual([]);
+
+    sala?.onPeerJoin?.('peer');
+    expect(sala?.enviadas).toEqual([PICK, { seq: 0, side: 'A', zone: 'L' }]);
+    channel.close();
+  });
+
+  it('canal fechado descarta o `Pick` em voz alta, sem falar em `seq` que ele não tem', async () => {
+    const { channel } = await abrirHost();
+    channel.close();
+    expect(() => channel.send(PICK)).not.toThrow();
+    expect(avisos.some((m) => m.includes('escolha de seleção do lado A'))).toBe(true);
+    expect(
+      avisos.some((m) => m.includes('seq=undefined')),
+      'o aviso inventou um número de cobrança para um payload que não é de cobrança',
+    ).toBe(false);
   });
 });
 

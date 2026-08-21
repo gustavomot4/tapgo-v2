@@ -542,6 +542,39 @@ describe('M5 — a camada não guarda placar (o placar é de M2)', () => {
     expect(codigo.split('play(').length - 1).toBe(1);
   });
 
+  it('D-90: o 3º argumento de `subscribe` sai completo em `cpu` e `local`, e nunca muda', () => {
+    // Fora do `online` nenhum dos dois lados vem de fora: as duas seleções nascem com a sessão e
+    // não há `Pick` nenhum a esperar. É o que faz M7 ler o MESMO argumento nos três modos, sem
+    // um `if (mode === 'online')` na tela.
+    for (const cfg of [cfgCpu(1, 'easy', 'A'), cfgLocal(1)]) {
+      const s = createSession(cfg);
+      const vistos: Array<Record<'A' | 'B', string | null>> = [];
+      s.subscribe((_e, _l, t) => vistos.push(t));
+      s.choose('L');
+      s.choose('R');
+      expect(vistos.length).toBeGreaterThan(0);
+      for (const t of vistos) expect(t).toEqual({ A: BR, B: AR });
+      s.dispose();
+    }
+  });
+
+  it('D-90: o que sai no 3º argumento é CÓPIA — a tela não reescreve o confronto', () => {
+    const s = createSession(cfgLocal(1));
+    let capturado: Record<'A' | 'B', string | null> | null = null;
+    s.subscribe((_e, _l, t) => {
+      capturado = t;
+    });
+    s.choose('L');
+    // Um assinante de M7 que mexesse no objeto vivo faria os dois aparelhos mostrarem marcas
+    // diferentes — o caminho mais barato para o defeito que `D-90` existe para fechar.
+    if (capturado !== null) (capturado as Record<string, string | null>)['A'] = 'AR';
+    const depois: Array<Record<'A' | 'B', string | null>> = [];
+    s.subscribe((_e, _l, t) => depois.push(t));
+    s.choose('R');
+    expect(depois.at(-1)).toEqual({ A: BR, B: AR });
+    s.dispose();
+  });
+
   /**
    * Esta asserção MUDOU em `T-13`, e a versão velha está escrita aqui de propósito.
    *
@@ -551,18 +584,24 @@ describe('M5 — a camada não guarda placar (o placar é de M2)', () => {
    * passou a ser o contrato — apagar o teste esconderia a mudança; trocá-lo pelo que ainda vale
    * a mantém conferida.
    *
-   * O que ainda vale: M5 entra em M6 **pela porta**. Se um dia aparecer aqui um import de
-   * `CONNECT_TIMEOUT_MS`, `newRoomId` ou `setSignalingLoader`, é M5 mexendo em relógio, em ID de
-   * sala ou em costura de teste — três coisas que têm dono, e o dono é M6.
+   * E MUDOU DE NOVO em `T-31`, pelo mesmo critério: `CONNECT_TIMEOUT_MS` entrou na lista, porque
+   * `D-90` deu a M5 um relógio próprio — o da espera do `Pick` do peer, que só existe depois de
+   * o canal conectar e o relógio de M6 ter sido limpo por `onPeerJoin`. O valor é o MESMO, e é
+   * por isso que ele é importado em vez de recopiado: `D-76` proíbe a constante nova, e cópia é
+   * o número que passa a mentir sozinha. O que continua proibido, e é o que este teste cobra,
+   * são `newRoomId` (ID de sala é de M6) e `setSignalingLoader` (costura de teste).
    */
-  it('M5 entra em M6 pela porta: só hostRoom e joinRoom, nada de interno', () => {
+  it('M5 entra em M6 pela porta: só hostRoom, joinRoom e o prazo de D-90', () => {
     const fonte = readFileSync(FONTE_M5, 'utf8');
 
     const valor = /^import \{([^}]*)\} from '\.\.\/net\/index';$/m.exec(fonte);
     expect(valor, 'M5 deixou de importar a porta de M6 — o modo online não abriria canal').not.toBeNull();
 
     const importados = (valor?.[1] ?? '').split(',').map((s) => s.trim()).filter((s) => s !== '');
-    expect(importados.sort()).toEqual(['hostRoom', 'joinRoom']);
+    expect(importados.sort()).toEqual(['CONNECT_TIMEOUT_MS', 'hostRoom', 'joinRoom']);
+    // Escrito à parte, e não só implícito no `toEqual`: são estes dois que continuam com dono.
+    expect(importados, 'ID de sala é de M6 — M5 só o reexporta').not.toContain('newRoomId');
+    expect(importados, 'costura de teste não entra em produção').not.toContain('setSignalingLoader');
 
     // Uma só porta de saída para a rede: dois pontos de criação de canal é uma sessão com dois
     // transportes, e o `dispose()` fecharia um só.
