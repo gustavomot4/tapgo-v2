@@ -7,6 +7,16 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-21] — `A-32` fechada: `T-29` passa a ter campo, e o portão do card estava medindo a variável errada
+
+- **Skill:** frontend-uiux (mesma sessão de `T-29`, fechando a conferência de aparelho).
+- **Quem mediu:** o dono, no navegador dele. Relato: *"verifiquei corretamente esses dois times e deu certo, 1 time fica com a camisa listrada e o outro com ela toda vermelha; testei em todas seleções que tem a cor vermelha predominante"*.
+- **O portão está cumprido, e por mais do que ele pedia:** o card mandava conferir Espanha × Croácia; o dono varreu o **grupo vermelho inteiro** — as 12 seleções que dividem a mesma cor, e que são exatamente onde `camisasDaDisputa` trabalha. A garantia que a suíte cobra sobre as 32x32 ganhou correspondência em quadros de verdade, que é o que o sandbox não produz.
+- **A resposta expôs um defeito no portão que eu mesmo escrevi, e é a lição desta entrada:** a pergunta foi *"quantas CORES de camisa diferentes você vê?"*, com **2** declarado como aprovação e **1** como reprovação. Só que `D-88` tinha decidido o contrário na véspera: na saída (B) as duas camisas ficam na **mesma cor**, e quem separa é o padrão. A resposta literalmente correta à minha pergunta era **1** — e o meu próprio card a teria reprovado. O dono passou por cima da pergunta e descreveu o que via; a descrição provou o que o número teria negado.
+- **Não é a lição de `A-31` repetida, é a seguinte:** lá o número era pedido junto das observações e sumia, e o conserto foi pedi-lo sozinho. Aqui ele veio sozinho e ainda assim estava errado, porque media a variável errada. **Pedir um inteiro só ajuda se o inteiro for observável do mecanismo que a decisão acabou de criar** — e `D-88` tinha trocado cor por padrão como canal de desempate, justamente a variável que a pergunta ignorou.
+- **O que continua sem confirmação humana, e é pouco:** as duas observações curtas que o card previa — (a) a cor de cada camisa bate com a seleção, e (b) o boneco de seleção verde some no gramado. A (b) é a única medida desta entrega sem olho humano: no sandbox são **72,4** de distância RGB contra as 4 faixas do gramado, com teste, mas distância medida não é olho.
+- **Nenhum byte de código mudou nesta entrada.**
+
 ## [2026-08-21] — `T-29`: a camisa passa a ser a cor nacional, e quem cede é o PADRÃO (`D-88`, saída (B) de `Q-16`)
 
 - **Skill:** frontend-uiux (mesma sessão que abriu `T-29`, seguindo depois da escolha do dono). **Módulo:** M7 — `src/ui/sprites.ts`, `src/ui/cena.ts`, `src/ui/tela_cobranca.ts`.
