@@ -316,8 +316,15 @@ LINHA_MAX = 400
 # arquivados naquela mesma sessão. Linha arquivada não é linha viva, e não se isenta.
 # Caíram para 12 no mesmo dia, pela mesma regra: `QA-24` e `QA-28` fecharam e foram para
 # [[decisions_archive]] na sessão que desempatou `QA-28`, e a tupla acompanha o corte.
+# Caíram para 5 em 2026-08-21, por `D-91`: 7 das 8 ADOTADAS gordas delegaram a íntegra à nota de
+# destino e passaram a caber nos 400 — isenção existe para linha que ninguém PODE consertar, e
+# essas passaram a poder. Sobram duas, e as duas por motivo escrito, não por inércia:
+#   `D-76` (479) é REJEITADA — a coluna de evidência dela É a lista-morta que a fase de evolução
+#     varre sem abrir o arquivo, e delegá-la cega a fase por 480 caracteres (`A-16` (i) já pagou).
+#   `D-75` (978) não cabe: só a coluna de DECISÃO dela mede 400, então nenhum ponteiro a salva.
+#     Encurtá-la é reescrever a decisão, e `D-91` supersede o append-only só na EVIDÊNCIA.
 ISENTAS_LINHA_MAX = (
-    "D-62", "D-65", "D-70", "D-71", "D-72", "D-73", "D-75", "D-76", "D-80",
+    "D-75", "D-76",
     "QA-20", "QA-21", "QA-27",
 )
 longas = []

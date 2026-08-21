@@ -7,6 +7,16 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-21] — o corte executado: `Q-15`/`Q-16` arquivadas e 7 das 8 gordas viram ponteiro (`D-91`)
+
+- **Skill:** context-bootstrap. Zero byte em `src/` — nenhum rebuild, nenhuma migração. O registro cai de **19.718 para 17.916**, e o aviso de 18.000 do `check.py` **sumiu** pela primeira vez desde `D-82`.
+- **§5.2 executada (rende 463, não 459):** `Q-15` e `Q-16` estavam marcadas *fechada* na tabela viva e foram para [[decisions_archive]] com o ID preservado, pelo precedente de `D-63` — o aviso do `check.py` nunca as viu porque `velhas` só casa `^\|\s*(D-\d+)\s*\|`. O rodapé "Retirados da tabela" passa a dizer `Q-14`..`Q-16`, que custou 8 e não 12.
+- **§5.1 executada em 7 das 8, e `D-91` registra o desvio:** `D-62`, `D-65`, `D-70`, `D-71`, `D-72`, `D-73` e `D-80` delegaram a íntegra da evidência à nota de destino e ficaram com ponteiro — **1.734** liberados, contra os 3.113 projetados. Duas notas nasceram para receber: `a_context/direcao_visual.md` (`D-65`, com linha no Mapa do CONTEXT) e `e_qa/e5_estado_no_aparelho.md` (`D-70`).
+- **`D-75` não foi executada, e não é escolha:** só a coluna de DECISÃO dela mede **400** — nenhum ponteiro a leva a ≤ 400, e encurtá-la é reescrever a decisão, que `D-91` não autoriza (ele supersede o append-only só na EVIDÊNCIA). Ela sozinha valia ~600 dos 3.113, e é a maior parte da diferença. A nota projetou medindo as colunas de evidência e nunca os prefixos, que vão de 175 a 400.
+- **Portão do §5.1, item a item:** 3 e 4 passam (cada número conferido por `grep` na nota de destino; as **9** REJEITADAS inteiras; CONTEXT 3.958 ≤ 4.000) · o 1 passa **com desvio** — `ISENTAS_LINHA_MAX` caiu de 12 para **5** e não para as 3 do QA, porque `D-76` (479) fica por ser a lista-morta e `D-75` (978) por não caber · o **2 REPROVA**: 17.916 contra os ≤ 16.700 que ele cobra.
+- **A reprova fica declarada, e manter ou reverter é do dono:** 1.734 é mais que o dobro das saídas que `A-16` matou (788, 821), que é a razão pela qual o item 2 existe — o número 2.900 foi calibrado sobre a projeção errada. O que não volta à mesa é subir o teto (§5.4): o registro está abaixo do aviso. Resultado medido, tabela linha a linha e os quatro itens em [[registro_no_teto]] §5.1.
+- **Efeito que não aparece nos 1.734:** com `ISENTAS` em 5, `D-83` passa a valer sobre **45 das 50** linhas do registro, contra 38 antes.
+
 ## [2026-08-21] — auditoria de evolução: o registro no teto, e o corte que sobrou
 
 - **Skill:** evolution-auditor. **Nada foi decidido nem executado** — a sessão mede e entrega as saídas; a escolha é do dono, e o registro (19.718/20.000) não tem espaço nem para a linha do próprio veredito, como em `A-21`.

@@ -172,3 +172,16 @@ discriminador — o argumento de `D-79`); sessão nova que reentra ANTES de qual
 indistinguível de reconexão legítima, e onde não há divergência a detectar; e a reentrada em que
 o lado que voltou **nunca escolhe** — sem `seq=0` chegando, não há o que detectar, e o veterano
 segue esperando até alguém sair. Este último não estava no portão de `A-23`; fica aqui escrito.
+
+## `D-80` — a evidência da linha do registro
+
+Íntegra da evidência de `D-80`, movida do registro pelo corte de [[registro_no_teto]] §5.1.
+
+O discriminador (`seq=0` com `kicks.length>0`) sai **de graça** e já vem medido: `D-78` e `D-79`
+morreram com número, não com opinião — as duas medições de campo estão acima nesta nota.
+
+`canal.close()` não é cortesia: é o que tira o **OUTRO** lado da tela travada, pelo caminho que
+`A-22` já mediu em campo. Sem ele, quem ficou na disputa antiga continua esperando um peer que não
+volta.
+
+Campo em dois aparelhos é `A-24`.

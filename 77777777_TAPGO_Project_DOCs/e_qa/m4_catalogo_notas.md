@@ -65,3 +65,18 @@ até lá o buraco fica declarado: um código retirado passaria pelo portão.
 Na prática o risco é contido, porque o catálogo é lista fechada e curada — nenhum código chega de
 entrada de usuário. Mas quem escrever a lista de `A-04` precisa saber que o portão **não** vai
 pegar `UK` no lugar de `GB`.
+
+## `D-62` — por que `?no-inline` e por que a suíte não veria
+
+Íntegra da evidência de `D-62`, movida do registro pelo corte de [[registro_no_teto]] §5.1.
+
+O caminho do SVG passa a vir do **arquivo versionado** (`import.meta.glob` eager sobre
+`src/assets/flags/`), não de uma segunda lista digitada ao lado de `CODES` — é a mesma razão de
+`D-61`: duas listas divergem, uma lista não.
+
+Sem `?no-inline`, **24 dos 32** SVGs virariam `data:` no build, e `Team.flag` passaria a ter **dois
+formatos** — caminho para uns, `data:` para outros. E a suíte **NÃO veria**, porque roda em modo
+dev, onde nada é embutido: o defeito só existiria no `dist/`, exatamente onde ninguém tem teste.
+
+É também por isso que seleção sem arquivo **derruba o carregamento** em vez de degradar: catálogo
+com bandeira faltando é `Team.flag` nulo silencioso, e a lista das 32 está em [[m4_lista_das_32]].

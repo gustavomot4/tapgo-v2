@@ -158,6 +158,49 @@ cabeçalho custaria ~150 dos 459 — e eu **não** recomendaria pagá-los agora.
 CONTEXT continua citando "`Q-15`/`Q-16` fechadas por `D-84`/`D-88`" e a checagem 10 continua
 achando os IDs (o arquivo morto conta) · DECISIONS ≤ 19.260. **P = 0,85.**
 
+### Resultado medido — executado em 2026-08-21 (`D-91`)
+
+O portão acima foi escrito **antes**. Contra ele, o experimento **reprova no item 2** e passa nos
+outros três. O que a nota não mediu ao projetar 3.113: ela mediu as **colunas de evidência** e o
+ponteiro, nunca os **prefixos** (`| ID | data | status | decisão |`). O teto de `D-83` é da **linha
+inteira**, e os prefixos medem de 175 a **400**.
+
+| linha | antes | depois | liberou | prefixo |
+|---|---|---|---|---|
+| `D-62` | 460 | 374 | 86 | 214 |
+| `D-65` | 580 | 386 | 194 | 314 |
+| `D-70` | 411 | 318 | 93 | 175 |
+| `D-71` | 622 | 372 | 250 | 257 |
+| `D-72` | 779 | 335 | 444 | 237 |
+| `D-73` | 922 | 371 | 551 | 271 |
+| `D-80` | 513 | 397 | 116 | 335 |
+| `D-75` | 978 | — | **0** | **400** |
+| **soma** | | | **1.734** | |
+
+**`D-75` não foi executada, e não é escolha:** só a coluna de DECISÃO dela mede **400**. Nenhum
+ponteiro, nem o vazio, a leva a ≤ 400 — a linha inteira mediria 401 com a evidência apagada.
+Encurtá-la é reescrever a **decisão**, e `D-91` supersede o append-only só na **evidência**. Ela
+sozinha valia ~600 dos 3.113 projetados, e é a maior parte da diferença.
+
+**Contra o portão, item a item:**
+
+1. `check.py` **verde** — mas `ISENTAS_LINHA_MAX` caiu para **5**, não para as 3 do QA: `D-76` (479)
+   fica pelo motivo escrito no §5.1, e `D-75` (978) fica por não caber. **Passa com desvio.**
+2. DECISIONS **17.916**, não ≤ 16.700; liberou **1.734**, não ≥ 2.900. **REPROVA.**
+3. Zero evidência perdida — cada número das 7 colunas conferido por `grep` na nota de destino.
+   **Passa.**
+4. As **9** REJEITADAS inteiras · nenhum wikilink quebrado · nenhuma nota órfã · CONTEXT **3.958**
+   ≤ 4.000. **Passa.**
+
+**O que fazer com a reprova, declarado e não escondido:** 1.734 é **mais que o dobro** das saídas
+que `A-16` matou (788, 821), que é a razão que o item 2 dá para existir. O número que ele cobra
+(2.900) foi calibrado sobre uma projeção errada. **Manter ou reverter é chamada do dono** — reverter
+é um `git revert`. O que **não** volta à mesa é a §5.4: o registro saiu de 19.718 para 17.916, abaixo
+do aviso de 18.000, e o teto de 20.000 deixou de morder.
+
+**Efeito colateral que rende:** com `ISENTAS` em 5, `D-83` passa a valer sobre 45 das 50 linhas do
+registro — contra 38 antes. É a metade da §5.1 que não aparece nos 1.734.
+
 ### 5.3 Card fechado do backlog deixa de segurar linha — rende, mas não paga sozinha
 
 É a régua do §3 virada em regra: `d_history/` já não segura linha; card com `[x]` é a mesma coisa
@@ -213,7 +256,9 @@ Esperado **hoje**: os três avisos de orçamento — CONTEXT 96%, QA 91%, DECISI
 *"Candidatas: NENHUMA — o corte de `D-43` está esgotado"* — e `OK` no resto. É esse texto que o §3
 explica.
 
-Depois da §5.2 executada: DECISIONS cai para **19.259** e o aviso continua (é 96%) — ele só sai da
-lista com a §5.1, que o leva a **16.605**, abaixo do aviso de 18.000.
+Esperado **agora**, com §5.2 e §5.1 executadas (2026-08-21, `D-91`): o aviso do DECISIONS
+**sumiu** — o registro está em **17.916**, abaixo do gatilho de 18.000. Sobram dois avisos, CONTEXT
+**98%** e QA **91%**. A §5.2 sozinha levou o registro a 19.255; a §5.1 tirou os outros 1.734, e não
+os 3.113 projetados — a conta está no "Resultado medido" do §5.1.
 
 O sandbox do agente é indicativo; o portão é o que roda na sua máquina.

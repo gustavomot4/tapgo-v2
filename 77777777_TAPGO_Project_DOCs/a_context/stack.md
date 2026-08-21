@@ -54,3 +54,18 @@ o build publicado alcança.
 
 Dependência só de build (compilador, bundler, runner de teste) não vai para esta tabela: ela não roda
 no navegador do jogador e não cria conta em serviço nenhum.
+
+## `D-71` — por que os 4 STUN padrão são exceção nominal, e não `iceServers` próprios
+
+Íntegra da evidência de `D-71`, movida do registro pelo corte de [[registro_no_teto]] §5.1.
+
+**Sem STUN não há P2P:** os **17/17** de `A-08` são candidatos `srflx` — descoberta de endereço,
+não endpoint novo. Cortar o STUN não deixa o online mais privado; deixa o online sem existir.
+
+Fixar `iceServers` à mão (a saída **b**) escolheria **os mesmos** servidores públicos: muda quem
+digitou a lista, não o que vai ao ar. Paga trabalho e não compra privacidade.
+
+A isenção nomeia `defaultIceServers` de `@trystero-p2p/core@0.25.3` **de propósito**, com arquivo e
+versão. O achado nunca foi "STUN é risco" — foi **default de dependência não aparece em revisão**.
+Citando arquivo e versão, a próxima subida de versão reabre a conferência sozinha; citando só
+"STUN", ela passaria em silêncio.

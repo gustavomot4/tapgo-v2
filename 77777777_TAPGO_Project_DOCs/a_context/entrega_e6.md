@@ -41,3 +41,19 @@ data: 2026-08-19
   para ~29% — a conta está em [[online_p2p]], e é ela que dimensiona qualquer modo com mais de dois.
 - **`QA-04` e `QA-06`** ficam abertos sob os dois critérios acima, e estão escritos lá em vez de
   fechados de carona: nenhum dos dois é crítico, e conserto de carona é o defeito que esta fase evita.
+
+## `D-72` — por que E-6 entregou sem a tela de convite
+
+Íntegra da evidência de `D-72`, movida do registro pelo corte de [[registro_no_teto]] §5.1.
+
+O critério de aceite do online é a **medição**, e ela **passou**: `A-08` deu **17/17**, limite
+inferior 95% de **83,8%** contra o corte de **70%** (`D-47`). O que faltava não era qualidade — era
+uma tela.
+
+E a tela não era barata: as duas saídas de `Q-11` mexem em **porta congelada de M5** (`D-13`), logo
+exigem decisão do dono e sessão de código. Segurar a entrega inteira por isso pararia CPU, 2P local
+e o torneio, que estavam prontos e conferidos no aparelho.
+
+O que **não** era aceitável era entregar em silêncio: objetivo que promete o que o build no ar não
+faz é **achado de entrega**, não detalhe. Por isso o Objetivo do CONTEXT deixou de prometer "por
+link de convite", e a promessa só voltou quando `Q-11` ganhou `D-73`.

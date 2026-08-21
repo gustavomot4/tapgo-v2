@@ -416,3 +416,22 @@ dos 400 de `D-83`, e é a primeira das 10 linhas do portão dele.
 | QA-24 | 2026-08-20 | MÉDIO | `a_context/c_decisions.md` (desde 2026-08-20) | `Q-14` está definida **duas vezes**: a do STUN, respondida por `D-71` e arquivada, e a de tempo por cobrança, aberta na tabela viva — a checagem 11 do `check.py` só olha tabela viva, então não pega | ID não se recicla: a questão nova vira `Q-15`, e `T-22`, CONTEXT e CHANGELOG passam a citá-la. Achado na sessão do corte de `D-74`, de outra sessão (regra 4) | ✔ 2026-08-20 — a questão viva virou `Q-15`; `Q-14` fica só com o STUN de `D-71`, arquivado, e `T-24`, CONTEXT e CHANGELOG citam o ID novo |
 | QA-28 | 2026-08-20 | MÉDIO | `b_process/c_backlog.md` (desde 2026-08-20) | `T-22` está definido **duas vezes**: o contador de segundos (linha 47, aberto em `A-24`) e o tempo por cobrança do `Q-14` respondido (linha 83). É `QA-24` de novo, um dia depois, agora em ID de tarefa — e o `check.py` não cobre `T-NN` | ID não se recicla: o card mais novo vira `T-24`, e CONTEXT e CHANGELOG passam a citá-lo. Achado na auditoria de `QA-26`, de outra sessão (regra 4) | ✔ 2026-08-20 — o card novo virou `T-24` e foi para "A fazer", onde já devia estar; `T-22` fica só com o contador de `A-24`, fechado |
 | QA-30 | 2026-08-20 | BAIXO | `e_qa/decisions_archive.md` (desde 2026-08-20) | A passagem do corte de `D-74` foi titulada **`## A-21`**, ID de card ABERTO e de outro assunto: quem varre o arquivo lê `A-21` como feita | Retitular sem ID de card — ID não se recicla. É `QA-24`/`QA-28` pela terceira vez; de outra sessão (regra 4) | ✔ 2026-08-20 — retitulado "Corte de `D-74` no registro", sem ID de card |
+
+
+## Corte por precedente de `D-63` — as duas questões FECHADAS saem da tabela viva (2026-08-21)
+
+`Q-15` e `Q-16` estavam marcadas **fechada** na própria tabela viva do `c_decisions.md`, e ninguém
+as trouxe para cá porque o aviso do `check.py` só varre linha `D-NN` — o `velhas` casa
+`^\|\s*(D-\d+)\s*\|`, e `Q-NN` nunca entrou na conta. É o mesmo caso de `A-15` (`D-63`, 8 questões)
+e de `A-20` (`Q-11`/`Q-14`): a resposta vive na linha do `D-NN` que a respondeu, e a fila do dono
+volta a mostrar só o que ainda espera resposta.
+
+Rende **459** medidos no registro (471 das duas linhas, menos os 12 dos IDs no rodapé "Retirados da
+tabela"). Método e portão em [[registro_no_teto]] §5.2. Precedente lido, não regra nova: `D-63` foi
+ação única sobre 8 questões — virar regra escrita no cabeçalho custaria ~150 dos 459, e a sessão
+que mediu isso recomendou **não** pagá-los agora.
+
+| # | Questão | Decidir quando |
+|---|---|---|
+| Q-15 | Tempo por cobrança no `online` — ID novo porque `Q-14` já é o STUN de `D-71` (`QA-24`) | **fechada por `D-84`** (saída (b), 15 s, estouro resolvido dentro do aparelho) — `T-24` entregou; falta o campo de `A-27` |
+| Q-16 | As 32 cores nacionais: (A) tabela fiel + `matizDistinto`, (B) tabela + padrão na camisa, ou (C) não trocar o hash? | **fechada por `D-88`** em 2026-08-21 — o dono escolheu **(B)**, a recomendação da sessão; `T-29` entregou, e falta o campo de `A-32` |

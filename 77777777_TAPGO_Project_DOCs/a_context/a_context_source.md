@@ -30,14 +30,15 @@ Partida de ~1 minuto: contra a CPU, contra alguém no mesmo aparelho, ou **por l
 - **Pronto:** M1..M9 e a medição, **E-1..E-6 fechadas**; suíte **638/638**; `T-24`..`T-33` **COM CAMPO** (`A-27`..`A-32`, `A-35`..`A-37`, **`A-39`**), e `T-30`/`T-32`/`T-33` **NO AR** (`A-38`); **`T-31` INTEIRA e CONFIRMADA** (`A-39`: `Brasil × Japão` nos DOIS aparelhos + "escolhendo…"); o ar **é `HEAD` em código** — `84591e4` é o último commit em `src/`. Módulo a módulo: [[estado_modulos]]
 - **Bundle:** **428.754 B** (5,4% de 8 MB) lido de `dist/`; `T-31` inteira custou **+2.904 B**, zero asset novo; 278.646 B são os 32 SVGs de T-19 (`QA-06`); Phaser e Trystero fora, por `import()` (D-27)
 - **Em andamento (máx 1):** _(vazio)_
-- **Próximo:** nada de campo em aberto · portão de `D-83`: **8 de 10**
-- **Bloqueado/pendente:** **registro 19.7k/20.000**, TRÊS pools em zero (`D-43`, duplicata, `D-74`) — `D-82` adia ~4-5 decisões · QA **7.3k/8.000** · CONTEXT **97%**
+- **Próximo:** nada de campo em aberto · portão de `D-83`: **9 de 10**
+- **Bloqueado/pendente:** registro **17.9k/20.000** — `D-91` liberou 1.7k e o aviso saiu; `D-75`/`D-76` seguem isentas · QA **7.3k/8.000** · CONTEXT **98%**
 - **Questões abertas:** Q-08, Q-09, Q-13 (**Q-15/Q-16 fechadas** por `D-84`/`D-88`) · **QA abertos:** QA-04..QA-07, QA-10, QA-17, QA-27, QA-29, QA-34, QA-35 (**QA-21/QA-32/QA-33/QA-36 fechados**) (**QA-20 fechado** por `T-29`) · respondidas e fechados: [[decisions_archive]]
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)
 - [[portao_de_aceite]] — **antes de fechar tarefa, declarar etapa fechada ou entregar**
 - [[licenciamento]] — ao criar ou alterar asset, nome de seleção, escudo ou texto de marca
 - [[cores_nacionais]] — ao mexer na cor da camisa em campo (`D-88`: a tabela das 32 e o padrão)
+- [[direcao_visual]] — ao mexer em superfície, sombra, degradê, capa ou movimento de tela (`D-65`)
 - [[online_p2p]] — ao tocar o módulo de disputa online
 - [[regras_partida]] — ao mexer no motor de regras da disputa ou na CPU
 - [[stack]] — ao escolher biblioteca, mexer no build ou publicar

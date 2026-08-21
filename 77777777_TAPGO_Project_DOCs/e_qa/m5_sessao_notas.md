@@ -168,3 +168,18 @@ descritas acima é evidência colhida no disco, não preferência:
 - O ramo `cfg.roomId === undefined ⇒ hostRoom().channel` (`src/session/index.ts`) **fica onde
   está**. Torná-lo impossível exigiria `roomId` obrigatório no modo `online`, o que é mudar
   `SessionConfig` — porta de `D-13`, e não era o que a saída (1) pedia.
+
+## `D-73` — por que a saída (1), e o que a (2) custaria
+
+Íntegra da evidência de `D-73`, movida do registro pelo corte de [[registro_no_teto]] §5.1.
+
+**A adotada já rodou em campo.** `src/medicao.ts` sorteia o ID **antes** da sala e os dois lados
+entram por `joinRoom` (`D-38`) — os **17/17** de `A-08` saíram dessa forma. E `newRoomId` já é
+exportado por M6 de propósito, então nada da superfície que `D-40` fechou se reabre.
+
+**A saída (2)** (`roomId()` na porta `Session`) custaria o **5º método** numa interface congelada —
+o precedente que `D-39` recusou comprar, e que `Q-09` herdaria. Pior: entregaria o ID **depois** do
+canal, logo depois de o relógio de **20 s** já ter armado (`QA-22`).
+
+**Custo completo da adotada:** 1 linha de export em `src/session/index.ts`, **zero byte** em
+`src/net`, e bundle inalterado até `T-21` existir.
