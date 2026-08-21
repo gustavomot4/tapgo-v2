@@ -6,7 +6,10 @@
  */
 import { resolve } from 'node:path';
 
-import { defineConfig } from 'vite';
+// `vitest/config` reexporta o `defineConfig` do Vite com o bloco `test` no tipo. Importar de
+// `vite` puro faria o campo `test` abaixo ser propriedade desconhecida — e o `tsc` do portão só
+// não pega isto por `include: ["src"]` não alcançar este arquivo.
+import { defineConfig } from 'vitest/config';
 
 /**
  * O GitHub Pages de repositório serve em `https://<usuario>.github.io/tapgo-v2/`, nunca na raiz.
@@ -60,5 +63,35 @@ export default defineConfig({
     // tornaria o portão de E-1 um teste que passa sozinho. Só a sonda é forçada para fora;
     // `undefined` devolve o resto ao comportamento padrão do Vite.
     assetsInlineLimit: (arquivo) => (arquivo.includes('base-probe') ? false : undefined),
+  },
+
+  /**
+   * `QA-32` — o teto de tempo da suíte.
+   *
+   * As provas estatísticas de M2 (1.000 cobranças sorteadas), M3 (3 níveis × 1.000 histogramas,
+   * e a frequência medida em cada papel) e M6 (20.000 sorteios de ID, e o rótulo de sincronia)
+   * não são testes lentos por descuido: o teto de 70% e a não-colisão do ID só se verificam por
+   * repetição, e repetição custa tempo de CPU. Com a máquina livre elas passam folgadas — o
+   * caso mais caro medido aqui foi **1.468 ms**. Com build e servidor de desenvolvimento
+   * disputando a mesma máquina, `npm test` deu **3 falhas por tempo** e nada mais: mesma
+   * semente, mesmas asserções, mesmo resultado — só mais devagar que os 5.000 ms que o Vitest
+   * assume quando ninguém declara nada.
+   *
+   * Teste que reprova por o dono estar compilando ao lado é teste instável (regra 10 da skill
+   * `testing`), e suíte instável é suíte que ninguém encara. Então o teto passa a ser declarado,
+   * não herdado. **20.000 ms** é escolhido pelo que ele separa: ~13× o pior caso medido, o que
+   * absorve a máquina ocupada; e ainda uma ordem de grandeza abaixo de um travamento de verdade
+   * (laço que não fecha, espera de rede que a regra 6 proíbe), que continua reprovando rápido.
+   *
+   * Isto NÃO afrouxa nenhuma asserção, e não muda a contagem da suíte: 598 testes antes, 598
+   * depois. O tempo limite nunca foi o que estes testes verificam.
+   */
+  test: {
+    testTimeout: 20_000,
+
+    // O mesmo motivo vale para `beforeEach`/`afterEach`: um hook que monta o dublê de M6 sob
+    // máquina ocupada estouraria o teto próprio (também 5.000 ms por padrão) e derrubaria o
+    // arquivo inteiro — falha ainda mais confusa que a do caso isolado.
+    hookTimeout: 20_000,
   },
 });

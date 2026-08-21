@@ -7,6 +7,17 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-21] — `QA-32` fechado: a suíte para de reprovar por o dono estar compilando ao lado
+
+- **Skill:** testing.
+- **O defeito:** ninguém nunca declarou `testTimeout`, então valia o padrão do Vitest, **5.000 ms**. As provas estatísticas de M2 (1.000 cobranças sorteadas), M3 (3 níveis × 1.000 histogramas, e a frequência de 70% medida em cada papel) e M6 (20.000 sorteios de ID, o rótulo de sincronia) passam folgadas com a máquina livre — o pior caso medido aqui foi **1.468 ms** — e estouravam o teto com build e servidor disputando CPU: `npm test` deu **3 falhas por tempo** ocupado e verde com a máquina livre. Mesma semente, mesmas asserções, resultado diferente: isso é teste instável (regra 10 da skill), e suíte instável é suíte que ninguém encara.
+- **A correção:** `test: { testTimeout: 20_000, hookTimeout: 20_000 }` em `vite.config.ts`, e o `defineConfig` passou a vir de `vitest/config` em vez de `vite` — sem isso o campo `test` é propriedade desconhecida no tipo (o `tsc` do portão só não pega porque `include: ["src"]` não alcança o arquivo, que é exatamente o `QA-04`, ainda aberto).
+- **Por que 20.000 e não outro número:** é ~13× o pior caso medido, o que absorve a máquina ocupada, e ainda uma ordem de grandeza abaixo de um travamento de verdade (laço que não fecha, espera de rede que a regra 6 proíbe) — que continua reprovando rápido. Teto grande demais transformaria o portão em espera; teto herdado transformava-o em sorteio.
+- **O `hookTimeout` foi junto de propósito:** ele também vale 5.000 ms por padrão, e um `beforeEach` estourado derruba o arquivo inteiro — falha mais confusa que a do caso isolado, pela mesma causa.
+- **O portão que a QA temia mexer não se moveu:** **598/598** antes e depois, `tsc` limpo, `check.py` verde, bundle inalterado em **424.987 B**. Nenhuma asserção foi tocada — o tempo limite nunca foi o que estes testes verificam.
+- **Prova do teto novo:** uma sonda temporária de **7 s** (acima do padrão antigo, abaixo do novo) passou; ela foi apagada em seguida e não entra na contagem.
+- **Sem `D-NN` novo, e a escolha é declarada:** o registro está a 96% do teto e `D-82` já adia decisões. O número e o seu porquê moram no comentário do `vite.config.ts` e na linha de `QA-32`, que é onde quem for mexer vai olhar.
+
 ## [2026-08-21] — `A-33` devolveu `4`: o online JÁ está no ar, e o Objetivo volta a prometer o convite (`QA-33` fechado)
 
 - **Skill:** frontend-uiux (mesma sessão de `QA-21`).
