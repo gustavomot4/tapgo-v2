@@ -7,6 +7,15 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-21] — `D-89`: quando a próxima ação for do dono, a resposta traz explicação e recomendações
+
+- **Skill:** frontend-uiux (mesma sessão de `QA-21`; a mudança é de processo, não de módulo).
+- **Pedido do dono, para o projeto inteiro:** *"sempre que a próxima ação for minha, faça uma explicação rápida na saída e me dê algumas recomendações"*.
+- **O que muda:** a seção "Como toda sessão termina" de `CLAUDE.md` ganha um bloco para o caso em que a sessão para esperando o dono — card `A-NN`, questão `Q-NN` ou escolha entre saídas. Antes do "Próximo passo" entram (1) a explicação de **por que aquilo depende dele** e (2) as **recomendações em ordem**, com o motivo curto de cada uma.
+- **A restrição que faz valer:** recomendação é **escolha, não catálogo** — dizer o que eu faria e por quê, em vez de listar tudo que existe. E o que for do dono por ser gosto ou regra de negócio (regra 6) é declarado como dele, não recomendado por mim.
+- **Por que ele pediu, e por que faz sentido:** o dono é o único caminho de verificação real deste projeto. O sandbox não compõe quadros — `document.visibilityState` é `hidden` e `requestAnimationFrame` não dispara —, então nenhuma tela de M7 é verificável por lá e todo portão visual vira card dele. Entregar só a pergunta transferia para ele o trabalho de decidir o que importava primeiro.
+- **Nenhum byte de código mudou.** Só `CLAUDE.md` e o registro.
+
 ## [2026-08-21] — `QA-21` fechado: a tela inicial parava de contradizer o próprio jogo
 
 - **Skill:** frontend-uiux. **Módulo:** M7 só — `src/ui/tela_inicio.ts`.

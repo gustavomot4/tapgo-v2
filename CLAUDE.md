@@ -74,6 +74,23 @@ Duas restrições que fazem isto valer a pena:
 - **Uma skill por prompt.** Se o próximo passo precisar de dois papéis, são duas sessões, e você
   entrega os dois prompts na ordem — nunca um prompt com duas skills.
 
+### Quando a próxima ação for DO DONO (`D-89`)
+
+Card `A-NN`, questão `Q-NN`, escolha entre saídas — qualquer coisa que pare esperando resposta
+dele. Aí, **antes** do "Próximo passo", a resposta traz mais duas coisas:
+
+1. **Explicação rápida** — o que ele está sendo chamado a fazer, e **por que aquilo depende dele**
+   (na maioria das vezes: o sandbox não compõe quadros, então nenhuma tela de M7 é verificável lá).
+2. **Recomendações** — o que você faria, **em ordem**, com o motivo curto de cada uma.
+
+Recomendação é **escolha, não catálogo**: diga o que faria e por quê, em vez de listar tudo que
+existe. Se um item for do dono por ser gosto ou regra de negócio (regra 6), diga isso em vez de
+recomendar por ele. E se não houver nada aberto, diga isso também — e recomende o que abrir.
+
+> Pedido do dono em 2026-08-21, para o projeto inteiro. O motivo: ele é o único caminho de
+> verificação real, e entregar só a pergunta transfere para ele o trabalho de decidir o que
+> importa primeiro. Ele quer o juízo junto, não só o pedido.
+
 ## Limites deste kit (não os contorne em silêncio)
 
 O `a_context/a_context_source.md` tem orçamento de **4.000 caracteres**, cobrado por script. Não coube? O excedente
