@@ -7,6 +7,19 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-21] — `A-30` fechada com UM número (`4`), e o campo achou o que o sandbox não achava
+
+- **Skill:** frontend-uiux (mesma sessão de `T-27`, fechando a conferência de aparelho).
+- **Quem mediu:** o dono, no monitor. Relato: *"aparecem 4 seleções, duas minhas e duas do adversário"*. **`A-30` passou, e com ela `T-27` tem campo.**
+- **A forma do card funcionou, e é a primeira vez em seis:** `A-25`..`A-29` fecharam por "tudo certo" global, sem observação item a item. `A-30` pediu **UM inteiro** e recebeu o inteiro, mais as duas observações curtas que o card admitia — grades lado a lado, nenhuma barra horizontal. A lição de `d_agent_learnings.md` que nasceu em `A-29` foi aplicada e se pagou.
+- **E o número trouxe dois achados que o sandbox não tinha.** É o argumento inteiro a favor do card de aparelho: eu medi geometria em cinco viewports e não vi nenhum dos dois.
+- **Achado 1 — `4` numa tela, `2` na outra.** *"já no TAP GO Cup aparecem apenas 2"*: a tela de começar o torneio usa a **mesma** `grade()` de 32 cartões da tela de seleções, e ficou de fora de `D-86` porque o critério que eu escrevi foi "esta tela tem PAR a formar?", e uma escolha de UMA seleção não tem. O critério certo era "esta tela tem a mesma grade?". Corrigido: a grade sozinha vira `.solo` e passa a 4 colunas, com 241px por cartão contra os 238px das telas emparelhadas — a mesma leitura, que é o que o achado pedia.
+- **Achado 2 — `QA-31`, com foto.** O "Sair da disputa" de 144px, que esta sessão tinha registrado e não consertado (regra 4), ficou **pior** com `D-86`: antes era estreito colado na margem, depois virou órfão no meio de um cartão de 760px, porque a regra nova centra o bloco em 420. Consertado — faltava `grupo` na classe do bloco, e `<button>` não estica dentro de `<div>` de bloco. Isso muda também o 360x640, onde o botão vai de 144 para 336px: é a largura que o "Voltar" de toda outra tela sempre teve.
+- **Portão:** `check.py` verde, suíte **582/582**, `tsc --noEmit` limpo, bundle **419.200 -> 419.311 B** (+111 B, zero asset novo) lido de `dist/`, e as duas telas remedidas em 360x640 e 1280x800 — 2 cartões e 4 cartões, `scrollWidth == clientWidth` nas duas.
+- **Pedidos novos do dono, registrados e NÃO decididos por mim:** `P-6` ganhou a resposta dele (sprites melhores, cores nacionais, bandeira de quem bate) e `P-8` nasceu (o sorteio em tela cheia, encolhendo para o painel no fim). As duas são `D-NN` dele.
+- **O que a checagem de licença devolveu, e destrava metade de `P-6`:** `a_context/licenciamento.md` lista cores nacionais como **livres**, proibindo só uniforme oficial identificável. O comentário de `sprites.ts` que diz "o matiz não representa cor nacional nenhuma" descreve uma escolha de `T-10`, não um portão legal — fica escrito no card para a próxima sessão não ler como proibição.
+- **Achados:** `QA-31` fechado. Nenhuma decisão nova: `D-86` foi estendida dentro do próprio escopo, não substituída.
+
 ## [2026-08-20] — `T-27`: o desktop deixa de ser a coluna de 420px, e são duas colunas (`D-86`)
 
 - **Skill:** frontend-uiux. Card `T-27`, nascido de `P-1`+`P-7` no mesmo card, o terceiro da lista que o dono escolheu em 2026-08-20.

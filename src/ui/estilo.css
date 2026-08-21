@@ -1284,6 +1284,20 @@
   }
 
   /*
+   * `.solo` é o outro caso da MESMA grade de 32 cartões: a tela de começar o torneio escolhe UMA
+   * seleção, então não há par a formar — e a primeira escrita de `D-86` deixou essa tela de fora
+   * por isso, entregando os mesmos 32 cartões em duas larguras diferentes — achado pelo DONO no
+   * monitor dele, no fechamento de `A-30`, e não pelo sandbox.
+   *
+   * O bloco atravessa as duas colunas (é o padrão logo acima) e quem vira grade de 4 é a GRADE,
+   * não a tela. Os 4 cartões dão ~241px cada, contra os 238px das telas emparelhadas: a mesma
+   * leitura, e é essa igualdade que o achado pedia.
+   */
+  .tela--largo > .solo > .selecoes {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  /*
    * O confronto NÃO é capado, e isso é escolha: com as duas grades lado a lado, as suas duas
    * metades (`1fr auto 1fr`) caem em cima da grade correspondente. Ele deixa de ser um cartão
    * solto no topo e vira o cabeçalho das duas colunas.

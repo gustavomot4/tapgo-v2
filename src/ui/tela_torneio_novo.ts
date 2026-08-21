@@ -29,7 +29,11 @@ import { grade } from './tela_selecoes';
 import type { Contexto, Tela } from './rotas';
 
 export const telaTorneioNovo: Tela = (raiz: HTMLElement, ctx: Contexto) => {
-  const tela = el('section', { classe: 'tela' });
+  // `tela--largo` (`D-86`, estendida no fechamento de `A-30`): usa a MESMA `grade()` de 32 cartões
+  // da tela de seleções, e ficar de fora do desktop largo entregava os mesmos cartões em duas
+  // larguras. Aqui a escolha é de UMA seleção, então não há par: a grade vira `.solo` e é ela,
+  // não a tela, que passa a 4 colunas.
+  const tela = el('section', { classe: 'tela tela--largo' });
   raiz.append(tela);
 
   tela.append(
@@ -95,10 +99,13 @@ export const telaTorneioNovo: Tela = (raiz: HTMLElement, ctx: Contexto) => {
 
   const iniciar = botao('Começar o torneio', 'botao botao--principal', comecar);
 
+  const suaGrade = grade('A', 'Sua seleção', minha, (code) => {
+    minha = code;
+  });
+  suaGrade.classList.add('solo');
+
   tela.append(
-    grade('A', 'Sua seleção', minha, (code) => {
-      minha = code;
-    }),
+    suaGrade,
     erro,
     el('div', { classe: 'grupo empurra' }, [
       iniciar,

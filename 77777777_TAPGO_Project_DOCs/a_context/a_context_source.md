@@ -27,12 +27,12 @@ Partida de ~1 minuto: contra a CPU ou contra alguém no mesmo aparelho. O online
 
 ## Estado atual (formato fixo — 1 linha por item, SEM prosa corrida)
 - **Versão:** v2.0.0 — entregue em 2026-08-19 (a v1 é baseline morto: reescrita total, nenhum código reaproveitado)
-- **Pronto:** M1..M9 e a medição, com **E-1..E-6 fechadas**; suíte **582/582**; `T-24`, `T-25` e `T-26` fechados COM CAMPO (`A-27`..`A-29`). **`T-27` feito e SEM campo:** o desktop virou duas colunas por `D-86`, e `A-30` é quem confirma. Módulo a módulo: [[estado_modulos]]
-- **Bundle:** **419.200 B** (5,2% de 8 MB) lido de `dist/`; `T-27` somou **+674 B** — zero asset novo, é CSS e 4 classes; 278.646 B são os 32 SVGs de T-19, asset do chunk de M4 (`QA-06`); Phaser e Trystero fora, por `import()` (D-27)
+- **Pronto:** M1..M9 e a medição, com **E-1..E-6 fechadas**; suíte **582/582**; `T-24`..`T-27` fechados **COM CAMPO** (`A-27`..`A-30`) — `A-30` foi o primeiro card de aparelho a pedir UM número e devolveu **4**, o do desktop em duas colunas. Módulo a módulo: [[estado_modulos]]
+- **Bundle:** **419.311 B** (5,2% de 8 MB) lido de `dist/`; `T-27` somou **+785 B** no total — zero asset novo, é CSS e 5 classes; 278.646 B são os 32 SVGs de T-19, asset do chunk de M4 (`QA-06`); Phaser e Trystero fora, por `import()` (D-27)
 - **Em andamento (máx 1):** nada
-- **Próximo:** `A-30` — o único número que falta é quantos cartões de seleção ficam lado a lado no monitor do dono (4 = passou, 2 = reprovou); depois dela, `T-28` é `P-6`, travado por uma `D-NN` do dono · portão de `D-83` correndo: **5 de 10** (`QA-30` 390, `D-84` 369, `D-85` 332, `D-86` 390, `QA-31` 387) · a promessa que `D-72` tirou volta ao Objetivo quando couber
-- **Bloqueado/pendente:** **registro 17.829/20.000** com os TRÊS pools em zero (`D-43`, duplicata, critério de `D-74`) — `D-82` é rejeição adiada: ~5-6 decisões · QA **5.309/8.000** · CONTEXT 97%
-- **Questões abertas:** Q-08, Q-09, Q-13 (**Q-15 fechada** por `D-84`) · **QA abertos:** QA-04..QA-07, QA-10, QA-17, QA-20, QA-21, QA-27, QA-29, **QA-31** · respondidas e fechados: [[decisions_archive]]
+- **Próximo:** `T-28` — o dono escolhe entre `P-6` (papel legível sem texto, já respondido por ele) e `P-8` (sorteio em tela cheia), e as duas são `D-NN` dele · nenhuma ação de aparelho pendente · portão de `D-83` correndo: **5 de 10** (`QA-30` 390, `D-84` 369, `D-85` 332, `D-86` 390, `QA-31` 397) · a promessa que `D-72` tirou volta ao Objetivo quando couber
+- **Bloqueado/pendente:** **registro 17.829/20.000** com os TRÊS pools em zero (`D-43`, duplicata, critério de `D-74`) — `D-82` é rejeição adiada: ~5-6 decisões · QA **5.327/8.000** · CONTEXT 97%
+- **Questões abertas:** Q-08, Q-09, Q-13 (**Q-15 fechada** por `D-84`) · **QA abertos:** QA-04..QA-07, QA-10, QA-17, QA-20, QA-21, QA-27, QA-29 (**QA-31 fechado**) · respondidas e fechados: [[decisions_archive]]
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)
 - [[portao_de_aceite]] — **antes de fechar tarefa, declarar etapa fechada ou entregar**

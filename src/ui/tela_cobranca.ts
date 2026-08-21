@@ -293,7 +293,11 @@ export const telaCobranca =
       contador,
       relogio,
       erro,
-      el('div', { classe: 'empurra' }, [sair]),
+      // `grupo` além de `empurra` (`QA-31`): sem ele este `<div>` é bloco, e `<button>` não
+      // estica dentro de bloco — o "Sair da disputa" saía com 144px em qualquer viewport,
+      // enquanto o "Voltar" de toda outra tela ocupa a linha inteira. `.grupo` é flex de coluna,
+      // e é isso que faz o botão herdar a largura, exatamente como nas demais telas.
+      el('div', { classe: 'grupo empurra' }, [sair]),
     );
 
     // ── Desenho ───────────────────────────────────────────────────────────────────────────

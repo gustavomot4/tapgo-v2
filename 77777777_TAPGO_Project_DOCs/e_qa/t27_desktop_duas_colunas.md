@@ -91,9 +91,44 @@ Conferidos também 1023px (a folha volta a 420 e a grade a 2 cartões — o pont
 não houve captura de tela — só geometria e estilo computado. Se as duas colunas ficam **bonitas**
 é olho humano, e é o que `A-30` pede.
 
-## `QA-31` — pré-existente, e por isso não consertado de carona
+## O campo (`A-30`, 2026-08-21): o número passou, e trouxe dois achados
+
+O dono respondeu **4** — *"aparecem 4 seleções, duas minhas e duas do adversário"* —, com as
+grades lado a lado e sem barra horizontal. `D-86` está no monitor dele, e `T-27` tem campo.
+
+**O card pediu UM inteiro, e é a primeira vez em seis que a forma funciona.** `A-25`..`A-29`
+fecharam por "tudo certo" global. O inteiro não só veio: ele veio acompanhado de dois defeitos que
+**nenhuma** das minhas cinco medições de viewport tinha visto.
+
+### Achado 1 — o critério de `D-86` estava escrito sobre a TELA, e devia estar sobre o COMPONENTE
+
+*"já no TAP GO Cup aparecem apenas 2"*. A tela de começar o torneio (`tela_torneio_novo.ts`) usa a
+**mesma** `grade()` de 32 cartões da tela de seleções. Ficou de fora porque o critério que escrevi
+foi *"esta tela tem par a formar?"* — e escolher UMA seleção não forma par. O critério certo era
+*"esta tela tem a mesma grade?"*.
+
+O conserto é `.solo`: o bloco atravessa as duas colunas (o padrão) e quem vira grade de 4 é a
+**grade**, não a tela. Dá 241px por cartão, contra os 238px das telas emparelhadas — a mesma
+leitura, que é exatamente o que o achado pedia. Em 360x640 continua 2 cartões de 164px.
+
+### Achado 2 — `QA-31` piorou por causa de `D-86`, e veio com foto
+
+O "Sair da disputa" de 144px já era estreito antes; com `D-86` o bloco passou a ser centrado em
+420px dentro de um cartão de 760, e o botão virou **órfão no meio**. Medindo na foto do dono: o
+cartão tem ~1035px de imagem, o botão começa em x≈290 — que é a borda esquerda de um bloco de 420
+CSS px centrado, na escala de 1,36 da captura. Bate.
+
+O conserto é `grupo` na classe do bloco: `<button>` não estica dentro de um `<div>` de bloco, e
+`.grupo` é flex de coluna. **Isto muda também o 360x640**, onde o botão vai de 144 para 336px — é
+a largura que o "Voltar" de toda outra tela sempre teve.
+
+## `QA-31` — como ele foi registrado, e por que não foi consertado na hora
 
 Na tela de cobrança o "Sair da disputa" tem **144px** de largura dentro de um bloco de 336 (em
 360x640) — o `<button>` não estica porque o pai é um `<div>` de bloco, e não um `.grupo` de flex
 como nas outras telas. Medido **antes e depois** desta sessão, nos dois viewports, com o mesmo
 número: é de `T-10`, não de `D-86` (regra 4).
+
+**Fechado em 2026-08-21**, quando o dono o fotografou: um achado que a sessão declarou e não
+consertou virou o defeito mais visível da entrega dela. A regra 4 continua certa — o que faltou
+foi ver que `D-86` o AGRAVAVA, e isso não é conserto de carona, é consequência da própria tarefa.
