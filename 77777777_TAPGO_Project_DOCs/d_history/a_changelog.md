@@ -7,6 +7,19 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-21] — `T-29` aberta e travada em `Q-16`: a tabela das 32 cores nacionais foi medida, e a medição derrubou a premissa
+
+- **Skill:** frontend-uiux. **Nenhum byte de código mudou** — a sessão parou antes do CSS, que era exatamente o que o card mandava fazer ("antes de qualquer CSS, monte a tabela e passe cada cor pelo teste de contraste").
+- **A tabela das 32 está montada, com base declarada linha a linha:** [[cores_nacionais]]. `bandeira` é conferível no SVG que já está no repositório (`T-19`/`D-54`); `esporte` é identidade que **não está na bandeira** (`NL` laranja, `IT` azzurro, `AR`/`UY` celeste, `AU` dourado) — são as linhas mais prováveis de o dono corrigir, e por isso vêm marcadas.
+- **O portão de contraste passou em todas, e a varredura diz por quê ele não podia reprovar:** os **360** matizes foram medidos, e o pior é `h=240` a **7,28:1** contra o limite de 4,5:1. Saturação e luminosidade são fixas por papel na `.marca` e em `sprites.ts`, então **o matiz não é o canal que decide contraste**. O portão que `P-6` ergueu para proteger a paleta não pode fechar sobre uma tabela de matizes — continua de pé, só não é ele que barra nada aqui.
+- **Duas seleções reprovam por outro motivo, e voltaram ao dono sem ajuste meu (regra 5):** `GB-ENG` (branco) e `DE` (branco/preto) não são um ângulo no círculo de matiz.
+- **O achado que trava o card:** `P-6` afirmava que "tabela curada não colide por construção". **Falso, e medido.** Quatorze das 32 têm vermelho como cor nacional — a tabela dá **15** matizes distintos para 30 seleções contra os **30** do hash de `T-10`, e **144 de 435** pares (33,1%) ficam abaixo dos 40° de `SEPARACAO_MINIMA`, contra 101 de 496 (20,4%). Trocar o hash pela tabela **dobra** a chance de duas camisas nascerem confundíveis, e `matizDistinto` "salvaria" a disputa mandando um vermelho para o ciano — o oposto do que o dono pediu.
+- **`QA-20` já estava morto no disco, e ninguém tinha notado:** o defeito que ele descreve é "os discos saem idênticos na grade", e desde `T-19` a `.marca--bandeira` sobrescreve fundo e borda do matiz com a `<img>` por cima. O matiz só aparece no ramo de erro. O que sobra de `QA-20` é o campo, e ali `matizDistinto` já conserta por disputa.
+- **Uma medida que NÃO virou portão, e está escrito por quê:** camisa contra gramado por razão WCAG não discrimina (29/30 da tabela abaixo de 1,6:1, mas 26/32 do hash de hoje também) — luminância não enxerga matiz. Pelo critério do próprio projeto (40° contra o matiz médio do gramado, 126,7°), a tabela é **melhor**: 5 de 30 contra 7 de 32. Fica registrado que as cinco verdes (`MX`, `SN`, `IR`, `NG`, `DZ`) passariam a vestir verde em gramado verde por escolha, onde o hash acertava por acaso.
+- **Saídas apresentadas ao dono, com a recomendação:** (A) tabela fiel + `matizDistinto`, (B) tabela + 2º canal de PADRÃO na camisa (listras e faixas, que [[licenciamento]] libera), (C) não trocar o hash. **Recomendação: (B)** — a única que entrega o pedido sem trocar um defeito por outro maior. **(A) é a que o card presumia, e é a que eu não recomendo.**
+- **Registrados:** `Q-16` (a escolha, do dono), `T-29` (o card, travado), `A-32` (o campo, que só pode ser respondido depois da implementação).
+- **Aviso que vai estourar:** o CONTEXT fechou em **3.985/4.000** (99%). A próxima sessão que escrever nele precisa mover um tema antes.
+
 ## [2026-08-21] — `A-31` fechada com `1`: `T-28` passa a ter campo
 
 - **Skill:** frontend-uiux (mesma sessão de `T-28`, fechando a conferência de aparelho).
