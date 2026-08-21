@@ -7,6 +7,16 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-21] — `A-34` devolveu `1`: o ar volta a bater com o repositório
+
+- **Skill:** delivery-review (campo; nenhuma linha de produção mudou).
+- **O portão passou:** o dono abriu **Espanha × Croácia pelo endereço público** e contou **1** camisa listrada — uma lisa, uma listrada, que é a saída (B) de `D-88`: quem cede é o padrão, não a cor.
+- **O que o `1` prova:** a listra só existe porque `T-29` está no ar. O build anterior pintava a camisa por hash, e hash não gera padrão. `T-29` e `QA-21` deixam de ser invisíveis para quem joga.
+- **A observação única veio item a item, e é a primeira vez em sete cards:** o rodapé da tela inicial **não** traz mais a frase sobre bandeiras que não entraram — `QA-21` no ar. Era a pergunta que ficou ambígua em `A-33`, e a emenda de forma (pergunta sozinha, depois do número, sem pedir enumeração num card de contagem) funcionou.
+- **LACUNA DECLARADA:** o **amarelo novo** (`hsl(50 95% 55%)`, `0f231bd`) não passa por Espanha × Croácia — nenhuma das duas é amarela. Se o build publicado saiu de `HEAD`, foi junto; se saiu de antes daquele commit, não. Não medido, não suposto: conferir custa uma disputa de seleção amarela e um inteiro, e entra de carona no próximo card de campo.
+- **Achado de consistência:** `A-30` está marcada `- [ ]` no backlog com o texto dizendo `✔ FECHADA em 2026-08-21` e o relato do dono junto — a caixa contradiz o card. Registrado como **`QA-35`**, não consertado (regra 4).
+- **Sem `D-NN` novo, de propósito:** publicar é procedimento, não decisão, e o registro está a 96% do teto.
+
 ## [2026-08-21] — três pedidos do dono viram `T-30`, `T-31` e `T-32`
 
 - **Skill:** frontend-uiux (registro; nenhuma linha de produção mudou).
