@@ -7,6 +7,18 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-21] — `T-33`: o símbolo ganha a cor do papel e um halo escuro, e sai do branco no branco (`QA-36`)
+
+- **Skill:** frontend-uiux. **Delta em um arquivo de produção só:** `src/ui/estilo.css`. `src/ui/cena.ts` não mudou um byte — o campo está certo, quem estava errado é o símbolo por cima dele.
+- **A saída escolhida foi (a)+(b) das três de [[qa36_simbolo_branco_no_branco]], e (c) foi descartada com motivo:** subir o símbolo para fora da banda das linhas o levaria para a faixa do travessão e dos postes, que são o mesmo branco com alfa **1,00** — pior que as linhas de alfa 0,90 —, e ainda descolaria o símbolo do rótulo que ele legenda.
+- **(a) Cor:** `color: var(--acento)` no disco e `color: var(--atencao)` na luva, dentro das regras de papel. O `background: currentColor` de `T-30` **não mudou uma vírgula** — mudou só de onde `currentColor` vem, e é por isso que as silhuetas que o dono aprovou em `A-36` estão intactas.
+- **(b) Halo:** `filter: drop-shadow(0 0 1.5px rgb(0 0 0 / 95%)) drop-shadow(0 1px 2px rgb(0 0 0 / 70%))` na regra compartilhada `.zona::before`. É `filter` e **não** `box-shadow` por medida, não por gosto: a luva são três camadas de `background`, e `box-shadow` contorna a **caixa** — recortaria um quadrado e deixaria os quatro dedos sem borda. `drop-shadow` segue o alfa composto, então o vão de 1,5px entre os dedos também ganha contorno.
+- **`T-28` continua de pé:** cor no símbolo é canal **somado**, nunca trocado. Disco cheio contra luva de quatro dedos segue distinguindo os dois papéis sem ler cor nenhuma.
+- **A armadilha do card foi paga, e com teste:** declaração vence herança, então `color` nas regras de papel tirava o `[disabled]` que era de graça por `currentColor`. Entrou `.zona[disabled][data-papel]::before { color: transparent }` — que vence as duas regras de papel por **especificidade** (3 contra 2), e não por ordem na folha — e **três testes novos**: a cor é token e não hex; o halo é `drop-shadow`, é preto e não é `box-shadow`; a regra de travado existe, apaga **e** vence, conferido por peso de seletor.
+- **Portão, medido:** `check.py` verde (só os três avisos de orçamento de sempre) · `tsc` limpo · suíte **613/613** (610 + 3) · bundle relido de `dist/`: **425.850 B**, delta **+181 B**, com as quatro regras conferidas no CSS minificado · **44 arquivos** em `dist/`, zero asset novo · zero cor nova em `.tapgo` · `aria-label` de `tela_cobranca.ts:435` intacto.
+- **O que NÃO foi coberto, declarado:** se o símbolo **se destaca** das linhas é olho humano. No sandbox `document.visibilityState` é `hidden`, nenhum quadro é composto e não existe pixel a ler — contraste de token contra token o teste de `T-20` mede, mas um disco de 24px com halo por cima de uma linha desenhada por Phaser num canvas é **composição**. Por isso `QA-36` fica **aberto** até o campo.
+- **Fechados:** `T-33` (sem campo). **Abertos:** `QA-36` (corrigido, aguardando campo) · `A-37`.
+
 ## [2026-08-21] — `A-36` devolveu `4`: a luva se lê como luva, e o branco dela some nas linhas do campo
 
 - **Skill:** delivery-review (campo; **nenhuma linha de produção mudou** — regra 4).

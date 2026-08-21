@@ -84,3 +84,23 @@ código com o número medido, não desta.
 Não é regressão de `T-30`. O triângulo e o arco de `T-28` eram do mesmo `--texto` branco e
 corriam a mesma banda: o defeito é de `T-28` e apenas **ficou visível** quando a silhueta virou
 um disco cheio de 24px, que tem muito mais área branca do que um triângulo sólido de 18x13.
+
+## O que `T-33` fez com isto (2026-08-21)
+
+Escolheu **(a)+(b)** e descartou (c) com motivo: a faixa de cima da zona tem travessão e postes em
+branco **sólido** (alfa 1,00), pior que as linhas de alfa 0,90, e o símbolo deixaria de encostar no
+rótulo que legenda.
+
+- **(a)** `color: var(--acento)` no disco e `color: var(--atencao)` na luva, **dentro** das regras de
+  papel. O `background: currentColor` de `T-30` não mudou — mudou de onde `currentColor` vem, e por
+  isso as silhuetas aprovadas em `A-36` estão intactas.
+- **(b)** `filter: drop-shadow(0 0 1.5px rgb(0 0 0 / 95%)) drop-shadow(0 1px 2px rgb(0 0 0 / 70%))`
+  em `.zona::before`. `filter` e não `box-shadow`: `box-shadow` contorna a CAIXA e deixaria os
+  quatro dedos sem borda; `drop-shadow` segue o alfa composto e contorna o vão entre eles.
+- **A armadilha 1 foi paga:** `.zona[disabled][data-papel]::before { color: transparent }`, que vence
+  as regras de papel por especificidade (3 contra 2) e não por ordem, mais três testes novos.
+- **A armadilha 2 continua honrada:** cor é canal SOMADO — disco cheio contra luva de quatro dedos
+  segue distinguindo os papéis sem ler cor nenhuma.
+
+**Aberto até o campo:** se o símbolo se DESTACA é olho humano. O portão é `A-37`, e o inteiro que
+ele pede é quantas das três bolas têm a borda inteira, sem linha branca comendo um pedaço.

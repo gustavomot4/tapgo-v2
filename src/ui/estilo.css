@@ -774,10 +774,47 @@
  * uma linha a mais: com o botão travado a folha já põe `color: transparent`, e a forma some junto
  * com o rótulo, exatamente como antes de `T-28`.
  */
+/*
+ * ── `T-33`/`QA-36`: o símbolo era branco sobre as linhas brancas do campo ────────────────
+ *
+ * O defeito veio do campo em `A-36` e foi medido, não suposto: `.zona` declara
+ * `color: var(--texto)` = **#eef2f9**, e `cena.ts` desenha linha de fundo, grande área, marca do
+ * pênalti e traves em **#f4faf5**. Diferença de 6, 8 e −4 por canal — é o mesmo branco. Um disco
+ * cheio de 24px desse branco por cima de uma linha desse branco não tem borda. `cena.ts` NÃO
+ * muda: o campo está certo; quem estava errado é o símbolo por cima dele.
+ *
+ * A correção são as saídas (a) e (b) de [[qa36_simbolo_branco_no_branco]], juntas, porque
+ * sozinhas nenhuma das duas basta:
+ *
+ *   (a) COR de papel no símbolo — `--acento` no disco, `--atencao` na luva. Tira o símbolo do
+ *       branco, mas verde e amarelo claros ainda encostam no #f4faf5 nas bordas.
+ *   (b) HALO ESCURO por baixo — dois `drop-shadow()` pretos na regra compartilhada. É `filter`,
+ *       e não `box-shadow`, porque a luva são três camadas de `background` e `box-shadow`
+ *       contorna a CAIXA: recortaria um quadrado, não a silhueta. O `drop-shadow` segue o alfa
+ *       composto, então o vão entre os quatro dedos de `T-30` também ganha borda.
+ *
+ * A saída (c) — subir o símbolo para fora da banda das linhas — foi DESCARTADA com motivo: a
+ * faixa de cima da zona tem travessão e postes em branco SÓLIDO (alfa 1,00), pior que as linhas
+ * de alfa 0,90, e ainda descolaria o símbolo do rótulo que ele legenda.
+ *
+ * **`T-28` continua de pé:** cor aqui é canal SOMADO, nunca trocado. Disco cheio contra luva de
+ * quatro dedos segue distinguindo os dois papéis em preto e branco, sem ler cor nenhuma.
+ *
+ * **Zero cor nova na paleta:** `--acento` e `--atencao` são as mesmas duas de `T-28`, que o
+ * cartesiano de `T-20` já mede; preto e transparência não são token.
+ *
+ * **A armadilha que este bloco paga:** até `T-30`, `[disabled]` apagava o símbolo DE GRAÇA —
+ * tudo era `currentColor` e a folha punha `color: transparent` na `.zona`. As duas regras de
+ * papel agora declaram o próprio `color`, e declaração vence herança: sem a regra explícita
+ * `.zona[disabled][data-papel]::before` lá embaixo, o símbolo sobreviveria ao botão travado sem
+ * reprovar teste nenhum. Por isso ela existe, e por isso ela tem TESTE.
+ */
 .zona::before {
   content: '';
   display: block;
   flex: 0 0 auto;
+  /* (b) o halo: o primeiro contorna a silhueta nos quatro lados, o segundo assenta a peça. */
+  filter: drop-shadow(0 0 1.5px rgb(0 0 0 / 95%)) drop-shadow(0 1px 2px rgb(0 0 0 / 70%));
 }
 
 .zona[data-papel='chutar'] {
@@ -788,6 +825,7 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
+  color: var(--acento);
   background: currentColor;
 }
 
@@ -799,6 +837,7 @@
   width: 24px;
   height: 24px;
   border-radius: 3px 3px 8px 8px;
+  color: var(--atencao);
   background:
     repeating-linear-gradient(90deg, currentColor 0 3px, transparent 3px 4.5px) 7px 1px / 16.5px 13px
       no-repeat,
@@ -815,6 +854,15 @@
   background: transparent;
   color: transparent;
   cursor: default;
+}
+
+/* `T-33`: o que devolve o `[disabled]` de graça que a cor de papel tirou. Dois atributos + uma
+   classe vencem a regra de papel por especificidade, então a ordem na folha não é o que segura
+   isto de pé. Com `color` transparente as três camadas de `background` da luva e o disco somem
+   junto com o rótulo — e o `filter` de cima não pinta halo nenhum, porque não sobra alfa para
+   projetar. `[disabled]` volta a ser o que era antes de `T-28`. */
+.zona[disabled][data-papel]::before {
+  color: transparent;
 }
 
 /* ── Avisos, estados e diálogo ─────────────────────────────────────────────────────────── */

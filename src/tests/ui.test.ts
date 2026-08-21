@@ -1378,6 +1378,72 @@ describe('a direção visual não afrouxa portão de M7 (T-20 fatia 2 / D-65)', 
     }
   });
 
+  // ── `T-33`/`QA-36`: o símbolo branco sobre as linhas brancas do campo ───────────────────
+  //
+  // `cena.ts` desenha as marcações em `#f4faf5` e a folha pintava o símbolo com `--texto`
+  // (`#eef2f9`) — o mesmo branco. A correção soma DOIS canais de separação (cor de papel e halo
+  // escuro) e, ao fazê-lo, tira de graça o `[disabled]` que `T-30` tinha por `currentColor`.
+  // Os três testes abaixo são um por peça, porque cada uma regride sozinha e em silêncio.
+
+  it('T-33: o símbolo tem a COR do papel, e ela é token — nunca hex cravado', () => {
+    // O `background: currentColor` de `T-30` fica: o que muda é de onde `currentColor` vem. Um
+    // hex aqui seria cor fora da paleta e o teste de `T-30` acima já o pegaria; este cobra o
+    // outro lado — que a cor exista, e que seja a do papel.
+    for (const [papel, token] of [
+      ['chutar', 'acento'],
+      ['defender', 'atencao'],
+    ] as [string, string][]) {
+      const corpo = formaDoPapel(papel);
+      expect(corpo, `${papel}: o símbolo voltou a herdar o branco de --texto`).toMatch(
+        new RegExp(`color:\\s*var\\(--${token}\\)`),
+      );
+      expect(corpo, `${papel}: a forma deixou de pintar com currentColor`).toMatch(
+        /background:[\s\S]*currentColor/,
+      );
+    }
+  });
+
+  it('T-33: o halo escuro é `filter`, e está na regra que vale para os DOIS símbolos', () => {
+    // `box-shadow` contorna a CAIXA: na luva, que são três camadas de `background`, recortaria um
+    // quadrado em volta e deixaria os quatro dedos de `T-30` sem borda. `drop-shadow` segue o
+    // alfa composto. Se um dia isto virar `box-shadow`, o defeito volta só na luva — e só no
+    // aparelho do dono, que é o lugar mais caro para descobrir.
+    const corpo = regras().find((r) => r.seletor === '.zona::before')?.corpo ?? '';
+    expect(corpo, 'o halo de T-33 sumiu da regra compartilhada').toMatch(
+      /filter:[\s\S]*drop-shadow\(/,
+    );
+    expect(corpo, 'o halo deixou de ser escuro — sem preto ele não separa do branco').toMatch(
+      /drop-shadow\([^)]*rgb\(0 0 0/,
+    );
+    expect(corpo, 'o halo virou box-shadow e perdeu a silhueta da luva').not.toMatch(
+      /box-shadow/,
+    );
+  });
+
+  it('T-33: `[disabled]` continua apagando o símbolo — a regra explícita que a cor exigiu', () => {
+    // A armadilha declarada no card. Até `T-30` isto era de graça: tudo era `currentColor` e a
+    // `.zona[disabled]` punha `color: transparent`, que descia por herança. As regras de papel
+    // agora DECLARAM `color`, e declaração vence herança — sem a regra abaixo o símbolo
+    // sobreviveria ao botão travado sem reprovar um único teste existente.
+    const alvo = regras().find(
+      (r) => /\[disabled\]/.test(r.seletor) && /\[data-papel\]/.test(r.seletor) && /::before/.test(r.seletor),
+    );
+    expect(alvo, 'a regra que apaga o símbolo no botão travado sumiu').toBeDefined();
+    expect(alvo?.corpo, 'a regra existe mas não apaga a cor').toMatch(/color:\s*transparent/);
+
+    // E ela tem de VENCER as duas regras de papel, senão existe e não vale nada. Especificidade
+    // sem `id` é contar classes e atributos: `.zona[disabled][data-papel]` = 3 contra
+    // `.zona[data-papel='chutar']` = 2, e aí a ordem na folha deixa de ser o que segura isto.
+    const peso = (seletor: string): number =>
+      (seletor.match(/\.[\w-]+/g)?.length ?? 0) + (seletor.match(/\[[^\]]+\]/g)?.length ?? 0);
+    for (const papel of ['chutar', 'defender']) {
+      expect(
+        peso(alvo?.seletor ?? '') > peso(`.zona[data-papel='${papel}']::before`),
+        `a regra de travado empatou ou perdeu para o papel ${papel}`,
+      ).toBe(true);
+    }
+  });
+
   it('as peças novas de D-65 estão na folha — capa, confronto e pódio', () => {
     // Sem isto, uma classe que sai do TS e fica órfã na folha (ou o contrário) passa em silêncio,
     // e `T-14` herda uma direção que só existe pela metade.
