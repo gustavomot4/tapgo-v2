@@ -7,6 +7,15 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-21] — `A-38` aberta: o card de publicar virou card de CONFIRMAR (`T-30`/`T-32`/`T-33`)
+
+- **Skill:** planner. **Nenhum arquivo de produção mudou** — sessão de planejamento: um card no BACKLOG, o estado do CONTEXT e esta linha.
+- **O achado que trocou o verbo do card:** ele foi pedido como "publicar o `dist/` de `HEAD`". `.github/workflows/pages.yml` publica a cada `push` em `main` (`D-17`), e `git reflog show origin/main` traz **um push por commit** desde `0f231bd`, o último sendo **`c748e9c` = `HEAD`**, às 17:04. Não há `dist/` a publicar à mão — o que falta é **confirmar**, e confirmar é ato do dono porque o endereço público não existe no sandbox.
+- **São TRÊS tarefas sem confirmação no ar, não duas:** o CONTEXT nomeava `T-32` e `T-33` e omitia **`T-30`** (`63c4486`, a bola e a luva). Corrigido no estado.
+- **O portão pede UM inteiro, e ele mede as três de uma vez:** no endereço público, quantas das três bolas verdes têm a borda **inteira**. `3` = `HEAD` no ar; `0` = ar atrasado (e `0` não é ambíguo com `A-37`, que já gastou a leitura "halo fino demais" respondendo `3` no build local); `1` ou `2` = cache misturando CSS velho com JS novo, logo recarga forte antes de responder. **Por ancestralidade:** um bundle com o CSS de `T-33` (`ae03a5e`) contém `T-30` e `T-32`, que são seus antepassados — o oposto da lacuna de `A-34`, onde o amarelo era commit POSTERIOR ao que o número media.
+- **A observação única é SIM/NÃO, não um segundo número:** na **segunda** tela de fim, aparece a linha "Série:"? Duas partidas bastam — `MINIMO_DA_SERIE = 2` (`src/ui/rotulos.ts:385`); `A-35` pediu três porque media memória através de duas revanches.
+- **Sem `D-NN` novo, de propósito:** publicar é procedimento, não decisão (mesma razão de `A-34`), e o registro está a 96% do teto sob `D-82`.
+
 ## [2026-08-21] — `A-37`: o campo devolveu `3` — a bola tem borda inteira nas três zonas (`T-33`/`QA-36`)
 
 - **Skill:** delivery-review. **Nenhum arquivo de produção mudou** — sessão de registro de campo, e campo confirma, não decide.
