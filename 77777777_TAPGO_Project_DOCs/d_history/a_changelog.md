@@ -7,6 +7,18 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-21] — `A-35` devolveu `3`: a série atravessa as revanches, e o amarelo já estava no ar
+
+- **Skill:** delivery-review (campo; nenhuma linha de produção mudou).
+- **O portão passou:** na terceira tela de fim, depois de duas revanches em "Contra o computador", o dono leu **"Série: Egito 1 × 2 Coreia do Sul — em 3 partidas"**. O card pedia o inteiro `3` e veio `3`.
+- **O que o `3` prova:** o que `T-32` acrescentou não é a linha, é a MEMÓRIA entre partidas — e contar três partidas depois de DOIS recomeços é a série sobrevivendo aos dois. `2` teria sido a série se perdendo numa das revanches, que é o defeito que o card existe para consertar.
+- **A resposta se confere sozinha, e isso não estava no portão:** `1 × 2` soma exatamente `3`. Placar da série e contagem de partidas saem do mesmo ponto (`rotulos.ts`, na tela de fim); virem coerentes num aparelho real mostra que a soma não ficou presa a uma das duas. Veio de graça — o card pedia um número, não dois.
+- **E a resposta traz um dado que o sandbox não produz:** as seleções foram **Egito × Coreia do Sul**. O sandbox mediu com as seleções que ele mesmo escolheu; o aparelho do dono, não.
+- **A observação única veio no único momento em que ainda media algo — ANTES de publicar:** Brasil × Colômbia lado a lado no endereço público e no build de hoje, e o amarelo é o **mesmo nos dois**. Logo o build publicado em `A-34` saiu de `HEAD`, e o amarelo de `0f231bd` (`hsl(50 95% 55%)`, execução de `D-88`) foi junto.
+- **A lacuna de `A-34` fecha MEDIDA, não suposta** — que era o ponto de não chutá-la lá: `A-34` sabia que Espanha × Croácia não tem seleção amarela, disse isso, e pagou uma disputa neste card em vez de adivinhar. Segundo card seguido com a observação respondida item a item.
+- **O que fica declarado:** `T-32` continua **fora do ar** — o `3` foi medido no build de hoje, não no endereço público. Publicar é `A-NN` futuro, e a comparação do amarelo perde o objeto no instante em que ele publicar.
+- **Sem `D-NN` novo, de propósito:** campo confirma, não decide, e o registro está a 96% do teto. O portão de `D-83` segue em **6 de 10** — esta sessão não escreveu linha de `D-NN`/`QA-NN`.
+
 ## [2026-08-21] — `T-32`: a série de revanches, na memória e medida no navegador
 
 - **Skill:** frontend-uiux. **Módulo:** M7 só. **Delta:** `src/ui/rotas.ts` (o campo `serie` e `SERIE_ZERO`), `src/ui/rotulos.ts` (a conta e a frase, puras), `src/ui/tela_fim.ts` (soma, mostra e leva adiante) e uma linha em cada um dos três pontos que criam `Partida` — `main.ts`, `tela_selecoes.ts`, `tela_torneio.ts`. Mais 9 testes.

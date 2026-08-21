@@ -27,10 +27,10 @@ Partida de ~1 minuto: contra a CPU, contra alguém no mesmo aparelho, ou **por l
 
 ## Estado atual (formato fixo — 1 linha por item, SEM prosa corrida)
 - **Versão:** v2.0.0 — entregue em 2026-08-19 (a v1 é baseline morto: reescrita total, nenhum código reaproveitado)
-- **Pronto:** M1..M9 e a medição, **E-1..E-6 fechadas**; suíte **607/607**; `T-24`..`T-29` **COM CAMPO** (`A-27`..`A-32`); `T-32` entregue e medido no navegador, **sem campo** (`A-35`); o ar em dia **até `T-29`** (`A-34`). Módulo a módulo: [[estado_modulos]]
+- **Pronto:** M1..M9 e a medição, **E-1..E-6 fechadas**; suíte **607/607**; `T-24`..`T-29` e `T-32` **COM CAMPO** (`A-27`..`A-32`, `A-35`); o ar em dia **até `0f231bd`**, amarelo incluído (`A-34`/`A-35`) — `T-32` fora do ar. Módulo a módulo: [[estado_modulos]]
 - **Bundle:** **425.525 B** (5,3% de 8 MB) lido de `dist/`; `T-32` custou **+538 B**, zero asset novo; 278.646 B são os 32 SVGs de T-19 (`QA-06`); Phaser e Trystero fora, por `import()` (D-27)
 - **Em andamento (máx 1):** nada
-- **Próximo:** `A-35` — a série no aparelho, e o amarelo no ar (do dono) · `T-30` na fila; `T-31` travada em `D-NN` de contrato · portão de `D-83`: **6 de 10**
+- **Próximo:** `T-30` — luva e bola no lugar do triângulo e do arco · `T-31` travada em `D-NN` de contrato · portão de `D-83`: **6 de 10**
 - **Bloqueado/pendente:** **registro 19.2k/20.000**, TRÊS pools em zero (`D-43`, duplicata, `D-74`) — `D-82` adia ~4-5 decisões · QA **6.9k/8.000** · CONTEXT **94%**
 - **Questões abertas:** Q-08, Q-09, Q-13 (**Q-15/Q-16 fechadas** por `D-84`/`D-88`) · **QA abertos:** QA-04..QA-07, QA-10, QA-17, QA-27, QA-29, QA-34, QA-35 (**QA-21/QA-32/QA-33 fechados**) (**QA-20 fechado** por `T-29`) · respondidas e fechados: [[decisions_archive]]
 
