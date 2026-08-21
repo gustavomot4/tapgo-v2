@@ -262,3 +262,80 @@ Esperado **agora**, com §5.2 e §5.1 executadas (2026-08-21, `D-91`): o aviso d
 os 3.113 projetados — a conta está no "Resultado medido" do §5.1.
 
 O sandbox do agente é indicativo; o portão é o que roda na sua máquina.
+
+## 8. A folga nova, medida — e a §5.3 contra ela (sessão de evolução, 2026-08-21, `D-92`)
+
+Segunda passagem do mesmo dia, depois de `D-91`. Mesma régua (`medida()`), mesmo recorte de "vivo".
+
+### 8.1 O que os 2.084 compram — e o número que não é 2.084
+
+| régua | folga | = decisões a **374** |
+|---|---|---|
+| teto do registro (20.000) | **2.084** | **5,5** |
+| **aviso do `check.py` (18.000)** | **85** | **ZERO** |
+| CONTEXT (4.000) | **42** | — |
+| QA (8.000) | 654 | — |
+
+Os 374 são medidos, não estimados: é a média das 8 linhas escritas depois de `D-83` (`D-84` 369,
+`D-85` 322, `D-86` 380, `D-87` 371, `D-88` 377, `D-89` 380, `D-90` 395, `D-91` 394; mediana 380).
+
+**A curva, do `git`, linha do registro por commit:** 17.829 no fim de 20/08 → **19.718** no fim de
+21/08 em 6 commits — **+1.889 num dia**. Contra ela, os 2.084 valem **1,1 dia**, e os 85 valem uma
+linha. O que `D-91` comprou não foi tempo: foi **um registro dentro do próprio `D-83`** (45 das 50
+linhas, contra 38 antes) e o fim da pressão como *bloqueio*. O prazo é o mesmo de `D-82`.
+
+**O gargalo mudou de arquivo:** com 42 caracteres, o CONTEXT tem **metade** da folga que o registro
+tem até o aviso, e é o único dos três que nenhuma edição de estado cabe. É lá que a próxima
+auditoria morde — não aqui.
+
+### 8.2 A §5.3 medida de novo: o pool é ZERO, e a causa é o §3 outra vez
+
+O portão da §5.3 era o de `A-16` (3 decisões) contra os 963 que ela soltava. Medido hoje:
+
+| régua aplicada | pool |
+|---|---|
+| `D-43` como está | **vazio** |
+| `+` card fechado do backlog não segura linha (**a §5.3 como escrita**) | **vazio** |
+| `+` e sem a própria nota de auditoria | `D-44` (267) · `D-85` (322) · `D-87` (371) = **960** |
+
+Quem segura `D-44`, `D-85` e `D-87` hoje **é esta nota** — o §5.3 acima os cita pelo nome para
+propor o corte. A régua do §3 não mede só o backlog: mede **qualquer** arquivo que enumere IDs, e
+a auditoria que procura linha morta é, ela mesma, o que a mantém viva.
+
+Soltar os 960 exige que a regra também pare de contar as notas de `e_qa/` — e aí ela colide de
+frente com `D-91`, que **acabou de fazer da nota o destino oficial da evidência**. Medido: **13**
+dos 51 IDs vivos têm como única citação viva uma nota de `e_qa/`, incluindo `D-06`/`D-07`/`D-08`
+(as `ARQUIVADO` que são a lista-morta) e `D-70`, cuja íntegra `D-91` mandou para lá ontem. A regra
+que solta 960 arquiva 13 linhas que o projeto decidiu manter.
+
+**E a carona acabou.** A recomendação da §5.3 era "só como carona da §5.1, no mesmo commit"; a §5.1
+foi executada em `31dd62a` e o commit fechou. O custo da linha de `D-NN` **não** desapareceu com a
+folga nova — ponteiro pós-`D-91` mede de 318 a 397 (média 374). Líquido de hoje: **~586**.
+
+**Contra o portão, com os dois preços:** 975 é "3 decisões" cotadas a 325, o custo de linha de
+19/08. Cotado no custo de hoje, o mesmo portão pede **1.122**. A §5.3 rende 960 brutos (2,6
+decisões) e 586 líquidos (1,6) — **reprova pelas duas réguas**, e já não por 12 caracteres.
+
+**`D-92` REJEITADO.** Não volta sem ângulo novo: um pool medido **fora** desta nota e **sem**
+desligar `e_qa/`.
+
+### 8.3 O que sobrou para delegar: 1.457, e nenhum é pegável
+
+`D-75` (978) e `D-76` (479) são as duas únicas linhas fora do padrão de `D-83`. `D-76` fica por
+escolha escrita (é REJEITADA — a lista-morta). `D-75` foi remedida coluna a coluna: decisão
+**374**, e a linha com a evidência **vazia** mede **401**. Encurtar a decisão é supersedir o
+append-only na coluna que o registro existe para proteger, e substituí-la por linha nova custa
+mais 374 com a velha ficando. **Nada a delegar** — o pool de `D-91` está gasto.
+
+### 8.4 O aviso volta na próxima linha, e o texto dele aponta para a saída reprovada
+
+Com `D-92` o registro vai a **18.307** e o aviso do `check.py` reacende. O texto do ramo sem
+candidatas termina em *"o que resta é rever o teto"* — a §5.4, **REPROVADA** aqui e confirmada
+reprovada hoje, agora recomendada pelo próprio portão, com 1.693 de folga sobrando.
+
+É o defeito que `D-63` já consertou uma vez, escrito no comentário do `check.py`: *o aviso ensinava
+a violar a regra que deveria proteger*. Hoje ele não manda arquivar o que `D-43` proíbe — manda
+subir o teto que duas sessões reprovaram. **Não executado nesta sessão:** custa uma linha de
+`D-NN` (~374) e é chamada do dono. Portão, se ele quiser: o ramo sem candidatas passa a imprimir o
+resíduo de `D-83` (hoje `D-75` e `D-76`, com o motivo de cada isenção) e **não** cita o teto;
+`check.py` verde; DECISIONS ≤ 18.700.

@@ -7,6 +7,16 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-21] — a folga nova medida: a §5.3 reprova pela 2ª vez e sai como `D-92` REJEITADO
+
+- **Skill:** evolution-auditor. Zero byte em `src/`. Segunda auditoria do mesmo dia, depois de `D-91` — mede o que os 2.084 de folga compram e se a §5.3 ainda rende. **Nada novo é adotado.**
+- **O que a folga compra, medido:** 2.084 até o teto = **5,5 decisões** a 374 (média das 8 escritas depois de `D-83`); **85 até o aviso de 18.000 = ZERO**. Pela curva do `git` (17.829 → 19.718 em 6 commits no dia 21, **+1.889**), os 2.084 valem **1,1 dia**. O que `D-91` comprou foi um registro dentro do próprio `D-83`, não prazo.
+- **O gargalo mudou de arquivo:** CONTEXT com **42** de folga — metade do que o registro tem até o aviso, e o único orçamento em que nenhuma edição de estado cabe. A própria edição desta sessão precisou de três tentativas para caber, e fechou em **3.998/4.000**.
+- **`D-92` REJEITADO — a §5.3 medida de novo:** pelo critério dela o pool é **vazio**, porque quem segura `D-44`/`D-85`/`D-87` hoje é a **nota que propõe o corte**. É a régua do §3 de novo: ela não mede o backlog, mede qualquer arquivo que enumere IDs. Soltar os 960 exige parar de contar as notas de `e_qa/`, e aí colide com `D-91`, que acabou de fazer da nota o destino oficial da evidência — **13** dos 51 IDs vivos têm como única citação viva uma nota de `e_qa/`.
+- **E a carona acabou:** a §5.3 se recomendava "só como carona da §5.1, no mesmo commit", e a §5.1 fechou em `31dd62a`. Líquido de hoje **~586** (960 menos a linha de `D-NN`, que mede 318–397 pós-`D-91`) contra o portão de `A-16` cotado hoje: 3 decisões = **1.122**. Reprova pelas duas réguas.
+- **Portão de `D-83`: FECHADO em 10 de 10.** `D-92` mede **390**, com evidência apontando para a nota.
+- **O aviso do registro voltou em 18.307, e o texto dele aponta para a saída reprovada:** o ramo sem candidatas termina em *"o que resta é rever o teto"* — a §5.4, reprovada duas vezes, com 1.693 de folga sobrando. É o defeito que `D-63` consertou uma vez. **Não executado:** custa uma linha de `D-NN` e é chamada do dono. Números e portão em [[registro_no_teto]] §8.
+
 ## [2026-08-21] — o corte executado: `Q-15`/`Q-16` arquivadas e 7 das 8 gordas viram ponteiro (`D-91`)
 
 - **Skill:** context-bootstrap. Zero byte em `src/` — nenhum rebuild, nenhuma migração. O registro cai de **19.718 para 17.916**, e o aviso de 18.000 do `check.py` **sumiu** pela primeira vez desde `D-82`.
