@@ -7,6 +7,15 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-21] — o `amarelo` das cores nacionais corrigido pelo dono (`D-88`, sem `D-NN` novo)
+
+- **Skill:** frontend-uiux.
+- **Corrigido:** `amarelo` de `CORES_NACIONAIS` passa de `hsl(48 85% 55%)` (`#eec72b`) para `hsl(50 95% 55%)` (`#f9d51f`) em `src/ui/sprites.ts` — dado curado, escolhido pelo dono entre quatro tons medidos. Uma linha de produção.
+- **Medido:** menor distância a outra cor nomeada **78,0 → 93,4** (contra o `laranja`); até a faixa mais parecida do gramado **157,9 → 174,5**. `l` fica em 55 de propósito: `corDaListra` vira em `l >= 55`, então a listra do amarelo continua escura e nenhuma das 4 seleções amarelas muda no desempate.
+- **Portão:** `check.py` verde, `tsc` limpo, **598/598** — os três testes que cobrem a tabela (par a par ≥ 40, as 4 faixas do gramado, as 32x32) passaram **sem alteração de asserção**.
+- **Dado:** linha do amarelo e a distância até o gramado atualizadas em `a_context/cores_nacionais.md`.
+- **Achado:** `QA-34` — o teste do gramado usa HSL aproximado no lugar das faixas reais de `cena.ts` (até 5,6 de diferença). Registrado, não consertado (regra 4).
+
 ## [2026-08-21] — `QA-32` fechado: a suíte para de reprovar por o dono estar compilando ao lado
 
 - **Skill:** testing.

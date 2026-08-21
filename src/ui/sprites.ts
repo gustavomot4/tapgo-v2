@@ -183,7 +183,7 @@ export const CORES_NACIONAIS = {
   vermelho: { h: 0, s: 72, l: 48 },
   'vermelho-escuro': { h: 350, s: 72, l: 34 },
   laranja: { h: 24, s: 85, l: 55 },
-  amarelo: { h: 48, s: 85, l: 55 },
+  amarelo: { h: 50, s: 95, l: 55 },
   verde: { h: 145, s: 75, l: 22 },
   azul: { h: 222, s: 70, l: 40 },
   celeste: { h: 200, s: 65, l: 62 },

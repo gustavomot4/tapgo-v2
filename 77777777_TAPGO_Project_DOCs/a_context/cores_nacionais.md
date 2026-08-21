@@ -26,7 +26,7 @@ de 18 pixels, e ainda fingir que a diferença é dado nacional quando ela seria 
 | vermelho | `hsl(0 72% 48%)` | `#d32222` | 192,2 |
 | vermelho-escuro | `hsl(350 72% 34%)` | `#95182d` | 154,4 |
 | laranja | `hsl(24 85% 55%)` | `#ee792b` | 168,9 |
-| amarelo | `hsl(48 85% 55%)` | `#eec72b` | 157,9 |
+| amarelo | `hsl(50 95% 55%)` | `#f9d51f` | 174,5 |
 | verde | `hsl(145 75% 22%)` | `#0e6231` | **72,4** |
 | azul | `hsl(222 70% 40%)` | `#1f49ad` | 129,3 |
 | celeste | `hsl(200 65% 62%)` | `#5fb3dd` | 120,1 |
@@ -38,7 +38,16 @@ para as **cinco** seleções verdes de uma vez. O hash antigo acertava nisso por
 nacional erraria por escolha. Há teste sobre as 4 faixas.
 
 **O `dourado` existiu e foi cortado:** ficava a **38,7** do `amarelo`, abaixo do próprio limiar que
-decide "mesma cor". A Austrália entrou em amarelo — um nome a menos e nenhuma perda.
+decide "mesma cor". A Austrália entrou em amarelo — um nome a menos e nenhuma perda. (Os **38,7**
+foram medidos contra o `amarelo` de `T-29`, `hsl(48 85% 55%)`; o tom de hoje só afasta mais.)
+
+**O `amarelo` foi corrigido em 2026-08-21, e a correção é do dono.** Ele trocou `hsl(48 85% 55%)`
+(`#eec72b`) por `hsl(50 95% 55%)` (`#f9d51f`) — dado curado, execução de `D-88` e **sem `D-NN`
+novo**. A luminosidade **não** mudou de propósito: `corDaListra` vira em `l >= 55`, então a listra
+do amarelo continua escura e nenhuma das 4 seleções amarelas muda de aparência no desempate. O que
+a saturação comprou está medido: a menor distância do `amarelo` a outra cor nomeada era **78,0**
+(contra o `laranja`, de Holanda e Costa do Marfim) e passou a **93,4**; até o gramado, de **157,9**
+a **174,5**.
 
 ## As 32 seleções
 
