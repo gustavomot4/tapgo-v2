@@ -1098,6 +1098,82 @@ describe('a direção visual não afrouxa portão de M7 (T-20 fatia 2 / D-65)', 
     );
   });
 
+  // ── `T-28`: os três itens que são PORTÃO, e não gosto ────────────────────────────────────
+
+  it('a sobreposição do sorteio não rouba o toque (item 2 do portão de A-29)', () => {
+    // Sobreposição em tela cheia é o defeito clássico: ela cobre os três botões de zona e o dedo
+    // bate nela. `pointer-events: none` é a defesa, e é a única que não perde NEM o primeiro
+    // toque — "sair ao primeiro toque" ainda comeria esse. Sem esta linha o portão de `A-29`
+    // volta a depender de alguém lembrar de conferir no aparelho.
+    const regra = regras().find((r) => r.seletor === '.sorteio-cheio');
+    expect(regra, '.sorteio-cheio sumiu da folha').toBeDefined();
+    expect(regra?.corpo, 'a sobreposição voltou a receber toque').toMatch(
+      /pointer-events:\s*none/,
+    );
+  });
+
+  it('a sobreposição nasce SÓ na transição escondido -> visível (o guarda de D-85)', () => {
+    // `desenhar()` roda a cada notificação de M5, e no `online` `aoNotificacaoDeRede()` a chama
+    // sem novidade. Chamar `mostrarSorteioCheio` fora do ramo de entrada faria a bandeira voltar
+    // a tela cheia várias vezes antes do 1º toque — foi o defeito que `D-85` já pagou uma vez.
+    const fonte = readFileSync(join(DIR_UI, 'tela_cobranca.ts'), 'utf8').replace(
+      /\/\*[\s\S]*?\*\//g,
+      '',
+    );
+    const chamadas = [...fonte.matchAll(/mostrarSorteioCheio\(/g)];
+    expect(chamadas.length, 'mostrarSorteioCheio: definição + uma única chamada').toBe(2);
+    expect(fonte, 'a sobreposição saiu de dentro do guarda de entrada').toMatch(
+      /if \(entrando\) mostrarSorteioCheio\(/,
+    );
+    // E o guarda só vale se `entrando` for mesmo a transição, e não uma constante.
+    expect(fonte).toMatch(/const entrando = !sorteioNaTela;/);
+  });
+
+  it('o papel tem DOIS canais: cor e forma, e a forma não depende da cor', () => {
+    // `P-6` traz a própria restrição: cor sozinha reprova em daltonismo. Os dois papéis precisam
+    // de uma regra de cor E de uma regra de FORMA — e é o par que este teste cobra, porque
+    // apagar o `::before` deixaria a tela verde-contra-amarelo e nada mais.
+    const seletores = regras().map((r) => r.seletor);
+    for (const papel of ['chutar', 'defender']) {
+      expect(seletores, `a cor do papel ${papel} sumiu`).toContain(`.zona[data-papel='${papel}']`);
+      expect(seletores, `a FORMA do papel ${papel} sumiu`).toContain(
+        `.zona[data-papel='${papel}']::before`,
+      );
+    }
+
+    // As duas formas têm de ser DIFERENTES entre si: duas regras idênticas passariam no teste
+    // acima e não distinguiriam papel nenhum.
+    const forma = (papel: string): string =>
+      regras().find((r) => r.seletor === `.zona[data-papel='${papel}']::before`)?.corpo ?? '';
+    expect(forma('chutar').trim()).not.toBe(forma('defender').trim());
+
+    // E a tela precisa ligar o atributo, senão a folha inteira fica órfã.
+    const fonte = readFileSync(join(DIR_UI, 'tela_cobranca.ts'), 'utf8');
+    expect(fonte, "tela_cobranca.ts não liga data-papel").toMatch(
+      /dataset\['papel'\] = vez\.papel/,
+    );
+  });
+
+  it('T-28 não trouxe cor nova para a paleta — os dois tons são --acento e --atencao', () => {
+    // `T-20` mede contraste sobre o produto cartesiano dos tokens de `.tapgo`. Cor nova ali custa
+    // a medição inteira de novo; por isso as bordas de papel repetem os dois hexes que já existem.
+    const p = paletaDaFolha();
+    const rgb = (hex: string): string => {
+      const n = /^#(..)(..)(..)$/.exec(hex);
+      return n === null ? '' : `${parseInt(n[1] ?? '0', 16)} ${parseInt(n[2] ?? '0', 16)} ${parseInt(n[3] ?? '0', 16)}`;
+    };
+    const pares: [string, string][] = [
+      ['chutar', 'acento'],
+      ['defender', 'atencao'],
+    ];
+    for (const [papel, token] of pares) {
+      const hex = p[token];
+      expect(hex, `token --${token} sumiu da paleta`).toBeDefined();
+      const corpo = regras().find((r) => r.seletor === `.zona[data-papel='${papel}']`)?.corpo ?? '';
+      expect(corpo, `a borda de ${papel} não usa --${token}`).toContain(rgb(hex ?? ''));
+    }
+  });
+
   it('as peças novas de D-65 estão na folha — capa, confronto e pódio', () => {
     // Sem isto, uma classe que sai do TS e fica órfã na folha (ou o contrário) passa em silêncio,
     // e `T-14` herda uma direção que só existe pela metade.

@@ -248,9 +248,14 @@ export const telaCobranca =
       el('div', { classe: 'sorteio__corpo' }, [sorteioTexto, sorteioSub]),
     ]);
     sorteio.hidden = true;
-    // O painel está na tela AGORA? Só isso — e serve à moeda de `T-26`: a marca é reconstruída
-    // na transição escondido -> visível, nunca a cada desenho. Ver `anunciarSorteio`.
+    // O painel está na tela AGORA? Só isso — e serve à moeda de `T-26` e à sobreposição de
+    // `T-28`: as duas nascem na transição escondido -> visível, nunca a cada desenho. Ver
+    // `anunciarSorteio`.
     let sorteioNaTela = false;
+    /** A sobreposição de tela cheia de `T-28`, enquanto ela existe. */
+    let sobreposicao: HTMLElement | null = null;
+    /** Rede de segurança da sobreposição: ver `mostrarSorteioCheio`. */
+    let fimDaSobreposicao: ReturnType<typeof setTimeout> | null = null;
 
     const canvasPai = el('div', { classe: 'campo__canvas' });
     const semCanvas = el('p', {
@@ -316,8 +321,7 @@ export const telaCobranca =
     function anunciarSorteio(vez: Vez): void {
       const anuncio = sorteioDoPrimeiro(estado, partida.times);
       if (anuncio === null || vez.pendente) {
-        sorteio.hidden = true;
-        sorteioNaTela = false;
+        esconderSorteio();
         return;
       }
 
@@ -327,7 +331,8 @@ export const telaCobranca =
       // meio dele: movimento aparente onde `D-65` pede o mínimo. O lado sorteado não muda
       // enquanto o painel está na tela (M5 sorteia uma vez, na criação da sessão, `D-48`), então
       // não há retrato velho a corrigir; os dois textos abaixo seguem sendo reescritos sempre.
-      if (!sorteioNaTela) {
+      const entrando = !sorteioNaTela;
+      if (entrando) {
         limpar(sorteioMarca);
         sorteioMarca.append(marca(partida.times[anuncio.lado]));
         sorteioNaTela = true;
@@ -336,6 +341,73 @@ export const telaCobranca =
       sorteioTexto.textContent = `Sorteio: ${anuncio.texto}.`;
       sorteioSub.textContent = instrucaoDoSorteio(partida.modo, vez.papel);
       sorteio.hidden = false;
+
+      // A sobreposição de `T-28` nasce SÓ aqui, depois de o painel estar visível — ela precisa
+      // medir para onde encolher, e um painel `hidden` mede zero. O guarda é o mesmo de `D-85`,
+      // e pelo mesmo motivo: `aoNotificacaoDeRede()` chama `desenhar()` sem novidade no
+      // `online`, e sem `entrando` a bandeira recomeçaria de tela cheia antes do 1º toque.
+      if (entrando) mostrarSorteioCheio(anuncio.lado, anuncio.texto);
+    }
+
+    /** Nada do sorteio fica na tela: nem o painel, nem a sobreposição no meio do caminho. */
+    function esconderSorteio(): void {
+      sorteio.hidden = true;
+      sorteioNaTela = false;
+      tirarSobreposicao();
+    }
+
+    function tirarSobreposicao(): void {
+      if (fimDaSobreposicao !== null) {
+        clearTimeout(fimDaSobreposicao);
+        fimDaSobreposicao = null;
+      }
+      sobreposicao?.remove();
+      sobreposicao = null;
+    }
+
+    /**
+     * `T-28`/`P-8`: a bandeira de quem cobra primeiro em tela cheia, girando e encolhendo para o
+     * painel de `D-49`.
+     *
+     * **Não custa toque, e é por isso que não reabre `D-49`** (o mesmo argumento de `D-85`): ela
+     * nasce sozinha com a tela e sai sozinha. O fluxo crítico continua fechando em 2 toques.
+     *
+     * **O toque não se perde durante ela** — item (2) do portão de `A-29`, e o defeito clássico
+     * de sobreposição em tela cheia. A defesa é `pointer-events: none` na folha, não um
+     * `addEventListener` de saída: sem alvo, o dedo atravessa e chega no botão de zona que está
+     * embaixo, inclusive no primeiro quadro. Uma saída ao toque ainda perderia ESSE toque.
+     *
+     * **Para onde ela encolhe é medido, não chutado:** o centro do painel já visível, em
+     * coordenadas de viewport, vira `--para-x`/`--para-y`. A medida sai ANTES do `append` para
+     * não haver segundo cálculo de layout, e o `> 0` cobre o caso de o painel não ter caixa.
+     */
+    function mostrarSorteioCheio(lado: Side, texto: string): void {
+      tirarSobreposicao();
+
+      const alvo = sorteioMarca.getBoundingClientRect();
+      const estilo: Record<string, string> = {};
+      if (alvo.width > 0) {
+        estilo['--para-x'] = `${Math.round(alvo.left + alvo.width / 2 - window.innerWidth / 2)}px`;
+        estilo['--para-y'] = `${Math.round(alvo.top + alvo.height / 2 - window.innerHeight / 2)}px`;
+      }
+
+      const moeda = el('div', { classe: 'sorteio-cheio__moeda' }, [
+        marca(partida.times[lado]),
+        el('p', { classe: 'sorteio-cheio__texto', texto }),
+      ]);
+      // `aria-hidden` porque o painel logo abaixo diz a MESMA frase na árvore de acessibilidade:
+      // sem isto quem usa leitor de tela ouve o sorteio duas vezes, e a segunda some sozinha.
+      const sobre = el('div', { classe: 'sorteio-cheio', estilo, attrs: { 'aria-hidden': 'true' } }, [
+        moeda,
+      ]);
+
+      moeda.addEventListener('animationend', tirarSobreposicao);
+      // Rede de segurança, e ela existe por medida: em `T-26` a pane escondida do navegador não
+      // compõe, e `animation.finished` nunca resolveu lá. Sobreposição de tela cheia presa por
+      // um evento que não chega seria pior que a que não existe — o relógio a tira de todo jeito.
+      fimDaSobreposicao = setTimeout(tirarSobreposicao, 2600);
+      sobreposicao = sobre;
+      raiz.append(sobre);
     }
 
     function desenhar(): void {
@@ -344,8 +416,7 @@ export const telaCobranca =
 
       const vez = derivacao.vez(estado);
       if (vez === null) {
-        sorteio.hidden = true;
-        sorteioNaTela = false;
+        esconderSorteio();
         travarZonas(true);
         pararRelogio();
         return;
@@ -362,6 +433,12 @@ export const telaCobranca =
 
       for (const [zona, b] of botoesZona) {
         b.setAttribute('aria-label', rotuloZona(zona, vez.papel));
+        // `T-28`/`P-6`(a): o papel deixa de vir só de TEXTO. `data-papel` liga dois canais na
+        // folha ao mesmo tempo — a cor da borda da zona e, ao lado dela, uma FORMA (triângulo
+        // para chutar, arco para defender). Cor sozinha reprovaria em daltonismo, e nenhuma cor
+        // nova entra na paleta: os dois tons já são `--acento` e `--atencao`, que `T-20` já
+        // mede. O `aria-label` acima continua sendo o canal de quem usa leitor de tela.
+        b.dataset['papel'] = vez.papel;
       }
       travarZonas(travado);
 
@@ -673,8 +750,7 @@ export const telaCobranca =
       aguardandoPeer = false;
       travado = true;
       travarZonas(true);
-      sorteio.hidden = true;
-      sorteioNaTela = false;
+      esconderSorteio();
       faixa.hidden = true;
 
       limpar(erro);
@@ -787,6 +863,7 @@ export const telaCobranca =
 
     return () => {
       vivo = false;
+      tirarSobreposicao();
       pararEspera();
       pararRelogio();
       document.removeEventListener('keydown', naTeclaGlobal);

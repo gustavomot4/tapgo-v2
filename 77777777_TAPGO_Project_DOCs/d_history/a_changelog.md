@@ -7,6 +7,17 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-21] — `T-28`: a bandeira de quem cobra primeiro em tela cheia, e o papel em dois canais
+
+- **Skill:** frontend-uiux. **Módulo:** M7 só — `src/ui/tela_cobranca.ts` e `src/ui/estilo.css`. `cena.ts` não foi tocado.
+- **O que entrou:** a bandeira de quem cobra primeiro nasce em sobreposição de tela cheia, gira uma vez e **encolhe para dentro do painel de `D-49`** (`P-8`); e as três zonas passam a dizer o papel por **cor + FORMA** — triângulo cheio para chutar, arco vazado para defender (`P-6`(a)).
+- **O guarda de `D-85` é o miolo, e é o mesmo:** a sobreposição nasce só na transição escondido -> visível. Sem ele `aoNotificacaoDeRede()` a recomeçaria a cada notificação no `online`, antes do 1º toque.
+- **Os três itens de portão foram MEDIDOS:** (1) `elementFromPoint` no centro das três zonas devolve o próprio `<button>` com a sobreposição no pico, nos dois viewports — `pointer-events: none` foi escolhido sobre "sair ao primeiro toque", que ainda comeria esse toque; (2) com o bloco de `prefers-reduced-motion` simulado, o quadro 0 já é `opacity: 0` e em 120 ms o nó saiu da árvore; (3) as duas silhuetas distinguem o papel sem cor, e nenhuma cor nova entrou na paleta.
+- **Para onde ela encolhe é medido, não chutado:** `--para-x`/`--para-y` saem do `getBoundingClientRect()` do painel já visível. Em 360x640 o quadro final cai exatamente no centro do painel; em 1280x800, a 8px dele.
+- **Números:** suíte **582 → 586/586** (4 testes de varredura novos, cada um falseado), `tsc` limpo, bundle **419.311 → 421.451 B (+2.140 B)**, zero asset novo, `scrollWidth == clientWidth` em 360 e em 1280x800 nos cinco quadros amostrados.
+- **Lacuna declarada:** o caso que o guarda existe para cobrir é do `online`, e o sandbox não o alcança — dois aparelhos. Vai para `A-31`, que pede **UM número**.
+- **Decisões:** nenhuma nova — `D-87` já era a decisão, esta entrada é a execução dela.
+
 ## [2026-08-21] — `D-87`: `T-28` nasce juntando `P-6`(a) e `P-8` num card só
 
 - **Skill:** frontend-uiux (mesma sessão de `T-27` e `A-30`; a decisão é do dono, o registro é da sessão).

@@ -559,6 +559,116 @@
   color: var(--texto-apagado);
 }
 
+/*
+ * ── `T-28`/`P-8`: a bandeira de quem cobra primeiro, em tela cheia ─────────────────────────
+ *
+ * Ela gira uma vez, grande, e encolhe para dentro do painel de `D-49` que está logo acima —
+ * `--para-x`/`--para-y` são medidos pela tela (`mostrarSorteioCheio`), porque o painel muda de
+ * lugar entre 360x640 e o desktop de `D-86` e um deslocamento fixo erraria num dos dois.
+ *
+ * **Não é a tela da moeda que `D-49` recusou**, e o argumento é o de `D-85`: aquela custava o 3º
+ * toque num fluxo com portão de 2. Esta nasce sozinha e sai sozinha — não há nada a tocar.
+ *
+ * **`pointer-events: none` é PORTÃO, não gosto.** O item (2) do portão de `A-29` diz que o toque
+ * não pode se perder, e sobreposição em tela cheia é justamente o que o rouba. Sem alvo o dedo
+ * atravessa e chega no botão de zona embaixo — inclusive no primeiro quadro, que é o que uma
+ * "saída ao primeiro toque" não entregaria: ela ainda comeria ESSE toque.
+ *
+ * **Quem pediu menos movimento recebe ela já fora da tela**, e isso sai de graça do quadro final:
+ * o bloco de `prefers-reduced-motion` no fim desta folha zera duração E atraso, o `both` daqui
+ * fixa o último quadro — `opacity: 0` —, e a tela remove o nó no `animationend`. Nada pisca e
+ * nada trava.
+ *
+ * Só `opacity` e `transform`, como `D-65` manda; `perspective()` é FUNÇÃO de `transform`. Zero
+ * asset: as 32 bandeiras já estão no bundle desde `T-19`, com licença conferida arquivo a arquivo.
+ */
+@keyframes tapgo-sorteio-fundo {
+  from {
+    opacity: 0;
+  }
+
+  14% {
+    opacity: 1;
+  }
+
+  70% {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes tapgo-sorteio-cheio {
+  from {
+    opacity: 0;
+    transform: perspective(900px) translate3d(0, 0, 0) scale(0.55) rotateY(-900deg);
+  }
+
+  18% {
+    opacity: 1;
+  }
+
+  62% {
+    opacity: 1;
+    transform: perspective(900px) translate3d(0, 0, 0) scale(1) rotateY(0deg);
+  }
+
+  to {
+    opacity: 0;
+    transform: perspective(900px) translate3d(var(--para-x, 0px), var(--para-y, -32vh), 0)
+      scale(0.2) rotateY(0deg);
+  }
+}
+
+.sorteio-cheio {
+  position: fixed;
+  z-index: 9;
+  inset: 0;
+  display: grid;
+  overflow: hidden;
+  place-items: center;
+  padding: 16px;
+
+  /* Ver o cabeçalho: sem isto a sobreposição rouba o toque, e o portão cai. */
+  pointer-events: none;
+  background: rgb(6 10 16 / 62%);
+  animation: tapgo-sorteio-fundo 1400ms ease-out both;
+}
+
+/*
+ * O tamanho é `vmin`, e não `vw`: em 1280x800 a bandeira é limitada pela ALTURA, e `vw` a faria
+ * crescer até empurrar o texto para fora. O teto de 168px e o `max-width` abaixo são o que mantém
+ * `scrollWidth == clientWidth` nos dois viewports do portão — o `overflow: hidden` acima é o
+ * anteparo do anteparo, para o caso de um nome de seleção longo demais para a linha.
+ */
+.sorteio-cheio__moeda {
+  --marca-tam: clamp(88px, 26vmin, 168px);
+
+  display: flex;
+  max-width: min(92vw, 460px);
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  animation: tapgo-sorteio-cheio 1400ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+/* O ramo do código ISO (`D-22`, hoje nenhuma seleção) não pode sair com letra de 0,72rem dentro
+   de uma cápsula de 88px — o disco grande pede a letra grande junto. */
+.sorteio-cheio__moeda .marca {
+  font-size: clamp(1.1rem, 5vmin, 2rem);
+}
+
+.sorteio-cheio__texto {
+  margin: 0;
+  color: var(--texto);
+  font-size: clamp(1.05rem, 5vw, 1.5rem);
+  font-weight: 800;
+  line-height: 1.15;
+  text-align: center;
+}
+
 /* ── Campo: canvas do Phaser com os botões de zona por cima ─────────────────────────────── */
 
 .campo {
@@ -608,8 +718,10 @@
    zona passa de 110px — muito acima dos 48px mínimos. */
 .zona {
   display: flex;
-  align-items: flex-end;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
   padding: 8px 4px;
   border: 2px solid rgb(255 255 255 / 18%);
   border-radius: 10px;
@@ -620,6 +732,58 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   cursor: pointer;
+}
+
+/*
+ * ── `T-28`/`P-6`(a): o papel (ataca/defende) em DOIS canais ────────────────────────────────
+ *
+ * Até aqui o papel vinha só de TEXTO — a faixa e o `aria-label` das zonas. O pedido de `P-6` é
+ * lê-lo numa olhada, e ele traz a própria restrição: **cor não pode ser o único canal**, porque
+ * daltonismo. Então são dois, e o segundo é FORMA:
+ *
+ *   chutar    → triângulo cheio, apontando para o gol   + borda em `--acento`
+ *   defender  → arco vazado, a trave/as mãos            + borda em `--atencao`
+ *
+ * A forma sozinha já distingue os dois papéis no escuro e em tela preto e branco; a cor só
+ * reforça. Nenhuma cor NOVA entra: os dois valores são `--acento` (74 222 128) e `--atencao`
+ * (255 209 102), que `T-20` já mede no produto cartesiano da paleta — cor nova ali custaria a
+ * medição inteira de contraste de novo.
+ *
+ * Zero asset e zero movimento: `D-65` continua inteiro. O triângulo é o truque de borda, e o arco
+ * é `border-radius` — nada que precise de arquivo.
+ *
+ * `currentColor` de propósito, e é o que faz a regra `[disabled]` abaixo continuar valendo sem
+ * uma linha a mais: com o botão travado a folha já põe `color: transparent`, e a forma some junto
+ * com o rótulo, exatamente como antes de `T-28`.
+ */
+.zona::before {
+  content: '';
+  display: block;
+  flex: 0 0 auto;
+}
+
+.zona[data-papel='chutar'] {
+  border-color: rgb(74 222 128 / 55%);
+}
+
+.zona[data-papel='chutar']::before {
+  width: 0;
+  height: 0;
+  border-right: 9px solid transparent;
+  border-bottom: 13px solid currentColor;
+  border-left: 9px solid transparent;
+}
+
+.zona[data-papel='defender'] {
+  border-color: rgb(255 209 102 / 55%);
+}
+
+.zona[data-papel='defender']::before {
+  width: 22px;
+  height: 12px;
+  border: 3px solid currentColor;
+  border-bottom: 0;
+  border-radius: 13px 13px 0 0;
 }
 
 .zona:active {
