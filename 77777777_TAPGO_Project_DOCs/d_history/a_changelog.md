@@ -7,6 +7,16 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-21] — `A-38` FECHADA: o ar devolveu `3` e `Sim` — as três tarefas confirmadas no endereço público (`T-30`/`T-32`/`T-33`)
+
+- **Skill:** delivery-review. **Nenhum arquivo de produção mudou** — sessão de registro de campo, e campo confirma, não decide.
+- **O portão pedia UM inteiro:** no endereço público, com recarga forte, na cobrança de "Chutar", em quantas das três bolas verdes a borda aparece **inteira**. **Veio `3`** — o valor que significa `HEAD` no ar.
+- **O `3` prova o AR, não o desenho.** O desenho `A-37` já provara no build local; o aberto era ONDE ele estava. Por ancestralidade, um bundle que serve o CSS de `T-33` (`ae03a5e`) saiu de um commit que já contém `T-30` (`63c4486`) e `T-32` (`84b3cad`) — um número, três tarefas, como o card previu.
+- **E o ar é `HEAD` em código, medido depois da resposta:** `ae03a5e` é o **último commit que toca `src/`**; `8cb256e`, `c748e9c` e `f3f4b7d` mexem só em documento e não produzem bundle. Não sobra lacuna entre o confirmado e o publicado [Fonte: `git log --oneline -- src/`].
+- **A observação única veio `Sim`:** a linha "Série:" apareceu na **segunda** tela de fim. `T-32` não está no ar só por descendência — ela **desenha**. O `Não` teria aberto `QA-NN` na hora; não abriu.
+- **Fechados:** `A-38` · **`T-30`, `T-32` e `T-33` passam a CONFIRMADAS NO AR**, e com isso não resta tarefa entregue fora do endereço público.
+- **Sem `D-NN` e sem `QA-NN`, de propósito:** o portão passou no primeiro campo, publicar é procedimento e não decisão (mesma razão de `A-34`/`A-37`), e o registro segue a 96% do teto sob `D-82`. O portão de `D-83` fica em **7 de 10** — nenhuma linha nova de `D-NN`/`QA-NN` foi escrita.
+
 ## [2026-08-21] — `A-38` aberta: o card de publicar virou card de CONFIRMAR (`T-30`/`T-32`/`T-33`)
 
 - **Skill:** planner. **Nenhum arquivo de produção mudou** — sessão de planejamento: um card no BACKLOG, o estado do CONTEXT e esta linha.
