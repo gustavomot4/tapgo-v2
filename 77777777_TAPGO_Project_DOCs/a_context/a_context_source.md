@@ -31,7 +31,7 @@ Partida de ~1 minuto: contra a CPU, contra alguém no mesmo aparelho, ou **por l
 - **Bundle:** **428.754 B** (5,4% de 8 MB) lido de `dist/`; `T-31` inteira custou **+2.904 B**, zero asset novo; 278.646 B são os 32 SVGs de T-19 (`QA-06`); Phaser e Trystero fora, por `import()` (D-27)
 - **Em andamento (máx 1):** _(vazio)_
 - **Próximo:** nada de campo em aberto · portão de `D-83`: **8 de 10**
-- **Bloqueado/pendente:** **registro 19.6k/20.000**, TRÊS pools em zero (`D-43`, duplicata, `D-74`) — `D-82` adia ~4-5 decisões · QA **7.3k/8.000** · CONTEXT **97%**
+- **Bloqueado/pendente:** **registro 19.7k/20.000**, TRÊS pools em zero (`D-43`, duplicata, `D-74`) — `D-82` adia ~4-5 decisões · QA **7.3k/8.000** · CONTEXT **97%**
 - **Questões abertas:** Q-08, Q-09, Q-13 (**Q-15/Q-16 fechadas** por `D-84`/`D-88`) · **QA abertos:** QA-04..QA-07, QA-10, QA-17, QA-27, QA-29, QA-34, QA-35 (**QA-21/QA-32/QA-33/QA-36 fechados**) (**QA-20 fechado** por `T-29`) · respondidas e fechados: [[decisions_archive]]
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)

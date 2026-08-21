@@ -7,6 +7,14 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-21] — auditoria de evolução: o registro no teto, e o corte que sobrou
+
+- **Skill:** evolution-auditor. **Nada foi decidido nem executado** — a sessão mede e entrega as saídas; a escolha é do dono, e o registro (19.718/20.000) não tem espaço nem para a linha do próprio veredito, como em `A-21`.
+- **O pool de `D-43` é zero pela 5ª vez, e a causa foi medida pela primeira vez:** `b_process/c_backlog.md` tem **198.785** caracteres (93,5% em cards fechados) e cita **51 dos 55** IDs vivos. A régua de "nenhum `.md` vivo cita" é avaliada contra um arquivo que, por construção, cita tudo.
+- **`D-83` está funcionando:** as 7 linhas escritas depois dele medem 370·323·381·381·378·372·396 — todas ≤ 400, nenhuma perdeu evidência. Ele conserta a inclinação; o intercepto continua esgotado.
+- **Quatro saídas medidas, com o custo de contexto de cada uma:** as 8 linhas gordas ADOTADAS delegando a evidência (**3.113**, registro a 16.605) · as duas questões fechadas saindo da tabela (**459**, e é o que destrava a escrita) · card fechado do backlog deixando de segurar linha (963, reprova o portão de `A-16` por 12) · subir o teto para 24.000 (**REPROVADA** — 3ª adiada seguida, e +1.100 tokens por sessão de evolução).
+- **Portão de cada uma escrito ANTES do experimento**, com o que não pode regredir: as 9 REJEITADAS ficam inteiras (são a lista-morta que esta fase varre). Números, régua e linhas prontas em [[registro_no_teto]].
+
 ## [2026-08-21] — `T-31` (M7): a tela escolhe um lado, e o outro é "escolhendo…" até o `Pick` chegar
 
 - **Skill:** frontend-uiux. **M6 e M5 não foram tocados** — o diff desta sessão não encosta em `src/net/` nem em `src/session/`. Com M7, `T-31` fecha inteira.
