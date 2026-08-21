@@ -7,6 +7,14 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-21] — três pedidos do dono viram `T-30`, `T-31` e `T-32`
+
+- **Skill:** frontend-uiux (registro; nenhuma linha de produção mudou).
+- **`T-30`:** luva de goleiro e bola no lugar do triângulo e do arco das zonas, e maiores. Sucede `T-28`/`P-6`(a), e herda as três restrições dele: zero asset, zero cor nova na paleta, `D-65` intacto — e a forma tem de distinguir os dois papéis **em preto e branco**.
+- **`T-31`:** no `online`, cada aparelho escolhe a própria seleção. **Travado em `D-NN`:** o canal carrega `Move` e nada mais (`D-13`, `src/net/index.ts:60`). O card conserta um defeito real — hoje os dois aparelhos podem mostrar confrontos DIFERENTES para a mesma partida. Escopo escolhido pelo dono: só no `online`.
+- **`T-32`:** contador de vitórias na série de revanches, em `cpu` e `local`. Escolhido pelo dono: **série na memória**, zera ao voltar ao início, nada persistido. `online` e `torneio` ficam fora, e as duas exclusões já têm razão escrita no código. Cabe em M7 inteiro: o contador é campo da `Partida`.
+- **Achado ao escopar:** "Jogar de novo" já existia em `cpu`/`local` (`tela_fim.ts:158`) — metade do pedido 3 já estava no ar, e o que faltava era só a série.
+
 ## [2026-08-21] — o `amarelo` das cores nacionais corrigido pelo dono (`D-88`, sem `D-NN` novo)
 
 - **Skill:** frontend-uiux.
