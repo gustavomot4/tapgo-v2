@@ -7,6 +7,16 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-21] — `A-37`: o campo devolveu `3` — a bola tem borda inteira nas três zonas (`T-33`/`QA-36`)
+
+- **Skill:** delivery-review. **Nenhum arquivo de produção mudou** — sessão de registro de campo, e campo confirma, não decide.
+- **O portão pedia UM inteiro:** na cobrança de "Chutar", em quantas das três bolas verdes a borda aparece **inteira**, sem a linha branca do campo comendo um pedaço. **Veio `3`.**
+- **O que o `3` prova:** `T-33` não tocou em tamanho nem em silhueta — moveu **separação**, e separação se mede pela borda estar lá ou não. O halo `drop-shadow(0 0 1.5px …)` sobreviveu à conversão para o pixel físico do monitor do dono. `2` teria apontado uma zona e uma linha de alfa específico; `0` ou `1` teriam mandado engrossar o halo. Nenhum dos dois.
+- **A observação única fecha a armadilha do card:** com uma zona tocada, as outras duas travam e o símbolo delas **some por completo** — sem fantasma escuro. Logo `.zona[disabled][data-papel]::before { color: transparent }` vence as duas regras de papel por especificidade **no navegador real**, e o `filter` não projeta halo sobre alfa composto zero. Era o risco que `T-33` pagou com três testes, e o aparelho confirmou.
+- **Declarado, para não virar dado inventado:** a **luva** segue sem medição direta em campo. O card a excluiu do portão com motivo — o disco CHEIO é o pior caso, e ela é vazada —, e o dono não disse nada dela. Não é lacuna nova; é a mesma, registrada.
+- **Fechados:** `A-37` · **`QA-36`** · **`T-33` passa a COM CAMPO**. **Sem `D-NN` novo, de propósito** (`D-82`, registro a 96% do teto).
+- **Continua fora do ar:** `T-32` e `T-33`. O número saiu do build local, não do endereço público.
+
 ## [2026-08-21] — `T-33`: o símbolo ganha a cor do papel e um halo escuro, e sai do branco no branco (`QA-36`)
 
 - **Skill:** frontend-uiux. **Delta em um arquivo de produção só:** `src/ui/estilo.css`. `src/ui/cena.ts` não mudou um byte — o campo está certo, quem estava errado é o símbolo por cima dele.

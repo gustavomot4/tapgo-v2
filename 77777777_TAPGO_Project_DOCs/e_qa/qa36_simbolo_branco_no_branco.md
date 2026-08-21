@@ -102,5 +102,17 @@ rótulo que legenda.
 - **A armadilha 2 continua honrada:** cor é canal SOMADO — disco cheio contra luva de quatro dedos
   segue distinguindo os papéis sem ler cor nenhuma.
 
-**Aberto até o campo:** se o símbolo se DESTACA é olho humano. O portão é `A-37`, e o inteiro que
-ele pede é quantas das três bolas têm a borda inteira, sem linha branca comendo um pedaço.
+## O campo respondeu, e `QA-36` FECHA (2026-08-21, `A-37`)
+
+O portão pedia quantas das três bolas têm a borda inteira, sem linha branca comendo um pedaço.
+**Veio `3`** — nas três zonas. O halo de 1,5px sobreviveu ao pixel físico do monitor do dono, e a
+cor de papel não precisou do reforço que `0` ou `1` teriam exigido; `2` teria apontado uma zona e
+uma linha de alfa específico, e não há zona a apontar.
+
+- **A armadilha 1 se confirma no navegador real:** com uma zona tocada, as outras duas travam e o
+  símbolo delas **some por completo** — sem fantasma escuro. A regra de `[disabled]` vence as duas
+  de papel por especificidade de fato, e `filter` não projeta halo sobre alfa composto zero.
+- **A saída (c) nunca precisou ser tentada** — a (a)+(b) passou no primeiro campo.
+- **LACUNA DECLARADA, a mesma de antes:** a **luva** segue sem medição direta em campo. `A-37` a
+  excluiu do portão com motivo (o disco CHEIO é o pior caso, e ela é vazada) e o dono não falou
+  dela. Não é lacuna nova; é esta, registrada.
