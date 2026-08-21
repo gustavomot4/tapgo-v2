@@ -202,16 +202,19 @@ Dados/schema (M1, forma de M4) → domínio (M2, M3, **M8**) → borda (M6, M5) 
   export type Mode = 'cpu' | 'local' | 'online';
   export interface SessionConfig {
     mode: Mode; seed: number; level?: Level;
-    teams: Record<Side, CountryCode>; localSide: Side; roomId?: string;
+    teams: Record<Side, CountryCode | null>;   // `D-90`: `null` só no `online`, e só no lado remoto
+    localSide: Side; roomId?: string;
   }
   export interface Session {
     state(): MatchState;
     choose(zone: Zone): void;                                        // a escolha deste aparelho
-    subscribe(fn: (s: MatchState, link: LinkStatus) => void): () => void;
+    // `D-90`: o 3º argumento é como M7 sabe a seleção do OUTRO sem um 5º método.
+    subscribe(fn: (s, link, teams: Record<Side, CountryCode | null>) => void): () => void;
     dispose(): void;
   }
   export function createSession(cfg: SessionConfig): Session;
   ```
+- **`D-90` reabriu esta porta, e só nisto:** `teams` aceita `null` no lado remoto do `online` até o `Pick` do outro aparelho chegar, e esse `null` **é** o estado de espera da tela — enquanto ele estiver ali, M7 não deixa cobrar. `assertConfig` segue recusando `null` em `cpu`/`local` e no `localSide` de qualquer modo. Ver [[t31_selecao_por_aparelho]].
 - **Estado que possui:** modo, lado local, escolha pendente da rodada e nº de sequência do peer. **Não** possui placar — placar é de M2.
 - **Skill responsável:** [[b_process/skills/backend-bff/SKILL|backend-bff]]
 - **Portão:** os três modos produzem o **mesmo** `MatchState` para a mesma sequência de zonas — é o teste que prova que a regra não foi duplicada (`D-01`) · evento remoto fora de ordem, repetido ou com zona inválida é descartado e **nunca chega a M2** [Fonte: a_context/regras_partida.md#invariantes] · `dispose()` fecha o canal e não deixa assinante vivo · **os três tipos de fora que a porta de M5 usa — `MatchState`, `LinkStatus` e `Level` — são reexportados por ela**; a regra é "todo tipo que aparece na assinatura de M5 sai por M5", senão o portão de camada de M7 vira impossível de cumprir para o tipo esquecido.
@@ -225,16 +228,19 @@ Dados/schema (M1, forma de M4) → domínio (M2, M3, **M8**) → borda (M6, M5) 
   ```ts
   export type LinkStatus = 'idle' | 'waiting' | 'connected' | 'failed' | 'closed';
   export interface Move { seq: number; side: Side; zone: Zone; }
+  export interface Pick { side: Side; team: CountryCode; }   // `D-90`: a seleção de QUEM manda
+  export type Payload = Move | Pick;                         // `D-90`
   export interface IceConfig { turn?: { urls: string; username: string; credential: string } }
   export interface Channel {
-    send(m: Move): void;
-    onMove(fn: (m: Move) => void): void;
+    send(p: Payload): void;                  // `D-90`: era `send(m: Move)`
+    onMove(fn: (p: Payload) => void): void;  // `D-90`: quem discrimina é M5, não M6
     onStatus(fn: (s: LinkStatus) => void): void;
     close(): void;
   }
   export function hostRoom(ice?: IceConfig): { roomId: string; channel: Channel };
   export function joinRoom(roomId: string, ice?: IceConfig): Channel;
   ```
+- **`D-90` reabriu esta porta, e só nisto:** o fio passou a carregar `Pick` ao lado de `Move`, pelos **mesmos 4 métodos** — um 5º (`onPick`) é o precedente que `D-39` recusou. M6 continua sem interpretar o que carrega: quem valida o código de país é M5, com `assertCatalogCode` (`D-61`). Custo, mortas e portão em [[t31_selecao_por_aparelho]].
 - **Estado que possui:** a conexão, o ID de sala e o relógio de timeout. **Nenhum estado de disputa** — M6 não sabe o que é gol.
 - **Skill responsável:** [[b_process/skills/microservice-sync/SKILL|microservice-sync]]
 - **TURN tem dono, e o dono é este módulo.** `IceConfig` existe para que o relay seja configurável sem tocar em mais nada. Duas saídas, e o plano exige que uma seja escolhida em E-4, por escrito: (a) usar uma camada gratuita de TURN, que então **ganha linha na tabela de custo** de [[stack]] e é verificada pelo portão de M9; ou (b) declarar TURN fora de escopo, e nesse caso o portão de E-4 registra **quantos por cento ficam sem online** — não "alguns jogadores" [Fonte: a_context/online_p2p.md#a-lacuna-declarada].

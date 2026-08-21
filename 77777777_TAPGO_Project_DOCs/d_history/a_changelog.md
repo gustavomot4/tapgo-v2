@@ -7,6 +7,17 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-21] — `D-90`: o fio ganha `Pick`, e `T-31` sai da trava de contrato
+
+- **Skill:** architecture-monolith. **Nenhum arquivo de `src/` mudou** — sessão de arquitetura desenha porta, não implementa.
+- **A trava era real e de contrato:** `Channel.send` carregava `Move { seq, side, zone }` e nada mais (`src/net/index.ts:60`, congelado por `D-13`). Seleção não viajava, então no `online` o anfitrião escolhia **os dois** lados e o convidado só recebia (`D-77` consertou a divergência, não a escolha).
+- **Por que não havia saída de custo zero:** a escolha do convidado nasce **depois** do link, e o link é de mão única. O argumento que matou `D-79` — "o fio já dá o discriminador de graça" — **não transfere**: o código de país do outro lado não existe neste aparelho em forma nenhuma.
+- **`D-90` ADOTADO · SUPERSEDE `D-13` no que `T-31` exige**, em duas portas e nenhum método novo: M6 carrega `Move` **ou** `Pick { side, team }` pelos **mesmos 4 métodos** de `Channel` (um 5º é o precedente que `D-39` recusou), e M5 entrega as seleções num **3º argumento** de `subscribe`, com `null` no lado remoto = "ainda escolhendo" — que é o próprio estado de espera da tela.
+- **As quatro perguntas do card, respondidas na decisão:** o que viaja (`CountryCode` de `D-52`, validado em M5 por `D-61`), quem manda primeiro (ninguém: os dois, ao conectar, sem aperto de mão, idempotente no rearme de `D-31`), o que a tela mostra enquanto espera (o `null`, com `CONNECT_TIMEOUT_MS` rearmado — sem constante nova, `D-76`) e o que acontece se o peer sumir (nada novo: `D-80` e o prazo de `T-22`).
+- **Quatro saídas mortas com o número que as matou**, entre elas `Move` com `team` obrigatório (a seleção de quem defende só chegaria na 2ª cobrança) — todas em [[t31_selecao_por_aparelho]].
+- **Portão de `D-83` cumprido:** a linha de `D-90` mede **395** contra o teto de 400, e a evidência inteira foi para a nota — que é o desenho de `D-83`, não compressão. O portão vai a **8 de 10**; o registro, a **19.611/20.000**.
+- **Atualizados:** as portas de M5 e M6 no [[b_plan|PLANO]], o card `T-31` (agora destravado) e o "Estado atual".
+
 ## [2026-08-21] — `A-38` FECHADA: o ar devolveu `3` e `Sim` — as três tarefas confirmadas no endereço público (`T-30`/`T-32`/`T-33`)
 
 - **Skill:** delivery-review. **Nenhum arquivo de produção mudou** — sessão de registro de campo, e campo confirma, não decide.
