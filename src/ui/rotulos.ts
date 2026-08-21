@@ -28,12 +28,27 @@ const COBRANCAS_REGULARES = 5;
 export const ZONAS: readonly Zone[] = ['L', 'C', 'R'];
 
 /**
+ * O que a tela escreve no lugar do nome enquanto o outro aparelho não anunciou (`D-90`/`T-31`).
+ *
+ * Escrito UMA vez, aqui, porque três telas o mostram — seleções, convite e cobrança — e um texto
+ * repetido em três lugares é um texto que só muda em dois no dia em que ele mudar. Reticências
+ * de verdade (`…`), e não três pontos: é o mesmo caractere que "Procurando o outro aparelho…"
+ * usa na tela de convite.
+ */
+export const ESCOLHENDO = 'escolhendo…';
+
+/**
  * Nome da seleção, sempre com texto.
  *
  * Código fora do catálogo devolve o próprio código, e não `undefined`: o código é informação
  * verdadeira e curta, enquanto a alternativa é a palavra "undefined" no meio do placar.
+ *
+ * `null` é o estado de ESPERA de `D-90`, e é diferente de "código estranho": ninguém escolheu
+ * ainda do outro lado. Devolve `ESCOLHENDO` — a tela não inventa seleção, e também não deixa uma
+ * área branca onde havia um nome.
  */
-export function nomeSelecao(code: CountryCode): string {
+export function nomeSelecao(code: CountryCode | null): string {
+  if (code === null) return ESCOLHENDO;
   return findTeam(code)?.name ?? code;
 }
 
@@ -138,7 +153,7 @@ export function nomeLado(lado: Side): string {
  */
 export function sorteioDoPrimeiro(
   estado: MatchState,
-  times: Readonly<Record<Side, CountryCode>>,
+  times: Readonly<Record<Side, CountryCode | null>>,
 ): { readonly lado: Side; readonly texto: string } | null {
   if (estado.kicks.length > 0 || estado.phase === 'finished' || estado.turn === null) return null;
   return { lado: estado.turn, texto: `${nomeSelecao(times[estado.turn])} cobra primeiro` };
@@ -173,7 +188,10 @@ export function resultadoUltimaCobranca(estado: MatchState): string | null {
  * `winner` é `null` enquanto a disputa corre — e também seria `null` num empate que o motor não
  * produz. Os dois casos têm frase, porque tela sem frase é área branca.
  */
-export function desfecho(estado: MatchState, times: Readonly<Record<Side, CountryCode>>): string {
+export function desfecho(
+  estado: MatchState,
+  times: Readonly<Record<Side, CountryCode | null>>,
+): string {
   if (estado.winner === null) {
     return estado.phase === 'finished' ? 'A disputa terminou empatada.' : 'Disputa em andamento.';
   }
@@ -270,6 +288,16 @@ export function segundosRestantes(prazoMs: number, agoraMs: number): number {
 
 /** O que a faixa diz quando o peer parou de responder. Fala da PESSOA, não do transporte. */
 export const AVISO_PEER_SUMIU = 'O outro jogador parou de responder.';
+
+/**
+ * O que a faixa diz enquanto o outro aparelho não anunciou a seleção dele (`D-90` / `T-31`).
+ *
+ * Fala da PESSOA, como `AVISO_PEER_SUMIU`, e diz o que está acontecendo em vez de só travar a
+ * tela: a cobrança não abre nesse estado, e uma tela trancada sem frase é a tela parecendo
+ * quebrada. Não promete prazo — quem conta os 20 s é M5, e se eles estourarem o que chega aqui
+ * é a queda de `D-35`, com a frase dela.
+ */
+export const AVISO_SEM_SELECAO = 'O outro jogador ainda está escolhendo a seleção dele.';
 
 /**
  * A linha do contador.
@@ -415,7 +443,7 @@ export function partidasDaSerie(serie: Serie): number {
  */
 export function textoDaSerie(
   serie: Serie,
-  times: Readonly<Record<Side, CountryCode>>,
+  times: Readonly<Record<Side, CountryCode | null>>,
 ): string | null {
   const total = partidasDaSerie(serie);
   if (total < MINIMO_DA_SERIE) return null;

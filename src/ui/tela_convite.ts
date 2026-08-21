@@ -35,7 +35,11 @@
  *
  * ## Fluxo crítico
  * **Anfitrião:** 1 toque (copiar não conta — é opcional). **Convidado:** 1 toque, e é o portão
- * de UX desta tela. O convidado abre o link, vê de quem é o convite e toca em "Entrar".
+ * de UX desta tela. O convidado vê de quem é o convite e toca em "Entrar".
+ *
+ * Desde `D-90` ele chega aqui vindo da tela de seleções, e não do link direto: escolher a
+ * própria seleção custou-lhe um toque a mais **antes** desta tela. O portão DESTA continua em 1,
+ * e é ele que esta tela responde por.
  *
  * ## A sessão sai daqui viva
  * A tela de cobrança recebe a sessão já conectada pela rota (`rotas.ts`). Criar uma segunda
@@ -46,9 +50,9 @@
 import { createSession } from '../session/index';
 import type { LinkStatus, Session, SessionConfig } from '../session/index';
 import { newRoomId } from '../session/index';
+import type { CountryCode, Side } from '../core/index';
 import { botao, el, focar, limpar } from './dom';
-import { linkDaSala, salaLegivel, timesDoEndereco } from './convite';
-import { ehDoCatalogo } from './rotulos';
+import { linkDaSala, salaLegivel } from './convite';
 import { nomeSelecao } from './rotulos';
 import { marca } from './tela_selecoes';
 import type { Contexto, Partida, Tela } from './rotas';
@@ -58,13 +62,17 @@ function enderecoAtual(): string {
   return window.location.href;
 }
 
+/**
+ * @param quemConvidou a seleção de quem mandou o link (`t=`, `D-90`), ou `null` quando é ESTE
+ *                     aparelho que convida — e também quando o link não a trouxe. É **rótulo**:
+ *                     nunca entra em `SessionConfig.teams`, onde o lado do peer nasce `null` e
+ *                     só o `Pick` do fio o preenche.
+ */
 export const telaConvite =
-  (partida: Partida): Tela =>
+  (partida: Partida, quemConvidou: CountryCode | null = null): Tela =>
   (raiz: HTMLElement, ctx: Contexto) => {
     const anfitriao = partida.ladoLocal === 'A';
-    // `D-77`: o convidado só vê o confronto do anfitrião se o link o trouxe. Quem lê o endereço é
-    // `main.ts`, na abertura — aqui basta saber se o que está em `partida.times` veio de lá.
-    const temTimesDoLink = !anfitriao && timesDoEndereco(enderecoAtual(), ehDoCatalogo) !== null;
+    const ladoRemoto: Side = anfitriao ? 'B' : 'A';
 
     const tela = el('section', { classe: 'tela' });
     raiz.append(tela);
@@ -112,9 +120,21 @@ export const telaConvite =
     }
 
     const daSala: string = sala;
-    // As seleções vão no link (`D-77`): é o que faz o convidado ver o MESMO confronto. Só o
-    // anfitrião as manda — o link do convidado nunca é montado para ninguém.
-    const link = linkDaSala(enderecoAtual(), daSala, partida.times);
+    /**
+     * O que a tela MOSTRA — e que não é o que a sessão recebe (`D-90`).
+     *
+     * O lado do peer em `partida.times` é `null`, e é assim que ele vai para `createSession`.
+     * Aqui, só aqui e só para o convidado, ele é pintado com o código que veio em `t=`: é o
+     * "quem te chamou" antes de existir conexão. Assim que o canal abrir, quem manda é o `Pick`
+     * — e é por isso que este valor nunca desce para a configuração.
+     */
+    const exibir: Record<Side, CountryCode | null> = { A: partida.times.A, B: partida.times.B };
+    if (exibir[ladoRemoto] === null && quemConvidou !== null) exibir[ladoRemoto] = quemConvidou;
+
+    // UM código no link, o deste aparelho (`D-90`): a seleção do convidado não existe aqui em
+    // momento nenhum — ela nasce no aparelho dele, depois que ele abrir o link.
+    const minhaSelecao = partida.times[partida.ladoLocal];
+    const link = linkDaSala(enderecoAtual(), daSala, minhaSelecao ?? undefined);
     const config: SessionConfig = {
       mode: 'online',
       seed: partida.semente,
@@ -334,19 +354,19 @@ export const telaConvite =
       );
     }
 
-    // As seleções deste aparelho, mostradas para que ninguém ache que elas viajaram pelo link.
-    // Elas não viajam: o canal de M6 carrega `Move` e nada mais (`D-13`), então cada aparelho
-    // mostra as suas. É lacuna declarada, e a frase abaixo é onde ela é declarada à pessoa.
+    // O confronto até onde ele é conhecido AGORA. O lado do outro aparelho é "escolhendo…"
+    // enquanto o `Pick` não chega (`D-90`) — para o convidado, com o rótulo de `t=` no lugar,
+    // que é a única coisa que existe antes da conexão.
     tela.append(
       el('div', { classe: 'confronto', attrs: { 'aria-hidden': 'true' } }, [
         el('span', { classe: 'confronto__lado' }, [
-          marca(partida.times.A),
-          el('span', { classe: 'confronto__nome', texto: nomeSelecao(partida.times.A) }),
+          marca(exibir.A),
+          el('span', { classe: 'confronto__nome', texto: nomeSelecao(exibir.A) }),
         ]),
         el('span', { classe: 'confronto__vs', texto: '×' }),
         el('span', { classe: 'confronto__lado' }, [
-          marca(partida.times.B),
-          el('span', { classe: 'confronto__nome', texto: nomeSelecao(partida.times.B) }),
+          marca(exibir.B),
+          el('span', { classe: 'confronto__nome', texto: nomeSelecao(exibir.B) }),
         ]),
       ]),
       // A ordem das cobranças NÃO é prometida aqui. Quem a anuncia é a tela da cobrança, lendo
@@ -354,16 +374,16 @@ export const telaConvite =
       // em que o sorteio do `online` for semeado pelo `roomId`, uma promessa escrita aqui viraria
       // mentira sem que ninguém tocasse neste arquivo.
       //
-      // A frase sobre as seleções mudou em `D-77`: elas viajam no link, então o confronto acima é
-      // o mesmo nos dois aparelhos. O ramo do convidado só existe para o link antigo, sem `t=` —
-      // aí ele cai nas seleções do próprio aparelho, e a tela diz isso em vez de fingir.
+      // A frase mudou de novo em `D-90`, e agora ela é a mesma verdade nos dois aparelhos: cada
+      // um escolheu o seu, e o que falta chega pelo fio. O ramo do convidado sem `t=` continua
+      // existindo — é o link de antes de `D-77`, e lá não há nem rótulo de quem chamou.
       el('p', {
         classe: 'lacuna',
         texto: anfitriao
-          ? 'O link leva estas duas seleções — o outro aparelho vai ver o mesmo confronto. Quem cobra é anunciado quando a disputa começa.'
-          : temTimesDoLink
-            ? 'Este é o confronto que quem convidou montou. Quem cobra é anunciado quando a disputa começa.'
-            : 'O convite não trouxe as seleções, então estas são as deste aparelho — o outro pode estar vendo outras.',
+          ? 'Quem entrar escolhe a seleção dele, e ela aparece aqui assim que a conexão abrir. Quem cobra é anunciado quando a disputa começa.'
+          : quemConvidou !== null
+            ? 'Esta é a seleção de quem te convidou. A sua é a que você acabou de escolher — e o outro aparelho vai vê-la quando a conexão abrir.'
+            : 'O convite não trouxe a seleção de quem chamou. Ela aparece assim que a conexão abrir.',
       }),
       aviso,
       carregando,

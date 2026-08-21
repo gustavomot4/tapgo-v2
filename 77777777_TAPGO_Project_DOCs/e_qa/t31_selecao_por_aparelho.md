@@ -194,3 +194,114 @@ o que a tela deixa tocar é a tela: mostrar **"escolhendo…"** enquanto `teams[
 pendente; travá-la aqui seria regra de tela nascendo na sessão. Hoje isso não tem efeito porque
 `src/ui/` ainda manda as duas seleções preenchidas (`tela_cobranca.ts:128`) — o `null` só nasce
 quando M7 passar a mandá-lo.
+
+---
+
+## O que `T-31` implementou — M7 (2026-08-21)
+
+> Sessão de construção, skill `frontend-uiux`. M6 e M5 já estavam no ar e **não foram tocados**:
+> `git diff` desta sessão não encosta em `src/net/` nem em `src/session/`. O que segue é o delta
+> real no disco.
+
+### As quatro coisas que o card pedia, e onde cada uma ficou
+
+| pedido | onde ficou |
+|---|---|
+| a tela escolhe só a seleção DESTE aparelho | `tela_selecoes.ts` — **uma** grade no `online`, a de `ladoLocal`; `times[ladoRemoto] = null` |
+| `teams[remoteSide] === null` vira "escolhendo…" e trava a cobrança | `rotulos.ts` (`ESCOLHENDO`, `nomeSelecao(null)`), `tela_selecoes.ts` (`marca(null)`), `tela_cobranca.ts` (`esperandoSelecao()`) |
+| o 3º argumento de `subscribe` chegando à tela | `tela_cobranca.ts` — `aoSelecoes()`, o **único** dono da seleção do peer daqui para baixo |
+| `t=` com UM código (`D-77`) | `convite.ts` — `PARAM_ANFITRIAO`, `linkDaSala(…, anfitriao?)`, `anfitriaoDoEndereco` |
+
+### O convidado passa pela tela de seleções, e é onde o card virou fluxo
+
+Era o buraco que nenhuma das quatro linhas acima fecha sozinha: até aqui o link levava **direto**
+à espera da conexão (`main.ts`, `abertura`), então o convidado não tinha tela em que escolher.
+Agora a abertura monta um `ConviteRecebido { sala, anfitriao }` e manda para a **mesma** tela de
+seleções do anfitrião, com `ladoLocal = 'B'`.
+
+**O preço, declarado:** o fluxo do convidado vai de **1 para 2 toques** (escolher e entrar). Dois
+é o portão declarado do projeto — é o que o anfitrião sempre gastou (`tela_inicio.ts`), e é o que
+`D-49` protegeu ao matar a tela da moeda. Não há regressão de portão; há um toque que não existia
+porque a escolha não existia.
+
+### `t=` é rótulo, e não desce para a sessão — a decisão desta sessão
+
+`D-90` disse o que `t=` passa a levar (um código, o de quem convida, "para o convite mostrar quem
+chamou antes de conectar"). O que ele **não** disse é se esse código pode virar
+`SessionConfig.teams`. Esta sessão decidiu que **não**, e por um motivo de uma linha: com o `Pick`
+no fio, o link seria a segunda fonte do mesmo dado — e a que chega primeiro é a errada (é o
+argumento com que o próprio `D-90` matou o segundo código do link antigo).
+
+Na prática: no `online`, `partida.times[ladoRemoto]` é **sempre** `null`, e o código do link vive
+num `exibir` separado, que só as telas de **seleções** e **convite** pintam — as duas telas
+anteriores à conexão. Da cobrança em diante, quem responde é o 3º argumento de `subscribe`.
+
+Link adulterado, link truncado no meio do `t=`, ou catálogo que mudou: todos caem em `null`, e
+`null` mostra "escolhendo…". Nenhum deles chega a `createSession`.
+
+### O que a tela de cobrança faz enquanto `teams[remoteSide]` é `null`
+
+`esperandoSelecao()` é uma função só, e ela é lida em **quatro** lugares — cada um por um motivo
+que o outro não cobre:
+
+1. **`desenhar()`** — faixa com `AVISO_SEM_SELECAO`, zonas trancadas, e o painel do sorteio
+   **escondido**. O sorteio vem depois desta guarda de propósito: `sorteioDoPrimeiro` monta "X
+   cobra primeiro" com o nome do lado sorteado, e metade das vezes esse lado é o que ninguém
+   escolheu — "escolhendo… cobra primeiro" é frase que não diz nada. Escondido, o painel (e a
+   moeda de tela cheia de `T-28`) nasce inteiro quando o `Pick` chega, com a bandeira de verdade.
+2. **`escolher()`** — porque o **teclado** chama a função direto (`naTeclaGlobal`), e botão
+   `disabled` não tranca a seta.
+3. **`armarRelogio()`** — os 15 s de `T-24` não correm. Sem isto, o relógio cobraria pressa de
+   quem não pode tocar, e aos 15 s **cobraria no escuro** por ela.
+4. **`vestirCena()`** — a camisa de `T-29`/`D-88` só é vestida com os dois códigos na mão. A cena
+   chega por `import()` e o `Pick` chega pelo fio; a que perder a corrida encontra a outra pronta,
+   e enquanto faltar uma o campo fica com as cores de repouso — nunca com a camisa de uma seleção
+   que ninguém escolheu.
+
+**O que NÃO ganhou prazo próprio:** a espera. Quem conta os 20 s é M5 (`armarEsperaDoPick`), e se
+eles estourarem o que chega aqui é `'failed'` — a queda de `D-35`, com a frase dela. Um segundo
+contador aqui seria dois relógios para um evento só, que é o defeito que `T-22` já pagou.
+
+### Duas coisas que mudaram de dono, e ficam declaradas
+
+1. **A seleção do peer deixou de morar em `Partida`.** `partida.times` passa a ser o valor da
+   **criação** da sessão, e mais nada — está escrito no tipo, em `rotas.ts`. Quem lê a seleção
+   viva é o 3º argumento. Um teste novo cobra isso lendo o disco: dentro de `telaCobranca`, a
+   única linha que ainda cita `partida.times` é a que **inicializa** o estado vivo.
+2. **A rota de fim leva o confronto inteiro** (`{ ...partida, times }`). Sem isso, o pódio, o
+   placar e o resumo cobrança a cobrança sairiam com "escolhendo…" no lado do vencedor — o
+   retrato do começo sobrevivendo ao fim da disputa.
+
+E, em `tela_fim`, "Convidar de novo" passa a mandar `times: { A: partida.times[ladoLocal], B: null }`:
+convite novo é peer novo, e herdar a seleção de quem acabou de jogar mostraria, na tela de convite,
+a marca de alguém que ainda não abriu o link. `A` e não `times.A` porque quem convida de novo pode
+ter sido o **convidado** da disputa que acabou.
+
+### Portão — o que está verde
+
+- [x] **`tsc` limpo**, `check.py` verde (só os 3 avisos de orçamento de sempre).
+- [x] **Suíte inteira: 638/638** (628 + 10). As 10 cobrem o que erra em silêncio sem navegador:
+      o `t=` de um código (ida, volta, `GB-ENG`, link antigo caindo no primeiro código, os quatro
+      `null`, minúscula e espaço), `nomeSelecao(null)`, os três rótulos que recebem o confronto
+      com um lado em espera (nenhum derrama `null`/`undefined`/`NaN`), e quatro portões de disco:
+      uma grade no `online`, o 3º argumento chegando, as três guardas de `esperandoSelecao`, e a
+      regra `.marca--vazia` sem matiz.
+- [x] **Bundle relido de `dist/`: 428.754 B**, delta de **+1.312 B** sobre os 427.442 B de M6+M5.
+      **Zero asset novo** (44 arquivos), **zero cor nova** na paleta — o disco de espera usa
+      `--borda`, `--superficie` e `--texto-apagado`, que `T-20` já mede.
+- [x] **Os 4 estados de `LinkStatus` seguem cobertos, mais o novo** (conectado com `Pick`
+      pendente), que é o que esta sessão pintou.
+
+### O que segue aberto, e por quê
+
+- [ ] **Os dois aparelhos mostram o MESMO confronto, com a seleção que CADA um escolheu** — é
+      `A-39`, e é do dono. O sandbox não compõe quadros e não tem dois aparelhos; o que dá para
+      provar aqui está provado.
+
+### Uma pendência de comentário que esta sessão NÃO consertou (escopo)
+
+`src/session/index.ts` cita `src/ui/main.ts:162` como o lugar onde os dois aparelhos do mesmo link
+nascem em `'B'` (o par espelhado de `D-81`/`QA-26`). O **fato** continua verdadeiro — o convidado
+segue nascendo `'B'` —, mas o endereço mudou de arquivo: quem escreve o lado agora é
+`tela_selecoes.ts`. Não foi corrigido de carona porque M5 não é o módulo desta sessão (regra 2), e
+um ponteiro velho em comentário não é defeito de comportamento. Fica para quem tocar M5.

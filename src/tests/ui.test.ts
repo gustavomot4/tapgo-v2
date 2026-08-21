@@ -16,11 +16,11 @@ import { criarDerivacao, outroLado } from '../ui/derivacao';
 import {
   FORMATO_SALA,
   PARAM_SALA,
-  PARAM_TIMES,
+  PARAM_ANFITRIAO,
+  anfitriaoDoEndereco,
   linkDaSala,
   salaDoEndereco,
   salaLegivel,
-  timesDoEndereco,
 } from '../ui/convite';
 import { CONNECT_TIMEOUT_MS, newRoomId } from '../session/index';
 import type { Vez } from '../ui/derivacao';
@@ -46,6 +46,7 @@ import {
   resultadoUltimaCobranca,
   rotuloZona,
   sorteioDoPrimeiro,
+  ESCOLHENDO,
   MINIMO_DA_SERIE,
   partidasDaSerie,
   serieComVencedor,
@@ -1246,8 +1247,14 @@ describe('a direção visual não afrouxa portão de M7 (T-20 fatia 2 / D-65)', 
       /\/\*[\s\S]*?\*\//g,
       '',
     );
+    // O nome da condição mudou em `T-31` (`const online = modo === 'online'`, porque agora ela
+    // decide mais de uma coisa nesta tela), então o padrão cobra as DUAS pontas: que a rota siga
+    // condicionada, e que a condição continue saindo do modo — e não de qualquer outra coisa.
     expect(fonte, 'a rota de convite deixou de ser condicionada ao modo online').toMatch(
-      /modo === 'online'\s*\?\s*\{\s*nome:\s*'convite'/,
+      /\bonline\s*\?\s*\{\s*nome:\s*'convite'/,
+    );
+    expect(fonte, 'a condição `online` deixou de sair do modo').toMatch(
+      /const online = modo === 'online'/,
     );
   });
 
@@ -1507,46 +1514,172 @@ describe('link do convite (T-21 / D-73)', () => {
     expect(salaDoEndereco(`${BASE}?${PARAM_SALA}=${SALA.toLowerCase()}`)).toBe(SALA);
   });
 
-  // ── `D-77`: as seleções viajam no link, porque o canal não as leva (A-22) ───────────────
-  it('as duas seleções vão e voltam pelo link, e o convidado vê o MESMO confronto', () => {
-    const times = { A: 'ES', B: 'AR' } as const;
-    const link = linkDaSala(BASE, SALA, times);
-    expect(timesDoEndereco(link, ehDoCatalogo)).toEqual({ A: 'ES', B: 'AR' });
+  // ── `D-90`: UM código no link, o de quem convida (`T-31`) ──────────────────────────────
+  // `D-77` levava as DUAS seleções aqui, e era assim que o anfitrião montava o confronto pelos
+  // dois. Com o `Pick` no fio, a do convidado nasce no aparelho dele: o que sobra no endereço é
+  // o rótulo de quem chamou, para ele ver de quem é o convite ANTES de existir conexão.
+  it('a seleção de quem convida vai e volta pelo link', () => {
+    const link = linkDaSala(BASE, SALA, 'ES');
+    expect(anfitriaoDoEndereco(link, ehDoCatalogo)).toBe('ES');
     // E a sala continua chegando junto: um parâmetro não pode comer o outro.
     expect(salaDoEndereco(link)).toBe(SALA);
   });
 
-  it('o código com subdivisão sobrevive ao separador (GB-ENG, a exceção de D-52)', () => {
-    // O motivo de o separador ser `_` e não `-`. Com hífen, a Inglaterra viraria "GB" em metade
-    // dos convites — e "GB" não está no catálogo, então o convite inteiro cairia fora.
-    const link = linkDaSala(BASE, SALA, { A: 'GB-ENG', B: 'BR' });
-    expect(timesDoEndereco(link, ehDoCatalogo)).toEqual({ A: 'GB-ENG', B: 'BR' });
+  it('o link NÃO leva a seleção do convidado — ela não existe neste aparelho', () => {
+    // O portão do formato, e ele é o que separa `D-90` de `D-77`: um código, sem separador. Se
+    // um dia voltar a sair com dois, o convidado volta a receber o confronto pronto — que é
+    // exatamente o que o dono recusou.
+    const link = linkDaSala(BASE, SALA, 'ES');
+    const valor = new URL(link).searchParams.get(PARAM_ANFITRIAO);
+    expect(valor).toBe('ES');
+    expect(valor, 'o link voltou a levar as duas seleções').not.toContain('_');
   });
 
-  it('convite sem as seleções, ou com código fora do catálogo, devolve null e não lança', () => {
-    // Link de antes de `D-77` — continua entrando na sala, só sem o confronto.
-    expect(timesDoEndereco(linkDaSala(BASE, SALA), ehDoCatalogo)).toBeNull();
-    // Adulterado: um lado bom e outro inexistente derruba os DOIS. Meio confronto na tela é
-    // pior que nenhum — é o lado que sobra virando "undefined" ao lado de um nome de verdade.
-    expect(timesDoEndereco(`${BASE}?${PARAM_TIMES}=ES_ZZ`, ehDoCatalogo)).toBeNull();
-    expect(timesDoEndereco(`${BASE}?${PARAM_TIMES}=ES`, ehDoCatalogo)).toBeNull();
-    expect(timesDoEndereco(`${BASE}?${PARAM_TIMES}=`, ehDoCatalogo)).toBeNull();
-    expect(timesDoEndereco('isto não é endereço nenhum', ehDoCatalogo)).toBeNull();
+  it('o código com subdivisão atravessa inteiro (GB-ENG, a exceção de D-52)', () => {
+    // O separador do formato antigo é `_` e não `-` justamente por isto: `GB-ENG` tem hífen, e
+    // partir por hífen faria a Inglaterra virar "GB" — que não está no catálogo.
+    expect(anfitriaoDoEndereco(linkDaSala(BASE, SALA, 'GB-ENG'), ehDoCatalogo)).toBe('GB-ENG');
   });
 
-  it('as seleções do link saem do catálogo de verdade, não de uma lista escrita na tela', () => {
+  it('link de antes de D-90 vale pelo PRIMEIRO código; o segundo é ignorado', () => {
+    // O convite antigo é `t=<anfitrião>_<convidado>`. O primeiro continua sendo quem chamou, e
+    // vale. O segundo era a seleção que o anfitrião escolhia PELO convidado, e é a que `D-90`
+    // desfez: lê-la agora seria uma segunda fonte para o que o `Pick` traz — e a que chega
+    // primeiro é a errada.
+    expect(anfitriaoDoEndereco(`${BASE}?${PARAM_ANFITRIAO}=ES_AR`, ehDoCatalogo)).toBe('ES');
+    expect(anfitriaoDoEndereco(`${BASE}?${PARAM_ANFITRIAO}=GB-ENG_BR`, ehDoCatalogo)).toBe('GB-ENG');
+    // E o segundo é ignorado mesmo quando é lixo: quem manda é o primeiro.
+    expect(anfitriaoDoEndereco(`${BASE}?${PARAM_ANFITRIAO}=ES_ZZZZ`, ehDoCatalogo)).toBe('ES');
+  });
+
+  it('convite sem a seleção, ou com código fora do catálogo, devolve null e não lança', () => {
+    // Os três `null`, e todos têm a MESMA saída na tela: "escolhendo…", até o `Pick` chegar.
+    expect(anfitriaoDoEndereco(linkDaSala(BASE, SALA), ehDoCatalogo)).toBeNull();
+    expect(anfitriaoDoEndereco(`${BASE}?${PARAM_ANFITRIAO}=ZZ`, ehDoCatalogo)).toBeNull();
+    expect(anfitriaoDoEndereco(`${BASE}?${PARAM_ANFITRIAO}=`, ehDoCatalogo)).toBeNull();
+    expect(anfitriaoDoEndereco(`${BASE}?${PARAM_ANFITRIAO}=_AR`, ehDoCatalogo)).toBeNull();
+    expect(anfitriaoDoEndereco('isto não é endereço nenhum', ehDoCatalogo)).toBeNull();
+  });
+
+  it('minúsculas do teclado, e espaço colado pelo mensageiro, ainda achatam no código certo', () => {
+    expect(anfitriaoDoEndereco(`${BASE}?${PARAM_ANFITRIAO}=es`, ehDoCatalogo)).toBe('ES');
+    expect(anfitriaoDoEndereco(`${BASE}?${PARAM_ANFITRIAO}=%20es%20`, ehDoCatalogo)).toBe('ES');
+  });
+
+  it('a seleção do link sai do catálogo de verdade, não de uma lista escrita na tela', () => {
     // O predicado é o de M4. Se o catálogo mudar, o convite muda junto — sem segunda lista.
-    const [primeiro, segundo] = listTeams();
+    const [primeiro] = listTeams();
     expect(primeiro, 'catálogo vazio: o teste passaria por vácuo').toBeDefined();
-    expect(segundo).toBeDefined();
-    if (primeiro === undefined || segundo === undefined) return;
-    const link = linkDaSala(BASE, SALA, { A: primeiro.code, B: segundo.code });
-    expect(timesDoEndereco(link, ehDoCatalogo)).toEqual({ A: primeiro.code, B: segundo.code });
+    if (primeiro === undefined) return;
+    const link = linkDaSala(BASE, SALA, primeiro.code);
+    expect(anfitriaoDoEndereco(link, ehDoCatalogo)).toBe(primeiro.code);
   });
 
   it('o código legível quebra de 4 em 4 sem perder nem inventar caractere', () => {
     expect(salaLegivel(SALA).replace(/ /g, '')).toBe(SALA);
     expect(salaLegivel(SALA).split(' ')[0]).toHaveLength(4);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// `T-31` / `D-90` — cada aparelho escolhe a própria seleção
+//
+// O portão de verdade é do dono, em DOIS aparelhos (o sandbox não compõe quadros, e `document`
+// não existe aqui). O que dá para cobrar sem navegador são as duas metades que erram em
+// silêncio: os rótulos com o lado do peer ainda `null`, e o que está ESCRITO nas telas — que é
+// como o resto deste arquivo já cobre M7 desde `T-20`.
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+describe('a espera pela seleção do outro aparelho (T-31 / D-90)', () => {
+  const VAZIO: Record<Side, string | null> = { A: 'ES', B: null };
+
+  it('sem seleção do outro lado, o rótulo diz "escolhendo…" — nunca vazio nem "null"', () => {
+    expect(nomeSelecao(null)).toBe(ESCOLHENDO);
+    expect(nomeSelecao(null)).not.toBe('');
+    expect(nomeSelecao(null).toLowerCase()).not.toContain('null');
+    expect(nomeSelecao(null).toLowerCase()).not.toContain('undefined');
+  });
+
+  it('nenhum rótulo que recebe o confronto derrama "null" quando um lado ainda é espera', () => {
+    // A regra 1 do cabeçalho de `rotulos.ts`, aplicada ao estado novo: `null` no lado do peer é
+    // caminho normal do `online`, e ele atravessa TODAS estas funções antes do primeiro toque.
+    const zerado = createSession({
+      mode: 'local',
+      seed: 7,
+      teams: { A: 'ES', B: 'AR' },
+      localSide: 'A',
+    }).state();
+
+    const saidas = [
+      desfecho(zerado, VAZIO),
+      textoDaSerie({ A: 2, B: 1 }, VAZIO) ?? '',
+      sorteioDoPrimeiro(zerado, VAZIO)?.texto ?? '',
+    ];
+
+    for (const texto of saidas) {
+      expect(texto).not.toBe('');
+      expect(texto.toLowerCase(), texto).not.toContain('null');
+      expect(texto.toLowerCase(), texto).not.toContain('undefined');
+      expect(texto, texto).not.toContain('NaN');
+    }
+  });
+
+  it('o sorteio nomeia a espera quando o lado sorteado é o que ainda não escolheu', () => {
+    // Ele não some, e não inventa: a tela é quem decide não MOSTRAR o painel nesse estado (ver
+    // o gate em `tela_cobranca.ts`, cobrado logo abaixo). Aqui se cobra que o texto seja honesto
+    // caso alguém volte a mostrá-lo.
+    const sessao = createSession({ mode: 'local', seed: 7, teams: { A: 'ES', B: 'AR' }, localSide: 'A' });
+    const anuncio = sorteioDoPrimeiro(sessao.state(), { A: null, B: null });
+    expect(anuncio).not.toBeNull();
+    expect(anuncio?.texto).toContain(ESCOLHENDO);
+  });
+
+  // ── O que está escrito nas telas ────────────────────────────────────────────────────────
+
+  it('a tela de seleções monta UMA grade no online — o anfitrião não escolhe pelos dois', () => {
+    const fonte = readFileSync(join(DIR_UI, 'tela_selecoes.ts'), 'utf8');
+    // A grade única é a do lado DESTE aparelho, e o outro lado vai `null` para a sessão.
+    expect(fonte, 'a grade do online deixou de ser a do lado local').toMatch(
+      /grade\(ladoLocal,/,
+    );
+    expect(fonte, 'o lado do peer deixou de nascer null (D-90)').toMatch(
+      /times\[ladoRemoto\] = null/,
+    );
+  });
+
+  it('a tela de cobrança lê a seleção do peer do 3º argumento de subscribe, e não da rota', () => {
+    const fonte = readFileSync(join(DIR_UI, 'tela_cobranca.ts'), 'utf8');
+    expect(fonte, 'o 3º argumento de subscribe sumiu da tela').toMatch(
+      /subscribe\([\s\S]{0,400}?selecoes:\s*Record<Side, CountryCode \| null>/,
+    );
+    // E o retrato do começo deixou de ser lido no corpo da disputa: `partida.times` sobrevive
+    // apenas onde ele é a CRIAÇÃO da sessão (`configDaPartida`) e no estado vivo que sai dele.
+    const corpo = fonte.slice(fonte.indexOf('export const telaCobranca'));
+    const leituras = corpo.split('\n').filter((l) => /partida\.times/.test(l) && !/^\s*(\*|\/\/)/.test(l));
+    expect(leituras, `a tela voltou a ler o retrato do começo: ${leituras.join(' | ')}`).toEqual([
+      '    const times: Record<Side, CountryCode | null> = { A: partida.times.A, B: partida.times.B };',
+    ]);
+  });
+
+  it('não se cobra sem confronto: o toque, o teclado e o relógio de 15 s param na mesma guarda', () => {
+    const fonte = readFileSync(join(DIR_UI, 'tela_cobranca.ts'), 'utf8');
+    // O teclado chama `escolher()` direto — um botão `disabled` não tranca a seta. Por isso a
+    // guarda mora na função, e não só no `travarZonas`.
+    expect(fonte, 'o toque deixou de checar a espera pela seleção').toMatch(
+      /function escolher\(zona: Zone\): void \{[\s\S]{0,300}?esperandoSelecao\(\)/,
+    );
+    // E o relógio de `T-24`: sem esta guarda ele cobraria no escuro por quem nem pode tocar.
+    expect(fonte, 'o relógio de 15 s deixou de checar a espera pela seleção').toMatch(
+      /function armarRelogio\(\): void \{[\s\S]{0,400}?esperandoSelecao\(\)/,
+    );
+    expect(fonte, 'a faixa deixou de dizer o que está acontecendo').toMatch(/AVISO_SEM_SELECAO/);
+  });
+
+  it('a folha tem o disco de espera, e ele não pede matiz nenhum', () => {
+    const folha = readFileSync(fileURLToPath(new URL('../ui/estilo.css', import.meta.url)), 'utf8');
+    const regra = /\.marca--vazia\s*\{([^}]*)\}/.exec(folha)?.[1];
+    expect(regra, 'a regra `.marca--vazia` sumiu da folha').toBeDefined();
+    // Matiz derivado de código nenhum seria a espera parecendo uma seleção.
+    expect(regra, 'o disco de espera passou a inventar cor de seleção').not.toContain('--matiz');
   });
 });
 

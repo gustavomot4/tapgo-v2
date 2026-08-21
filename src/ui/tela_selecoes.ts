@@ -12,7 +12,17 @@
  * - **erro** — a seleção marcada saiu do catálogo entre abrir a tela e tocar em "Começar".
  *   Acontece de verdade quando `A-04` trocar a lista de fixação pela lista real com preferência
  *   antiga gravada; sem este ramo, `createSession` recusaria a configuração e a tela quebraria.
- * - **sucesso** — as duas seleções marcadas e o botão de começar ativo.
+ * - **sucesso** — as seleções marcadas e o botão de começar ativo.
+ *
+ * ## No `online`, esta tela escolhe UM lado (`D-90` / `T-31`)
+ * Até aqui ela escolhia os dois, inclusive no `online` — o anfitrião montava o confronto inteiro
+ * e o convidado recebia pronto (`D-77` levava as duas seleções no link). O dono recusou isso: o
+ * convidado não escolhia nada. Com o `Pick` no fio, cada aparelho declara o seu, e a tela reflete
+ * a mesma fronteira — **uma** grade, a do lado deste aparelho, e o outro lado como espera.
+ *
+ * É também por isso que o CONVIDADO passa por aqui: o link deixa de levar direto à espera da
+ * conexão. O fluxo dele vai de 1 para 2 toques (escolher e entrar), e é o preço declarado de ele
+ * poder escolher — a alternativa era continuar jogando com a seleção que o outro marcou.
  */
 
 import type { CountryCode, Side } from '../core/index';
@@ -23,7 +33,7 @@ import { findTeam, listTeams } from '../data/teams';
 import { botao, el, focar, limpar } from './dom';
 import { marcaSelecao, nomeSelecao } from './rotulos';
 import { selecaoInicial } from './preferencias';
-import type { Contexto, Tela } from './rotas';
+import type { Contexto, ConviteRecebido, Tela } from './rotas';
 import { LADO_DO_HUMANO, SERIE_ZERO } from './rotas';
 
 /**
@@ -37,7 +47,20 @@ import { LADO_DO_HUMANO, SERIE_ZERO } from './rotas';
  * `alt=""`: o nome da seleção está escrito ao lado em todo lugar onde a marca aparece, e trocar
  * texto por imagem não pode transformar decoração em conteúdo anunciado duas vezes.
  */
-export function marca(code: CountryCode, grande = false): HTMLElement {
+export function marca(code: CountryCode | null, grande = false): HTMLElement {
+  // ── `D-90`/`T-31`: o outro aparelho ainda não anunciou ──────────────────────────────────
+  // Disco vazio, sem matiz e sem bandeira. Ele NÃO é o ramo de erro do arquivo que não carrega
+  // (esse mostra o código ISO, que é dado verdadeiro): aqui não existe dado nenhum a mostrar,
+  // e qualquer marca desenhada seria uma seleção inventada — o defeito de `A-22` de novo.
+  if (code === null) {
+    const vazio = el('span', {
+      classe: grande ? 'marca marca--vazia marca--grande' : 'marca marca--vazia',
+      attrs: { 'aria-hidden': 'true' },
+    });
+    vazio.textContent = '…';
+    return vazio;
+  }
+
   const m = marcaSelecao(code);
 
   const classes = ['marca'];
@@ -89,14 +112,14 @@ export function marca(code: CountryCode, grande = false): HTMLElement {
  * `aria-hidden` na caixa inteira: cada nome daqui já está escrito no rádio marcado da grade, e o
  * leitor de tela anunciar as duas seleções duas vezes é ruído, não acessibilidade.
  */
-function confronto(times: Readonly<Record<Side, CountryCode>>): {
+function confronto(times: Readonly<Record<Side, CountryCode | null>>): {
   node: HTMLElement;
   atualizar: () => void;
 } {
   const ladoA = el('span', { classe: 'confronto__lado' });
   const ladoB = el('span', { classe: 'confronto__lado' });
 
-  function pintar(alvo: HTMLElement, code: CountryCode): void {
+  function pintar(alvo: HTMLElement, code: CountryCode | null): void {
     limpar(alvo);
     alvo.append(marca(code), el('span', { classe: 'confronto__nome', texto: nomeSelecao(code) }));
   }
@@ -157,9 +180,20 @@ export function grade(
 }
 
 export const telaSelecoes =
-  (modo: ModoJogavel, nivel: Level | null): Tela =>
+  (modo: ModoJogavel, nivel: Level | null, convite: ConviteRecebido | null = null): Tela =>
   (raiz: HTMLElement, ctx: Contexto) => {
     ctx.aquecerCena();
+
+    const online = modo === 'online';
+    /**
+     * O lado DESTE aparelho — e, no `online`, o único que esta tela escolhe (`D-90`).
+     *
+     * `'B'` quando o jogo abriu por um link: quem convida é o `A` e quem entra é o `B`
+     * (`main.ts`, na abertura). Fora do `online` os dois lados são deste aparelho e o valor é o
+     * de sempre, `LADO_DO_HUMANO`.
+     */
+    const ladoLocal: Side = convite === null ? LADO_DO_HUMANO : 'B';
+    const ladoRemoto: Side = ladoLocal === 'A' ? 'B' : 'A';
 
     // `tela--largo` é a declaração de largura de desktop desta tela (`D-86`): acima de 1024px a
     // folha vai a 1040px e `.tela` vira grade de duas colunas. Esta é a tela que mais pedia isso
@@ -181,14 +215,47 @@ export const telaSelecoes =
       return () => undefined;
     }
 
-    const times: Record<Side, CountryCode> = { A: escolha.A, B: escolha.B };
+    /**
+     * As duas seleções que vão para a sessão. No `online`, o lado do peer é `null` (`D-90`).
+     *
+     * `null` aqui não é "ainda vou preencher": é o estado de espera que vai VIAJAR para
+     * `SessionConfig.teams`, e é ele que faz a tela seguinte mostrar "escolhendo…" em vez de
+     * inventar a seleção do outro. A do peer nasce no aparelho dele e chega pelo `Pick`.
+     */
+    const times: Record<Side, CountryCode | null> = { A: escolha.A, B: escolha.B };
+    if (online) times[ladoRemoto] = null;
+
+    /**
+     * O que estava marcado ao abrir a tela — a preferência, ou as duas primeiras do catálogo.
+     *
+     * Existe porque `comecar()` grava a preferência dos DOIS lados e, no `online`, esta tela só
+     * escolheu um: o outro tem de voltar ao arquivo como estava, e não como `null`. (É também a
+     * cópia que o TypeScript pede: dentro do ouvinte, `escolha` volta a ser `null` possível.)
+     */
+    const padrao: Record<Side, CountryCode> = { A: escolha.A, B: escolha.B };
+
+    /**
+     * O que a tela MOSTRA no confronto — que não é o que a sessão recebe, e a diferença é `D-90`.
+     *
+     * Para o convidado, o lado do anfitrião aqui é o código que veio em `t=`: rótulo de quem
+     * chamou, para ele não escolher às cegas. Ele fica **fora** de `times` de propósito — link
+     * velho ou adulterado não pode virar a seleção com que a sessão nasce, e a verdade sobre o
+     * outro aparelho é o `Pick`, não o endereço. Para o anfitrião não há nada a mostrar ainda:
+     * quem ele convidou nem abriu o link.
+     */
+    const exibir: Record<Side, CountryCode | null> = { A: times.A, B: times.B };
+    if (online) exibir[ladoRemoto] = convite === null ? null : convite.anfitriao;
+
     const avisoRepetida = el('p', { classe: 'faixa', dados: { tom: 'atencao' } });
     const avisoErro = el('div', { classe: 'aviso', dados: { tom: 'erro' } });
-    const duelo = confronto(times);
+    const duelo = confronto(exibir);
 
     function atualizarAvisos(): void {
+      exibir[ladoLocal] = times[ladoLocal];
       duelo.atualizar();
-      const repetida = times.A === times.B;
+      // Só faz sentido com os dois lados escolhidos NESTE aparelho: no `online` o outro lado é
+      // espera, e "as duas são a mesma" seria comparar uma escolha com uma ausência.
+      const repetida = !online && times.A === times.B;
       avisoRepetida.textContent = repetida
         ? 'As duas seleções são a mesma — dá para jogar assim.'
         : '';
@@ -197,7 +264,13 @@ export const telaSelecoes =
 
     function comecar(): void {
       // ── Estado de ERRO ──────────────────────────────────────────────────────────────────
-      const sumiram = (['A', 'B'] as const).filter((l) => findTeam(times[l]) === undefined);
+      // `null` NÃO entra na conta: no `online` ele é a espera do `Pick`, e M5 o aceita no lado
+      // do peer. O que este ramo pega é a seleção marcada que saiu do catálogo entre abrir a
+      // tela e tocar no botão — sem ele, `createSession` recusaria a configuração.
+      const sumiram = (['A', 'B'] as const).filter((l) => {
+        const code = times[l];
+        return code !== null && findTeam(code) === undefined;
+      });
       if (sumiram.length > 0) {
         limpar(avisoErro);
         avisoErro.hidden = false;
@@ -209,12 +282,17 @@ export const telaSelecoes =
         return;
       }
 
-      ctx.salvarPrefs({ ...ctx.prefs(), selecao: { A: times.A, B: times.B } });
+      // O lado que esta tela não escolheu guarda a preferência anterior: no `online` só um dos
+      // dois muda, e gravar `null` apagaria a seleção com que a próxima partida de CPU abriria.
+      ctx.salvarPrefs({
+        ...ctx.prefs(),
+        selecao: { A: times.A ?? padrao.A, B: times.B ?? padrao.B },
+      });
       const partida = {
         modo,
         nivel,
         times: { A: times.A, B: times.B },
-        ladoLocal: LADO_DO_HUMANO,
+        ladoLocal,
         // Semente nova a cada disputa: mesma semente daria a mesma CPU toda partida. A
         // reprodutibilidade que os testes exigem é por semente FIXADA, não por semente única.
         semente: newSeed(),
@@ -223,7 +301,10 @@ export const telaSelecoes =
         // A sala é sorteada na tela de convite, e só no `online` (`D-73`). Sorteá-la aqui
         // adiantaria o ID para os dois modos que não têm sala — e, no online, sem nenhum ganho:
         // o que importa é que ela nasça antes do canal, não antes desta tela.
-        sala: null,
+        //
+        // A exceção é o CONVIDADO: a sala dele veio no link, e é a única que serve. Sortear
+        // outra aqui o mandaria para uma sala vazia com o nome certo na tela.
+        sala: convite === null ? null : convite.sala,
         // Série zerada: escolher seleção nesta tela COMEÇA uma série (`T-32`). É o que faz
         // "trocar de seleção" recomeçar a conta sem uma linha a mais em lugar nenhum.
         serie: SERIE_ZERO,
@@ -232,45 +313,63 @@ export const telaSelecoes =
       // No `online` a próxima tela é o convite, e é ela que decide QUANDO a sessão nasce
       // (`D-75`). Mandar direto para a cobrança abriria o canal — e armaria o relógio de 20 s —
       // antes de o outro aparelho existir.
-      ctx.ir(modo === 'online' ? { nome: 'convite', partida } : { nome: 'cobranca', partida });
+      ctx.ir(
+        online
+          ? { nome: 'convite', partida, anfitriao: convite === null ? null : convite.anfitriao }
+          : { nome: 'cobranca', partida },
+      );
     }
 
     // Em `local` os rótulos dizem ONDE cada seleção aparece, não em que ordem ela cobra: com o
     // sorteio de `D-48` a ordem só existe depois que a disputa é criada, e esta tela é anterior a
     // ela. "Quem cobra primeiro" aqui seria uma promessa que a tela seguinte desmentiria em
     // metade das partidas (`QA-15`). Esquerda e direita são as posições do placar da cobrança.
-    // No `online` os dois lados também são escolhidos aqui, e o outro aparelho escolhe os dele:
-    // o canal de M6 carrega `Move` e nada mais (`D-13`), então seleção não viaja. A tela de
-    // convite diz isso à pessoa; aqui os rótulos só evitam prometer que o adversário verá o mesmo.
+    // Os dois rótulos abaixo são só de `cpu` e `local`: no `online` a grade é uma, e o rótulo
+    // dela é escrito no lugar em que ela nasce.
     const rotuloA = modo === 'local' ? 'Seleção da esquerda' : 'Sua seleção';
-    const rotuloB =
-      modo === 'local'
-        ? 'Seleção da direita'
-        : modo === 'cpu'
-          ? 'Adversário (computador)'
-          : 'Adversário (neste aparelho)';
+    const rotuloB = modo === 'local' ? 'Seleção da direita' : 'Adversário (computador)';
 
-    const iniciar = botao('Começar', 'botao botao--principal', comecar);
+    // O convidado ainda tem a tela de convite pela frente ("Entrar na disputa"), então o botão
+    // daqui não pode prometer que a disputa começa agora.
+    const iniciar = botao(
+      convite === null ? 'Começar' : 'Continuar',
+      'botao botao--principal',
+      comecar,
+    );
 
     // As duas grades são o par de `D-86`: no desktop elas ficam lado a lado, e o confronto acima
     // cai em cima delas — a metade esquerda do confronto sobre a grade da esquerda. A classe
     // `par` fica AQUI e não dentro de `grade()` porque a tela de torneio novo usa a mesma função
     // com UMA grade só, e uma grade sozinha numa das colunas deixaria a outra vazia.
-    const gradeA = grade('A', rotuloA, times.A, (code) => {
-      times.A = code;
-      atualizarAvisos();
-    });
-    const gradeB = grade('B', rotuloB, times.B, (code) => {
-      times.B = code;
-      atualizarAvisos();
-    });
-    gradeA.classList.add('par');
-    gradeB.classList.add('par');
+    //
+    // **No `online` há UMA grade, e é a mudança que `D-90` pediu à tela** (`T-31`): este
+    // aparelho escolhe a própria seleção e mais nada. A do outro nasce no aparelho dele. As duas
+    // grades de antes eram o anfitrião escolhendo PELO convidado — o que o dono recusou.
+    const grades: HTMLFieldSetElement[] = online
+      ? [
+          grade(ladoLocal, 'Sua seleção', escolha[ladoLocal], (code) => {
+            times[ladoLocal] = code;
+            atualizarAvisos();
+          }),
+        ]
+      : [
+          grade('A', rotuloA, escolha.A, (code) => {
+            times.A = code;
+            atualizarAvisos();
+          }),
+          grade('B', rotuloB, escolha.B, (code) => {
+            times.B = code;
+            atualizarAvisos();
+          }),
+        ];
+    // `par` só no par: uma grade sozinha numa das colunas de `D-86` deixaria a outra vazia, que
+    // é o mesmo motivo pelo qual a classe nunca morou dentro de `grade()`.
+    if (grades.length === 2) for (const g of grades) g.classList.add('par');
 
     avisoErro.hidden = true;
 
     tela.append(
-      el('h1', { classe: 'titulo', texto: 'Seleções' }),
+      el('h1', { classe: 'titulo', texto: online ? 'Sua seleção' : 'Seleções' }),
       el('p', {
         classe: 'sub',
         texto:
@@ -278,11 +377,14 @@ export const telaSelecoes =
             ? 'Um sorteio decide quem começa. Você e o computador se revezam a cada cobrança.'
             : modo === 'local'
               ? 'Os dois jogam neste aparelho, revezando o toque. Um sorteio decide quem começa.'
-              : 'Escolha as seleções e mande o convite na tela seguinte. O outro aparelho escolhe as dele.',
+              : convite === null
+                ? 'Escolha a SUA seleção e mande o convite na tela seguinte. Quem entrar escolhe a dele.'
+                : exibir[ladoRemoto] === null
+                  ? 'Escolha a SUA seleção para entrar na disputa. Quem convidou escolhe a dele no aparelho dele.'
+                  : `Escolha a SUA seleção para entrar na disputa. Quem convidou joga com ${nomeSelecao(exibir[ladoRemoto])}.`,
       }),
       duelo.node,
-      gradeA,
-      gradeB,
+      ...grades,
       avisoRepetida,
       avisoErro,
       el('div', { classe: 'grupo empurra' }, [

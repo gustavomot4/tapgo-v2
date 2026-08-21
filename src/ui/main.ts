@@ -16,15 +16,12 @@
  * visível e rótulo lido por leitor de tela, e `<canvas>` não entrega nenhum dos três.
  */
 
-import type { CountryCode, Side } from '../core/index';
-import { newSeed } from '../core/index';
 import { el, limpar } from './dom';
-import { salaDoEndereco, timesDoEndereco } from './convite';
+import { anfitriaoDoEndereco, salaDoEndereco } from './convite';
 import { ehDoCatalogo } from './rotulos';
-import { lerPreferencias, gravarPreferencias, selecaoInicial } from './preferencias';
+import { lerPreferencias, gravarPreferencias } from './preferencias';
 import type { Preferencias } from './preferencias';
 import { criarSom } from './som';
-import { SERIE_ZERO } from './rotas';
 import type { Contexto, Rota, Tela } from './rotas';
 import { telaInicio } from './tela_inicio';
 import { telaSelecoes } from './tela_selecoes';
@@ -40,8 +37,8 @@ import './estilo.css';
 
 function escolherTela(rota: Rota): Tela {
   if (rota.nome === 'inicio') return telaInicio;
-  if (rota.nome === 'selecoes') return telaSelecoes(rota.modo, rota.nivel);
-  if (rota.nome === 'convite') return telaConvite(rota.partida);
+  if (rota.nome === 'selecoes') return telaSelecoes(rota.modo, rota.nivel, rota.convite);
+  if (rota.nome === 'convite') return telaConvite(rota.partida, rota.anfitriao);
   if (rota.nome === 'cobranca') return telaCobranca(rota.partida, rota.sessao ?? null);
   if (rota.nome === 'torneio_novo') return telaTorneioNovo;
   if (rota.nome === 'torneio') return telaTorneio;
@@ -118,7 +115,7 @@ export function bootGame(container: HTMLElement): void {
     },
   };
 
-  ctx.ir(abertura(prefs, torneio !== null));
+  ctx.ir(abertura(torneio !== null));
 }
 
 /**
@@ -135,40 +132,30 @@ export function bootGame(container: HTMLElement): void {
  * A disputa em andamento NUNCA é retomada — ela nunca é gravada, por contrato de privacidade —,
  * então o que volta do torneio é a próxima disputa do jogador.
  *
- * O convidado não passa pela tela de seleções: o fluxo dele fecha em 1 toque, e as seleções vêm
- * **do link** (`D-77`) — é o que faz os dois aparelhos mostrarem o mesmo confronto, defeito que
- * `A-22` pegou em campo. Link antigo, sem o parâmetro, cai na preferência do aparelho, que é o
- * comportamento que `T-21` entregou. Sem catálogo não há seleção possível, e aí a abertura é o
- * menu, que já tem o estado vazio escrito.
+ * ## O convidado passa pela tela de seleções (`D-90` / `T-31`)
+ * Até aqui ele ia direto para a espera da conexão, com o confronto que o anfitrião montara e
+ * mandara em `t=` (`D-77`). Era o defeito que o dono recusou: **o convidado não escolhia nada**.
+ * Com o `Pick` no fio, cada aparelho declara a própria seleção, e escolher é a tela de seleções
+ * — a mesma do anfitrião, com uma grade só. O que a abertura faz aqui é montar o convite
+ * recebido (a sala, e o rótulo de quem chamou) e entregá-lo àquela tela.
+ *
+ * O que sumiu desta função, e de propósito: `selecaoInicial`. Quem lê a preferência é a tela de
+ * seleções, que já a lia — e o estado VAZIO do catálogo é dela, escrito lá. Ler aqui também seria
+ * a segunda fonte que decide se o link vale, com a resposta da primeira.
  */
-function abertura(prefs: Preferencias, temTorneio: boolean): Rota {
+function abertura(temTorneio: boolean): Rota {
   const endereco = window.location.href;
   const sala = salaDoEndereco(endereco);
-  // `D-77`: as seleções do anfitrião vêm no link. A preferência do aparelho é o ramo de trás —
-  // link antigo, sem `t=`, continua entrando na sala. Sem os dois, não há confronto a montar.
-  const doLink = sala === null ? null : timesDoEndereco(endereco, ehDoCatalogo);
-  const escolha = doLink ?? (sala === null ? null : selecaoInicial(prefs));
 
-  if (sala !== null && escolha !== null) {
-    const times: Readonly<Record<Side, CountryCode>> = { A: escolha.A, B: escolha.B };
+  if (sala !== null) {
     return {
-      nome: 'convite',
-      partida: {
-        modo: 'online',
-        torneio: false,
-        nivel: null,
-        times,
-        // O convidado é sempre o lado B: quem convida é o A, e é ele quem cobra primeiro
-        // enquanto o sorteio do `online` não for semeado pelo `roomId` (ver M5, em `first`).
-        ladoLocal: 'B',
-        // Semente do aparelho, e ela não é lida no `online`: quem sorteia lá é ninguém. Passar
-        // uma semente de verdade mesmo assim mantém a configuração igual à dos outros modos.
-        semente: newSeed(),
-        sala,
-        // O `online` não tem série de revanches (`T-32`): lá o botão é "Convidar de novo",
-        // e sala nova é confronto novo. Zero literal, não pendência.
-        serie: SERIE_ZERO,
-      },
+      nome: 'selecoes',
+      modo: 'online',
+      nivel: null,
+      // `D-90`: UM código em `t=`, o de quem convidou, e ele é rótulo — a seleção com que a
+      // sessão do convidado nasce do outro lado é `null`, e quem a preenche é o `Pick`. `null`
+      // aqui é link de antes de `D-77`, ou código fora do catálogo: a tela mostra "escolhendo…".
+      convite: { sala, anfitriao: anfitriaoDoEndereco(endereco, ehDoCatalogo) },
     };
   }
 

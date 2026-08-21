@@ -134,13 +134,13 @@ export const telaInicio: Tela = (raiz: HTMLElement, ctx: Contexto) => {
   const contraCpu = botao(
     'Contra o computador',
     'botao botao--principal',
-    () => ctx.ir({ nome: 'selecoes', modo: 'cpu', nivel }),
+    () => ctx.ir({ nome: 'selecoes', modo: 'cpu', nivel, convite: null }),
   );
 
   const doisNoAparelho = botao(
     'Dois no mesmo aparelho',
     'botao',
-    () => ctx.ir({ nome: 'selecoes', modo: 'local', nivel: null }),
+    () => ctx.ir({ nome: 'selecoes', modo: 'local', nivel: null, convite: null }),
   );
 
   /*
@@ -151,11 +151,15 @@ export const telaInicio: Tela = (raiz: HTMLElement, ctx: Contexto) => {
    * O caminho é o mesmo dos outros dois — seleções e depois a tela do modo —, e a diferença
    * mora na tela seguinte à de seleções: o convite, que é quem sorteia a sala e decide quando a
    * sessão nasce (`D-75`).
+   *
+   * `convite: null` é literal: quem começa por aqui é quem CONVIDA. O `ConviteRecebido` só nasce
+   * na abertura por link (`main.ts`), e é ele que diz à tela de seleções que este aparelho é o
+   * convidado — o lado `B`, escolhendo a própria seleção (`D-90`).
    */
   const comAmigo = botao(
     'Jogar com um amigo',
     'botao',
-    () => ctx.ir({ nome: 'selecoes', modo: 'online', nivel: null }),
+    () => ctx.ir({ nome: 'selecoes', modo: 'online', nivel: null, convite: null }),
   );
 
   /*

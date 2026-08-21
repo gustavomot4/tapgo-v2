@@ -192,8 +192,17 @@ export const telaFim =
                 semente: newSeed(),
                 ladoLocal: 'A',
                 sala: null,
+                // `D-90`: convite novo é peer novo, e a seleção dele nasce no aparelho dele.
+                // Herdar de `...partida` a seleção de quem acabou de jogar mostraria, na tela de
+                // convite, a marca de alguém que ainda não abriu o link.
+                // O lado deste aparelho, que passa a ser o `A` — e não `times.A`: quem convida
+                // de novo pode ter sido o CONVIDADO da disputa que acabou, e aí `times.A` é a
+                // seleção do outro.
+                times: { A: partida.times[partida.ladoLocal], B: null },
                 serie: SERIE_ZERO,
               },
+              // Este aparelho passa a ser o anfitrião: não há convite recebido a rotular.
+              anfitriao: null,
             });
           })
         : botao('Jogar de novo', 'botao botao--principal', () => {

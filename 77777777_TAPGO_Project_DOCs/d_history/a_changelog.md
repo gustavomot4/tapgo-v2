@@ -7,6 +7,17 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-21] — `T-31` (M7): a tela escolhe um lado, e o outro é "escolhendo…" até o `Pick` chegar
+
+- **Skill:** frontend-uiux. **M6 e M5 não foram tocados** — o diff desta sessão não encosta em `src/net/` nem em `src/session/`. Com M7, `T-31` fecha inteira.
+- **Tela de seleções:** no `online` monta **uma** grade, a do lado deste aparelho, e manda `times[ladoRemoto] = null` para a sessão. As duas grades de antes eram o anfitrião escolhendo pelo convidado — o que o dono recusou.
+- **O convidado passa a passar por ela:** até aqui o link levava direto à espera da conexão, e ele não tinha onde escolher. O fluxo dele vai de **1 para 2 toques** (escolher e entrar) — dois é o portão declarado do projeto, o mesmo que o anfitrião sempre gastou.
+- **`t=` leva UM código, o de quem convida (`D-77` emendado por `D-90`), e ele é RÓTULO:** nunca vira `SessionConfig.teams`. Link de antes de `D-90` vale pelo primeiro código; o segundo é ignorado, não lido. Duas fontes para o mesmo dado, e a que chega primeiro é a errada.
+- **Tela de cobrança:** a seleção do peer vem do **3º argumento de `subscribe`** e só dele; `partida.times` passa a ser o valor da criação, escrito no tipo e cobrado por teste que lê o disco. `esperandoSelecao()` trava o desenho, o toque (o **teclado** chama `escolher()` direto), o relógio de 15 s de `T-24` e a camisa de `T-29`.
+- **Nenhum prazo novo:** quem conta os 20 s da espera é M5; o estouro chega como a queda de `D-35`, com a frase dela.
+- **Portão:** `check.py` verde · `tsc` limpo · suíte **638/638** (628 + 10) · bundle relido de `dist/`: **428.754 B**, **+1.312 B** · zero asset novo (44 arquivos) e zero cor nova na paleta.
+- **Falta o campo:** `A-39` — `Brasil × Japão` nos DOIS placares, em dois aparelhos de verdade. Delta e decisões em [[t31_selecao_por_aparelho]].
+
 ## [2026-08-21] — `T-31` (M6+M5): o `Pick` entra no fio, e a seleção do outro aparelho existe
 
 - **Skill:** backend-bff. **`src/ui/` não foi tocado** — a parte de M7 é a próxima sessão, e o card `T-31` segue aberto por causa dela.

@@ -41,7 +41,21 @@ export interface Partida {
    */
   readonly torneio: boolean;
   readonly nivel: Level | null;
-  readonly times: Readonly<Record<Side, CountryCode>>;
+  /**
+   * As duas seleções do confronto. `null` é **estado de espera**, não lacuna (`D-90`/`T-31`).
+   *
+   * Em `cpu`, `local` e no torneio os dois lados nascem preenchidos e nunca mudam — os dois são
+   * deste aparelho. No `online` só o lado do PEER pode ser `null`: a escolha dele nasce no
+   * aparelho dele, depois do link, e chega pelo `Pick` do fio. Enquanto ele estiver `null` a
+   * tela mostra "escolhendo…" no lugar da marca e **não deixa cobrar** — inventar uma seleção
+   * aqui seria exatamente o defeito que `A-22` pegou em campo, só que com outro nome.
+   *
+   * **Este campo é o valor da CRIAÇÃO da sessão, e ele não é atualizado depois.** Quem sabe a
+   * seleção do peer depois de conectado é o 3º argumento de `subscribe` (M5), e é de lá que a
+   * tela de cobrança lê — copiar aqui o que a sessão já tem seria segunda fonte para o mesmo
+   * dado, e a que envelhece é sempre esta.
+   */
+  readonly times: Readonly<Record<Side, CountryCode | null>>;
   readonly ladoLocal: Side;
   readonly semente: number;
   /**
@@ -74,10 +88,39 @@ export interface Partida {
   readonly serie: Serie;
 }
 
+/**
+ * O convite que chegou pelo endereço (`?sala=`), quando foi por ele que o jogo abriu.
+ *
+ * Existe porque, desde `D-90`, o convidado **também escolhe** — e escolher é a tela de seleções,
+ * não a de convite. Então o link deixa de levar direto à espera da conexão e passa pela mesma
+ * tela de escolha que o anfitrião já usava; o que ele traz de lá para cá é isto.
+ *
+ * `anfitriao` é a seleção de **quem convidou**, lida de `t=` (`D-77`, agora com UM código). Ela
+ * é **rótulo, e só**: serve para o convidado ver quem o chamou antes de existir conexão. Ela
+ * NUNCA vira `SessionConfig.teams` — o lado do peer nasce `null` e é o `Pick` do fio que o
+ * preenche, porque duas fontes para o mesmo dado é como os dois aparelhos voltam a divergir.
+ * `null` quando o link é anterior a `D-77`, ou quando o código não está no catálogo de M4.
+ */
+export interface ConviteRecebido {
+  readonly sala: string;
+  readonly anfitriao: CountryCode | null;
+}
+
 export type Rota =
   | { readonly nome: 'inicio' }
-  | { readonly nome: 'selecoes'; readonly modo: ModoJogavel; readonly nivel: Level | null }
-  | { readonly nome: 'convite'; readonly partida: Partida }
+  | {
+      readonly nome: 'selecoes';
+      readonly modo: ModoJogavel;
+      readonly nivel: Level | null;
+      /** O convite do endereço, ou `null` quando a escolha começou no menu deste aparelho. */
+      readonly convite: ConviteRecebido | null;
+    }
+  | {
+      readonly nome: 'convite';
+      readonly partida: Partida;
+      /** A seleção de quem convidou (rótulo de `t=`), ou `null` quando é ESTE que convida. */
+      readonly anfitriao: CountryCode | null;
+    }
   /**
    * A cobrança, e — só no `online` — a sessão **já conectada** que a tela de convite criou.
    *

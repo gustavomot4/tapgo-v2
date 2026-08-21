@@ -71,7 +71,7 @@
  * - **sucesso** — a disputa correndo.
  */
 
-import type { Side, Zone } from '../core/index';
+import type { CountryCode, Side, Zone } from '../core/index';
 import { createRng, newSeed } from '../core/index';
 import type { LinkStatus, MatchState, Session, SessionConfig } from '../session/index';
 import { CONNECT_TIMEOUT_MS, createSession } from '../session/index';
@@ -84,6 +84,7 @@ import { marca } from './tela_selecoes';
 import {
   AVISO_COBRANCA_SORTEADA,
   AVISO_PEER_SUMIU,
+  AVISO_SEM_SELECAO,
   PRAZO_COBRANCA_MS,
   SEGUNDOS_DE_PRESSA,
   ZONAS,
@@ -164,6 +165,23 @@ export const telaCobranca =
       return () => undefined;
     }
 
+    const ladoRemoto: Side = partida.ladoLocal === 'A' ? 'B' : 'A';
+
+    /**
+     * As duas seleções, **vivas** — e é o 3º argumento de `subscribe` quem as move (`D-90`).
+     *
+     * `partida.times` é só o valor com que a sessão nasceu: no `online` o lado do peer chega aqui
+     * `null`, porque a escolha dele nasce no aparelho dele. Quem sabe a resposta é M5, que a
+     * recebe pelo `Pick` do fio e a entrega em toda notificação. Ler `partida.times` daqui para
+     * baixo seria ler o retrato do começo — a segunda fonte que envelhece na primeira cobrança.
+     */
+    const times: Record<Side, CountryCode | null> = { A: partida.times.A, B: partida.times.B };
+
+    /** Falta a seleção do outro aparelho: não há confronto inteiro, e não se cobra (`D-90`). */
+    function esperandoSelecao(): boolean {
+      return times[ladoRemoto] === null;
+    }
+
     const derivacao = criarDerivacao(partida.modo, partida.ladoLocal);
     let estado: MatchState = sessao.state();
     let apresentados = 0;
@@ -222,14 +240,27 @@ export const telaCobranca =
 
     // ── Esqueleto ─────────────────────────────────────────────────────────────────────────
     const numeros = el('span', { classe: 'placar__numeros', texto: placar(estado) });
-    const ladoA = el('span', { classe: 'placar__lado' }, [
-      marca(partida.times.A),
-      el('span', { texto: nomeSelecao(partida.times.A) }),
-    ]);
-    const ladoB = el('span', { classe: 'placar__lado placar__lado--direita' }, [
-      marca(partida.times.B),
-      el('span', { texto: nomeSelecao(partida.times.B) }),
-    ]);
+    const ladoA = el('span', { classe: 'placar__lado' });
+    const ladoB = el('span', { classe: 'placar__lado placar__lado--direita' });
+
+    /**
+     * (Re)desenha os dois lados do placar a partir de `times`.
+     *
+     * Chamado na montagem e **só** quando uma seleção muda de verdade — que, no `online`, é o
+     * instante em que o `Pick` do peer chega. Repintar a cada notificação recriaria o `<img>` da
+     * bandeira várias vezes por cobrança, e o `dataset['vez']` do destaque vive no `<span>` de
+     * fora justamente para sobreviver a esta troca de filhos.
+     */
+    function pintarPlacar(): void {
+      for (const [alvo, lado] of [
+        [ladoA, 'A'],
+        [ladoB, 'B'],
+      ] as const) {
+        limpar(alvo);
+        alvo.append(marca(times[lado]), el('span', { texto: nomeSelecao(times[lado]) }));
+      }
+    }
+    pintarPlacar();
     const cabecalho = el('div', { classe: 'placar', attrs: { role: 'status' } }, [
       ladoA,
       numeros,
@@ -319,7 +350,7 @@ export const telaCobranca =
      * estaria dizendo a quem defende para fazer o contrário do que a tela pede.
      */
     function anunciarSorteio(vez: Vez): void {
-      const anuncio = sorteioDoPrimeiro(estado, partida.times);
+      const anuncio = sorteioDoPrimeiro(estado, times);
       if (anuncio === null || vez.pendente) {
         esconderSorteio();
         return;
@@ -334,7 +365,7 @@ export const telaCobranca =
       const entrando = !sorteioNaTela;
       if (entrando) {
         limpar(sorteioMarca);
-        sorteioMarca.append(marca(partida.times[anuncio.lado]));
+        sorteioMarca.append(marca(times[anuncio.lado]));
         sorteioNaTela = true;
       }
 
@@ -392,7 +423,7 @@ export const telaCobranca =
       }
 
       const moeda = el('div', { classe: 'sorteio-cheio__moeda' }, [
-        marca(partida.times[lado]),
+        marca(times[lado]),
         el('p', { classe: 'sorteio-cheio__texto', texto }),
       ]);
       // `aria-hidden` porque o painel logo abaixo diz a MESMA frase na árvore de acessibilidade:
@@ -422,6 +453,20 @@ export const telaCobranca =
         return;
       }
 
+      // ── `D-90`/`T-31`: o outro aparelho ainda não anunciou a seleção dele ──────────────
+      // Vem ANTES do sorteio de propósito: `sorteioDoPrimeiro` monta "X cobra primeiro" com o
+      // nome do lado sorteado, e metade das vezes esse lado é o que ninguém escolheu ainda —
+      // "escolhendo… cobra primeiro" é frase que não diz nada. Escondido aqui, o painel (e a
+      // moeda de `T-28`) nasce inteiro quando o `Pick` chegar, com a bandeira de verdade.
+      if (esperandoSelecao()) {
+        esconderSorteio();
+        pararRelogio();
+        travarZonas(true);
+        faixa.dataset['tom'] = 'atencao';
+        faixa.textContent = AVISO_SEM_SELECAO;
+        return;
+      }
+
       anunciarSorteio(vez);
 
       // Quem está com o aparelho na mão, em destaque no placar. Em `online` é sempre o lado
@@ -446,7 +491,7 @@ export const telaCobranca =
         pararRelogio();
         // Modo `local`, entre chute e defesa. Nenhuma pista da zona escolhida — ver o cabeçalho.
         faixa.dataset['tom'] = 'atencao';
-        faixa.textContent = `Passe o aparelho: ${nomeSelecao(partida.times[vez.lado])} defende.`;
+        faixa.textContent = `Passe o aparelho: ${nomeSelecao(times[vez.lado])} defende.`;
         return;
       }
 
@@ -523,7 +568,9 @@ export const telaCobranca =
     }
 
     function escolher(zona: Zone): void {
-      if (travado || !vivo) return;
+      // `esperandoSelecao()` está aqui, e não só no `disabled` dos botões, porque o teclado
+      // (`naTeclaGlobal`) chama esta função direto: um botão trancado não tranca a seta.
+      if (travado || !vivo || esperandoSelecao()) return;
       travado = true;
       travarZonas(true);
       // `T-24`: o toque chegou dentro do prazo — o relógio não tem mais o que cobrar. Se
@@ -576,10 +623,56 @@ export const telaCobranca =
       sorteada = false;
 
       if (estado.phase === 'finished') {
-        ctx.ir({ nome: 'fim', partida, estado });
+        // `times`, e não `partida.times`: no `online` a seleção do peer só existe depois do
+        // `Pick`, e a tela de fim mostra o pódio, o placar e o resumo cobrança a cobrança. Com o
+        // retrato do começo, o vencedor do outro lado sairia de lá como "escolhendo…".
+        ctx.ir({ nome: 'fim', partida: { ...partida, times: { ...times } }, estado });
         return;
       }
       desenhar();
+    }
+
+    // ── `D-90`: a seleção do outro aparelho chega pelo 3º argumento de `subscribe` ────────
+
+    /**
+     * Guarda a seleção que M5 acabou de entregar, e repinta o que dependia dela.
+     *
+     * Só age quando um dos dois lados MUDA — o que, na prática, é uma vez por disputa: o
+     * instante em que o `Pick` do peer atravessa o fio. Fora do `online` nada aqui se move, e é
+     * de propósito: lá os dois lados nascem preenchidos e nunca mudam.
+     *
+     * Não chama `desenhar()`: quem o chama é o caminho normal da notificação, logo abaixo, e
+     * desenhar duas vezes por evento é como uma animação de cobrança começa em dobro.
+     */
+    function aoSelecoes(selecoes: Record<Side, CountryCode | null>): void {
+      let mudou = false;
+      for (const lado of ['A', 'B'] as const) {
+        if (times[lado] === selecoes[lado]) continue;
+        times[lado] = selecoes[lado];
+        mudou = true;
+      }
+      if (!mudou) return;
+
+      pintarPlacar();
+      vestirCena();
+    }
+
+    /**
+     * Veste as camisas da disputa, se já houver confronto inteiro e cena montada.
+     *
+     * Duas chamadas, e as duas são necessárias porque a ordem entre elas não é fixa: a cena
+     * chega por `import()` e o `Pick` chega pelo fio. A que perder a corrida encontra a outra
+     * pronta; enquanto faltar uma, o campo fica com as cores de repouso da cena — nunca com uma
+     * camisa de seleção que ninguém escolheu.
+     */
+    function vestirCena(): void {
+      const a = times.A;
+      const b = times.B;
+      if (cena === null || a === null || b === null) return;
+      // A camisa vem da COR NACIONAL da selecao (`T-29`/`D-88`), e o desempate por padrao ja vem
+      // resolvido de `camisasDaDisputa` — funcao pura sobre os dois codigos, entao os dois
+      // aparelhos do `online` chegam ao mesmo resultado sem trocar nada pelo fio.
+      cena.definirCamisas(camisasDaDisputa(a, b));
     }
 
     // ── Rede: a outra metade da cobrança chega por aqui (modo `online`) ────────────────────
@@ -627,7 +720,9 @@ export const telaCobranca =
      * na tela não pode atrasar até um segundo inteiro atrás do relógio real.
      */
     function armarRelogio(): void {
-      if (!online || !vivo || caiu || travado) {
+      // `esperandoSelecao()`: cobrar pressa de quem nem pode tocar seria o relógio punindo a
+      // pessoa pelo tempo do outro aparelho — e aos 15 s ele cobraria no escuro por ela.
+      if (!online || !vivo || caiu || travado || esperandoSelecao()) {
         pararRelogio();
         return;
       }
@@ -810,13 +905,19 @@ export const telaCobranca =
 
     // ── Ligações ──────────────────────────────────────────────────────────────────────────
 
-    const cancelarAssinatura = sessao.subscribe((s: MatchState, status: LinkStatus) => {
-      estado = s;
-      derivacao.aoNotificar(s);
-      // Notificação de dentro do próprio `choose()` já tem quem a trate, logo abaixo dele. Só o
-      // que vem de FORA da pilha do toque — a jogada do peer, a queda do canal — passa daqui.
-      if (!emChoose) aoNotificacaoDeRede(status);
-    });
+    const cancelarAssinatura = sessao.subscribe(
+      (s: MatchState, status: LinkStatus, selecoes: Record<Side, CountryCode | null>) => {
+        estado = s;
+        derivacao.aoNotificar(s);
+        // `D-90`: o 3º argumento é a única forma de esta tela saber a seleção do OUTRO aparelho.
+        // Ele chega em TODA notificação, e por isso a repintura é condicionada à mudança de
+        // verdade — sem isso a bandeira do placar seria recriada a cada cobrança.
+        aoSelecoes(selecoes);
+        // Notificação de dentro do próprio `choose()` já tem quem a trate, logo abaixo dele. Só o
+        // que vem de FORA da pilha do toque — a jogada do peer, a queda do canal — passa daqui.
+        if (!emChoose) aoNotificacaoDeRede(status);
+      },
+    );
 
     const naTeclaGlobal = (ev: KeyboardEvent): void => {
       if (dialogoAberto) return;
@@ -841,14 +942,10 @@ export const telaCobranca =
           cena = null;
           return;
         }
-        // A camisa vem da COR NACIONAL da selecao (`T-29`/`D-88`), e o desempate por padrao ja
-        // vem resolvido de `camisasDaDisputa` — funcao pura sobre os dois codigos, entao os dois
-        // aparelhos do `online` chegam ao mesmo resultado sem trocar nada pelo fio.
-        //
         // **O disco do placar NAO mudou, e isso e escolha declarada:** ele mostra a bandeira desde
         // `T-19`, e o matiz de `marcaSelecao` fica invisivel embaixo dela. Mexer nele custaria
         // todas as telas e nao mudaria um pixel do que a pessoa ve.
-        cena.definirCamisas(camisasDaDisputa(partida.times.A, partida.times.B));
+        vestirCena();
         cena.repousar(sessao.state().turn);
         semCanvas.hidden = true;
       })
