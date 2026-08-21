@@ -1342,6 +1342,42 @@ describe('a direção visual não afrouxa portão de M7 (T-20 fatia 2 / D-65)', 
     }
   });
 
+  // ── `T-30`: a bola e a luva, no tamanho que o card DECLAROU ─────────────────────────────
+  //
+  // `T-28` deixou triângulo e arco, que distinguem mas não DIZEM. `T-30` trocou por bola e luva
+  // e mandou os dois crescerem — com o número declarado no card antes da primeira linha de CSS,
+  // justamente para "maior" não virar gosto de quem implementa. O que se cobra aqui é o que
+  // regride em silêncio: o tamanho, o asset e a cor.
+  const formaDoPapel = (papel: string): string =>
+    regras().find((r) => r.seletor === `.zona[data-papel='${papel}']::before`)?.corpo ?? '';
+
+  it('T-30: os dois símbolos têm o tamanho declarado no card — 24x24', () => {
+    for (const papel of ['chutar', 'defender']) {
+      const corpo = formaDoPapel(papel);
+      expect(/width:\s*24px/.test(corpo), `${papel}: largura fora dos 24px do card`).toBe(true);
+      expect(/height:\s*24px/.test(corpo), `${papel}: altura fora dos 24px do card`).toBe(true);
+    }
+  });
+
+  it('T-30: zero asset novo — a forma não busca arquivo nenhum', () => {
+    // A bola sai de `border-radius` e a luva de camadas de `background`. Um `url(...)` aqui seria
+    // arquivo em `dist/`, que é exatamente o que o card proibiu — e um `data:image/svg+xml`
+    // ainda levaria o `xmlns` de `//www.w3.org` para dentro da varredura de endereço externo.
+    for (const papel of ['chutar', 'defender']) {
+      expect(formaDoPapel(papel), `${papel}: a forma passou a pedir arquivo`).not.toMatch(/url\(/);
+    }
+  });
+
+  it('T-30: a forma é `currentColor` e nada mais — cor nova ali custa a medição de T-20', () => {
+    // `currentColor` também é o que faz `.zona[disabled] { color: transparent }` apagar o símbolo
+    // junto com o rótulo, sem uma linha a mais. Um hex cravado aqui sobreviveria ao botão travado.
+    for (const papel of ['chutar', 'defender']) {
+      const corpo = formaDoPapel(papel);
+      expect(corpo, `${papel}: a forma deixou de usar currentColor`).toMatch(/currentColor/);
+      expect(corpo, `${papel}: cor crua na forma`).not.toMatch(/#[0-9a-f]{3,8}|rgba?\(/i);
+    }
+  });
+
   it('as peças novas de D-65 estão na folha — capa, confronto e pódio', () => {
     // Sem isto, uma classe que sai do TS e fica órfã na folha (ou o contrário) passa em silêncio,
     // e `T-14` herda uma direção que só existe pela metade.

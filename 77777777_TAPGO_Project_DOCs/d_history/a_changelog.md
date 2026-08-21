@@ -7,6 +7,17 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-21] — `T-30`: a bola e a luva no lugar do triângulo e do arco, 24x24, sem um arquivo novo
+
+- **Skill:** frontend-uiux. **Delta em UM arquivo de produção:** `src/ui/estilo.css` (as duas regras `.zona[data-papel]::before`) + 3 testes em `src/tests/ui.test.ts`. `src/ui/tela_cobranca.ts` com **0 byte alterado** — `data-papel` continua sendo a chave, e o `aria-label` das zonas foi lido do DOM no navegador, intacto.
+- **O tamanho foi DECLARADO no card antes da primeira linha de CSS**, como `T-30` exigia: `24 x 24 px` nos DOIS símbolos (eram 18x13 e 22x12). Quadrado igual de propósito — papel se lê pela silhueta, não por qual dos dois ocupa mais espaço.
+- **A bola:** `border-radius: 50%` e `background: currentColor`. **A luva:** três camadas de `background`, todas `currentColor` — quatro dedos numa `repeating-linear-gradient` (3px de dedo, 1,5px de vão), palma, e polegar saindo pela esquerda; o `border-radius` do elemento arredonda a base da palma e o polegar de uma vez, porque recorta todas as camadas.
+- **SVG embutido foi recusado por medida, não por gosto:** `data:image/svg+xml` só renderiza com o `xmlns` de `w3.org`, e esse endereço cai na varredura de endereço externo do portão de privacidade de M9. Afrouxar a varredura para caber um ícone seria pagar privacidade em troca de desenho.
+- **Portão de sandbox:** `check.py` verde, `tsc` limpo, suíte **607 → 610/610**, bundle **425.525 → 425.669 B (+144 B)** lido de `dist/`, **44 arquivos em `dist/` antes e depois** (zero asset novo), zero cor nova na paleta (`--acento` e `--atencao`, os de `T-28`), `D-65` intacto (zero asset, zero movimento).
+- **Medido no navegador em 360x640:** os dois símbolos em `24px x 24px` de estilo computado, as três camadas da luva nas posições escritas, `scrollWidth == clientWidth` (**360**) nos dois papéis, e `scrollHeight` **640** — o símbolo cresceu 11px de altura e não custou altura de documento, porque mora dentro de `.zona`, absoluta no `.campo` de proporção fixa. Em 1280x800: `1265 == 1265`, `scrollHeight` 824, os números de `T-28`.
+- **`[disabled]` segue apagando o símbolo sem uma linha a mais:** com o botão travado `color` vira `rgba(0, 0, 0, 0)` e todas as paradas dos três gradientes viram transparente junto.
+- **Lacuna declarada:** o sandbox mede geometria, não quadros. Se um desenho de 24px **se lê como luva** é olho humano — `A-36`, e o portão dela pede um inteiro: quantos dedos o dono conta.
+
 ## [2026-08-21] — `A-35` devolveu `3`: a série atravessa as revanches, e o amarelo já estava no ar
 
 - **Skill:** delivery-review (campo; nenhuma linha de produção mudou).

@@ -741,16 +741,34 @@
  * lê-lo numa olhada, e ele traz a própria restrição: **cor não pode ser o único canal**, porque
  * daltonismo. Então são dois, e o segundo é FORMA:
  *
- *   chutar    → triângulo cheio, apontando para o gol   + borda em `--acento`
- *   defender  → arco vazado, a trave/as mãos            + borda em `--atencao`
+ *   chutar    → BOLA (disco de 24x24)                    + borda em `--acento`
+ *   defender  → LUVA de goleiro (24x24)                  + borda em `--atencao`
  *
  * A forma sozinha já distingue os dois papéis no escuro e em tela preto e branco; a cor só
  * reforça. Nenhuma cor NOVA entra: os dois valores são `--acento` (74 222 128) e `--atencao`
  * (255 209 102), que `T-20` já mede no produto cartesiano da paleta — cor nova ali custaria a
  * medição inteira de contraste de novo.
  *
- * Zero asset e zero movimento: `D-65` continua inteiro. O triângulo é o truque de borda, e o arco
- * é `border-radius` — nada que precise de arquivo.
+ * Zero asset e zero movimento: `D-65` continua inteiro. A bola é `border-radius: 50%` e a luva é
+ * uma pilha de três camadas de `background` — nada que precise de arquivo.
+ *
+ * ── `T-30`: por que as duas formas mudaram, e por que o tamanho é o MESMO ────────────────
+ *
+ * Triângulo e arco cumpriam a restrição (duas silhuetas), mas nenhum dos dois DIZ o que faz. A
+ * bola e a luva dizem, e o dono pediu os dois maiores: 18x13 e 22x12 viraram **24x24 nos dois**,
+ * declarado no card antes desta linha existir. Quadrado igual de propósito — o papel se lê pela
+ * silhueta, não por qual dos dois ocupa mais espaço.
+ *
+ * A luva sem arquivo nenhum: os quatro dedos são UMA `repeating-linear-gradient` (3px de dedo,
+ * 1,5px de vão), a palma é um retângulo e o polegar é outro, saindo pela esquerda. O
+ * `border-radius` do próprio elemento arredonda a base da palma e a ponta do polegar de uma vez,
+ * porque ele recorta TODAS as camadas. SVG embutido chegou a ser a opção óbvia e foi recusada por
+ * medida, não por gosto: `data:image/svg+xml` precisa de `xmlns='http://www.w3.org/2000/svg'`, e
+ * o `//www.` cai na varredura de endereço externo do portão de privacidade de M9 — afrouxar essa
+ * varredura para caber um desenho seria pagar a privacidade em troca de um ícone.
+ *
+ * **Em preto e branco elas continuam distintas**, que é a razão de `T-28` e o que o card proibiu
+ * perder: disco cheio contra silhueta com quatro dedos e polegar. Nenhuma depende da cor.
  *
  * `currentColor` de propósito, e é o que faz a regra `[disabled]` abaixo continuar valendo sem
  * uma linha a mais: com o botão travado a folha já põe `color: transparent`, e a forma some junto
@@ -767,11 +785,10 @@
 }
 
 .zona[data-papel='chutar']::before {
-  width: 0;
-  height: 0;
-  border-right: 9px solid transparent;
-  border-bottom: 13px solid currentColor;
-  border-left: 9px solid transparent;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: currentColor;
 }
 
 .zona[data-papel='defender'] {
@@ -779,11 +796,14 @@
 }
 
 .zona[data-papel='defender']::before {
-  width: 22px;
-  height: 12px;
-  border: 3px solid currentColor;
-  border-bottom: 0;
-  border-radius: 13px 13px 0 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 3px 3px 8px 8px;
+  background:
+    repeating-linear-gradient(90deg, currentColor 0 3px, transparent 3px 4.5px) 7px 1px / 16.5px 13px
+      no-repeat,
+    linear-gradient(currentColor 0 0) 5.5px 11px / 18px 12px no-repeat,
+    linear-gradient(currentColor 0 0) 0 7px / 5.5px 16px no-repeat;
 }
 
 .zona:active {
