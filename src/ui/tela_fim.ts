@@ -12,6 +12,17 @@
  * o único ponto em que a disputa do jogador está de fato encerrada. "Jogar de novo" some — ele
  * repetiria uma disputa que o chaveamento já registrou.
  *
+ * ## A série de revanches (`T-32`)
+ * Em `cpu` e `local`, "Jogar de novo" mantém o confronto — e a partir daí a tela conta a série:
+ * quantas cada lado venceu, em quantas partidas. A conta mora na `Partida` que segue para a
+ * revanche, na MEMÓRIA e em lugar nenhum além dela: voltar ao início ou trocar de seleção cria
+ * uma `Partida` nova, e a série nasce zerada com ela.
+ *
+ * Fora dela ficam os dois modos que não têm revanche do mesmo confronto: no `torneio` o botão é
+ * "Continuar no torneio" e o placar da série já é a tabela da Cup (`T-25`); no `online` é
+ * "Convidar de novo" — sala nova, e uma série compartilhada cairia na trava de contrato de
+ * `T-31`.
+ *
  * ## Os 4 estados
  * - **carregando** e **vazio** — não existem: a tela só é alcançada com um `MatchState` já
  *   encerrado na mão. Lacunas declaradas.
@@ -23,8 +34,16 @@
 import { newSeed } from '../core/index';
 import type { MatchState } from '../session/index';
 import { botao, el, focar } from './dom';
-import { desfecho, nomeSelecao, nomeZona, placar } from './rotulos';
+import {
+  desfecho,
+  nomeSelecao,
+  nomeZona,
+  placar,
+  serieComVencedor,
+  textoDaSerie,
+} from './rotulos';
 import { marca } from './tela_selecoes';
+import { SERIE_ZERO } from './rotas';
 import type { Contexto, Partida, Tela } from './rotas';
 
 /**
@@ -118,6 +137,20 @@ export const telaFim =
       el('p', { classe: 'faixa', dados: { tom: 'bom' }, texto: desfecho(estado, partida.times) }),
     );
 
+    /*
+     * A série já com ESTA disputa somada. Só `cpu` e `local` a têm: são os dois modos em que
+     * "Jogar de novo" repete o mesmo confronto neste aparelho. Sem vencedor nada soma, e a linha
+     * simplesmente não aparece enquanto não houver duas partidas (`textoDaSerie` devolve `null`).
+     */
+    const contaSerie = !partida.torneio && partida.modo !== 'online';
+    const serie = contaSerie ? serieComVencedor(partida.serie, vencedor) : SERIE_ZERO;
+    const frase = contaSerie ? textoDaSerie(serie, partida.times) : null;
+    if (frase !== null) {
+      // Sem `aria-label`: a frase já começa por "Série", e o rótulo repetia a palavra para
+      // quem ouve ("Série de revanches: Série: ..."), medido no navegador.
+      tela.append(el('p', { classe: 'sub', texto: frase }));
+    }
+
     if (vencedor === null) {
       // ── Estado de ERRO ──────────────────────────────────────────────────────────────────
       tela.append(
@@ -152,13 +185,23 @@ export const telaFim =
         ? botao('Convidar de novo', 'botao botao--principal', () => {
             ctx.ir({
               nome: 'convite',
-              partida: { ...partida, semente: newSeed(), ladoLocal: 'A', sala: null },
+              // Sala nova é confronto novo do ponto de vista da série, e o `online` não a
+              // conta de todo jeito — o zero aqui é literal, não herança de `...partida`.
+              partida: {
+                ...partida,
+                semente: newSeed(),
+                ladoLocal: 'A',
+                sala: null,
+                serie: SERIE_ZERO,
+              },
             });
           })
         : botao('Jogar de novo', 'botao botao--principal', () => {
             ctx.ir({
               nome: 'cobranca',
-              partida: { ...partida, semente: newSeed() },
+              // A série segue para a revanche JÁ com esta partida somada — é o único ponto
+              // do jogo onde ela cresce, porque é o único onde existe vencedor.
+              partida: { ...partida, semente: newSeed(), serie },
             });
           });
 

@@ -7,6 +7,18 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-21] — `T-32`: a série de revanches, na memória e medida no navegador
+
+- **Skill:** frontend-uiux. **Módulo:** M7 só. **Delta:** `src/ui/rotas.ts` (o campo `serie` e `SERIE_ZERO`), `src/ui/rotulos.ts` (a conta e a frase, puras), `src/ui/tela_fim.ts` (soma, mostra e leva adiante) e uma linha em cada um dos três pontos que criam `Partida` — `main.ts`, `tela_selecoes.ts`, `tela_torneio.ts`. Mais 9 testes.
+- **A forma:** `serie` conta as vitórias das partidas ANTERIORES a esta; quem soma é a tela de fim, o único ponto do jogo onde existe vencedor. A linha aparece da 2ª partida em diante — depois da primeira ela repetiria o placar logo acima.
+- **Zerar não virou código:** "Voltar ao início" e trocar de seleção passam pela tela de seleções, e ela cria a `Partida` com `SERIE_ZERO`. Não existe rotina de limpeza a esquecer de chamar.
+- **Nada gravado, como o card exigia:** `localStorage`/`sessionStorage` em `src/ui/` seguem com os dois donos de sempre, agora cobrados por teste que lê o disco; no navegador o armazenamento tinha as duas chaves conhecidas e nenhuma a mais. `createSession` e `MatchState` com 0 byte alterado.
+- **Sandbox:** `check.py` verde, `tsc` limpo, suíte **598 → 607/607**, bundle **424.987 → 425.525 B (+538 B)**, 44 arquivos em `dist/` antes e depois. Quatro falseamentos, cada um reprovando exatamente 1 teste.
+- **O método mudou, e é a lição do dia:** a disputa de M7 é JOGÁVEL no sandbox. O que a travava não era a falta de DOM — era `await cena.animar(...)` esperando um tween de Phaser que nunca roda com a pane escondida. Trocando `requestAnimationFrame` por `setTimeout` antes de a cena montar, a disputa inteira anda, e o portão do card deixou de ser "lacuna declarada" para virar medida: três revanches deram "em 2", "em 3" e "em 4 partidas"; "Voltar ao início" zerou; o `local` repetiu em 360x640; a disputa do torneio terminou sem linha nenhuma.
+- **Um acerto veio da medição:** o `aria-label` escrito na primeira versão fazia o leitor de tela ouvir "Série de revanches: Série: ..." — a palavra duas vezes. Saiu.
+- **O que continua sendo do dono:** `A-35` — o número em três partidas de verdade, e a comparação do amarelo (`0f231bd`) entre o ar e o build de hoje, que é a lacuna que `A-34` deixou declarada. A observação do amarelo só mede algo ANTES de publicar.
+- **Sem `D-NN` novo, de propósito:** o escopo foi escolhido pelo dono em 2026-08-21 e o registro está a 96% do teto.
+
 ## [2026-08-21] — `A-34` devolveu `1`: o ar volta a bater com o repositório
 
 - **Skill:** delivery-review (campo; nenhuma linha de produção mudou).

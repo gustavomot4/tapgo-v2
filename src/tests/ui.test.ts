@@ -46,7 +46,13 @@ import {
   resultadoUltimaCobranca,
   rotuloZona,
   sorteioDoPrimeiro,
+  MINIMO_DA_SERIE,
+  partidasDaSerie,
+  serieComVencedor,
+  textoDaSerie,
 } from '../ui/rotulos';
+import { SERIE_ZERO } from '../ui/rotas';
+import type { Serie } from '../ui/rotas';
 import { PADRAO, lerPreferencias, gravarPreferencias, selecaoInicial } from '../ui/preferencias';
 import {
   ALFABETO,
@@ -1621,5 +1627,109 @@ describe('prazo da cobrança no online (T-24)', () => {
       vistas.add(String(zona));
     }
     expect(vistas).toEqual(new Set(['L', 'C', 'R']));
+  });
+});
+
+describe('a série de revanches (T-32)', () => {
+  const CONFRONTO = { A: 'BR', B: 'ES' } as const;
+
+  /** Joga a série inteira a partir do zero, como a tela de fim faz a cada revanche. */
+  function serieDe(vencedores: readonly (Side | null)[]): Serie {
+    return vencedores.reduce<Serie>((s, v) => serieComVencedor(s, v), SERIE_ZERO);
+  }
+
+  it('três revanches seguidas devolvem o placar da série, não o da última partida', () => {
+    // O portão do card: A, B, A → "2 × 1 em 3 partidas". A tela mostra a série já COM a
+    // partida que acabou de terminar, e é essa mesma série que segue para a revanche.
+    const serie = serieDe(['A', 'B', 'A']);
+    expect(serie).toEqual({ A: 2, B: 1 });
+    expect(partidasDaSerie(serie)).toBe(3);
+
+    const frase = textoDaSerie(serie, CONFRONTO);
+    expect(frase).not.toBeNull();
+    expect(frase).toContain('2 × 1');
+    expect(frase).toContain('3 partidas');
+    expect(frase).toContain(nomeSelecao('BR'));
+    expect(frase).toContain(nomeSelecao('ES'));
+  });
+
+  it('a série cresce de UM em UM, e o total é a soma dos dois lados', () => {
+    let serie: Serie = SERIE_ZERO;
+    for (let i = 1; i <= 6; i++) {
+      serie = serieComVencedor(serie, i % 2 === 0 ? 'B' : 'A');
+      expect(partidasDaSerie(serie)).toBe(i);
+      expect(serie.A + serie.B).toBe(i);
+    }
+    expect(serie).toEqual({ A: 3, B: 3 });
+  });
+
+  it('zerar é começar de novo: SERIE_ZERO não guarda nada da série anterior', () => {
+    // "Voltar ao início" e "trocar de seleção" não limpam nada — eles criam uma `Partida` nova,
+    // e ela nasce com este valor. O teste cobra que o zero é zero de verdade, e imutável.
+    const jogada = serieDe(['A', 'A', 'B']);
+    expect(jogada).toEqual({ A: 2, B: 1 });
+    expect(SERIE_ZERO).toEqual({ A: 0, B: 0 });
+    expect(partidasDaSerie(SERIE_ZERO)).toBe(0);
+    expect(textoDaSerie(SERIE_ZERO, CONFRONTO)).toBeNull();
+  });
+
+  it('a primeira partida não vira linha de série — ela repetiria o placar de cima', () => {
+    expect(MINIMO_DA_SERIE).toBe(2);
+    expect(textoDaSerie(serieDe(['A']), CONFRONTO)).toBeNull();
+    expect(textoDaSerie(serieDe(['A', 'B']), CONFRONTO)).not.toBeNull();
+  });
+
+  it('disputa sem vencedor não entra na conta, nem como vitória nem como partida', () => {
+    // `winner` é `Side | null` no tipo, e o estado de erro da tela existe por isso. Contar o
+    // `null` faria "em 3 partidas" incluir uma que não terminou.
+    const serie = serieDe(['A', null, 'B', null]);
+    expect(serie).toEqual({ A: 1, B: 1 });
+    expect(partidasDaSerie(serie)).toBe(2);
+  });
+
+  it('o número é inteiro e são: nada de NaN, negativo ou casa decimal na tela', () => {
+    const torta = { A: Number.NaN, B: -3 } as unknown as Serie;
+    expect(serieComVencedor(torta, 'A')).toEqual({ A: 1, B: 0 });
+    expect(partidasDaSerie(torta)).toBe(0);
+    expect(partidasDaSerie({ A: 2.7, B: 1.2 } as Serie)).toBe(3);
+
+    const frase = textoDaSerie({ A: 2.7, B: 1.2 } as Serie, CONFRONTO);
+    expect(frase).not.toBeNull();
+    expect(frase).not.toMatch(/NaN|undefined|-\d|\d\.\d/);
+  });
+
+
+  it('a série não grava nada: nenhum armazenamento novo entrou em src/ui/', () => {
+    // O escopo do card é série NA MEMÓRIA. Quem toca `localStorage`/`sessionStorage` em M7
+    // continua sendo dois arquivos, e só eles — mais um exigiria `D-NN` dizendo o que fica
+    // gravado e por quanto tempo.
+    const donos = new Set(['preferencias.ts', 'torneio_salvo.ts']);
+    const infratores = arquivosDeUi(DIR_UI)
+      .filter((a) => /(localStorage|sessionStorage)/.test(readFileSync(a, 'utf8')))
+      .map((a) => relative(DIR_UI, a).split(sep).join('/'))
+      .filter((nome) => !donos.has(nome));
+    expect(infratores).toEqual([]);
+  });
+
+  it('a revanche leva a série adiante, e o online a zera — lido da fonte de tela_fim.ts', () => {
+    // Nenhuma tela de M7 é alcançável pela suíte (`vitest` roda em Node sem DOM), então o que
+    // este teste alcança é o texto do arquivo — o mesmo caminho do portão de camada acima.
+    const fonte = readFileSync(join(DIR_UI, 'tela_fim.ts'), 'utf8');
+
+    // "Jogar de novo": semente nova E a série somada seguem na mesma `Partida`.
+    expect(fonte).toMatch(/nome: 'cobranca',[\s\S]*?semente: newSeed\(\), serie \}/);
+    // "Convidar de novo": sala nova, série zerada, nunca herdada pelo espalhamento.
+    expect(fonte).toMatch(/nome: 'convite',[\s\S]*?serie: SERIE_ZERO/);
+    // O torneio e o online não contam série nenhuma.
+    expect(fonte).toContain("!partida.torneio && partida.modo !== 'online'");
+  });
+
+  it('a frase se explica sozinha para quem lê e para quem ouve', () => {
+    const frase = textoDaSerie(serieDe(['A', 'B']), CONFRONTO) ?? '';
+    // Ela é lida assim como está, inclusive por leitor de tela: não há `aria-label` a manter
+    // em dia, e é a própria frase que precisa dizer do que se trata.
+    expect(frase).toMatch(/^Série:/);
+    // Sem jargão nem termo da lista-morta de licenciamento: nome de país e número, só.
+    expect(frase).not.toMatch(/FIFA|Copa do Mundo|match|rematch|score/i);
   });
 });

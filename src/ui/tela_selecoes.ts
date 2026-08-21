@@ -24,7 +24,7 @@ import { botao, el, focar, limpar } from './dom';
 import { marcaSelecao, nomeSelecao } from './rotulos';
 import { selecaoInicial } from './preferencias';
 import type { Contexto, Tela } from './rotas';
-import { LADO_DO_HUMANO } from './rotas';
+import { LADO_DO_HUMANO, SERIE_ZERO } from './rotas';
 
 /**
  * A marca da seleção: a bandeira em `<img>`, ou o disco com o código ISO quando não há arquivo.
@@ -224,6 +224,9 @@ export const telaSelecoes =
         // adiantaria o ID para os dois modos que não têm sala — e, no online, sem nenhum ganho:
         // o que importa é que ela nasça antes do canal, não antes desta tela.
         sala: null,
+        // Série zerada: escolher seleção nesta tela COMEÇA uma série (`T-32`). É o que faz
+        // "trocar de seleção" recomeçar a conta sem uma linha a mais em lugar nenhum.
+        serie: SERIE_ZERO,
       };
 
       // No `online` a próxima tela é o convite, e é ela que decide QUANDO a sessão nasce

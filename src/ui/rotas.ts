@@ -13,6 +13,17 @@ import type { Som } from './som';
 import type { TorneioEmCurso } from './torneio_salvo';
 
 /**
+ * O placar da série de revanches: vitórias de cada lado, em inteiro (`T-32`).
+ *
+ * Mesmo formato de `times`, e de propósito — os dois são indexados por `Side`, e quem monta a
+ * frase da série lê os dois lado a lado.
+ */
+export type Serie = Readonly<Record<Side, number>>;
+
+/** Série sem nenhuma partida. O valor com que toda `Partida` nasce. */
+export const SERIE_ZERO: Serie = { A: 0, B: 0 };
+
+/**
  * Tudo que a tela de cobrança precisa para criar a sessão — e nada além.
  *
  * `nivel: null` fora do modo `cpu` é literal: `createSession` **recusa** `level` em `local`
@@ -44,6 +55,23 @@ export interface Partida {
    * `null` em `cpu`/`local` é literal, não "ainda não sei": esses modos não têm sala.
    */
   readonly sala: string | null;
+  /**
+   * A série de revanches deste confronto (`T-32`): quantas o lado `A` venceu, quantas o `B`.
+   *
+   * **Conta as partidas ANTERIORES a esta**, e só elas — quem soma a que acabou de terminar é a
+   * tela de fim, que é o único ponto do jogo onde existe vencedor. Inteiro sempre (`D-02`), e o
+   * total de partidas da série é `A + B` porque a disputa nunca empata (`D-09`).
+   *
+   * **Vive só na memória, de propósito.** Nada disto é gravado: o CONTEXT diz "nenhum dado
+   * pessoal coletado", e armazenamento novo pediria um `D-NN` dizendo o que fica e por quanto
+   * tempo. Voltar ao início ou trocar de seleção cria uma `Partida` nova, e a série nasce
+   * zerada junto — não há o que limpar.
+   *
+   * `SERIE_ZERO` nos modos que não têm série (`online` e `torneio`): campo obrigatório pelo mesmo
+   * motivo de `torneio` acima — escrever o zero em cada criação é mais barato que descobrir,
+   * depois, qual dos caminhos esqueceu de zerar.
+   */
+  readonly serie: Serie;
 }
 
 export type Rota =

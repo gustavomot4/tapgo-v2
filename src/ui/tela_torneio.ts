@@ -49,6 +49,7 @@ import {
 } from './rotulos';
 import { marca } from './tela_selecoes';
 import { telaCampeao } from './tela_campeao';
+import { SERIE_ZERO } from './rotas';
 import type { Contexto, Tela } from './rotas';
 
 /** A próxima disputa, do tamanho de quem é o assunto da tela. */
@@ -174,6 +175,9 @@ export const telaTorneio: Tela = (raiz: HTMLElement, ctx: Contexto) => {
         // O torneio é offline por contrato ([[online_p2p]]: ele funciona sem rede nenhuma), e
         // sala é coisa do modo `online`. `null` aqui é literal, não pendência.
         sala: null,
+        // Disputa de torneio não tem série (`T-32`): o placar de lá é a tabela da Cup (`T-25`),
+        // e a tela de fim nem oferece "Jogar de novo".
+        serie: SERIE_ZERO,
       },
     });
   }

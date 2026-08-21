@@ -24,6 +24,7 @@ import { ehDoCatalogo } from './rotulos';
 import { lerPreferencias, gravarPreferencias, selecaoInicial } from './preferencias';
 import type { Preferencias } from './preferencias';
 import { criarSom } from './som';
+import { SERIE_ZERO } from './rotas';
 import type { Contexto, Rota, Tela } from './rotas';
 import { telaInicio } from './tela_inicio';
 import { telaSelecoes } from './tela_selecoes';
@@ -164,6 +165,9 @@ function abertura(prefs: Preferencias, temTorneio: boolean): Rota {
         // uma semente de verdade mesmo assim mantém a configuração igual à dos outros modos.
         semente: newSeed(),
         sala,
+        // O `online` não tem série de revanches (`T-32`): lá o botão é "Convidar de novo",
+        // e sala nova é confronto novo. Zero literal, não pendência.
+        serie: SERIE_ZERO,
       },
     };
   }

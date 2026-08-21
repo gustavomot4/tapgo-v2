@@ -20,6 +20,7 @@ import type { Level } from '../session/index';
 import type { Stage, Standing } from '../tournament/index';
 import { findTeam } from '../data/teams';
 import type { ModoJogavel, Papel } from './derivacao';
+import type { Serie } from './rotas';
 
 /** Cobranças por lado na fase regular. Espelha `REGULAR_KICKS` de M2, que não é exportado. */
 const COBRANCAS_REGULARES = 5;
@@ -367,3 +368,59 @@ export const NOTA_PONTOS =
   'Pts é 3 por vitória — a disputa nunca empata, então não há ponto de empate. Pontos iguais ' +
   'são vitórias iguais, e o desempate segue o de sempre: confronto direto, saldo, gols e, se ' +
   'tudo empatar, sorteio.';
+
+
+// ── `T-32`: a série de revanches ────────────────────────────────────────────────────────────
+// A série é DERIVAÇÃO de render, como os pontos acima: M2 e M5 não sabem que ela existe, e
+// nenhum contrato deles muda. Quem a carrega é a `Partida`, que é de M7; o que estas funções
+// fazem é somar a partida que acabou e escrever a frase.
+
+/**
+ * A partir de quantas partidas a série aparece na tela.
+ *
+ * Duas, e não uma: depois da primeira partida a "série" seria "1 × 0 em 1 partida", que é o
+ * mesmo que o placar logo acima já diz, com uma linha a mais para ler. A frase só passa a
+ * informar quando existe passado que a tela não mostra.
+ */
+export const MINIMO_DA_SERIE = 2;
+
+/** Contagem sã: nunca `NaN`, nunca negativa, nunca fracionária (a lição de `avisoDePressa`). */
+function contagem(n: number): number {
+  return Number.isFinite(n) ? Math.max(0, Math.trunc(n)) : 0;
+}
+
+/**
+ * A série depois desta disputa.
+ *
+ * `vencedor === null` devolve a série INTACTA: disputa sem vencedor não entra na conta, nem como
+ * vitória nem como partida jogada — contá-la faria "em 3 partidas" incluir uma que não terminou.
+ */
+export function serieComVencedor(serie: Serie, vencedor: Side | null): Serie {
+  const base: Serie = { A: contagem(serie.A), B: contagem(serie.B) };
+  if (vencedor === null) return base;
+  return { ...base, [vencedor]: base[vencedor] + 1 };
+}
+
+/** Quantas partidas a série já teve. Soma exata: sem empate (`D-09`), toda partida tem dono. */
+export function partidasDaSerie(serie: Serie): number {
+  return contagem(serie.A) + contagem(serie.B);
+}
+
+/**
+ * A frase da série, ou `null` quando ainda não há série a contar.
+ *
+ * `null` é a saída declarada do caso "primeira partida" — quem chama não desenha a linha. Devolver
+ * texto vazio deixaria um parágrafo de altura zero no meio da tela, que é o mesmo defeito que
+ * "lista vazia sem mensagem": espaço sem informação.
+ */
+export function textoDaSerie(
+  serie: Serie,
+  times: Readonly<Record<Side, CountryCode>>,
+): string | null {
+  const total = partidasDaSerie(serie);
+  if (total < MINIMO_DA_SERIE) return null;
+  return (
+    `Série: ${nomeSelecao(times.A)} ${String(contagem(serie.A))} × ` +
+    `${String(contagem(serie.B))} ${nomeSelecao(times.B)} — em ${String(total)} partidas`
+  );
+}
