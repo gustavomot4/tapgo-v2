@@ -55,13 +55,19 @@ import {
   BOLA,
   GOLEIRO_MERGULHO,
   GOLEIRO_PARADO,
+  CAMISA_NACIONAL,
+  CORES_NACIONAIS,
+  camisasDaDisputa,
+  corDaListra,
+  corDoPixel,
+  corNacional,
   dimensoes,
+  distanciaDeCor,
+  DISTANCIA_MINIMA,
   hsl,
-  matizDistinto,
   paleta,
-  SEPARACAO_MINIMA,
 } from '../ui/sprites';
-import type { Papel, Sprite } from '../ui/sprites';
+import type { Camisa, Cor, Papel, Sprite } from '../ui/sprites';
 import type { Preferencias } from '../ui/preferencias';
 
 const DIR_UI = fileURLToPath(new URL('../ui', import.meta.url));
@@ -761,7 +767,7 @@ describe('sprites do campo (T-20)', () => {
   });
 
   it('todo papel usado nas grades tem cor na paleta — nenhum pixel fica sem cor', () => {
-    const cores = paleta(200);
+    const cores = paleta(CORES_NACIONAIS.azul);
     for (const [nome, sprite] of Object.entries(TODOS)) {
       for (const linha of sprite) {
         for (const ch of linha) {
@@ -778,11 +784,11 @@ describe('sprites do campo (T-20)', () => {
     expect(dimensoes(GOLEIRO_PARADO).altura).toBe(GOLEIRO_PARADO.length);
   });
 
-  it('a camisa muda com o matiz, e o resto do boneco NÃO', () => {
+  it('a camisa muda com a cor nacional, e o resto do boneco NÃO', () => {
     // É o pedido "cada goleiro com a cor da sua seleção". Pele, cabelo e chuteira ficam fixos:
     // variar tom de pele por seleção seria inventar identidade onde só existe um código ISO.
-    const a = paleta(10);
-    const b = paleta(200);
+    const a = paleta(CORES_NACIONAIS.vermelho);
+    const b = paleta(CORES_NACIONAIS.azul);
 
     expect(a.C).not.toBe(b.C);
     expect(a.M).not.toBe(b.M);
@@ -794,41 +800,168 @@ describe('sprites do campo (T-20)', () => {
     expect(a.D).toBe(b.D);
   });
 
-  it('o matiz de M7 NÃO é injetor — 2 pares das 32 colidem, e por isso matizDistinto existe', () => {
-    // Este teste documenta o defeito de `QA-20` em vez de fingir que ele não existe: se um dia o
-    // hash mudar e as 32 passarem a ser únicas, ele reprova e alguém revisita `matizDistinto`.
-    const matizes = listTeams().map((t) => marcaSelecao(t.code).matiz);
-    expect(matizes).toHaveLength(32);
-    expect(new Set(matizes).size).toBe(30);
+  // ── `T-29`/`D-88`: a cor nacional, e o padrão como canal de desempate ────────────────
+
+  it('as 32 seleções do catálogo têm cor nacional — nenhuma cai na saída de emergência', () => {
+    // O `corNacional` devolve branco para código desconhecido, e essa saída existe para não pôr
+    // um retângulo transparente em campo. Mas ela NÃO pode estar cobrindo o catálogo real: se
+    // alguém acrescentar uma seleção a M4 e esquecer da tabela, é aqui que isso aparece.
+    for (const time of listTeams()) {
+      expect(
+        Object.prototype.hasOwnProperty.call(CAMISA_NACIONAL, time.code),
+        `${time.code} sem linha em CAMISA_NACIONAL`,
+      ).toBe(true);
+    }
+    expect(Object.keys(CAMISA_NACIONAL)).toHaveLength(32);
   });
 
-  it('em campo, os dois lados nunca saem com a mesma camisa — nem os 3 pares que colidem', () => {
-    const codigos = listTeams().map((t) => t.code);
+  it('toda cor nomeada da tabela existe, e nenhuma linha aponta para nome inventado', () => {
+    for (const [code, nome] of Object.entries(CAMISA_NACIONAL)) {
+      expect(CORES_NACIONAIS[nome], `${code} aponta para cor inexistente: ${nome}`).toBeDefined();
+    }
+  });
 
-    for (const a of codigos) {
-      for (const b of codigos) {
-        if (a === b) continue; // seleção contra ela mesma é permitido, e aí a cor igual é honesta
-        const mA = marcaSelecao(a).matiz;
-        const mB = matizDistinto(mA, marcaSelecao(b).matiz);
-
-        const bruto = Math.abs(mA - mB);
-        const distancia = Math.min(bruto, 360 - bruto);
-        expect(distancia, `${a} x ${b}: camisas a ${distancia}graus`).toBeGreaterThanOrEqual(
-          SEPARACAO_MINIMA,
-        );
-        expect(paleta(mA).C, `${a} x ${b}`).not.toBe(paleta(mB).C);
+  it('as cores nomeadas são distinguíveis entre si — a menor distância passa do limiar', () => {
+    // É o que autoriza o limiar de `DISTANCIA_MINIMA` a decidir "mesma cor" por comparação: se
+    // duas cores DIFERENTES da tabela caíssem abaixo dele, o desempate listraria camisas que já
+    // eram distintas, e a listra perderia o significado.
+    const nomes = Object.keys(CORES_NACIONAIS) as (keyof typeof CORES_NACIONAIS)[];
+    for (let i = 0; i < nomes.length; i += 1) {
+      for (let j = i + 1; j < nomes.length; j += 1) {
+        const a = nomes[i];
+        const b = nomes[j];
+        if (a === undefined || b === undefined) continue;
+        const d = distanciaDeCor(CORES_NACIONAIS[a], CORES_NACIONAIS[b]);
+        expect(d, `${a} x ${b} a ${d.toFixed(1)}`).toBeGreaterThanOrEqual(DISTANCIA_MINIMA);
       }
     }
   });
 
-  it('matizDistinto não mexe em quem já estava longe, e é determinístico', () => {
-    expect(matizDistinto(0, 180)).toBe(180);
-    expect(matizDistinto(10, 90)).toBe(90);
-    // Colidiu: vai para o oposto, sempre no mesmo lugar.
-    expect(matizDistinto(100, 100)).toBe(280);
-    expect(matizDistinto(100, 100)).toBe(280);
-    // A volta do círculo conta como perto: 350 e 10 estão a 20 graus.
-    expect(matizDistinto(350, 10)).toBe(170);
+  it('nenhuma cor nacional some no gramado — as 4 faixas do campo, medidas', () => {
+    // O verde é o caso que este teste existe para segurar: no tom médio ele ficava a 29,7 do
+    // gramado, e cinco seleções vestiriam camisa invisível. As faixas são as de `cena.ts`.
+    const GRAMADO: Cor[] = [
+      { h: 128, s: 41, l: 41 },
+      { h: 127, s: 39, l: 45 },
+      { h: 127, s: 36, l: 50 },
+      { h: 126, s: 35, l: 54 },
+    ];
+    for (const [nome, cor] of Object.entries(CORES_NACIONAIS)) {
+      for (const faixa of GRAMADO) {
+        const d = distanciaDeCor(cor, faixa);
+        expect(d, `${nome} a ${d.toFixed(1)} do gramado`).toBeGreaterThanOrEqual(DISTANCIA_MINIMA);
+      }
+    }
+  });
+
+  it('em campo, os dois lados nunca saem com a mesma camisa — as 32x32, sem exceção', () => {
+    // A MESMA garantia que `matizDistinto` dava, cobrada do mesmo jeito: o produto cartesiano
+    // inteiro, e não os pares de que eu lembrei. O que mudou é o preço — a cor nacional dos DOIS
+    // lados sobrevive, e quem cede é o padrão.
+    const codigos = listTeams().map((t) => t.code);
+
+    for (const a of codigos) {
+      for (const b of codigos) {
+        if (a === b) continue; // seleção contra ela mesma é permitido, e aí a camisa igual é honesta
+        const { A, B } = camisasDaDisputa(a, b);
+
+        // A cor nacional dos dois lados fica INTACTA. É a diferença entre (B) e a saída (A).
+        expect(A.cor, `${a} x ${b}: lado A perdeu a cor nacional`).toEqual(corNacional(a));
+        expect(B.cor, `${a} x ${b}: lado B perdeu a cor nacional`).toEqual(corNacional(b));
+
+        // E mesmo assim os dois bonecos saem distinguíveis: ou pela cor, ou pela listra.
+        const distintos =
+          distanciaDeCor(A.cor, B.cor) >= DISTANCIA_MINIMA || A.padrao !== B.padrao;
+        expect(distintos, `${a} x ${b}: mesma cor E mesmo padrão`).toBe(true);
+      }
+    }
+  });
+
+  it('quem cede é sempre o lado B, e o resultado não depende da ordem', () => {
+    // Espanha e Croácia são duas das doze vermelhas: quem entra como B é quem ganha listras, nas
+    // duas ordens. Sem isso, a mesma disputa sairia diferente conforme quem foi sorteado.
+    expect(camisasDaDisputa('ES', 'HR').A.padrao).toBe('liso');
+    expect(camisasDaDisputa('ES', 'HR').B.padrao).toBe('listras');
+    expect(camisasDaDisputa('HR', 'ES').A.padrao).toBe('liso');
+    expect(camisasDaDisputa('HR', 'ES').B.padrao).toBe('listras');
+  });
+
+  it('cor diferente não vira listra — Brasil x Argentina saem os dois lisos', () => {
+    const { A, B } = camisasDaDisputa('BR', 'AR');
+    expect(A.padrao).toBe('liso');
+    expect(B.padrao).toBe('liso');
+  });
+
+  it('seleção contra ela mesma sai com as duas camisas IGUAIS, e isso é honesto', () => {
+    // Listrar um dos dois lados diria que são seleções diferentes, e elas não são.
+    const { A, B } = camisasDaDisputa('BR', 'BR');
+    expect(A).toEqual(B);
+    expect(B.padrao).toBe('liso');
+  });
+
+  it('a listra é visível sobre a própria camisa — clara no escuro, escura no claro', () => {
+    for (const [nome, cor] of Object.entries(CORES_NACIONAIS)) {
+      const d = distanciaDeCor(cor, corDaListra(cor));
+      expect(d, `listra de ${nome} a ${d.toFixed(1)} da base`).toBeGreaterThanOrEqual(
+        DISTANCIA_MINIMA,
+      );
+    }
+    // O branco é o único que cai no ramo escuro, e o único lugar onde o preto entra no jogo.
+    expect(corDaListra(CORES_NACIONAIS.branco).l).toBeLessThan(20);
+    expect(corDaListra(CORES_NACIONAIS.azul).l).toBeGreaterThan(80);
+  });
+
+  it('a listra pinta SÓ a camisa, e alterna de verdade ao longo do x', () => {
+    const camisa: Camisa = { cor: CORES_NACIONAIS.vermelho, padrao: 'listras' };
+    const cores = paleta(camisa.cor);
+
+    // Ao longo do tronco, o pixel de camisa alterna entre a base e a listra.
+    const aoLongo = [0, 1, 2, 3, 4, 5].map((x) => corDoPixel(camisa, cores, 'C', x));
+    expect(new Set(aoLongo).size, 'a listra não alterna').toBe(2);
+    expect(aoLongo[0]).toBe(cores.C);
+    expect(aoLongo[2]).not.toBe(cores.C);
+
+    // Calção, meião, pele e chuteira ficam lisos: listrar o boneco inteiro a 18px vira ruído.
+    for (const papel of ['S', 'M', 'P', 'K', 'B'] as Papel[]) {
+      for (const x of [0, 1, 2, 3]) {
+        expect(corDoPixel(camisa, cores, papel, x), `papel ${papel} foi listrado`).toBe(
+          cores[papel],
+        );
+      }
+    }
+  });
+
+  it('camisa lisa ignora o x — nenhum pixel dela muda com a posição', () => {
+    const camisa: Camisa = { cor: CORES_NACIONAIS.vermelho, padrao: 'liso' };
+    const cores = paleta(camisa.cor);
+    for (const x of [0, 1, 2, 3, 4, 5, 6, 7]) {
+      expect(corDoPixel(camisa, cores, 'C', x)).toBe(cores.C);
+    }
+  });
+
+  it('o branco sobrevive à derivação de luva, calção e meião — nada dele sai colorido', () => {
+    // Era o defeito da paleta antiga, que cravava `hsl(matiz, 40, 82)`: saturação fixa devolve
+    // cor a uma base sem cor, e o kit branco sairia com luva colorida.
+    const p = paleta(CORES_NACIONAIS.branco);
+    for (const papel of ['C', 'G', 'S', 'M'] as Papel[]) {
+      const cor = p[papel];
+      const r = (cor >> 16) & 255;
+      const g = (cor >> 8) & 255;
+      const b = cor & 255;
+      expect(Math.max(r, g, b) - Math.min(r, g, b), `papel ${papel} saiu colorido`).toBeLessThan(6);
+    }
+  });
+
+  it('a chave de textura de `cena.ts` carrega o PADRÃO, e não só a cor', () => {
+    // Varredura de fonte porque `cena.ts` importa Phaser e nenhuma tela de M7 é alcançável pelo
+    // vitest (Node, sem DOM). O defeito que ela segura é silencioso e caro: sem o padrão na
+    // chave, Espanha lisa e Espanha listrada dividem a mesma textura, a segunda sai pelo
+    // `textures.exists` e os dois lados voltam a sair com a MESMA camisa — o defeito que o
+    // desempate inteiro existe para impedir, reintroduzido por uma string.
+    const fonte = readFileSync(fileURLToPath(new URL('../ui/cena.ts', import.meta.url)), 'utf8');
+    const corpo = /function chaveDaCamisa\([^)]*\)[^{]*\{([\s\S]*?)\n\}/.exec(fonte)?.[1];
+    expect(corpo, 'chaveDaCamisa sumiu de cena.ts').toBeDefined();
+    expect(corpo, 'a chave não usa camisa.padrao').toMatch(/camisa\.padrao/);
   });
 
   it('hsl devolve cor dentro da faixa de 24 bits, para qualquer matiz', () => {

@@ -7,6 +7,24 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-21] — `T-29`: a camisa passa a ser a cor nacional, e quem cede é o PADRÃO (`D-88`, saída (B) de `Q-16`)
+
+- **Skill:** frontend-uiux (mesma sessão que abriu `T-29`, seguindo depois da escolha do dono). **Módulo:** M7 — `src/ui/sprites.ts`, `src/ui/cena.ts`, `src/ui/tela_cobranca.ts`.
+- **O dono escolheu (B)**, que era a recomendação da sessão: cor nacional **mais** um 2º canal de padrão. `D-88` registra.
+- **O que entrou:** 8 cores nomeadas cobrindo as 32 seleções (`CORES_NACIONAIS`/`CAMISA_NACIONAL`), a camisa em campo saindo delas, e `camisasDaDisputa` decidindo o padrão. **`matizDistinto` saiu.**
+- **A (B) mudou o que se CEDE, e é o que ela comprou:** `matizDistinto` separava dois lados parecidos jogando o matiz de B para o oposto do círculo — barato com cor de hash, caro com cor nacional (Espanha × Portugal de ciano). Agora quem cede é o padrão: o lado B ganha listras e **mantém a cor**. O teste das 32x32 cobra as duas coisas na mesma volta — cor intacta nos dois lados **e** bonecos distinguíveis.
+- **Escopo cortado de propósito, e declarado:** a cor nacional vai só para a camisa em campo. `marcaSelecao` e o disco do placar **não foram tocados** — desde `T-19` o disco mostra a bandeira e o matiz fica invisível embaixo dela. Mexer nele custaria todas as telas sem mudar um pixel do que a pessoa vê, e era justamente isso que fazia de `QA-20` um `D-NN` global.
+- **Duas coisas reprovaram na medição, e foram corrigidas por medida:** (1) o `verde` do tom médio ficava a **29,7** de distância RGB da faixa mais parecida do gramado — cinco seleções de camisa invisível; no tom escurecido são **72,4**, com teste sobre as 4 faixas · (2) o `dourado` ficava a **38,7** do `amarelo`, abaixo do próprio limiar: saiu, e a Austrália entrou em amarelo.
+- **O limiar de 40 não é chutado:** menor distância entre cores DIFERENTES é **63,8**, entre iguais é **0** por construção — qualquer valor entre 1 e 63 serve, e há teste que reprova se duas cores se aproximarem.
+- **`GB-ENG` e `DE` deixaram de ser buraco sem eu inventar cor:** a (B) trocou "matiz" por HSL completo, e branco é `s: 0` — o que a saída (A) não sabia dizer. A cor deles já estava na tabela que o dono revisou ao escolher (B).
+- **Números:** suíte **586 → 596/596** (12 testes novos, 2 removidos com o `matizDistinto`), `tsc` limpo, `check.py` verde, bundle **421.451 → 425.115 B (+3.664 B)**, **zero asset novo** e **zero cor nova na paleta de `.tapgo`** — a cor da camisa nunca foi token de CSS.
+- **6 falseamentos, cada um reprovando exatamente o que cobra:** desligar o desempate; clarear o verde; listrar o boneco inteiro; trocar quem cede; tirar o padrão da chave de textura; aproximar duas cores nomeadas.
+- **LACUNA DECLARADA, agora com a causa MEDIDA:** o sandbox não desenha o campo porque `document.visibilityState` é **`hidden`** mesmo com a aba fronteada — `requestAnimationFrame` não dispara, Phaser nunca renderiza, e não há pixel a ler. As sessões anteriores diziam "a pane não compõe"; esta é a causa, e ela explica de uma vez por que nenhuma tela de M7 é verificável por lá.
+- **O que o sandbox provou mesmo assim:** com Espanha × Croácia (as duas vermelhas) escolhidas por DOM, o campo montou (`definirCamisas` rodou sem lançar), **zero erro de console**, e `scrollWidth == clientWidth` em 360x640 e 1280x800, com o campo em 334x241 e 641x462 — as medidas de `T-27`, nada regrediu.
+- **Fechados:** `Q-16` (por `D-88`) e **`QA-20`**, com resíduo declarado — o hash segue não-injetor no ramo de erro do disco, que mostra o CÓDIGO e por isso não confunde.
+- **Falta o campo:** `A-32`, destravada, pedindo **UM número sozinho**.
+- **`QA-32` achado e NÃO consertado de carona (regra 4):** a suíte devolveu 3 falhas na primeira volta — todas `Test timed out in 5000ms`, e todas em provas estatísticas de M2, M3 e M6, nenhuma em `ui.test.ts`. Com a máquina livre, os mesmos 3 arquivos deram **130/130**. Não é regressão desta sessão; é a suíte sem `testTimeout` declarado, e o dono pode topar com isso ao rodar `npm test` com o computador ocupado.
+
 ## [2026-08-21] — `T-29` aberta e travada em `Q-16`: a tabela das 32 cores nacionais foi medida, e a medição derrubou a premissa
 
 - **Skill:** frontend-uiux. **Nenhum byte de código mudou** — a sessão parou antes do CSS, que era exatamente o que o card mandava fazer ("antes de qualquer CSS, monte a tabela e passe cada cor pelo teste de contraste").

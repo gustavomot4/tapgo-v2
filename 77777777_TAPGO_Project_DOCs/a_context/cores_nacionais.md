@@ -2,133 +2,123 @@
 tags: [tema, m7, cor]
 status: atual
 ---
-# As 32 cores nacionais — a tabela, e o que a medição fez com ela (`P-6`(b) / `T-29`)
+# As 32 cores nacionais — a tabela, e o padrão que a torna legível (`T-29` / `D-88`)
 
-> **Nada aqui está no código.** Esta é a tabela **proposta** pela sessão de 2026-08-21, e ela é
-> **DADO revisado pelo dono** — foi assim que `P-6` a travou, e é a regra 5 do kit: cor nacional
-> não é derivável do catálogo, do código ISO nem da bandeira. Enquanto `Q-16` não fechar, o
-> `marcaSelecao` segue com o hash de `T-10` e nenhum byte de produção mudou.
+> **Decidido em 2026-08-21.** O dono escolheu a saída **(B)** de `Q-16`, que era a recomendação da
+> sessão: cor nacional na camisa **mais** um 2º canal de PADRÃO. `T-29` entregou. Este arquivo é o
+> dado — o que está no código é `CORES_NACIONAIS` e `CAMISA_NACIONAL`, em `src/ui/sprites.ts`.
+> **Mexer aqui é `D-NN` novo**, nunca efeito colateral de tarefa de arte.
 
-## O que a sessão foi fazer, e o que ela achou
+## A regra em uma frase
 
-O card mandava: montar a tabela das 32, passar **cada cor** pelo teste de contraste de `T-20`, e
-devolver ao dono a que reprovasse. Os três resultados, na ordem em que mudam a decisão:
+A camisa em campo é a **cor nacional da seleção**; quando os dois lados de uma disputa têm cores
+parecidas demais, o lado B ganha **listras** e **mantém a cor**. Nunca se cede a cor — só o padrão.
 
-1. **O contraste não reprova ninguém — e não reprovaria nunca.** Varredura dos **360** matizes:
-   o pior par texto/disco é `h=240`, a **7,28:1** contra o limite de 4,5:1. O motivo é estrutural:
-   saturação e luminosidade são fixas por papel (`hsl(h 75% 82%)` sobre `hsl(h 40% 22%)` na
-   `.marca`; `hsl(h 72% 52%)` na camisa de `sprites.ts`), e o matiz **não é o canal que decide a
-   razão de contraste**. O portão que `P-6` ergueu para proteger a paleta é, para uma tabela de
-   matizes, um portão que não pode fechar. Ele continua valendo — só não é ele que barra nada aqui.
-2. **Duas seleções não têm matiz, e essas voltam ao dono:** `GB-ENG` (branco) e `DE` (branco/preto).
-   Branco e preto não são um ângulo no círculo de matiz. Não escolhi cor para elas.
-3. **A tabela NÃO fecha `QA-20` — ela piora o número, e isso derruba a premissa do card.** É o
-   achado que trava a implementação, e está medido logo abaixo.
+## As 8 cores nomeadas
 
-## O número que derruba a premissa
+**Uma cor por nome, e essa é a decisão que mais importa.** Doze seleções desta tabela vestem
+vermelho, e elas vestem o **mesmo** vermelho — porque vestem mesmo. Inventar doze vermelhos
+separados por três pontos de luminosidade seria fingir uma precisão que ninguém enxerga num boneco
+de 18 pixels, e ainda fingir que a diferença é dado nacional quando ela seria só minha.
 
-`P-6` dizia, e o texto está lá: *"tabela curada não colide por construção"*. Falso, e o motivo não
-é a curadoria — é o mundo. **Quatorze** das 32 seleções têm vermelho como cor nacional.
+| Nome | HSL | Hex | Distância até o gramado |
+|---|---|---|---|
+| vermelho | `hsl(0 72% 48%)` | `#d32222` | 192,2 |
+| vermelho-escuro | `hsl(350 72% 34%)` | `#95182d` | 154,4 |
+| laranja | `hsl(24 85% 55%)` | `#ee792b` | 168,9 |
+| amarelo | `hsl(48 85% 55%)` | `#eec72b` | 157,9 |
+| verde | `hsl(145 75% 22%)` | `#0e6231` | **72,4** |
+| azul | `hsl(222 70% 40%)` | `#1f49ad` | 129,3 |
+| celeste | `hsl(200 65% 62%)` | `#5fb3dd` | 120,1 |
+| branco | `hsl(0 0% 90%)` | `#e6e6e6` | 194,7 |
 
-| | tabela proposta | hash de hoje (`T-10`) |
+**O verde é escuro por medição, não por gosto.** No tom médio (`hsl(145 62% 38%)`) ele ficava a
+**29,7** da faixa mais parecida do gramado de `cena.ts` — camisa verde sumindo em campo verde, e
+para as **cinco** seleções verdes de uma vez. O hash antigo acertava nisso por acaso; uma tabela
+nacional erraria por escolha. Há teste sobre as 4 faixas.
+
+**O `dourado` existiu e foi cortado:** ficava a **38,7** do `amarelo`, abaixo do próprio limiar que
+decide "mesma cor". A Austrália entrou em amarelo — um nome a menos e nenhuma perda.
+
+## As 32 seleções
+
+**Base** diz de onde a cor vem, e as duas classes não têm o mesmo risco: `bandeira` é conferível no
+SVG que já está no repositório (`T-19`/`D-54`); `esporte` é identidade esportiva que **não está na
+bandeira** — são as linhas mais prováveis de precisar de correção um dia.
+
+| # | Código | Seleção | Cor | Base | | # | Código | Seleção | Cor | Base |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | `ES` | Espanha | vermelho | bandeira | | 17 | `JP` | Japão | azul | esporte |
+| 2 | `AR` | Argentina | celeste | esporte | | 18 | `SN` | Senegal | verde | bandeira |
+| 3 | `FR` | França | azul | bandeira | | 19 | `NO` | Noruega | vermelho | bandeira |
+| 4 | `GB-ENG` | Inglaterra | branco | esporte | | 20 | `UY` | Uruguai | celeste | esporte |
+| 5 | `BR` | Brasil | amarelo | bandeira | | 21 | `DK` | Dinamarca | vermelho | bandeira |
+| 6 | `MA` | Marrocos | vermelho | bandeira | | 22 | `IR` | Irã | verde | bandeira |
+| 7 | `PT` | Portugal | vermelho-escuro | bandeira | | 23 | `AT` | Áustria | vermelho | bandeira |
+| 8 | `BE` | Bélgica | vermelho | bandeira | | 24 | `EG` | Egito | vermelho | bandeira |
+| 9 | `NL` | Holanda | laranja | esporte | | 25 | `EC` | Equador | amarelo | bandeira |
+| 10 | `MX` | México | verde | bandeira | | 26 | `NG` | Nigéria | verde | bandeira |
+| 11 | `CO` | Colômbia | amarelo | bandeira | | 27 | `TR` | Turquia | vermelho | bandeira |
+| 12 | `DE` | Alemanha | branco | esporte | | 28 | `AU` | Austrália | amarelo | esporte |
+| 13 | `HR` | Croácia | vermelho | bandeira | | 29 | `DZ` | Argélia | verde | bandeira |
+| 14 | `CH` | Suíça | vermelho | bandeira | | 30 | `CA` | Canadá | vermelho | bandeira |
+| 15 | `IT` | Itália | azul | esporte | | 31 | `CI` | Costa do Marfim | laranja | bandeira |
+| 16 | `US` | Estados Unidos | azul | bandeira | | 32 | `KR` | Coreia do Sul | vermelho | bandeira |
+
+Grupos: **vermelho** 12 · **verde** 5 · **azul** 4 · **amarelo** 4 · **celeste** 2 · **branco** 2 ·
+**laranja** 2 · **vermelho-escuro** 1.
+
+## Como o desempate funciona
+
+`camisasDaDisputa(a, b)` compara as duas cores por **distância no cubo RGB**. Abaixo de
+`DISTANCIA_MINIMA = 40` elas são a mesma camisa para quem joga, e o lado B recebe `padrao:
+'listras'`. Quem cede é **sempre** o lado B, para o resultado não depender da ordem em que os dois
+chegaram.
+
+**O limiar não é chutado.** Medida contra as 8 cores, a menor distância entre cores **diferentes** é
+**63,8** (vermelho × vermelho-escuro); entre cores **iguais** é **0** por construção. Qualquer valor
+entre 1 e 63 separa os dois casos, e 40 fica no meio — não depende de ajuste fino se uma cor mudar
+de tom um dia. Um teste cobra essa folga, e ele reprova se duas cores nomeadas se aproximarem.
+
+A cor da listra sai da **própria camisa**, não de uma tabela: base clara ganha listra escura, base
+escura ganha listra clara. Uma regra, zero dado novo, e o resultado é sempre visível porque é a base
+que escolhe. O **branco** é o único que cai no ramo escuro — e é o único lugar onde o preto entra no
+jogo, o que por acaso deixa a Alemanha listrada de preto contra a Inglaterra.
+
+**Só a camisa (`C`) recebe listra.** Calção e meião ficam lisos: listrar o boneco inteiro num sprite
+de 18 pixels vira ruído, e o que precisa ser lido de longe é o tronco.
+
+## O que a saída (A) teria custado — o registro de por que ela morreu
+
+A sessão de 2026-08-21 mediu a saída (A) (tabela fiel + o `matizDistinto` de `T-20`) antes de
+qualquer código, e é isso que derrubou a premissa escrita em `P-6` — *"tabela curada não colide por
+construção"*, que é **falsa**:
+
+| | tabela como matiz (saída A) | hash de `T-10` |
 |---|---|---|
-| matizes distintos | **15** (para 30 seleções; 2 sem matiz) | **30** (para 32) |
-| pares abaixo dos 40° de `SEPARACAO_MINIMA` | **144 de 435 — 33,1%** | 101 de 496 — 20,4% |
-| seleções em ao menos uma colisão | **30 de 30** | — |
+| matizes distintos | **15** (para 30; 2 sem matiz) | **30** (para 32) |
+| pares abaixo dos 40° de separação | **144 de 435 — 33,1%** | 101 de 496 — 20,4% |
 
-Ou seja: trocar o hash pela tabela **dobra** a chance de duas camisas nascerem confundíveis. O
-`matizDistinto` de `sprites.ts` continuaria salvando cada disputa — mandando o lado B para o
-oposto —, e é aí que a troca se morde: em Espanha × Portugal uma das duas camisas deixaria de ser
-vermelha para virar ciano. O pedido do dono era o contrário disso.
+Ou seja: (A) **dobrava** a chance de duas camisas nascerem confundíveis, e o `matizDistinto` então
+"salvava" a disputa jogando o vermelho de Portugal para o ciano — o contrário do pedido. A (B) paga
+o mesmo problema com o padrão, e a cor nacional dos **dois** lados sobrevive.
 
-## A tabela proposta (32 linhas)
+**Um portão que se revelou vazio, e vale ficar escrito:** `P-6` travava o card em "cada cor tem de
+passar no teste de contraste de `T-20`". A varredura dos **360** matizes mostrou pior caso de
+**7,28:1** contra um limite de 4,5:1 — saturação e luminosidade eram fixas por papel, então o matiz
+nunca decidia contraste. O portão não podia reprovar nada. Quem barrava o card era a premissa não
+medida, não o portão anunciado.
 
-`matiz` em grau. **Base** diz de onde a cor vem, e as duas classes não têm o mesmo risco:
-`bandeira` é conferível no SVG que já está no repositório (`T-19`/`D-54`); `esporte` é identidade
-esportiva que **não está na bandeira** — são as linhas mais prováveis de o dono corrigir.
+## Licença
 
-| # | Código | Seleção | Cor proposta | Matiz | Base | Contraste disco |
-|---|---|---|---|---|---|---|
-| 1 | `ES` | Espanha | vermelho | 0 | bandeira | 7,32 ✔ |
-| 2 | `AR` | Argentina | celeste | 200 | esporte | 7,56 ✔ |
-| 3 | `FR` | França | azul | 220 | bandeira | 7,53 ✔ |
-| 4 | `GB-ENG` | Inglaterra | branco | — | esporte | **sem matiz** |
-| 5 | `BR` | Brasil | amarelo | 48 | bandeira | 7,52 ✔ |
-| 6 | `MA` | Marrocos | vermelho | 355 | bandeira | 7,33 ✔ |
-| 7 | `PT` | Portugal | vermelho-escuro | 350 | bandeira | 7,34 ✔ |
-| 8 | `BE` | Bélgica | vermelho | 0 | bandeira | 7,32 ✔ |
-| 9 | `NL` | Holanda | laranja | 24 | esporte | 7,53 ✔ |
-| 10 | `MX` | México | verde | 145 | bandeira | 7,44 ✔ |
-| 11 | `CO` | Colômbia | amarelo | 45 | bandeira | 7,57 ✔ |
-| 12 | `DE` | Alemanha | branco/preto | — | esporte | **sem matiz** |
-| 13 | `HR` | Croácia | vermelho | 0 | bandeira | 7,32 ✔ |
-| 14 | `CH` | Suíça | vermelho | 0 | bandeira | 7,32 ✔ |
-| 15 | `IT` | Itália | azul | 215 | esporte | 7,58 ✔ |
-| 16 | `US` | Estados Unidos | azul | 225 | bandeira | 7,50 ✔ |
-| 17 | `JP` | Japão | azul | 230 | esporte | 7,44 ✔ |
-| 18 | `SN` | Senegal | verde | 150 | bandeira | 7,44 ✔ |
-| 19 | `NO` | Noruega | vermelho | 0 | bandeira | 7,32 ✔ |
-| 20 | `UY` | Uruguai | celeste | 200 | esporte | 7,56 ✔ |
-| 21 | `DK` | Dinamarca | vermelho | 0 | bandeira | 7,32 ✔ |
-| 22 | `IR` | Irã | verde | 150 | bandeira | 7,44 ✔ |
-| 23 | `AT` | Áustria | vermelho | 0 | bandeira | 7,32 ✔ |
-| 24 | `EG` | Egito | vermelho | 0 | bandeira | 7,32 ✔ |
-| 25 | `EC` | Equador | amarelo | 48 | bandeira | 7,52 ✔ |
-| 26 | `NG` | Nigéria | verde | 140 | bandeira | 7,43 ✔ |
-| 27 | `TR` | Turquia | vermelho | 0 | bandeira | 7,32 ✔ |
-| 28 | `AU` | Austrália | dourado | 45 | esporte | 7,57 ✔ |
-| 29 | `DZ` | Argélia | verde | 150 | bandeira | 7,44 ✔ |
-| 30 | `CA` | Canadá | vermelho | 0 | bandeira | 7,32 ✔ |
-| 31 | `CI` | Costa do Marfim | laranja | 25 | bandeira | 7,59 ✔ |
-| 32 | `KR` | Coreia do Sul | vermelho | 0 | bandeira | 7,32 ✔ |
+[[licenciamento]] lista "Cores nacionais e padrões genéricos (listras, faixas)" como **livre**, com
+a condição de não reproduzir uniforme oficial identificável. Cor chapada e listra genérica num
+boneco de 18 pixels são cor e listra: não há escudo, gola, patrocínio nem desenho de uniforme em
+lugar nenhum. Nenhuma linha desta tabela nomeia clube, competição ou pessoa. **Zero asset novo** —
+nada disso é arquivo, é dado no código.
 
-**Licença conferida antes da tabela:** [[licenciamento]] lista "Cores nacionais e padrões
-genéricos (listras, faixas)" como **livre**, com a condição de não reproduzir uniforme oficial
-identificável. Cor chapada na camisa do sprite é cor, não uniforme — não há escudo, gola,
-patrocínio nem listra exata. Nenhuma linha desta tabela nomeia clube, competição ou pessoa.
+## O que continua sem medição
 
-## Um achado de medição que NÃO virou portão, e por que
-
-Medi também a camisa contra o gramado, e o resultado **não discrimina**: pela razão de contraste
-WCAG, 29 das 30 camisas propostas ficam abaixo de 1,6:1 contra as quatro faixas de
-`cena.ts:211-216` — mas **26 das 32 de hoje também ficam**. A razão de luminância não enxerga
-matiz, e é matiz o que separa um boneco do gramado. Pelo critério que o próprio projeto já usa
-(`SEPARACAO_MINIMA = 40`, contra o matiz médio do gramado, **126,7°**), a conta muda de figura:
-
-- **tabela proposta:** 5 de 30 dentro dos 40° — `MX`, `SN`, `IR`, `NG`, `DZ` (as cinco verdes)
-- **hash de hoje:** 7 de 32 — `ES`, `FR`, `NL`, `DE`, `CH`, `US`, `CA`
-
-A tabela é **ligeiramente melhor** aqui, então isto não é argumento contra ela. Fica registrado
-porque as cinco verdes são um caso novo e nomeável: camisa verde em gramado verde, sempre, para
-aquelas cinco seleções — o hash acertava nisso por acaso, e a tabela erraria por escolha.
-
-## E `QA-20`? Ele já estava morto no disco, e ninguém tinha notado
-
-`QA-20` descreve o defeito assim: *"os discos delas saem idênticos na grade"*. **Isso não acontece
-mais desde `T-19`.** Com as 32 bandeiras entregues, `.marca--bandeira` (`estilo.css:426`) sobrescreve
-`background` e `border-color` do matiz e a `<img>` cobre 100% do disco — o matiz fica **invisível**
-na marca. O único ramo que ainda o mostra é o estado de erro (arquivo que não carrega volta a ser
-o código ISO), e lá o contraste é 7,3:1 em qualquer matiz.
-
-O que sobra de `QA-20` é o **campo**, e o campo já tem conserto: `matizDistinto`, local à disputa.
-Fechar `QA-20` não depende desta tabela — depende de alguém escrever isto, e está escrito.
-
-## As três saídas, e a recomendação
-
-- **(A) Tabela fiel, `matizDistinto` continua.** Barata: troca o hash pela tabela e mais nada.
-  **Custo:** em ~33% das disputas um dos dois lados sai da cor nacional — e é nos confrontos mais
-  icônicos, porque são os vermelhos que colidem. Não fecha `QA-20`; piora o número dele.
-- **(B) Tabela fiel + 2º canal de PADRÃO na camisa** (liso · listra vertical · faixa horizontal),
-  que [[licenciamento]] libera explicitamente. Vermelho liso ≠ vermelho listrado ≠ vermelho com
-  faixa: as duas camisas ficam distintas **sem sair da cor nacional**, e a marca passa a ser o par
-  (cor, padrão), injetor por construção — 15 cores × 3 padrões dá 45 lugares para 32 seleções.
-  **Custo:** papel novo no `ALFABETO` de `sprites.ts` e os 4 sprites redesenhados. É card maior.
-- **(C) Não trocar o hash.** `QA-20` fecha pelo parágrafo acima (a bandeira já apagou o defeito no
-  disco), e a cor nacional simplesmente não entra. Custo zero, e o pedido do dono não é atendido.
-
-**Recomendação da sessão: (B)** — é a única que entrega o pedido inteiro (*"jogadores seguindo as
-cores corretas dos países"*) sem trocar um defeito por outro maior. **(A) é a que eu não
-recomendo**, e é justamente a que o card presumia ser a resposta.
-
-Seja qual for a escolha, **(C) vale de imediato para o `QA-20`**: o defeito que ele descreve não
-está mais na tela, e isso independe de `Q-16`.
+Se as listras **se leem** num tronco de 8 pixels de largura a 2,2x de escala é olho humano, e é
+`A-32`. O sandbox não desenha o campo: `document.visibilityState` é `hidden` mesmo com a aba
+fronteada, `requestAnimationFrame` não dispara, Phaser não renderiza e não há pixel a ler.

@@ -27,17 +27,17 @@ Partida de ~1 minuto: contra a CPU ou contra alguém no mesmo aparelho. O online
 
 ## Estado atual (formato fixo — 1 linha por item, SEM prosa corrida)
 - **Versão:** v2.0.0 — entregue em 2026-08-19 (a v1 é baseline morto: reescrita total, nenhum código reaproveitado)
-- **Pronto:** M1..M9 e a medição, com **E-1..E-6 fechadas**; suíte **586/586**; `T-24`..`T-28` fechados **COM CAMPO** (`A-27`..`A-31`) — `A-31` devolveu **1**, e o número só veio quando pedido separado das observações. Módulo a módulo: [[estado_modulos]]
-- **Bundle:** **421.451 B** (5,3% de 8 MB) lido de `dist/`; `T-28` somou **+2.140 B** — zero asset novo, é CSS e a sobreposição; 278.646 B são os 32 SVGs de T-19, asset do chunk de M4 (`QA-06`); Phaser e Trystero fora, por `import()` (D-27)
+- **Pronto:** M1..M9 e a medição, **E-1..E-6 fechadas**; suíte **596/596**; `T-24`..`T-28` **COM CAMPO** (`A-27`..`A-31`); `T-29` entregue, campo em `A-32`. Módulo a módulo: [[estado_modulos]]
+- **Bundle:** **425.115 B** (5,3% de 8 MB) lido de `dist/`; `T-29` somou **+3.664 B**, zero asset novo; 278.646 B são os 32 SVGs de T-19 (`QA-06`); Phaser e Trystero fora, por `import()` (D-27)
 - **Em andamento (máx 1):** nada
-- **Próximo:** `T-29` (`P-6`(b)) **travado em `Q-16`**: a tabela das 32 está montada e medida — dá **15** matizes para 30 seleções (2 sem matiz) contra 30 do hash, então **não fecha `QA-20`**, piora · `A-32` aberta e ainda sem resposta · portão de `D-83`: **6 de 10** · a promessa que `D-72` tirou volta ao Objetivo quando couber
-- **Bloqueado/pendente:** **registro 18.571/20.000**, TRÊS pools em zero (`D-43`, duplicata, `D-74`) — `D-82` é rejeição adiada: ~4-5 decisões · QA **5.355/8.000** · CONTEXT **99% — estoura na próxima**
-- **Questões abertas:** Q-08, Q-09, Q-13, **Q-16** (**Q-15 fechada** por `D-84`) · **QA abertos:** QA-04..QA-07, QA-10, QA-17, QA-20, QA-21, QA-27, QA-29 (**QA-31 fechado**) · respondidas e fechados: [[decisions_archive]]
+- **Próximo:** `A-32` — a camisa nacional no aparelho, **UM número pedido sozinho**; sem ela `T-29` fica sem campo · portão de `D-83`: **6 de 10** · a promessa que `D-72` tirou volta ao Objetivo quando couber
+- **Bloqueado/pendente:** **registro 18.9k/20.000**, TRÊS pools em zero (`D-43`, duplicata, `D-74`) — `D-82` adia ~4-5 decisões · QA **5.3k/8.000** · CONTEXT **99%: mova um tema antes de escrever**
+- **Questões abertas:** Q-08, Q-09, Q-13 (**Q-15/Q-16 fechadas** por `D-84`/`D-88`) · **QA abertos:** QA-04..QA-07, QA-10, QA-17, QA-21, QA-27, QA-29, **QA-32** (**QA-20 fechado** por `T-29`) · respondidas e fechados: [[decisions_archive]]
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)
 - [[portao_de_aceite]] — **antes de fechar tarefa, declarar etapa fechada ou entregar**
 - [[licenciamento]] — ao criar ou alterar asset, nome de seleção, escudo ou texto de marca
-- [[cores_nacionais]] — ao mexer na cor da camisa ou no matiz de `marcaSelecao` (`T-29`/`Q-16`)
+- [[cores_nacionais]] — ao mexer na cor da camisa em campo (`D-88`: a tabela das 32 e o padrão)
 - [[online_p2p]] — ao tocar o módulo de disputa online
 - [[regras_partida]] — ao mexer no motor de regras da disputa ou na CPU
 - [[stack]] — ao escolher biblioteca, mexer no build ou publicar

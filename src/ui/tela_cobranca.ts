@@ -76,6 +76,7 @@ import { createRng, newSeed } from '../core/index';
 import type { LinkStatus, MatchState, Session, SessionConfig } from '../session/index';
 import { CONNECT_TIMEOUT_MS, createSession } from '../session/index';
 import type { Cena } from './cena';
+import { camisasDaDisputa } from './sprites';
 import { criarDerivacao } from './derivacao';
 import type { Vez } from './derivacao';
 import { botao, el, focar, limpar } from './dom';
@@ -89,7 +90,6 @@ import {
   descricaoFase,
   instrucao,
   instrucaoDoSorteio,
-  marcaSelecao,
   nomeSelecao,
   nomeZona,
   placar,
@@ -841,13 +841,14 @@ export const telaCobranca =
           cena = null;
           return;
         }
-        // O matiz vem de `marcaSelecao`, o MESMO que pinta o disco ao lado do nome no placar: o
-        // goleiro em campo e a marca no cabecalho sao a mesma cor, e a pessoa liga as duas sem
-        // legenda. Arbitrario e derivado do codigo ISO — nao e cor nacional (ver `licenciamento`).
-        cena.definirMatizes({
-          A: marcaSelecao(partida.times.A).matiz,
-          B: marcaSelecao(partida.times.B).matiz,
-        });
+        // A camisa vem da COR NACIONAL da selecao (`T-29`/`D-88`), e o desempate por padrao ja
+        // vem resolvido de `camisasDaDisputa` — funcao pura sobre os dois codigos, entao os dois
+        // aparelhos do `online` chegam ao mesmo resultado sem trocar nada pelo fio.
+        //
+        // **O disco do placar NAO mudou, e isso e escolha declarada:** ele mostra a bandeira desde
+        // `T-19`, e o matiz de `marcaSelecao` fica invisivel embaixo dela. Mexer nele custaria
+        // todas as telas e nao mudaria um pixel do que a pessoa ve.
+        cena.definirCamisas(camisasDaDisputa(partida.times.A, partida.times.B));
         cena.repousar(sessao.state().turn);
         semCanvas.hidden = true;
       })

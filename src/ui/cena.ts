@@ -26,9 +26,11 @@
  * (`sprites.ts`) e vira textura do Phaser em tempo de execução. `assets/` segue com os três
  * áudios e as 32 bandeiras, e a procedência de [[licenciamento]] não ganha linha nova.
  *
- * A camisa recebe o **matiz da seleção** — o mesmo de `marcaSelecao`, arbitrário e derivado do
- * código ISO. Não é cor nacional e não imita uniforme: é o que faz dois goleiros em campo não
- * saírem iguais, que era o pedido, sem tocar no que [[licenciamento]] proíbe.
+ * A camisa recebe a **cor nacional da seleção** desde `T-29`/`D-88` — tabela curada em
+ * `sprites.ts`, revisada pelo dono (`Q-16`). O que [[licenciamento]] libera é "cores nacionais e
+ * padrões genéricos"; o que ele proíbe é uniforme identificável, e cor chapada mais listra num
+ * boneco de 18 pixels não é uniforme. Dois lados de cor igual são separados pelo **padrão**, não
+ * mais pelo matiz — ver `camisasDaDisputa`.
  */
 
 import Phaser from 'phaser';
@@ -40,11 +42,12 @@ import {
   BOLA,
   GOLEIRO_MERGULHO,
   GOLEIRO_PARADO,
+  camisasDaDisputa,
+  corDoPixel,
   dimensoes,
-  matizDistinto,
   paleta,
 } from './sprites';
-import type { Papel, Sprite } from './sprites';
+import type { Camisa, Papel, Sprite } from './sprites';
 import { outroLado } from './derivacao';
 
 const LARGURA = 360;
@@ -72,13 +75,25 @@ const ESCALA = { goleiro: 2.2, batedor: 2.4, bola: 1.6 } as const;
 const SEMENTE_DA_TORCIDA = 20260813;
 
 export interface Cena {
-  /** Matiz de cada lado, para camisa de goleiro e de batedor. Chamar antes da 1ª cobrança. */
-  definirMatizes(matizes: Readonly<Record<Side, number>>): void;
+  /** Camisa de cada lado, para goleiro e batedor. Chamar antes da 1ª cobrança. */
+  definirCamisas(camisas: Readonly<Record<Side, Camisa>>): void;
   /** Anima a cobrança inteira e resolve quando ela termina. Nunca rejeita. */
   animar(chute: Zone, defesa: Zone, gol: boolean, cobra: Side): Promise<void>;
   /** Volta bola e bonecos ao lugar, já vestidos para a cobrança de `cobra`. */
   repousar(cobra: Side | null): void;
   destruir(): void;
+}
+
+/**
+ * A chave de cache da textura, e ela tem de conter o PADRÃO além da cor.
+ *
+ * Sem o padrão, Espanha lisa e Espanha listrada dividiriam a mesma chave: a segunda acharia a
+ * textura da primeira já criada, `texturaDeSprite` sairia pelo `exists` e os dois lados sairiam
+ * com a mesma camisa — exatamente o defeito que o desempate existe para impedir.
+ */
+function chaveDaCamisa(camisa: Camisa): string {
+  const { h, s, l } = camisa.cor;
+  return `${h}_${s}_${l}_${camisa.padrao}`;
 }
 
 function movimentoReduzido(): boolean {
@@ -96,8 +111,8 @@ class CobrancaCena extends Phaser.Scene {
   private clarao!: Phaser.GameObjects.Rectangle;
   private pronta = false;
 
-  /** Matiz por lado. O padrão só vale até `definirMatizes`, e existe para nada nascer sem cor. */
-  private matizes: Record<Side, number> = { A: 210, B: 15 };
+  /** Camisa por lado. O padrão só vale até `definirCamisas`, e existe para nada nascer sem cor. */
+  private camisas: Record<Side, Camisa> = camisasDaDisputa('BR', 'AR');
   private cobra: Side = 'A';
 
   // Sem `override`: `Phaser.Scene` não declara `create` no tipo base — o laço do Phaser a chama
@@ -105,7 +120,7 @@ class CobrancaCena extends Phaser.Scene {
   public create(): void {
     this.desenharCampo();
 
-    this.texturaDeSprite('bola', BOLA, 0);
+    this.texturaDeSprite('bola', BOLA, this.camisas.A);
     this.texturasDosLados();
 
     this.goleiro = this.add
@@ -135,7 +150,7 @@ class CobrancaCena extends Phaser.Scene {
   // ── Texturas ────────────────────────────────────────────────────────────────────────────
 
   private chave(quem: string, lado: Side): string {
-    return `${quem}-${this.matizes[lado]}`;
+    return `${quem}-${chaveDaCamisa(this.camisas[lado])}`;
   }
 
   /**
@@ -144,11 +159,11 @@ class CobrancaCena extends Phaser.Scene {
    * É o passo que troca "arquivo de imagem" por "dado no código": a arte fica versionada como
    * texto, e a camisa é parâmetro em vez de virar 32 PNGs.
    */
-  private texturaDeSprite(chave: string, sprite: Sprite, matiz: number): void {
+  private texturaDeSprite(chave: string, sprite: Sprite, camisa: Camisa): void {
     if (this.textures.exists(chave)) return;
 
     const { largura, altura } = dimensoes(sprite);
-    const cores = paleta(matiz);
+    const cores = paleta(camisa.cor);
     const g = this.make.graphics({ x: 0, y: 0 }, false);
 
     for (let y = 0; y < altura; y += 1) {
@@ -156,10 +171,10 @@ class CobrancaCena extends Phaser.Scene {
       for (let x = 0; x < largura; x += 1) {
         const ch = linha[x];
         if (ch === undefined || ch === '.') continue;
-        const cor = cores[ch as Papel];
         // Caractere fora do alfabeto é erro de digitação na grade, e a suíte o pega antes daqui.
         // Em runtime ele é ignorado: melhor um pixel faltando do que a cena inteira não subir.
-        if (cor === undefined) continue;
+        if (cores[ch as Papel] === undefined) continue;
+        const cor = corDoPixel(camisa, cores, ch as Papel, x);
         g.fillStyle(cor, 1).fillRect(x, y, 1, 1);
       }
     }
@@ -171,19 +186,20 @@ class CobrancaCena extends Phaser.Scene {
   /** As texturas de boneco desta partida: goleiro e batedor, parado e em ação, dos dois lados. */
   private texturasDosLados(): void {
     for (const lado of ['A', 'B'] as const) {
-      const matiz = this.matizes[lado];
-      this.texturaDeSprite(`goleiro-${matiz}`, GOLEIRO_PARADO, matiz);
-      this.texturaDeSprite(`mergulho-${matiz}`, GOLEIRO_MERGULHO, matiz);
-      this.texturaDeSprite(`batedor-${matiz}`, BATEDOR_PARADO, matiz);
-      this.texturaDeSprite(`chute-${matiz}`, BATEDOR_CHUTE, matiz);
+      const camisa = this.camisas[lado];
+      const k = chaveDaCamisa(camisa);
+      this.texturaDeSprite(`goleiro-${k}`, GOLEIRO_PARADO, camisa);
+      this.texturaDeSprite(`mergulho-${k}`, GOLEIRO_MERGULHO, camisa);
+      this.texturaDeSprite(`batedor-${k}`, BATEDOR_PARADO, camisa);
+      this.texturaDeSprite(`chute-${k}`, BATEDOR_CHUTE, camisa);
     }
   }
 
-  public definirMatizes(matizes: Readonly<Record<Side, number>>): void {
-    // `B` passa por `matizDistinto` porque o matiz de M7 nao e injetor: 3 pares das 32 colidem
-    // (`QA-20`), e camisa igual nos dois bonecos apaga quem e quem no unico lugar onde isso
-    // importa. Quem cede e sempre o lado B, para o resultado nao depender da ordem.
-    this.matizes = { A: matizes.A, B: matizDistinto(matizes.A, matizes.B) };
+  public definirCamisas(camisas: Readonly<Record<Side, Camisa>>): void {
+    // O desempate ja veio feito de `camisasDaDisputa`: quem monta a tela conhece os dois codigos,
+    // e a cena so recebe o resultado. Ela nao decide cor, e e por isso que o `online` nao pode
+    // divergir aqui — os dois aparelhos passam os mesmos dois codigos pela mesma funcao pura.
+    this.camisas = { A: camisas.A, B: camisas.B };
     if (!this.pronta) return;
     this.texturasDosLados();
     this.vestir();
@@ -317,7 +333,7 @@ class CobrancaCena extends Phaser.Scene {
 
       // O batedor troca para o sprite do chute e some no meio da jogada: ele fica na frente da
       // bola, e mantê-lo em cena esconderia justamente o que a pessoa quer ver.
-      this.batedor.setTexture(`chute-${this.matizes[this.cobra]}`);
+      this.batedor.setTexture(`chute-${chaveDaCamisa(this.camisas[this.cobra])}`);
       this.tweens.add({
         targets: this.batedor,
         alpha: 0,
@@ -329,7 +345,7 @@ class CobrancaCena extends Phaser.Scene {
       // e não mergulho — goleiro de pé no meio continua legível como "não saiu do lugar".
       if (paraOsLados) {
         this.goleiro
-          .setTexture(`mergulho-${this.matizes[outroLado(this.cobra)]}`)
+          .setTexture(`mergulho-${chaveDaCamisa(this.camisas[outroLado(this.cobra)])}`)
           .setFlipX(xDefesa < GOLEIRO_REPOUSO.x);
       }
       this.tweens.add({
@@ -420,7 +436,7 @@ export async function montarCena(pai: HTMLElement): Promise<Cena> {
   });
 
   return {
-    definirMatizes: (matizes) => cena.definirMatizes(matizes),
+    definirCamisas: (camisas) => cena.definirCamisas(camisas),
     animar: (chute, defesa, gol, cobra) => cena.jogar(chute, defesa, gol, cobra),
     repousar: (cobra) => cena.voltarAoRepouso(cobra),
     destruir: () => jogo.destroy(true),
