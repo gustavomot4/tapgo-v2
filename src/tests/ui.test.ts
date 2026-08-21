@@ -1187,6 +1187,35 @@ describe('a direção visual não afrouxa portão de M7 (T-20 fatia 2 / D-65)', 
     expect(bloco).toMatch(/::after/);
   });
 
+  // ── `QA-21`: a tela inicial não pode contradizer o que o jogo mostra ────────────────────
+  it('nenhuma tela promete ao jogador algo que `T-19` já entregou — o texto morto não volta', () => {
+    // O defeito era esse: a tela inicial dizia "As bandeiras ainda não entraram: cada seleção
+    // aparece pelo código de duas letras do país", e dois toques adiante a grade mostrava as 32
+    // bandeiras. Texto de lacuna sobrevive à lacuna porque ninguém varre a tela quando o dado
+    // chega — então quem varre é este teste.
+    //
+    // A varredura é sobre `src/ui/` INTEIRO, não sobre `tela_inicio.ts`: a frase pode reaparecer
+    // em qualquer tela, e conferir só onde ela estava provaria o passado.
+    const mortos = [/bandeiras ainda não entraram/i, /aparece pelo código de duas letras/i];
+    for (const arquivo of readdirSync(DIR_UI).filter((f) => f.endsWith('.ts'))) {
+      const fonte = readFileSync(join(DIR_UI, arquivo), 'utf8');
+      for (const morto of mortos) {
+        expect(morto.test(fonte), `${arquivo} promete bandeira ausente — as 32 vieram em T-19`).toBe(
+          false,
+        );
+      }
+    }
+  });
+
+  it('as 32 seleções TÊM bandeira — é o fato que torna aquele texto mentira', () => {
+    // Sem esta linha, o teste acima ficaria verde por vazio no dia em que uma bandeira sumisse:
+    // ele só cobra que a FRASE não volte, não que o dado exista. Aqui é o dado.
+    for (const time of listTeams()) {
+      expect(time.flag, `${time.code} sem bandeira`).not.toBeNull();
+    }
+    expect(listTeams()).toHaveLength(32);
+  });
+
   // ── O fluxo crítico continua em 2 toques (3 no `online`, e por decisão) ──────────────────
   it('o menu não ganhou passo: as telas do fluxo crítico só levam às rotas declaradas', () => {
     // Este é o portão que uma tela mais rica quebra sem querer — "só mais um passo para escolher

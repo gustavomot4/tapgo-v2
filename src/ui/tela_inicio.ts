@@ -187,12 +187,15 @@ export const telaInicio: Tela = (raiz: HTMLElement, ctx: Contexto) => {
       // gesto antes do primeiro áudio: aqui o gesto acabou de acontecer.
       if (v) ctx.som.tocar('chute');
     }),
-    el('p', {
-      classe: 'lacuna',
-      texto:
-        'As bandeiras ainda não entraram: cada seleção aparece pelo código de duas letras do país.',
-    }),
   ]);
+  // `QA-21`: aqui havia uma `.lacuna` anunciando que as bandeiras não tinham entrado. `T-19`
+  // entregou as 32 (`D-54`/`D-62`), e a tela contradizia o que ela mesma pinta dois toques
+  // adiante — a grade de seleções mostra bandeira, não código.
+  //
+  // **Apagada, e não trocada por outra lacuna**, porque a que sobrou já é declarada onde ela
+  // acontece: `D-47` deixa até ~16% das redes sem conectar no `online`, e quem diz isso à pessoa
+  // é o estado de erro da tela de convite (`tela_convite.ts`), no instante da falha. Repetir o
+  // aviso na tela inicial seria alarme antes do fato, para quem talvez nem vá jogar `online`.
 
   tela.append(modos, rodape);
   raiz.append(tela);

@@ -7,6 +7,18 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-21] — `QA-21` fechado: a tela inicial parava de contradizer o próprio jogo
+
+- **Skill:** frontend-uiux. **Módulo:** M7 só — `src/ui/tela_inicio.ts`.
+- **O defeito era o único que o jogador conseguia LER:** o rodapé da primeira tela dizia *"As bandeiras ainda não entraram: cada seleção aparece pelo código de duas letras do país"*, e dois toques adiante a grade mostrava as 32 bandeiras que `T-19` entregou em 12/08. Texto de lacuna sobrevive à lacuna porque ninguém varre a tela no dia em que o dado chega.
+- **Apagada, e não trocada por outra lacuna — e a escolha foi por evidência, não por gosto:** o card oferecia as duas saídas. Fui ver se sobrava lacuna que valesse o lugar, e a candidata era `D-47` (até ~16% das redes sem conectar, sem relay). Mas essa já é dita **onde acontece** — o estado de erro da tela de convite trata o `'failed'` com a falha honesta. Repetir na tela inicial seria alarme antes do fato, para quem talvez nem jogue `online`.
+- **A classe `.lacuna` não virou cruft:** segue viva em `tela_convite.ts` e em duas notas de `tela_torneio.ts` (`NOTA_PONTOS`, `NOTA_SEM_GOLS`).
+- **Dois testes, e o primeiro varre `src/ui/` INTEIRO:** conferir só `tela_inicio.ts` provaria o passado — a frase pode reaparecer em qualquer tela. O segundo cobra que as 32 seleções têm bandeira, senão o primeiro ficaria verde por vazio no dia em que o dado sumisse. Falseado: devolver a frase reprova exatamente 1 teste.
+- **Números:** suíte **596 → 598/598**, `tsc` limpo, `check.py` verde, bundle **425.115 → 424.987 B (-128 B)** — a primeira entrega desta sequência que DEVOLVE bytes.
+- **Medido no navegador, nos dois viewports:** a frase não está no DOM, `.lacuna` some da tela inicial, `scrollWidth == clientWidth` em 360x640 e 1280x800, o rodapé continua colado embaixo (base a 2px do fim da dobra em 360), o interruptor de som segue lá, nenhum alvo de toque abaixo de 48px, foco visível de **3px** no primeiro Tab e **zero erro de console**. Captura de tela segue impossível — a pane não compõe (`visibilityState` é `hidden`).
+- **`QA-33` achado e NÃO consertado (regra 4), e ele é maior que o card:** o Objetivo do CONTEXT ainda declara o online **"medido e não publicado"** (`D-72`) — mas a condição que `D-72` pôs foi cumprida: `D-73` fechou `Q-11`, `T-21` entregou a tela de convite e `A-22` a confirmou em **dois aparelhos reais**. A fonte única pode estar descrevendo um produto menor do que o que existe, e é a linha que toda sessão lê primeiro. Reescrevê-la depende de um fato que só o dono tem: se o build **no ar** foi republicado depois de `T-21`. Virou `A-33`.
+- **`A-33` aplica a lição de `A-32` de propósito:** o número pedido é "quantos botões de modo aparecem na tela inicial do endereço público", e **4** é o build em dia — porque "Jogar com um amigo" é justamente o botão que `T-21` acrescentou. O inteiro mede a variável que a decisão move, que foi o que o portão de `A-32` errou.
+
 ## [2026-08-21] — `A-32` fechada: `T-29` passa a ter campo, e o portão do card estava medindo a variável errada
 
 - **Skill:** frontend-uiux (mesma sessão de `T-29`, fechando a conferência de aparelho).
