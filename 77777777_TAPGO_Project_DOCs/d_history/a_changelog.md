@@ -41,6 +41,17 @@ status: atual
 - **Portão de `D-83` cumprido:** a linha de `D-90` mede **395** contra o teto de 400, e a evidência inteira foi para a nota — que é o desenho de `D-83`, não compressão. O portão vai a **8 de 10**; o registro, a **19.611/20.000**.
 - **Atualizados:** as portas de M5 e M6 no [[b_plan|PLANO]], o card `T-31` (agora destravado) e o "Estado atual".
 
+## [2026-08-21] — `A-39` FECHADA: `2` e `Sim` — `T-31` confirmada em dois aparelhos de verdade (`T-31`/`D-90`)
+
+- **Skill:** delivery-review. **Nenhum arquivo de produção mudou** — sessão de registro de campo, e campo confirma, não decide.
+- **O portão pedia UM inteiro:** em quantos dos dois aparelhos o placar da cobrança diz `Brasil × Japão`. **Veio `2`**.
+- **O `2` prova `D-90` inteiro, e por um caminho que o sandbox não alcança:** nenhum dos dois aparelhos tinha o código de país do outro ao começar — `Brasil` nasceu no 1, `Japão` nasceu no 2, escolhidos de propósito para que a convergência não pudesse sair de coincidência. Os dois só mostram o mesmo confronto se o `Pick` atravessou o fio **nos dois sentidos**, foi discriminado em M5 (`'zone' in p`) e chegou à tela pelo 3º argumento de `subscribe`.
+- **A observação única veio `Sim`:** "escolhendo…" com o retângulo tracejado vazio apareceu no aparelho 1 antes de conectar. É o estado que `D-90` **criou** — e é também a medida de que `t=` **não** virou dado de sessão: uma bandeira ali seria o rótulo do link tendo descido para `SessionConfig.teams`, a segunda fonte que a sessão de M7 decidiu não deixar nascer.
+- **O ar é `HEAD` em código:** `84591e4` é o último commit que toca `src/`, e `origin/main` está nele — o campo rodou no bundle de `T-31` [Fonte: `git log --oneline -- src/`, `git log origin/main`].
+- **Fechados:** `A-39` · **`T-31` passa a COM CAMPO**, e com ela `T-24`..`T-33` não deixam tarefa entregue sem confirmação em aparelho de verdade.
+- **Sem `D-NN` e sem `QA-NN`, de propósito:** o portão passou no primeiro campo e a observação veio `Sim` — não há achado a registrar (mesma razão de `A-37`/`A-38`), e o registro está a 98% do teto sob `D-82`, com `D-83` cobrando 400 caracteres por linha nova. O portão de `D-83` fica em **8 de 10**.
+- **O que continua declarado de fora:** o link antigo com dois códigos em `t=` (coberto por teste; fabricar link de versão fora do ar seria trabalho sem informação nova) e a pendência de comentário em `src/session/index.ts`, que aponta `src/ui/main.ts:162` quando quem escreve o lado agora é `tela_selecoes.ts`. Evidência inteira em [[t31_selecao_por_aparelho]].
+
 ## [2026-08-21] — `A-38` FECHADA: o ar devolveu `3` e `Sim` — as três tarefas confirmadas no endereço público (`T-30`/`T-32`/`T-33`)
 
 - **Skill:** delivery-review. **Nenhum arquivo de produção mudou** — sessão de registro de campo, e campo confirma, não decide.

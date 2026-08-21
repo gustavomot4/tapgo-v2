@@ -102,11 +102,11 @@ fio, ele seria uma segunda fonte para o mesmo dado, e a que chega primeiro é a 
 
 ## Portão de `D-90` (o que aprova a implementação de `T-31`)
 
-> Marcado na sessão de construção de 2026-08-21 (M6+M5). O que segue aberto depende de M7 e do
-> aparelho do dono — ver "O que `T-31` implementou", no fim desta nota.
+> Marcado na sessão de construção de 2026-08-21 (M6+M5), **fechado no mesmo dia** por `A-39` —
+> ver "O campo de `A-39`", no fim desta nota.
 
-- [ ] Os dois aparelhos mostram o **mesmo** confronto, com a seleção que **cada um** escolheu,
-      medido em dois aparelhos de verdade (`A-NN`, como `A-22`) — o sandbox não compõe quadros.
+- [x] Os dois aparelhos mostram o **mesmo** confronto, com a seleção que **cada um** escolheu,
+      medido em dois aparelhos de verdade (`A-39`, como `A-22`) — o sandbox não compõe quadros.
 - [x] Os 4 estados de `LinkStatus` que a tela alcança seguem cobertos, **mais** o novo: conectado
       com `Pick` pendente.
 - [x] Teste de contrato do canal: `Pick` malformado é descartado como `Move` malformado é hoje.
@@ -182,9 +182,9 @@ Quatro testes do bloco `D-81` foram reescritos por isso, e o motivo está no `it
 - [x] **Conectado com `Pick` pendente**, o estado novo: coberto, mais o prazo de 20 s que o fecha
       (medido a `CONNECT_TIMEOUT_MS - 1` e a `CONNECT_TIMEOUT_MS`).
 - [x] **`check.py`, `tsc`, suíte inteira (628/628) e bundle relido de `dist/`** — 427.442 B, +1.592 B.
-- [ ] **Os dois aparelhos mostram o MESMO confronto, com a seleção que CADA um escolheu**, medido
-      em dois aparelhos de verdade (`A-NN`). **Depende de M7**, que esta sessão não tocou — e o
-      sandbox não compõe quadros.
+- [x] **Os dois aparelhos mostram o MESMO confronto, com a seleção que CADA um escolheu**, medido
+      em dois aparelhos de verdade — **`A-39` devolveu `2` em 2026-08-21**. Dependia de M7, que
+      esta sessão não tocou; o sandbox não compõe quadros.
 
 ### O que M7 herda (e que M5 deliberadamente NÃO faz)
 
@@ -292,11 +292,11 @@ ter sido o **convidado** da disputa que acabou.
 - [x] **Os 4 estados de `LinkStatus` seguem cobertos, mais o novo** (conectado com `Pick`
       pendente), que é o que esta sessão pintou.
 
-### O que segue aberto, e por quê
+### O que seguia aberto — fechado no mesmo dia por `A-39`
 
-- [ ] **Os dois aparelhos mostram o MESMO confronto, com a seleção que CADA um escolheu** — é
-      `A-39`, e é do dono. O sandbox não compõe quadros e não tem dois aparelhos; o que dá para
-      provar aqui está provado.
+- [x] **Os dois aparelhos mostram o MESMO confronto, com a seleção que CADA um escolheu** — era
+      `A-39`, e era do dono. **Devolvido `2` em 2026-08-21.** O sandbox não compõe quadros e não
+      tem dois aparelhos; o que dava para provar aqui estava provado, e o resto veio do campo.
 
 ### Uma pendência de comentário que esta sessão NÃO consertou (escopo)
 
@@ -305,3 +305,50 @@ nascem em `'B'` (o par espelhado de `D-81`/`QA-26`). O **fato** continua verdade
 segue nascendo `'B'` —, mas o endereço mudou de arquivo: quem escreve o lado agora é
 `tela_selecoes.ts`. Não foi corrigido de carona porque M5 não é o módulo desta sessão (regra 2), e
 um ponteiro velho em comentário não é defeito de comportamento. Fica para quem tocar M5.
+
+---
+
+## O campo de `A-39` — `2` e `Sim` (2026-08-21)
+
+> Sessão de fechamento de campo, skill `delivery-review`. **Nenhum arquivo de `src/` foi tocado**:
+> campo confirma, não decide. O ar já era `HEAD` — `84591e4` é o último commit em `src/`, e
+> `origin/main` está nele [Fonte: `git log --oneline -- src/`, `git log origin/main`].
+
+### O portão pedia UM inteiro, e veio `2`
+
+**Em quantos dos dois aparelhos o placar da cobrança diz `Brasil × Japão`?** → **`2`**.
+
+O `2` é o único valor que prova `D-90` inteiro, e prova por um caminho que nenhum teste do
+sandbox alcança: **nenhum dos dois aparelhos tinha, ao começar, o código de país do outro** — o
+`Brasil` nasceu no aparelho 1, o `Japão` nasceu no aparelho 2, e as duas seleções foram escolhidas
+de propósito para que a convergência não pudesse sair de coincidência. Os dois só mostram o mesmo
+confronto se o `Pick` atravessou o fio **nos dois sentidos**, foi discriminado em M5 (`'zone' in p`)
+e chegou à tela pelo 3º argumento de `subscribe`. `1` teria sido divergência de um lado só;
+`0`, o confronto errado antes mesmo do fio.
+
+### A observação única veio `Sim`, e é o estado que `D-90` criou
+
+No aparelho 1, antes de conectar, o lado direito do confronto mostrava **"escolhendo…" com o
+retângulo tracejado vazio** no lugar da bandeira. Isso fecha três coisas de uma vez:
+
+1. `teams[remoteSide] === null` chega à tela como estado, não como buraco — `nomeSelecao(null)` e
+   `marca(null)` pintam o que `D-90` inventou.
+2. **`t=` não virou dado de sessão.** Uma bandeira ali seria o rótulo do link tendo descido para
+   `SessionConfig.teams` — exatamente a segunda fonte que a sessão de M7 decidiu não deixar
+   nascer. O `Sim` é a medida dessa decisão em quadro de verdade.
+3. A tela **não inventa seleção quando não tem dado**, que é o defeito que `D-77` só remendou.
+
+### Sem `D-NN` e sem `QA-NN`, de propósito
+
+O portão passou no primeiro campo e a observação veio `Sim` — não há achado a registrar. Campo
+confirma, não decide (a razão de `A-37`/`A-38`), e o registro segue perto do teto sob `D-82`, com
+`D-83` cobrando 400 caracteres por linha nova. O portão de `D-83` fica em **8 de 10**: nenhuma
+linha nova de `D-NN`/`QA-NN` foi escrita nesta sessão.
+
+### O que continua declarado de fora
+
+- O **link antigo** (dois códigos em `t=`, de antes de `D-90`): coberto por teste, e fabricar um
+  link de versão que não está mais no ar seria trabalho sem informação nova. Estava no card.
+- A **pendência de comentário** em `src/session/index.ts`, que aponta `src/ui/main.ts:162` para o
+  nascimento do par espelhado quando quem escreve o lado agora é `tela_selecoes.ts`. Continua sem
+  dono, pelo mesmo motivo: não é defeito de comportamento, e M5 não é o módulo desta sessão.
