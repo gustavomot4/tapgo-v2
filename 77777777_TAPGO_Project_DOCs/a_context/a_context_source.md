@@ -6,7 +6,7 @@ status: atual
 
 ## Objetivo (3 linhas)
 Jogo web de disputa de pênaltis, mobile-first, jogável em qualquer navegador sem instalar nada.
-Partida de ~1 minuto: contra a CPU ou contra alguém no mesmo aparelho. O online está medido e **não publicado** (`D-72`).
+Partida de ~1 minuto: contra a CPU, contra alguém no mesmo aparelho, ou **por link de convite** — o online está no ar (`D-73`/`T-21`/`A-33`).
 **Não-objetivo:** não é simulador de futebol — sem partida completa, elenco ou transferências.
 
 ## Restrições inegociáveis (violou = inválido)
@@ -30,9 +30,9 @@ Partida de ~1 minuto: contra a CPU ou contra alguém no mesmo aparelho. O online
 - **Pronto:** M1..M9 e a medição, **E-1..E-6 fechadas**; suíte **598/598**; `T-24`..`T-29` **COM CAMPO** (`A-27`..`A-32`) — `A-32` varreu o grupo vermelho inteiro. Módulo a módulo: [[estado_modulos]]
 - **Bundle:** **424.987 B** (5,3% de 8 MB) lido de `dist/`; `QA-21` devolveu **-128 B**, zero asset novo; 278.646 B são os 32 SVGs de T-19 (`QA-06`); Phaser e Trystero fora, por `import()` (D-27)
 - **Em andamento (máx 1):** nada
-- **Próximo:** `A-33` — o build no ar está atrás do repositório? Trava `QA-33`, que é o Objetivo desta página descrevendo produto menor do que o entregue · portão de `D-83`: **6 de 10** · a promessa que `D-72` tirou volta ao Objetivo quando couber
+- **Próximo:** `A-34` — **publicar**: `T-29` e `QA-21` estão no repositório e NÃO no ar; o que o jogador vê é o build de antes delas · portão de `D-83`: **6 de 10**
 - **Bloqueado/pendente:** **registro 18.9k/20.000**, TRÊS pools em zero (`D-43`, duplicata, `D-74`) — `D-82` adia ~4-5 decisões · QA **5.7k/8.000** · CONTEXT **94%**
-- **Questões abertas:** Q-08, Q-09, Q-13 (**Q-15/Q-16 fechadas** por `D-84`/`D-88`) · **QA abertos:** QA-04..QA-07, QA-10, QA-17, QA-27, QA-29, QA-32, **QA-33** (**QA-21 fechado**) (**QA-20 fechado** por `T-29`) · respondidas e fechados: [[decisions_archive]]
+- **Questões abertas:** Q-08, Q-09, Q-13 (**Q-15/Q-16 fechadas** por `D-84`/`D-88`) · **QA abertos:** QA-04..QA-07, QA-10, QA-17, QA-27, QA-29, QA-32 (**QA-21/QA-33 fechados**) (**QA-20 fechado** por `T-29`) · respondidas e fechados: [[decisions_archive]]
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)
 - [[portao_de_aceite]] — **antes de fechar tarefa, declarar etapa fechada ou entregar**

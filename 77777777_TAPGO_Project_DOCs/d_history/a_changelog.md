@@ -7,6 +7,17 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-21] — `A-33` devolveu `4`: o online JÁ está no ar, e o Objetivo volta a prometer o convite (`QA-33` fechado)
+
+- **Skill:** frontend-uiux (mesma sessão de `QA-21`).
+- **Quem mediu:** o dono, no endereço público. Relato: os 3 botões de dificuldade, **4 botões de modo** (contra o computador · 2 jogadores no mesmo PC · jogar com amigo · TAP GO Cup) e o interruptor de som.
+- **O `4` prova exatamente o que foi desenhado para provar:** "jogar com amigo" é o botão que `T-21` acrescentou, então ele estar no ar significa que a tela de convite está no ar. O portão mediu a variável que a decisão move — a lição de `A-32` aplicada e funcionando.
+- **`QA-33` fecha, e o Objetivo do CONTEXT muda:** ele dizia o online **"medido e não publicado"** (`D-72`); passa a prometer **"por link de convite"** (`D-73`/`T-21`/`A-33`). A fonte única estava descrevendo um produto menor do que o que existe, e essa é a linha que toda sessão lê primeiro.
+- **Sem `D-NN` novo, e a escolha é declarada:** restaurar a promessa é **execução** de `D-72`, que já dizia "a promessa volta quando `Q-11` tiver `D-NN`" — e `D-73` foi esse `D-NN`. Nenhuma decisão nova foi tomada. O registro está a **96%** do teto (19.215/20.000), e linha que não decide nada não merece o orçamento.
+- **O que o `4` NÃO prova, e é o achado da resposta:** ele mede `T-21`, de 20/08. **`T-29` e `QA-21` foram commitados hoje e não foram publicados** — quem joga pelo endereço público continua vendo camisa de hash e a frase das bandeiras. As duas estão verdes em `check.py`, `tsc` e 598/598, e invisíveis para o jogador. Virou **`A-34`**.
+- **A observação (b) ficou ambígua e NÃO conta como resposta:** perguntei se a frase das bandeiras aparecia no rodapé, e o dono enumerou **botões** — a `.lacuna` é um `<p>`, não um botão, então o silêncio dele não é negativa. É o mesmo defeito de forma dos seis cards anteriores, mas desta vez a culpa é da pergunta: pedir "o que aparece" num card cujo número é uma **contagem** convida a enumerar só o que se conta. Em `A-34` ela vem sozinha.
+- **Nenhum byte de código mudou nesta entrada.**
+
 ## [2026-08-21] — `D-89`: quando a próxima ação for do dono, a resposta traz explicação e recomendações
 
 - **Skill:** frontend-uiux (mesma sessão de `QA-21`; a mudança é de processo, não de módulo).
