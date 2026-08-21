@@ -7,6 +7,16 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-21] — `D-87`: `T-28` nasce juntando `P-6`(a) e `P-8` num card só
+
+- **Skill:** frontend-uiux (mesma sessão de `T-27` e `A-30`; a decisão é do dono, o registro é da sessão).
+- **Decisão do dono**, tomada no fechamento de `A-30`, depois de a sessão mostrar que os dois pedidos são a mesma peça: uma sobreposição que mostra a bandeira de quem cobra primeiro **é** o segundo canal que `P-6` pedia, e **é** o sorteio grande que `P-8` pedia.
+- **Não reabre `D-49`** (sobreposição sem toque — o argumento que aprovou `D-85`) **nem `D-65`** (só `opacity`/`transform`, zero asset: as 32 bandeiras já vêm de `T-19`, com licença conferida arquivo a arquivo).
+- **`P-6`(b) fica de fora e vira card próprio:** as 32 cores nacionais são dado curado que o dono revisa, mudam a marca da seleção em toda tela, e cada cor tem de passar no teste de contraste de `T-20`. Fecharia `QA-20` de quebra.
+- **O que a licença permitiu, e vale registrar porque contraria a leitura fácil:** `a_context/licenciamento.md` lista cores nacionais como **livres** — o proibido é uniforme oficial identificável. O comentário de `sprites.ts` sobre matiz arbitrário descreve uma escolha de `T-10`, não um portão legal.
+- **Nenhum byte de código mudou nesta entrada.** `T-28` está aberto e é a próxima sessão.
+- **Decisões:** `D-87`.
+
 ## [2026-08-21] — `A-30` fechada com UM número (`4`), e o campo achou o que o sandbox não achava
 
 - **Skill:** frontend-uiux (mesma sessão de `T-27`, fechando a conferência de aparelho).
