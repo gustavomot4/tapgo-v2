@@ -27,12 +27,12 @@ Partida de ~1 minuto: contra a CPU, contra alguém no mesmo aparelho, ou **por l
 
 ## Estado atual (formato fixo — 1 linha por item, SEM prosa corrida)
 - **Versão:** v2.0.0 — entregue em 2026-08-19 (a v1 é baseline morto: reescrita total, nenhum código reaproveitado)
-- **Pronto:** M1..M9 e a medição, **E-1..E-6 fechadas**; suíte **610/610**; `T-24`..`T-29` e `T-32` **COM CAMPO** (`A-27`..`A-32`, `A-35`); `T-30` entregue, campo em `A-36`; o ar em dia **até `0f231bd`**, amarelo incluído (`A-34`/`A-35`) — `T-32` fora do ar. Módulo a módulo: [[estado_modulos]]
+- **Pronto:** M1..M9 e a medição, **E-1..E-6 fechadas**; suíte **610/610**; `T-24`..`T-30` e `T-32` **COM CAMPO** (`A-27`..`A-32`, `A-35`, `A-36`); o ar em dia **até `0f231bd`**, amarelo incluído (`A-34`/`A-35`) — `T-32` fora do ar. Módulo a módulo: [[estado_modulos]]
 - **Bundle:** **425.669 B** (5,3% de 8 MB) lido de `dist/`; `T-30` custou **+144 B**, zero asset novo; 278.646 B são os 32 SVGs de T-19 (`QA-06`); Phaser e Trystero fora, por `import()` (D-27)
 - **Em andamento (máx 1):** nada
-- **Próximo:** `A-36` — o dono conta os dedos da luva de `T-30` · `T-31` travada em `D-NN` de contrato · portão de `D-83`: **6 de 10**
-- **Bloqueado/pendente:** **registro 19.2k/20.000**, TRÊS pools em zero (`D-43`, duplicata, `D-74`) — `D-82` adia ~4-5 decisões · QA **6.9k/8.000** · CONTEXT **94%**
-- **Questões abertas:** Q-08, Q-09, Q-13 (**Q-15/Q-16 fechadas** por `D-84`/`D-88`) · **QA abertos:** QA-04..QA-07, QA-10, QA-17, QA-27, QA-29, QA-34, QA-35 (**QA-21/QA-32/QA-33 fechados**) (**QA-20 fechado** por `T-29`) · respondidas e fechados: [[decisions_archive]]
+- **Próximo:** `T-33` — cor no símbolo de papel, hoje branco sobre as linhas brancas do campo (`QA-36`) · `T-31` travada em `D-NN` de contrato · portão de `D-83`: **7 de 10**
+- **Bloqueado/pendente:** **registro 19.2k/20.000**, TRÊS pools em zero (`D-43`, duplicata, `D-74`) — `D-82` adia ~4-5 decisões · QA **7.3k/8.000** · CONTEXT **95%**
+- **Questões abertas:** Q-08, Q-09, Q-13 (**Q-15/Q-16 fechadas** por `D-84`/`D-88`) · **QA abertos:** QA-04..QA-07, QA-10, QA-17, QA-27, QA-29, QA-34..QA-36 (**QA-21/QA-32/QA-33 fechados**) (**QA-20 fechado** por `T-29`) · respondidas e fechados: [[decisions_archive]]
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)
 - [[portao_de_aceite]] — **antes de fechar tarefa, declarar etapa fechada ou entregar**

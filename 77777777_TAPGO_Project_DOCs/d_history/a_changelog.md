@@ -7,6 +7,18 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-21] — `A-36` devolveu `4`: a luva se lê como luva, e o branco dela some nas linhas do campo
+
+- **Skill:** delivery-review (campo; **nenhuma linha de produção mudou** — regra 4).
+- **O portão passou:** na cobrança em que os botões dizem "Defender", o dono contou **quatro dedos** no símbolo de 24px. O card pedia UM inteiro e veio `4` — `1` seria o vão de 1,5px fechando na tela dele, `3` ou `5` seria o arredondamento do navegador comendo ou inventando um dedo.
+- **O que o `4` prova:** `T-30` não trocou o tamanho do símbolo, trocou a **silhueta**, e a silhueta da luva depende inteira de os quatro vãos sobreviverem à conversão para o pixel físico de um monitor real. O sandbox mediu `24px x 24px` e as três camadas nas posições escritas; o que ele não consegue é **ver**. Por isso `T-30` **fecha COM CAMPO**.
+- **A observação única também voltou aprovada:** *"tirando isso os ícones estão certos"* — as duas formas se leem, logo a razão de `T-28` (forma como SEGUNDO canal, que não depende de cor) está de pé. **Declarado:** ele aprovou os ícones, mas não respondeu na forma literal da pergunta ("sem ler o rótulo, dá para dizer qual é o de chutar?") — a leitura cega segue sem medição direta, e o registro guarda o que ele disse, não o que a pergunta esperava.
+- **O card devolveu mais do que pediu, e virou achado — `QA-36`:** *"está difícil de ver porque tem linhas brancas e atrapalha a bola"*. Lido do código: `.zona` declara `color: var(--texto)` = **#eef2f9** e as duas regras pintam todas as camadas com `background: currentColor`, enquanto `src/ui/cena.ts` desenha linha de fundo, grande área e marca do pênalti em **`0xf4faf5`** (e as traves no mesmo branco com alfa **1,00**). Diferença de 6, 8 e −4 por canal: é o mesmo branco. A cor de papel (`--acento`/`--atencao`) está só na **borda** da zona, a 55% de alfa, e nunca chegou ao símbolo.
+- **O achado NÃO reprova `T-30`:** o triângulo e o arco de `T-28` eram do mesmo `--texto` branco e corriam a mesma banda. O defeito é de `T-28` e apenas **ficou visível** quando a silhueta virou um disco cheio de 24px, que tem cerca de quatro vezes a área branca de um triângulo de 18x13.
+- **Registrado e não consertado (regra 4):** `QA-36` na tabela viva, com medida, 3 saídas e as 2 armadilhas em [[qa36_simbolo_branco_no_branco]]; o conserto é o card **`T-33`**, que o pedido do dono abriu.
+- **A armadilha que `T-33` carrega escrita, porque reprovaria em silêncio:** hoje `[disabled]` apaga o símbolo **de graça** — tudo é `currentColor` e a folha põe `color: transparent`, o que `T-30` mediu. Cor fixa no símbolo quebra isso **sem falhar nenhum teste atual**, então a saída que largar o `currentColor` paga regra explícita **e** teste.
+- **Fechados:** `A-36` · `T-30` (COM CAMPO). **Abertos:** `QA-36` · `T-33`.
+
 ## [2026-08-21] — `T-30`: a bola e a luva no lugar do triângulo e do arco, 24x24, sem um arquivo novo
 
 - **Skill:** frontend-uiux. **Delta em UM arquivo de produção:** `src/ui/estilo.css` (as duas regras `.zona[data-papel]::before`) + 3 testes em `src/tests/ui.test.ts`. `src/ui/tela_cobranca.ts` com **0 byte alterado** — `data-papel` continua sendo a chave, e o `aria-label` das zonas foi lido do DOM no navegador, intacto.
