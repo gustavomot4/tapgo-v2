@@ -7,6 +7,14 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-21] — `A-31` fechada com `1`: `T-28` passa a ter campo
+
+- **Skill:** frontend-uiux (mesma sessão de `T-28`, fechando a conferência de aparelho).
+- **Quem mediu:** o dono, no navegador dele. **A bandeira grande aparece UMA vez** antes do 1º toque — o guarda de `D-85` segurou em quadros de verdade, que é o que o sandbox não produz. As duas observações curtas passaram: o toque numa zona vale com a sobreposição na tela, e o símbolo de papel aparece nos botões além da cor da borda.
+- **A forma de `A-30` funcionou de novo, e com uma emenda:** o dono respondeu as duas observações e fechou com *"aparentemente tudo correto aqui"* — a confirmação global de `A-25`..`A-29` de volta, e **sem o número**. Ele veio quando foi pedido sozinho, em pergunta separada. A lição não é "peça UM número": é **peça o número separado das observações**, porque elas são mais fáceis de responder e o engolem.
+- **O que continua sem número:** o guarda sob REPETIÇÃO, que só o `online` produz (dois aparelhos). O `cpu` conferido aqui chama `desenhar()` uma vez só — o `1` prova a sobreposição, não prova o guarda apanhando notificação repetida. Coberto pela varredura de fonte e por `D-85`, que já mediu o mesmo guarda.
+- **Nenhum byte de código mudou nesta entrada.**
+
 ## [2026-08-21] — `T-28`: a bandeira de quem cobra primeiro em tela cheia, e o papel em dois canais
 
 - **Skill:** frontend-uiux. **Módulo:** M7 só — `src/ui/tela_cobranca.ts` e `src/ui/estilo.css`. `cena.ts` não foi tocado.

@@ -27,10 +27,10 @@ Partida de ~1 minuto: contra a CPU ou contra alguém no mesmo aparelho. O online
 
 ## Estado atual (formato fixo — 1 linha por item, SEM prosa corrida)
 - **Versão:** v2.0.0 — entregue em 2026-08-19 (a v1 é baseline morto: reescrita total, nenhum código reaproveitado)
-- **Pronto:** M1..M9 e a medição, com **E-1..E-6 fechadas**; suíte **586/586**; `T-24`..`T-27` fechados **COM CAMPO** (`A-27`..`A-30`) e `T-28` entregue, sem campo ainda (`A-31`). Módulo a módulo: [[estado_modulos]]
+- **Pronto:** M1..M9 e a medição, com **E-1..E-6 fechadas**; suíte **586/586**; `T-24`..`T-28` fechados **COM CAMPO** (`A-27`..`A-31`) — `A-31` devolveu **1**, e o número só veio quando pedido separado das observações. Módulo a módulo: [[estado_modulos]]
 - **Bundle:** **421.451 B** (5,3% de 8 MB) lido de `dist/`; `T-28` somou **+2.140 B** — zero asset novo, é CSS e a sobreposição; 278.646 B são os 32 SVGs de T-19, asset do chunk de M4 (`QA-06`); Phaser e Trystero fora, por `import()` (D-27)
 - **Em andamento (máx 1):** nada
-- **Próximo:** `A-31` — UM número do dono (quantas vezes a bandeira grande aparece antes do 1º toque); é o que dá campo a `T-28` e o único caso que o sandbox não alcança · depois, `P-6`(b): as 32 cores nacionais, que fecha `QA-20` e pede a tabela como DADO dele · portão de `D-83`: **6 de 10** · a promessa que `D-72` tirou volta ao Objetivo quando couber
+- **Próximo:** `P-6`(b) — as 32 cores nacionais como card próprio: fecha `QA-20` (o matiz de hash dá 30 cores para 32 seleções) e pede a tabela como DADO revisado pelo dono · nenhuma ação de aparelho pendente · portão de `D-83`: **6 de 10** · a promessa que `D-72` tirou volta ao Objetivo quando couber
 - **Bloqueado/pendente:** **registro 18.201/20.000** com os TRÊS pools em zero (`D-43`, duplicata, critério de `D-74`) — `D-82` é rejeição adiada: ~4-5 decisões · QA **5.327/8.000** · CONTEXT 97%
 - **Questões abertas:** Q-08, Q-09, Q-13 (**Q-15 fechada** por `D-84`) · **QA abertos:** QA-04..QA-07, QA-10, QA-17, QA-20, QA-21, QA-27, QA-29 (**QA-31 fechado**) · respondidas e fechados: [[decisions_archive]]
 
