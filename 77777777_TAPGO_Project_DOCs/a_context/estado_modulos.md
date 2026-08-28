@@ -23,7 +23,7 @@ status: atual
 | M6 | Transporte P2P | `T-11` + `T-31` (`Pick` no fio pelos mesmos 4 métodos, `D-90`) |
 | M7 | Telas (DOM) e a cobrança em Phaser | `T-10` + `T-17b` + `T-20` + `T-14` (as 3 telas do torneio) + `T-21` (o convite e o `online` na cobrança) + `T-24` (o prazo de 15 s no `online`) + `T-25` (a coluna "Pts" na tabela) + `T-32` (a série de revanches em `cpu` e `local`) + `T-31` (uma grade no `online`, "escolhendo…" e `t=` com um código, `D-90`) |
 | M8 | Torneio: grupos, mata-mata, retrato | `T-12` — alterado por `D-57` |
-| M9 | Build, portões e publicação | `T-05` (esqueleto) |
+| M9 | Build, portões e publicação | `T-05` (esqueleto) + `T-34` (`vite.config.ts` dentro do `tsc`, `QA-04`) + `T-36` (o medidor caminha só o grafo de `index.html`, `QA-06`/`D-93`) |
 | medição | O experimento de campo de E-4 | `T-15` + `T-16` |
 
 **Etapas:** `E-1`..`E-6` fechadas — a prova de cada critério está em [[entrega_e6]].

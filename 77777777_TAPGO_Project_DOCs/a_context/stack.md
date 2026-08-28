@@ -25,6 +25,11 @@ data: 2026-08-07
 reabre quando o **bundle inicial** chegar a **≥ 8 MB lido da saída do build** — nunca estimado — ou
 quando o fluxo crítico ficar **< 30 fps em viewport 360x640 no celular real do dono**, sem correção
 possível dentro do Phaser. O número vivo do bundle mora no [[a_context_source|CONTEXT]].
+**O que conta como "bundle inicial" mudou em `D-93`** (`T-36`, fecha `QA-06`): é o grafo de
+imports estáticos de `index.html` e **só ele**. `medicao.html` (`D-33`) é instrumento — nenhum
+jogador a abre —, e enquanto ela entrava na soma o gatilho lia 13.949 B que ninguém baixa.
+Quem mede é `src/scripts/bundle-size.mjs`, dentro do `npm run build`; entrada ausente do
+manifesto REPROVA em vez de medir outra coisa.
 
 ## Quem roda o quê (o sandbox do agente não é portão)
 

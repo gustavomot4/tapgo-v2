@@ -27,12 +27,12 @@ Partida de ~1 minuto: contra a CPU, contra alguém no mesmo aparelho, ou **por l
 
 ## Estado atual (formato fixo — 1 linha por item, SEM prosa corrida)
 - **Versão:** v2.0.0 — entregue em 2026-08-19 (a v1 é baseline morto: reescrita total, nenhum código reaproveitado)
-- **Pronto:** M1..M9 e a medição, **E-1..E-6 fechadas**; suíte **638/638**; `T-24`..`T-33` **COM CAMPO** (`A-27`..`A-32`, `A-35`..`A-37`, **`A-39`**), e `T-30`/`T-32`/`T-33` **NO AR** (`A-38`); **`T-31` INTEIRA e CONFIRMADA** (`A-39`: `Brasil × Japão` nos DOIS aparelhos + "escolhendo…"); o ar **é `HEAD` em código** — `84591e4` é o último commit em `src/`. Módulo a módulo: [[estado_modulos]]
-- **Bundle:** **428.754 B** (5,4% de 8 MB) lido de `dist/`; `T-31` inteira custou **+2.904 B**, zero asset novo; 278.646 B são os 32 SVGs de T-19 (`QA-06`); Phaser e Trystero fora, por `import()` (D-27)
+- **Pronto:** M1..M9 e a medição, **E-1..E-6 fechadas**; suíte **638/638**; `T-24`..`T-33` **COM CAMPO** (`A-27`..`A-32`, `A-35`..`A-37`, **`A-39`**), e `T-30`/`T-32`/`T-33` **NO AR** (`A-38`); **`T-31` INTEIRA e CONFIRMADA** (`A-39`: 2 aparelhos); o ar **é `HEAD` em jogo** — `T-34`/`T-36` (M9) não mudam um byte de `dist/`. Módulo a módulo: [[estado_modulos]]
+- **Bundle:** **414.805 B** (5,2% de 8 MB) lido de `dist/` — desde `D-93`/`T-36` só o grafo de `index.html` (`QA-06` fechado); 278.646 B são os 32 SVGs de T-19; Phaser e Trystero fora, por `import()` (D-27)
 - **Em andamento (máx 1):** _(vazio)_
 - **Próximo:** nada de campo em aberto · portão de `D-83` **FECHADO — 10 de 10**
-- **Bloqueado/pendente:** registro **18.3k/20.000** — aviso voltou em `D-92`; subir o teto segue REPROVADO · **CONTEXT: 42 de folga, o menor** · QA **7.3k/8.000** · `D-75`/`D-76` isentas
-- **Questões abertas:** Q-08, Q-09, Q-13 (**Q-15/Q-16 fechadas** por `D-84`/`D-88`) · **QA abertos:** QA-04..QA-07, QA-10, QA-17, QA-27, QA-29, QA-34, QA-35 (**QA-21/QA-32/QA-33/QA-36 fechados**) (**QA-20 fechado** por `T-29`) · respondidas e fechados: [[decisions_archive]]
+- **Bloqueado/pendente:** registro **18.7k/20.000** — aviso voltou em `D-92`; subir o teto segue REPROVADO · **CONTEXT: 18 de folga, o menor** · QA **7.3k/8.000** · `D-75`/`D-76` isentas
+- **Questões abertas:** Q-08, Q-09, Q-13 (**Q-15/Q-16 fechadas** por `D-84`/`D-88`) · **QA abertos:** QA-05, QA-07, QA-10, QA-17, QA-27, QA-29, QA-34, QA-35 (**QA-04/QA-06/QA-21/QA-32/QA-33/QA-36 fechados**) (**QA-20 fechado** por `T-29`) · respondidas e fechados: [[decisions_archive]]
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)
 - [[portao_de_aceite]] — **antes de fechar tarefa, declarar etapa fechada ou entregar**

@@ -435,3 +435,27 @@ que mediu isso recomendou **não** pagá-los agora.
 |---|---|---|
 | Q-15 | Tempo por cobrança no `online` — ID novo porque `Q-14` já é o STUN de `D-71` (`QA-24`) | **fechada por `D-84`** (saída (b), 15 s, estouro resolvido dentro do aparelho) — `T-24` entregou; falta o campo de `A-27` |
 | Q-16 | As 32 cores nacionais: (A) tabela fiel + `matizDistinto`, (B) tabela + padrão na camisa, ou (C) não trocar o hash? | **fechada por `D-88`** em 2026-08-21 — o dono escolheu **(B)**, a recomendação da sessão; `T-29` entregou, e falta o campo de `A-32` |
+
+
+## `T-34` e `T-36` fecham os dois achados de M9 abertos desde 2026-08-07 (2026-08-28)
+
+Os dois eram o mesmo tipo de achado — **um portão medindo menos do que diz medir** — e os dois
+estavam parados pela regra 4 (de outro dono, e `QA-06` ainda mudava um portão, o que pedia `D-NN`).
+
+`QA-04`: o `include: ["src"]` do `tsconfig.json` não alcançava o `vite.config.ts`, então
+`tsc --noEmit` passava verde sobre um arquivo que ninguém checava. Medido nas duas metades antes e
+depois: com o `include` antigo, um erro de tipo plantado no `vite.config.ts` saiu com **código 0**;
+com `"vite.config.ts"` no `include`, o MESMO erro saiu com **código 2** (`TS2322`), e o arquivo
+limpo segue em 0. Custou uma palavra no `tsconfig.json` e zero byte em `dist/`.
+
+`QA-06`: `bundle-size.mjs` somava toda entrada com `isEntry`, e desde `D-33` são duas — a segunda
+é `medicao.html`, instrumento que não é alcançável a partir do `index.html`. `D-93` redefine o que
+o gatilho de `D-02` mede; o medidor caminha só o grafo de `index.html` e REPROVA se essa entrada
+sumir do manifesto (medido: renomeando a chave, saída com código 1). O número do CONTEXT cai de
+**428.754** para **414.805 B** sem um byte a menos em `dist/`, que segue em 1.711.161 B: o que caiu
+foi a leitura, não o artefato.
+
+| # | Data | Sev. | Onde | O que quebrava | Correção | Fechado em |
+|---|---|---|---|---|---|---|
+| QA-04 | 2026-08-07 | MÉDIO | `tsconfig.json` (`D-14`) × `vite.config.ts` (T-05) | `include: ["src"]` deixa o `vite.config.ts` fora do `tsc --noEmit`: erro de tipo no build só estoura no `vite build` | Acrescentar `"vite.config.ts"` ao `include` | ✔ 2026-08-28 (`T-34`) — erro plantado: 0 antes, 2 depois |
+| QA-06 | 2026-08-07 | MÉDIO | `src/scripts/bundle-size.mjs` (M9) | Soma **toda** entrada `isEntry` no "bundle inicial": com `D-33`, o gatilho de `D-02` lê página que o jogador nunca abre | Medir só o grafo de `index.html` | ✔ 2026-08-28 (`T-36`/`D-93`) — 428.754 -> 414.805 B |

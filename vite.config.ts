@@ -7,8 +7,8 @@
 import { resolve } from 'node:path';
 
 // `vitest/config` reexporta o `defineConfig` do Vite com o bloco `test` no tipo. Importar de
-// `vite` puro faria o campo `test` abaixo ser propriedade desconhecida — e o `tsc` do portão só
-// não pega isto por `include: ["src"]` não alcançar este arquivo.
+// `vite` puro faria o campo `test` abaixo ser propriedade desconhecida — e desde `T-34` o `tsc`
+// do portão PEGA isto: o `include` do tsconfig alcança este arquivo.
 import { defineConfig } from 'vitest/config';
 
 /**
@@ -36,9 +36,9 @@ export default defineConfig({
      * que é o que o Pages dá. `medicao.html` é instrumento, não jogo: não é alcançável a partir
      * do `index.html` e leva `noindex`.
      *
-     * **Consequência declarada (`QA-06`):** `bundle-size.mjs` soma TODA entrada com `isEntry`
-     * no "bundle inicial", então o número do CONTEXT passa a incluir a página de medição. O
-     * defeito é da definição do medidor, é de M9, e não foi consertado aqui de carona (regra 4).
+     * **`QA-06`, fechado por `D-93`/`T-36`:** `bundle-size.mjs` somava TODA entrada com
+     * `isEntry`, então o número do CONTEXT incluía esta página, que jogador nenhum abre. Hoje o
+     * medidor caminha só o grafo de `index.html` — mexer aqui no `input` derruba a medição.
      */
     rollupOptions: {
       input: {

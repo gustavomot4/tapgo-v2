@@ -56,7 +56,17 @@ try {
   process.exit(1);
 }
 
-// Caminha o grafo de imports ESTÁTICOS a partir de cada entrada, sem revisitar.
+/**
+ * A entrada medida — UMA, e é a que o jogador abre (`QA-06` / `D-93`).
+ *
+ * `D-33` pôs uma segunda entrada no build (`medicao.html`), e ela é instrumento: não é alcançável
+ * a partir do `index.html` e nenhum jogador a baixa. Somar toda entrada `isEntry` fazia o gatilho
+ * de `D-02` ler bytes que ninguém carrega para pintar a primeira tela — inflando o número contra
+ * a própria definição escrita no topo deste arquivo.
+ */
+const ENTRADA = 'index.html';
+
+// Caminha o grafo de imports ESTÁTICOS a partir da entrada, sem revisitar.
 const iniciais = new Map(); // arquivo -> bytes
 const vistos = new Set();
 
@@ -73,18 +83,20 @@ function visitar(chave) {
   for (const importado of item.imports ?? []) visitar(importado);
 }
 
-for (const [chave, item] of Object.entries(manifesto)) {
-  if (item.isEntry) visitar(chave);
+if (!manifesto[ENTRADA]?.isEntry) {
+  // Entrada renomeada ou removida em vite.config.ts derruba a medição em vez de medir outra coisa:
+  // medidor que cai de pé sobre a entrada errada devolve número verde e sem significado.
+  console.error(
+    `ERRO: "${ENTRADA}" não é entrada (\`isEntry\`) no manifesto — não há bundle inicial a medir.\n` +
+      '      Confira `build.rollupOptions.input` em vite.config.ts.',
+  );
+  process.exit(1);
 }
+visitar(ENTRADA);
 
 // O `index.html` é a primeira coisa que o navegador baixa. Nem toda versão do Vite o lista no
 // manifesto, então ele entra por fora — e sem duplicar se já tiver entrado.
-if (!iniciais.has('index.html')) iniciais.set('index.html', tamanho('index.html'));
-
-if (iniciais.size === 0) {
-  console.error('ERRO: nenhuma entrada (`isEntry`) no manifesto — não há bundle inicial a medir.');
-  process.exit(1);
-}
+if (!iniciais.has(ENTRADA)) iniciais.set(ENTRADA, tamanho(ENTRADA));
 
 const inicial = [...iniciais.values()].reduce((a, b) => a + b, 0);
 const totalDist = somaRecursiva(DIST);

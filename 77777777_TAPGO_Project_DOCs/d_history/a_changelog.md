@@ -7,6 +7,16 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-28] — os dois portões de M9 que mediam menos do que diziam: `T-34` e `T-36` (`QA-04`/`QA-06`/`D-93`)
+
+- **Skill:** iac-docker-terraform. Dois achados abertos desde 2026-08-07, parados pela regra 4 e fechados no mesmo turno porque são o mesmo defeito: **portão que passa verde sobre o que não olha**.
+- **`T-34` fecha `QA-04`** — `"vite.config.ts"` entra no `include` do `tsconfig.json`. Portão nas duas metades: `tsc --noEmit` limpo (**0**) e erro de tipo plantado no `vite.config.ts` reprovando (**2**, `TS2322`+`TS6133`). Contraprova no mesmo turno: com o `include` antigo o MESMO erro plantado saía com **0**. Arquivo restaurado byte a byte.
+- **`T-36` fecha `QA-06`, e é `D-93`** — `bundle-size.mjs` caminha só o grafo de `index.html`; `medicao.html` (`D-33`) sai da soma. O número do CONTEXT cai de **428.754** para **414.805 B** (5,19% do teto), diferença de **13.949 B** que bate exatamente com `assets/medicao-*.js`.
+- **O artefato não mudou:** `dist/` em **1.711.161 B** antes e depois. O que caiu foi a leitura, não o que vai ao ar — por isso o ar segue sendo `HEAD` em jogo.
+- **Guarda nova:** entrada ausente do manifesto agora REPROVA (código **1**) em vez de medir outra entrada. Medido renomeando a chave `index.html`.
+- **Orçamentos:** CONTEXT em **3.982/4.000** (18 de folga, e a linha dele dizia 42 quando o real era 2 — corrigida); registro em **18.698/20.000** com `D-93` medindo **390**; QA cai para **6.760/8.000**, porque `QA-04` e `QA-06` saíram da tabela viva para [[decisions_archive]] por `D-74`.
+- **Suíte 638/638, `tsc` limpo.** Zero byte de código de jogo alterado.
+
 ## [2026-08-21] — a folga nova medida: a §5.3 reprova pela 2ª vez e sai como `D-92` REJEITADO
 
 - **Skill:** evolution-auditor. Zero byte em `src/`. Segunda auditoria do mesmo dia, depois de `D-91` — mede o que os 2.084 de folga compram e se a §5.3 ainda rende. **Nada novo é adotado.**
