@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
+import { LISTA_MORTA } from './lista_morta';
 import {
   CATALOG_IS_FIXTURE,
   FLAG_PENDENTE,
@@ -152,19 +153,20 @@ describe('M4 · portão — licença: zero URL, zero escudo', () => {
   });
 
   it('a fonte de M4 não cita clube, federação nem marca da lista-morta', () => {
-    const fonte = readFileSync(FONTE_M4, 'utf8').toLowerCase();
-    const listaMorta = [
-      'fifa',
-      'copa do mundo',
-      'world cup',
-      'brasileirão',
-      'libertadores',
-      'champions league',
-      'cbf',
-      'escudo',
-    ];
-    for (const termo of listaMorta) {
-      expect(fonte).not.toContain(termo);
+    // `QA-05`: os seis termos de marca vêm montados em tempo de execução, de `lista_morta.ts`.
+    // Escritos por extenso aqui — como estavam até aqui —, eles apareciam na própria varredura do
+    // portão de marca de M7 (`grep -rniE … src/` = zero) e a faziam devolver 6, todas vindas do
+    // arquivo que existe para cobrá-la. Mesmo motivo das agulhas de `core.test.ts` e `ui.test.ts`.
+    const fonte = readFileSync(FONTE_M4, 'utf8');
+    for (const termo of LISTA_MORTA) {
+      expect(fonte, termo.rotulo).not.toMatch(new RegExp(termo.padrao, 'i'));
+    }
+
+    // `cbf` e `escudo` não estão na varredura de marca (o portão de M7 não os conta), então
+    // continuam por extenso: aqui eles não reprovam portão nenhum.
+    const minusculas = fonte.toLowerCase();
+    for (const termo of ['cbf', 'escudo']) {
+      expect(minusculas, termo).not.toContain(termo);
     }
   });
 });

@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import { createRng, newSeed, type Rng } from '../core/index';
+import { NOME_PLANTADO } from './lista_morta';
 
 /** Coleta `n` valores de `int(max)`. */
 function draw(rng: Rng, n: number, max: number): number[] {
@@ -127,7 +128,11 @@ describe('M1 · checagem de camada (portão de E-1)', () => {
   // apareceria na varredura e o próprio teste reprovaria o portão que verifica.
   const AGULHA = ['Math', 'random'].join('.');
   const SRC = resolve(fileURLToPath(new URL('.', import.meta.url)), '..');
-  const IGNORAR = new Set(['node_modules', 'dist', '.git']);
+  // `NOME_PLANTADO` é o arquivo que `marca.test.ts` cria e apaga dentro de um caso de teste
+  // (`QA-05`). Os dois arquivos rodam em paralelo, e sem ignorá-lo esta varredura poderia listar
+  // um caminho e tentar lê-lo depois de apagado — teste instável, não portão. Ele nunca contém
+  // agulha de M1, e nunca sobrevive ao caso que o cria.
+  const IGNORAR = new Set(['node_modules', 'dist', '.git', NOME_PLANTADO]);
 
   function varrer(dir: string): string[] {
     return readdirSync(dir).flatMap((nome) => {

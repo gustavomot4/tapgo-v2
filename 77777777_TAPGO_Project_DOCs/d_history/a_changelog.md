@@ -7,6 +7,16 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-28] — `T-37`: o portão de marca de M7 parou de contar quem o defende (`QA-05`/`D-95`)
+
+- **Skill:** testing. Achado aberto desde 2026-08-07, o mais antigo da tabela viva. Mesma família de `T-34`/`T-36`: **portão que media o próprio arquivo que existe para cobrá-lo** — o `grep -rniE` da lista-morta sobre `src/` devolvia **6**, e as 6 vinham de teste.
+- **Metade 1 — a varredura zera.** 5 ocorrências saem de `src/tests/teams.test.ts` (a 6ª, `brasileirão`, escapava do `-E` por acento) e 1 de `src/tests/ui.test.ts`. Os termos passam a ser montados em tempo de execução, com **fonte única** em `src/tests/lista_morta.ts` — o mesmo recurso que `core.test.ts` já usava para o gerador nativo, agora com uma lista só em vez de três cópias. Medido: **6 -> 0**.
+- **Metade 2 — o portão prova que mede.** `src/tests/marca.test.ts` varre `src/` **inteiro**, sem filtro de extensão (fail-closed: o `grep` do portão não pergunta extensão, e uma lista de permitidas seria o buraco por onde o próximo tipo de arquivo entra), planta cada um dos 6 termos num arquivo de `src/`, mede por **delta** contra a varredura anterior e apaga no `finally`.
+- **Verificado de fato, fora da suíte:** `Champions League` plantado à mão em `src/ui/rotulos.ts` reprova **9** casos; `Libertadores` em `src/main.ts` reprova **2** (o de `src/ui/` não alcança a raiz). Os dois arquivos restaurados byte a byte, `grep` de volta a **0**.
+- **Custo declarado:** `core.test.ts` passa a ignorar pelo nome o arquivo que `marca.test.ts` planta. Os dois varrem `src/` inteiro e rodam em paralelo; sem isso, uma varredura poderia listar um caminho e lê-lo depois de apagado — teste instável, que a regra 10 da skill proíbe.
+- **Uma armadilha paga no caminho:** a primeira versão de `lista_morta.ts` citava o comando do portão por extenso no próprio docstring, e a varredura voltou a **1**. O comando literal não mora mais lá.
+- **Suíte 638 -> 656/656** em 2 rodadas, `tsc --noEmit` limpo, bundle **414.805 B** inalterado — nada do grafo de `index.html` alcança os arquivos novos.
+
 ## [2026-08-28] — os dois portões de M9 que mediam menos do que diziam: `T-34` e `T-36` (`QA-04`/`QA-06`/`D-93`)
 
 - **Skill:** iac-docker-terraform. Dois achados abertos desde 2026-08-07, parados pela regra 4 e fechados no mesmo turno porque são o mesmo defeito: **portão que passa verde sobre o que não olha**.

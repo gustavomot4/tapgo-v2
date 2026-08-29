@@ -11,6 +11,7 @@ import type { Level, MatchState, Session } from '../session/index';
 import type { Side, Zone } from '../core/index';
 import { createRng, newSeed } from '../core/index';
 import { listTeams } from '../data/teams';
+import { padraoDaListaMorta } from './lista_morta';
 
 import { criarDerivacao, outroLado } from '../ui/derivacao';
 import {
@@ -150,18 +151,10 @@ describe('portão de camada de M7 (D-01)', () => {
   it('nenhum termo da lista-morta de licenciamento aparece em src/ui/', () => {
     // As agulhas são montadas em tempo de execução, como em `core.test.ts`: escritas por extenso
     // aqui, elas apareceriam na própria varredura de marca do portão de M7 e o reprovariam a
-    // partir do arquivo que existe para cobrá-lo. Ver `QA-05`.
-    const proibido = new RegExp(
-      [
-        ['fi', 'fa'].join(''),
-        ['copa do', 'mundo'].join(' '),
-        ['world', 'cup'].join(' '),
-        ['brasileir', '[ãa]o'].join(''),
-        ['liberta', 'dores'].join(''),
-        ['champions', 'league'].join(' '),
-      ].join('|'),
-      'i',
-    );
+    // partir do arquivo que existe para cobrá-lo. Ver `QA-05`. Desde o fechamento de `QA-05` a
+    // montagem mora em `lista_morta.ts` — este teste varre `src/ui/`, `marca.test.ts` varre
+    // `src/` inteiro, e duas cópias da lista sairiam de sincronia no dia em que um termo entrasse.
+    const proibido = padraoDaListaMorta();
 
     for (const caminho of arquivos) {
       expect(readFileSync(caminho, 'utf8'), caminho).not.toMatch(proibido);
@@ -1965,6 +1958,10 @@ describe('a série de revanches (T-32)', () => {
     // em dia, e é a própria frase que precisa dizer do que se trata.
     expect(frase).toMatch(/^Série:/);
     // Sem jargão nem termo da lista-morta de licenciamento: nome de país e número, só.
-    expect(frase).not.toMatch(/FIFA|Copa do Mundo|match|rematch|score/i);
+    // Os dois termos de marca vêm de `lista_morta.ts` (`QA-05`): escritos aqui por extenso, eles
+    // faziam a varredura do portão de M7 contar este arquivo. O jargão de interface, que portão
+    // nenhum conta, continua literal.
+    expect(frase).not.toMatch(padraoDaListaMorta());
+    expect(frase).not.toMatch(/match|rematch|score/i);
   });
 });
