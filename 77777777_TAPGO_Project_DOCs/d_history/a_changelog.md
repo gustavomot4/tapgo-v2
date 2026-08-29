@@ -7,6 +7,15 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-28] — `A-40` PASSOU: o link truncado nos dois aparelhos, e `T-38` fica COM CAMPO
+
+- **Skill:** guardrails-review, sessão de evolução. **Zero byte de código alterado** — esta sessão só registra o que o dono mediu na máquina real.
+- **Os quatro inteiros do portão, todos batendo:** no convidado, `descartadas por configuração: 1` e placar **`0/0`** (nunca `0/9`); no anfitrião, **0** toques e **0 s** de espera. É exatamente a saída (c)+(b) de `D-96`: a base inválida é recusada ANTES da 1ª tentativa, some do denominador, e o outro aparelho não queima os 180 s esperando um par que nunca vai tocar.
+- **O terceiro toque do card, o que impedia o portão de ser teatro:** com o link **ÍNTEIRO**, o botão do convidado ficou habilitado e a medição seguiu normal. Sem esta metade, `T-38` poderia ter fechado a porta de todo mundo e os quatro inteiros acima passariam mesmo assim.
+- **A pré-condição de publicar se provou sozinha, e vale como método:** `descartadas` é um contador que só nasceu em `D-96`. Lê-lo no aparelho não é indício de que o `medicao.html` no ar é o novo — é a prova. Portão que pede a variável que a decisão acabou de mover dispensa a confirmação separada do deploy.
+- **Registrado:** `A-40` fechada no BACKLOG · `T-38` **COM CAMPO** no CONTEXT e em [[estado_modulos]] · `QA-10` passa a citar o campo em [[d_qa]]. **Nenhum `D-NN` novo** — resultado de campo de card existente não é decisão, e o registro está a 285 caracteres do teto.
+- **Orçamentos:** CONTEXT **3.978 -> 3.920/4.000** (o card gastou menos do que a linha de "exige publicar" ocupava) · BACKLOG **19.257 -> 19.747/20.000**, e é o que ficou apertado: com `A-40` fechada, `arquivar.py --backlog` passa a ter três cards para arquivar. **Não arquivado nesta sessão** — é ato deliberado do dono.
+
 ## [2026-08-28] — `QA-37` FECHADO: a varredura de citações passa a enxergar o `CLAUDE.md` da raiz
 
 - **Skill:** debugging-diagnosis, a pedido do dono na mesma sessão em que `QA-37` foi aberto — a `guardrails-review` não conserta, e trocar de sessão para uma linha de `scripts/` custaria a releitura de contexto inteira. **Sem card `T-NN`, de propósito:** o BACKLOG está em 96% e `QA-37` já é o ID que rastreia.
