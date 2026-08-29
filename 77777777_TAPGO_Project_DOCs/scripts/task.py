@@ -51,19 +51,37 @@ TAREFAS = {
     "evidencia": ([PY, str(AQUI / "evidencia.py")],
                   "Mede o uso do kit neste projeto a partir do git e dos arquivos "
                   "(relata; use --json para acumular entre projetos).", False),
-    "test":      ([PY, str(AQUI / "test_check.py")],
+    # Fica na tabela para a ajuda poder marcá-lo com `-` em vez de calar (QA-42).
+    "test":      ([PY, str(AQUI / "test_check.py")],  # do repositório do KIT: não veio aqui
                   "Testes de regressão dos scripts (encoding, worktree, git ausente).", True),
 }
+
+
+def instalada(cmd) -> bool:
+    """O script desta tarefa veio nesta instalação?
+
+    A ajuda pergunta ao disco em vez de confiar numa lista fixa: `test` é do
+    repositório do KIT e nunca chega num projeto, e oferecê-lo com a mesma marca de
+    portão de `check` fazia a ajuda mentir até alguém rodar a tarefa (QA-42).
+    """
+    return Path(cmd[1]).exists()
 
 
 def ajuda() -> int:
     print(__doc__.splitlines()[0])
     print("\nTarefas:\n")
     largura = max(len(n) for n in TAREFAS)
-    for nome, (_, desc, portao) in TAREFAS.items():
-        marca = "*" if portao else " "
-        print(f"  {marca} {nome:<{largura}}  {desc}")
+    faltando = False
+    for nome, (cmd, desc, portao) in TAREFAS.items():
+        if instalada(cmd):
+            marca = "*" if portao else " "
+            print(f"  {marca} {nome:<{largura}}  {desc}")
+        else:
+            faltando = True
+            print(f"  - {nome:<{largura}}  {desc} NÃO RODA AQUI.")
     print("\n  * = reprova com código 1 quando encontra problema (serve de portão em CI).")
+    if faltando:
+        print("  - = o script é do repositório do KIT e não veio nesta instalação.")
     print("\nSem argumento, roda `check`.")
     return 0
 
@@ -77,9 +95,9 @@ def main() -> int:
         ajuda()
         return 2
     cmd = TAREFAS[pedido][0] + sys.argv[2:]
-    if not Path(cmd[1]).exists():
-        # Acontece de propósito com `test` num PROJETO: `test_check.py` testa os scripts do
-        # kit e fica no kit. Mensagem que explica vale mais que mensagem que só reclama.
+    if not instalada(cmd):
+        # Acontece de propósito com `test`: `test_check.py` é do repositório do KIT e não
+        # veio nesta instalação. Mensagem que explica vale mais que a que só reclama.
         print(f"A tarefa '{pedido}' não existe aqui: {Path(cmd[1]).name} não foi instalado.")
         if pedido == "test":
             print("   `test` é do repositório do KIT — ele testa os próprios scripts.")

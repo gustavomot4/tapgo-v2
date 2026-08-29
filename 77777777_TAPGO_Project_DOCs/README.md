@@ -27,16 +27,17 @@ Nenhuma ferramenta serve para tudo, e o kit fica mais útil quando você sabe on
 **A segunda:** a varredura de segredo é uma rede de arrasto, não uma garantia. Ela cobre 11 famílias de padrão e foi medida contra 8 formatos reais de vazamento (8/8, 0 falsos-positivos em 12 iscas) — mas um segredo em formato que ela não conhece passa. Ver *a auditoria (fica no kit)*, que mediu a versão anterior detectando **0 de 8**.
 
 ## Como começar
-1. **Projeto novo:** `python scripts/new_project.py ../meu-app --name "Meu App" --code src` — monta o esqueleto inteiro do padrão: pasta de docs, pasta de código, README, `.gitignore`, `.gitattributes`.
+1. **Projeto novo — no repositório do KIT, não aqui:** `python scripts/new_project.py ../meu-app --name "Meu App" --code src` monta o esqueleto inteiro do padrão (pasta de docs, pasta de código, README, `.gitignore`, `.gitattributes`). `new_project.py` **não vem na instalação**: ele é quem a cria, e o inventário de `scripts/` abaixo lista só o que veio. Num projeto já criado, este passo já aconteceu — comece pelo 2.
 2. `cd ../meu-app && git init && python 77777777_*_Project_DOCs/scripts/install_hook.py` — todo commit passa a rodar o `check.py`. Sem isso, os portões automáticos viram opcionais.
 3. Instale as skills de [[b_process/skills/README|skills/]] na sua ferramenta de IA (ou deixe os `SKILL.md` à mão para colar).
 4. Siga o [[a_roadmap|ROTEIRO]]. Ele começa com [[b_process/skills/context-bootstrap/SKILL|context-bootstrap]], que entrevista você (≤5 perguntas) e devolve o [[a_context_source|CONTEXT]] preenchido.
 5. Escolha o perfil da stack em [[a_generic|profiles/]] e cole os blocos no [[a_context_source|CONTEXT]].
 
 ## O que vem na caixa
-O kit **é** a pasta de documentação do padrão da equipe: `new_project.py` o instala num projeto
-como `77777777_<TAG>_Project_DOCs/` e monta o resto do esqueleto em volta. Regras de nome,
-estrutura e commit: [[e_repository_standard|padrão do repositório]].
+O kit **é** a pasta de documentação do padrão da equipe: `new_project.py` (no repositório do kit,
+como diz o passo 1) o instala num projeto como `77777777_<TAG>_Project_DOCs/` e monta o resto do
+esqueleto em volta. Regras de nome, estrutura e commit:
+[[e_repository_standard|padrão do repositório]].
 
 ```
 INDEX.md          ← nota-casa: mapa de navegação

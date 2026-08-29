@@ -7,6 +7,15 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-29] — `QA-42` fecha: os dois textos param de oferecer script que não veio (`D-102`)
+
+- **Skill:** debugging-diagnosis. Escopo: `README.md`, `scripts/task.py` e a prova nova `e_qa/test_qa42.py`. **Nada em `src/`** — nem `scripts/` nem o README entram no bundle, não há rebuild nem bump.
+- **Reprodução, antes de editar:** `python scripts/new_project.py ../meu-app --name "Meu App" --code src` (o passo 1 do `README.md:30`, copiado como está) morre com `No such file or directory`, exit 2; e `python scripts/task.py --help` lista `test` com a marca `*` — a mesma de `check` —, que a legenda define como portão de CI. A ausência só aparecia depois de rodar a tarefa.
+- **Causa:** os dois textos vieram do repositório do KIT, onde `new_project.py` e `test_check.py` existem. `new_project.py` é quem CRIA a instalação e por isso nunca está dentro dela; `test_check.py` testa os scripts do kit e fica no kit. A ajuda confiava numa tabela fixa em vez de perguntar ao disco — e a tabela foi escrita onde os arquivos existem.
+- **Correção, mínima e nos dois donos:** (1) o passo 1 do README passa a dizer, na própria linha, que o comando roda **no repositório do KIT** e que `new_project.py` não vem na instalação — quem já tem um projeto criado começa pelo 2; (2) `task.py` ganha `instalada(cmd)`, que a ajuda consulta por tarefa: o que não veio sai impresso com `-` e `NÃO RODA AQUI`, com legenda própria, e nunca com o `*` de portão. `main()` passa a usar a mesma função, então a lista e o despacho não podem divergir.
+- **Régua nova (`D-102`), porque "não citar" seria mentira pior:** o README precisa dizer de onde o projeto nasceu e o `task.py` precisa saber o que `test` chamaria. O critério não é *silêncio*, é **oferta**: nomear pode, oferecer não — e a menção só escapa quando a própria linha declara que aquele script é do KIT e não veio. É o mesmo par de sentidos de `QA-41`, agora sobre oferta em vez de inventário.
+- **Portão:** `e_qa/test_qa42.py` — a diferença simétrica entre os scripts oferecidos nos dois textos e `git ls-files scripts/` tem de ser vazia **nos dois sentidos**, e a ajuda tem de marcar o ausente. Verde agora (7 versionados, 0 ofertas mortas); **falha na versão anterior** (`git stash` dos dois arquivos): `['new_project.py', 'test_check.py']` oferecidos e ausentes, mais a ajuda sem a marca. `python scripts/check.py` exit 0 com os **mesmos dois** avisos velhos (`D-64`, `microservice-sync`).
+
 ## [2026-08-29] — `QA-43` fecha: o `check.py` passa a medir "vivo" com a régua do `arquivar.py` (`D-101`)
 
 - **Skill:** debugging-diagnosis. Escopo: `scripts/check.py` e a prova nova `e_qa/test_qa43.py`. **Nada em `src/`** — `scripts/` não entra no bundle, não há rebuild nem bump.
