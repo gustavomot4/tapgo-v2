@@ -17,6 +17,7 @@ status: atual
 - **`a_context/a_context_source.md`: 3.919 -> 3.578.** A leva de cards de conferência (`A-27`..`A-32`, `A-35`..`A-40`) saiu da linha "Pronto" para [[estado_modulos]] — o mesmo destino que `D-74` já dera ao histórico de módulos. Nenhum ID sumiu.
 - **`QA-38` (BAIXO, aberto):** o `d_qa.md` é o único tema de `a_context/` fora do Mapa de leitura do CONTEXT — aviso de pé desde `D-50`. Registrado, não consertado: a linha custa orçamento do arquivo que esta sessão acabou de encolher (regra 4).
 - **Nenhum teto subiu.** `D-94` teve de comprar essa saída para o BACKLOG ontem; hoje nenhum dos quatro precisou. Números em `e_qa/d97_tres_orcamentos.md`.
+- **`QA-39` (MÉDIO, aberto):** ao conferir as citações do arquivamento, três documentos vivos ainda tratam `Q-11` como aberta e travando o sorteio no `online` — `a_context/b_plan.md:349`, `a_context/online_p2p.md:107` e o próprio card `T-17`, que é o PRÓXIMO passo do quadro. `D-73` respondeu `Q-11` em 2026-08-19. Registrado, não consertado: reescrever o card muda o escopo de `T-17`, e isso é da sessão que for implementá-lo.
 - **Decisões:** D-97.
 
 ## [2026-08-28] — `QA-35` FECHADO: a caixa de `A-30`, o `Próximo:` que apontava card fechado, e o portão que ainda falava de `QA-04`/`QA-06`

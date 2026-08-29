@@ -32,7 +32,7 @@ Partida de ~1 minuto: contra a CPU, contra alguém no mesmo aparelho, ou **por l
 - **Em andamento (máx 1):** _(vazio)_
 - **Próximo:** `T-17` · `D-83` **FECHADO — 10 de 10**
 - **Bloqueado/pendente:** _(nada)_ — `D-97`: registro **15.6k**/20k · BACKLOG **13.5k**/20k · QA **3.4k**/8k; subir teto segue REPROVADO
-- **Questões abertas:** Q-08, Q-09, Q-13 · **QA abertos:** QA-07, QA-17, QA-27, QA-29, QA-34 e **QA-38** · respondidas e fechados: [[decisions_archive]]
+- **Questões abertas:** Q-08, Q-09, Q-13 · **QA abertos:** QA-07, QA-17, QA-27, QA-29, QA-34, **QA-38** e **QA-39** · respondidas e fechados: [[decisions_archive]]
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)
 - [[portao_de_aceite]] — **antes de fechar tarefa, declarar etapa fechada ou entregar**
