@@ -66,11 +66,14 @@ docs/             auditoria do próprio KIT — não vai para projetos novos
 LICENSE           MIT
 .github/workflows portão rodando em Linux e Windows a cada push
 scripts/
-  task.py         ponto de entrada único: check · check-all · test · hook
+  task.py         ponto de entrada único: check · check-all · strict · hook · escopo ·
+                  portao · unhook · arquivar · arquivar-backlog · evidencia
   check.py        o portão de higiene (18 falhas · 20 avisos)
-  test_check.py   testes de regressão dos scripts — só stdlib
-  install_hook.py instala o pre-commit
-  new_project.py  cria projeto novo · `--upgrade` atualiza o processo de um existente
+  install_hook.py instala e remove o pre-commit e as duas travas de hook
+  escopo_hook.py  trava de escopo: recusa escrita fora da pasta do módulo em andamento
+  portao_hook.py  trava do pulo: `--no-verify` só passa com `SEM-PORTAO: <motivo>`
+  arquivar.py     lista o que nenhum `.md` vivo cita, no DECISIONS e (`--backlog`) no BACKLOG
+  evidencia.py    mede o uso do kit neste projeto a partir do git e dos arquivos
 ```
 Projeto que roda continuamente ganha ainda um `RUNBOOK.md` na entrega (exigido pela Fase 6).
 

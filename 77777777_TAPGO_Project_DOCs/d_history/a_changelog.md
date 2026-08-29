@@ -7,6 +7,14 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-29] — `QA-41` fecha: o bloco `scripts/` do README passa a listar os arquivos que existem
+
+- **Skill:** artifact-consistency. Nenhum byte em `src/` nem em `scripts/`; só `README.md` e os registros.
+- **O defeito:** o inventário de `scripts/` (README, linha 68) descrevia o repositório do KIT, não esta instalação. Listava `test_check.py` e `new_project.py`, que `git log --all` mostra nunca terem existido aqui, e omitia **quatro** arquivos versionados: `arquivar.py`, `evidencia.py`, `escopo_hook.py` e `portao_hook.py` — metade da pasta. Achado ao fechar `QA-29`, registrado e não consertado de carona (regra 4).
+- **O que ficou no lugar:** os **7** arquivos de `git ls-files scripts/`, um por linha, cada linha dizendo o que o arquivo faz — tirado do docstring de cada um, não do que o README lembrava. As duas travas de hook (`escopo_hook.py`, `portao_hook.py`) aparecem no README pela primeira vez. A linha do `task.py` deixou de mostrar uma amostra de quatro tarefas e passa a nomear as **10** que rodam aqui; `test` fica de fora de propósito, porque é a única que não roda (o `task.py` já a recusa com o motivo).
+- **Portão, nos dois sentidos:** cada arquivo listado existe em disco, e cada arquivo versionado em `scripts/` está listado — um lado só deixaria a omissão passar de novo, que foi exatamente metade deste defeito. `python scripts/check.py` verde (exit 0, os dois avisos velhos: `D-64` prometido no changelog e `microservice-sync` sem sessão).
+- **Registrado, não consertado (regra 4):** `QA-42` — `README.md:30` ainda manda rodar `new_project.py` no passo 1 do "como começar", e a ajuda do `task.py` ainda lista `test` marcada com `*` (portão de CI) sem dizer que ela não roda nesta instalação. Mesma família do defeito fechado aqui, fora do bloco que `QA-41` delimitou.
+
 ## [2026-08-29] — `QA-29` fecha: os três textos do portão passam a dizer o número contado (`D-100`)
 
 - **Skill:** guardrails-review. Nenhum byte em `src/`; só `README.md`, o docstring de `scripts/check.py` e os registros.
