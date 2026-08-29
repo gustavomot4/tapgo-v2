@@ -21,7 +21,8 @@ status: atual
 ## Os arquivos do dia a dia
 | Arquivo | Para quê |
 |---|---|
-| [[f_glossary_and_primer\|PRIMER]] | **comece aqui:** para que serve, o ciclo e o glossário dos termos |
+| [[g_primeiros_passos\|PRIMEIROS PASSOS]] | **quem chegou agora começa aqui:** a primeira hora, o que ignorar, e quando NÃO usar o kit |
+| [[f_glossary_and_primer\|PRIMER]] | para que serve, o ciclo e o glossário dos termos |
 | [[a_roadmap|ROTEIRO]] | o caminho do dia 1 à entrega, fase por fase |
 | [[CLAUDE]] | contrato de leitura do agente — a ferramenta carrega sozinha |
 | [[a_context_source|CONTEXT]] | contexto-fonte (≤4.000 chars) — o único que TODA sessão carrega |
@@ -58,5 +59,13 @@ Cada um é uma skill instalável, com regras e portão próprios. **Uma skill po
 `python scripts/task.py check` — reprova orçamento estourado, estado duplicado, WIP acima do declarado, skill fora do esquema, link quebrado, segredo versionado, ID inexistente e tarefa apontando módulo que não existe. Com o hook instalado, roda em todo commit.
 
 Antes de entregar, `python scripts/task.py check-all`: no dia a dia a varredura de segredo olha só os 30 commits recentes, e o script diz qual alcance usou.
+
+`python scripts/task.py evidencia` mede, do git e dos arquivos, o que o kit produziu neste projeto: ocupação dos orçamentos, quantas decisões foram **rejeitadas**, quantas questões você respondeu, achados por gravidade e por passagem, quais skills dispararam, e se as sessões entregaram delta ou reescreveram arquivo inteiro. Ele fecha declarando o que **não** mede — a começar por "o kit ajudou?", que exigiria o mesmo projeto feito sem ele. Com `--json`, a saída acumula entre projetos: um projeto é relato, vários viram medida.
+
+`python scripts/task.py escopo` liga a **trava de escopo**: com uma tarefa em andamento que declara `**Módulo:**`, e o módulo declarando `**Pasta:**` no PLANO, escrita fora dessa pasta é recusada pelo agente. É a regra 2 do [[CLAUDE]] deixando de ser prosa. Falha aberta em toda dúvida, e diz por quê. Desligar: `escopo --remover`.
+
+O projeto que precisar de **teto maior** ou de um **registro extra de IDs** (por exemplo os `QA-NN` em `a_context/d_qa.md`) declara isso em **`.kit-config.json`**, no vault — e nunca editando o `scripts/check.py`. Editar o portão congela o projeto na versão em que a edição foi feita: ele para de receber as correções do kit e passa a medir a si mesmo com uma régua que não é mais a régua. Formato: `{"tetos": {"a_context/c_decisions.md": 20000}, "registros": ["a_context/d_qa.md"]}`. Subir teto continua exigindo um `D-NN` que registre a elevação.
+
+`python scripts/task.py portao` liga a **trava do pulo**: `git commit --no-verify` sem `SEM-PORTAO: <motivo>` na mensagem é recusado. Pular o portão continua permitido — pular em silêncio, não, porque era o único contorno que não deixava rastro nem para a medição do próprio kit. Com o marcador, o motivo fica no histórico e o `evidencia` conta os pulos. Desligar: `portao --remover`.
 
 `python scripts/task.py test` roda os testes de regressão dos próprios scripts — os mesmos que o CI roda em Linux **e Windows**, porque os dois bugs de encoding que o kit já pagou não reproduzem no Linux.

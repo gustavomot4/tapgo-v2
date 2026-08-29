@@ -1,0 +1,22 @@
+{
+  "tetos": {
+    "a_context/c_decisions.md": 20000,
+    "a_context/d_qa.md": 8000,
+    "b_process/c_backlog.md": 20000
+  },
+  "registros": [
+    "a_context/d_qa.md"
+  ],
+  "medir_sem_padding": true,
+  "linha_max": {
+    "limite": 400,
+    "isentas": [
+      "D-75",
+      "D-76",
+      "QA-20",
+      "QA-21",
+      "QA-27"
+    ]
+  },
+  "candidatas": "nao_citadas"
+}

@@ -35,8 +35,22 @@ TAREFAS = {
                   "Igual ao check, mas avisos também reprovam.", True),
     "hook":      ([PY, str(AQUI / "install_hook.py")],
                   "Instala o pre-commit — sem isto o portão só roda quando você lembra.", False),
+    "escopo":    ([PY, str(AQUI / "install_hook.py"), "--escopo"],
+                  "Liga a trava de escopo: escrita fora da pasta do módulo em andamento é "
+                  "recusada (Claude Code). Desligar: `escopo --remover`.", False),
+    "portao":    ([PY, str(AQUI / "install_hook.py"), "--portao"],
+                  "Liga a trava do pulo: `git commit --no-verify` sem 'SEM-PORTAO: <motivo>' "
+                  "é recusado (Claude Code). Desligar: `portao --remover`.", False),
     "unhook":    ([PY, str(AQUI / "install_hook.py"), "--remover"],
                   "Remove o pre-commit deste kit.", False),
+    "arquivar":  ([PY, str(AQUI / "arquivar.py")],
+                  "Lista as decisões que ninguém vivo cita (relata; só escreve com --aplicar).", False),
+    "arquivar-backlog": ([PY, str(AQUI / "arquivar.py"), "--backlog"],
+                  "Card FECHADO vira ponteiro com ID e Módulo; íntegra vai para e_qa/. "
+                  "É a saída da checagem 15 (relata; só escreve com --aplicar).", False),
+    "evidencia": ([PY, str(AQUI / "evidencia.py")],
+                  "Mede o uso do kit neste projeto a partir do git e dos arquivos "
+                  "(relata; use --json para acumular entre projetos).", False),
     "test":      ([PY, str(AQUI / "test_check.py")],
                   "Testes de regressão dos scripts (encoding, worktree, git ausente).", True),
 }

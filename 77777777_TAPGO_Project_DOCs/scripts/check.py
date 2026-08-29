@@ -14,24 +14,27 @@ FALHAS (código 1)
   2. Registro de decisões inchado       8. Segredo versionado (árvore + histórico)
   3. Fonte única (contexto/plano/dec.)  9. .gitignore sem cobertura mínima de segredo
   4. WIP acima do declarado            10. IDs D-/Q-/QA- citados que não existem
-  5. Cruft óbvio                       11. IDs duplicados entre os DOIS registros
+  5. Cruft óbvio                       11. IDs duplicados no DECISIONS
   6. Skill sem name/description        12. "Em andamento" divergindo entre BACKLOG e CONTEXT
                                        13. Tarefa apontando módulo que não existe no PLANO
                                        14. Skill fora do esquema (Contexto/Limites/Saída)
-                                       15. Registro de QA inchado
-                                       16. Linha de registro acima de 400 medidos
+                                       15. BACKLOG inchado (card fechado nunca arquivado)
+                                       16. Teto de orçamento elevado sem registro no DECISIONS
+                                       17. Registro declarado em .kit-config.json acima do teto
+                                       18. Linha de registro acima do limite declarado
 
 AVISOS (não reprovam; com --avisos-reprovam, reprovam)
   frontmatter ausente · placeholders · templates em rascunho · nota órfã ·
   arquivo grande não varrido · varredura de histórico que não rodou ·
   portão automático (pre-commit) não instalado · módulo do PLANO sem tarefa ·
   description de skill sem fronteira negativa · CONTEXT perto do teto ·
-  DECISIONS perto do teto · QA perto do teto · tema de a_context/ fora do mapa de leitura ·
+  DECISIONS perto do teto · BACKLOG perto do teto · registro declarado perto do teto ·
+  tema de a_context/ fora do mapa de leitura ·
   sessão sem skill declarada no changelog · ocupação declarada divergindo do arquivo ·
-  questão do dono ausente do CONTEXT · achado grave aberto há mais de 14 dias
-
-Os orçamentos são medidos SEM o padding de alinhamento das tabelas (`medida()`, `D-50`):
-teto que conta espaço de alinhamento mede o formatador do editor, não o texto.
+  questão do dono ausente do CONTEXT ·
+  achado vencido (7 dias p/ CRÍTICO e ALTO, 15 p/ MÉDIO, BAIXO não vence) ·
+  ID prometido no CHANGELOG e nunca registrado ·
+  skill declarada responsável no PLANO que nunca rodou
 
 O README declara quantos itens de checklist existem e quantos esta máquina julga.
 Esse número é cobrado por `test_check.py` — a frase mais honesta do kit não pode
@@ -43,6 +46,7 @@ Marque uma linha com `checar:ignore` para isentá-la da varredura de segredo
 import re
 import subprocess
 import sys
+from collections import Counter
 from datetime import date
 from pathlib import Path
 
@@ -127,16 +131,11 @@ TEM_GIT = DIR_HOOKS is not None
 # Os caminhos são relativos à raiz da pasta de documentação (o vault).
 CONTEXTO = "a_context/a_context_source.md"      # a verdade: estado, ≤4.000 chars
 PLANO = "a_context/b_plan.md"                   # plano congelado
-DECISOES = "a_context/c_decisions.md"           # D-NN / Q-NN, append-only
-# `A-13`/`D-50`: os QA-NN saíram do DECISOES. Motivo medido: três registros de ciclo de vida
-# diferente dividiam um orçamento só, e o de QA crescia 10,8× contra 3,6× do de decisões —
-# com 6 achados ABERTOS, que por definição não se arquivam. Registro separado, orçamento
-# separado; os IDs continuam únicos entre os DOIS arquivos (ver bloco 10/11).
-QA_REG = "a_context/d_qa.md"                    # QA-NN, append-only
+DECISOES = "a_context/c_decisions.md"           # D-NN / Q-NN / QA-NN, append-only
 BACKLOG = "b_process/c_backlog.md"              # fonte única de tarefas
+SKILLS = "b_process/skills"                     # os agentes instaláveis
 CHANGELOG = "d_history/a_changelog.md"          # histórico datado; nenhuma sessão carrega
 ARQUIVO_MORTO = "e_qa/decisions_archive.md"     # íntegra das linhas retiradas da tabela
-SKILLS = "b_process/skills"                     # os agentes instaláveis
 # Pastas do vault: só nelas "nota órfã" faz sentido. Markdown do próprio app
 # (content/, docs de pacote, README de módulo) não é nota e não bloqueia commit.
 PASTAS_VAULT = {"a_context", "b_process", "c_technical_docs", "d_history", "e_qa"}
@@ -144,6 +143,184 @@ PASTAS_VAULT = {"a_context", "b_process", "c_technical_docs", "d_history", "e_qa
 # `docs/` entra aqui porque é onde mora a auditoria do PRÓPRIO kit (ver e_qa/README.md):
 # ela cita D-NN e QA-NN dos projetos-cobaia, que nunca existirão no DECISIONS deste repo.
 PASTAS_HISTORICAS = {"d_history", "e_qa", "docs"}
+
+# --- Orçamentos ---------------------------------------------------------------------
+# A tese central do kit é "orçamento cobrado por script". Ela foi FALSEADA pelo próprio
+# kit no primeiro projeto real: o backlog chegou a 191.591 caracteres (1.596% do teto) e
+# o registro de decisões a 157%, DEPOIS de o teto dele ter sido elevado de 12.000 para
+# 20.000 dentro do projeto. O portão não impediu nada — porque o teto que aperta é
+# editável por quem está sendo apertado, e a edição não deixava rastro nenhum.
+#
+# Agora deixa. `TETOS_PADRAO` é o kit e não se mexe; `TETOS` é o projeto e pode subir —
+# só que subir sem registrar reprova (FALHA 16). Um limite que sobe em silêncio não é
+# limite, é lembrete.
+TETOS_PADRAO = {CONTEXTO: 4000, DECISOES: 12000, BACKLOG: 12000}
+
+# O projeto NÃO sobe o teto editando este arquivo. Ele declara em `.kit-config.json`, no
+# vault, e o `check.py` continua byte a byte igual ao do kit.
+#
+# Isto nasceu de um custo medido, não de gosto: o primeiro projeto real precisou de um teto
+# maior e de um TERCEIRO registro (os `QA-NN` saíram do DECISIONS para `a_context/d_qa.md`),
+# e a única saída que o kit oferecia era editar o `check.py`. Resultado: o portão do projeto
+# virou um FORK do portão do kit — 8 versões atrasado, com uma cegueira já corrigida aqui e
+# marcado como "PROTEGIDO" em toda atualização. O projeto passou a medir a si mesmo com uma
+# régua que não era mais a régua. Customização por edição de script é dívida com juros.
+#
+#   {"tetos": {"a_context/c_decisions.md": 20000, "a_context/d_qa.md": 8000},
+#    "registros": ["a_context/d_qa.md"],
+#    "medir_sem_padding": true,
+#    "linha_max": {"limite": 400, "isentas": ["D-75", "D-76"]},
+#    "candidatas": "nao_citadas"}
+#
+# `tetos`      — teto em caracteres, por caminho (relativo ao vault).
+# `registros`  — arquivos que também DEFINEM IDs D-/Q-/QA-, além do DECISIONS.
+# `medir_sem_padding` — mede o CONTEÚDO das tabelas, sem o padding de alinhamento.
+# `linha_max`  — {"limite": N, "isentas": [ID, ...]}: linha de registro acima de N reprova.
+# `candidatas` — "mais_antigas" (padrão) | "nao_citadas": critério do que arquivar.
+#
+# Subir teto continua exigindo um D-NN (FALHA 16). O que muda é onde a elevação mora: num
+# dado versionado, e não numa linha de código que ninguém consegue atualizar depois.
+#
+# As três últimas chaves nasceram do MESMO projeto e do MESMO custo que as duas primeiras.
+# Ele havia escrito no fork três regras que o kit não tinha; o `--upgrade` do v13.10 devolveu
+# o portão do kit e as três sumiram SEM UMA LINHA DE AVISO. Duas delas seguravam hipótese de
+# auditoria: sem `medir_sem_padding` o registro passou de 18.858 para 19.422 medidos sem uma
+# palavra nova (um formatador de Markdown já somou 2.048 de padding puro naquele arquivo, e
+# o teto é 20.000); sem `candidatas` o aviso voltou a apontar as REJEITADAS, que são a
+# lista-morta que a fase de evolução varre. Regra que o projeto precisa e o kit não tem vira
+# fork; fork vira régua que não é mais a régua. Configuração é a saída, e é por isso que
+# CHAVE DESCONHECIDA REPROVA (abaixo): a chave que some calada é a doença, não o remédio.
+CONFIG = ".kit-config.json"
+
+# O contrato inteiro num lugar só. Chave fora daqui não é ignorada: reprova.
+CHAVES_CONFIG = {"tetos", "registros", "medir_sem_padding", "linha_max", "candidatas"}
+CANDIDATAS_VALIDAS = {"mais_antigas", "nao_citadas"}
+
+
+def _config_do_projeto() -> dict:
+    alvo = raiz / CONFIG
+    if not alvo.exists():
+        return {}
+    import json as _json
+    try:
+        dados = _json.loads(alvo.read_text(encoding="utf-8"))
+    except (ValueError, OSError) as erro:
+        # Config quebrada REPROVA, e não "vale o padrão em silêncio": teto que o dono acha
+        # que declarou e o script ignorou é pior que teto nenhum.
+        falhas.append(f"{CONFIG} não é JSON válido ({erro}) — corrija antes de commitar.")
+        return {}
+    if not isinstance(dados, dict):
+        falhas.append(f"{CONFIG} precisa ser um objeto JSON.")
+        return {}
+    return dados
+
+
+_cfg = _config_do_projeto()
+TETOS = dict(TETOS_PADRAO)
+for _arq, _valor in (_cfg.get("tetos") or {}).items():
+    if isinstance(_valor, int) and _valor > 0:
+        TETOS[_arq] = _valor
+    else:
+        falhas.append(f"{CONFIG}: teto de {_arq} precisa ser um inteiro positivo (veio {_valor!r}).")
+# Registros extras: onde mais um ID pode NASCER. Sem isto, um projeto que move os `QA-NN`
+# para arquivo próprio vê todos eles virarem "ID fantasma" — e a saída que sobrava era
+# editar o portão, que é exatamente o que esta configuração existe para evitar.
+REGISTROS_EXTRAS = [r for r in (_cfg.get("registros") or []) if isinstance(r, str)]
+
+# Chave desconhecida REPROVA, pelo mesmo motivo que JSON quebrado reprova: o dono acha que
+# declarou, o script ignora, e o verde continua saindo por cima de uma regra que nao existe.
+# Um erro de digitacao em `linha_max` custa exatamente o que custou o `--upgrade` que apagou
+# a regra sem avisar. Falso verde e o pior estado do portao: pior que vermelho, e pior que
+# portao nenhum, porque este mente com autoridade.
+_desconhecidas = sorted(set(_cfg) - CHAVES_CONFIG)
+if _desconhecidas:
+    falhas.append(
+        f"{CONFIG}: chave(s) que este kit nao conhece: {', '.join(_desconhecidas)} - "
+        f"as validas sao {', '.join(sorted(CHAVES_CONFIG))}. Chave ignorada em silencio "
+        "vira regra que o dono acha que tem e nao tem; corrija o nome ou remova a chave."
+    )
+
+# `medir_sem_padding` (o CONTEUDO, sem o alinhamento das tabelas). Medido no primeiro
+# projeto real em 2026-08-12: ao salvar o registro de decisoes, um formatador de Markdown
+# alinhou as colunas e somou 2.048 caracteres de padding PURO - 17% do arquivo, sem uma
+# palavra nova. O portao passou a reprovar num commit que so respondia uma questao, e foi
+# preciso desalinhar tudo a mao para voltar. Orcamento que conta espaco de alinhamento mede
+# o FORMATADOR do editor, nao o texto, e some ou volta conforme quem salvou por ultimo.
+# Fica OPCIONAL, e o padrao continua `len()`: a regua que conta tudo e a mais facil de
+# explicar, e projeto sem tabela em registro nao paga nada por ela. Quem usa, declara.
+SEM_PADDING = bool(_cfg.get("medir_sem_padding"))
+
+
+def medida(texto: str) -> int:
+    """Regua dos orcamentos. Com `medir_sem_padding`, as celulas viram `a|b|c` antes de
+    contar - o mesmo conteudo mede igual em qualquer editor. So mede; NUNCA reescreve o
+    arquivo: o alinhamento continua livre para quem edita."""
+    if not SEM_PADDING:
+        return len(texto)
+    linhas = []
+    for linha in texto.split("\n"):
+        if linha.lstrip().startswith("|"):
+            linha = re.sub(r" *\| *", "|", linha.strip())
+        linhas.append(linha)
+    return len("\n".join(linhas))
+
+
+# `linha_max`: o teto do ARQUIVO so morde quando ja e tarde, e quem esta no meio de uma
+# sessao corta o que estiver a mao - nao o que devia sair. O custo real esta na linha que
+# carrega a INTEGRA da evidencia em vez de delega-la a uma nota. Medido no mesmo projeto:
+# 141, 175 e 238 quando a linha delega; 922 e 978 quando nao delega.
+# `isentas` e lista CONGELADA, nao janela movel: linha que ja estava viva quando o limite
+# foi adotado nao pode ser reescrita num registro append-only, e checagem que nasce vermelha
+# em linha que ninguem PODE consertar ensina a ignorar o script. A lista mora no dado
+# versionado e aparece no diff - ID novo ali e decisao do dono, nao descuido.
+LINHA_MAX = None
+ISENTAS_LINHA = ()
+_lm = _cfg.get("linha_max")
+if isinstance(_lm, dict):
+    _limite = _lm.get("limite")
+    if isinstance(_limite, int) and _limite > 0:
+        LINHA_MAX = _limite
+    else:
+        falhas.append(
+            f"{CONFIG}: linha_max.limite precisa ser um inteiro positivo (veio {_limite!r})."
+        )
+    _isentas = _lm.get("isentas") or []
+    if isinstance(_isentas, list) and all(isinstance(i, str) for i in _isentas):
+        ISENTAS_LINHA = tuple(_isentas)
+    else:
+        falhas.append(
+            f"{CONFIG}: linha_max.isentas precisa ser uma lista de IDs (veio {_isentas!r})."
+        )
+elif _lm is not None:
+    falhas.append(
+        f'{CONFIG}: linha_max precisa ser um objeto {{"limite": N, "isentas": [...]}} '
+        f"(veio {_lm!r})."
+    )
+
+# `candidatas`: qual criterio o aviso do DECISIONS usa para apontar o que arquivar.
+# "mais_antigas" e o padrao do kit. "nao_citadas" sai do criterio do projeto que decidiu
+# que deixa a tabela quem NENHUM `.md` vivo cita - e existe porque o padrao, num projeto que
+# preserva as REJEITADAS de proposito, aponta justamente para elas: a lista-morta que a fase
+# de evolucao varre sem abrir o arquivo. Aviso que manda apagar a memoria de rejeicao ensina
+# a re-propor o que ja morreu, que e o oposto do que o registro existe para fazer.
+CANDIDATAS = _cfg.get("candidatas", "mais_antigas")
+if CANDIDATAS not in CANDIDATAS_VALIDAS:
+    falhas.append(
+        f"{CONFIG}: candidatas precisa ser "
+        f"{' ou '.join(sorted(CANDIDATAS_VALIDAS))} (veio {CANDIDATAS!r})."
+    )
+    CANDIDATAS = "mais_antigas"
+# Avisar a 90% do teto em vez de só reprovar a 100%: quando o teto estoura, quem escreve
+# está no meio de uma sessão de trabalho e corta o que estiver à mão — não o que devia sair.
+PERTO = 0.90
+
+
+def mil(n: int) -> str:
+    """12000 -> '12.000'. O texto do portão sempre imprimiu assim; com o teto virando
+    variável, a formatação precisou virar função em vez de literal escrito à mão."""
+    return f"{n:,}".replace(",", ".")
+
+
 # ----------------------------------------------------------------------------------
 
 # `.pytest_cache` e `.mypy_cache` entram porque um `README.md` gerado por ferramenta dentro
@@ -180,6 +357,8 @@ def alvos_de_varredura():
 
 
 def sem_codigo(texto):
+    """Sem bloco cercado E sem trecho entre crases. Use quando o exemplo entre crases NÃO
+    deve contar — o caso do wikilink de demonstração, que não é link de verdade."""
     texto = re.sub(r"```.*?```", "", texto, flags=re.S)
     return re.sub(r"`[^`\n]*`", "", texto)
 
@@ -187,36 +366,14 @@ def sem_codigo(texto):
 def sem_bloco_de_codigo(texto):
     """Só o bloco cercado. É o filtro certo para a checagem de ID (10).
 
-    `sem_codigo` também apaga a crase SIMPLES, e para wikilink isso está certo: `[[x]]`
-    dentro de crase é exemplo, não link. Para ID é o contrário — medido: 300 de 341
-    citações de ID estavam ENTRE CRASES, porque a casa escreve `D-13`, não D-13.
-    Filtrando por `sem_codigo`, a checagem enxergava 12% das citações e imprimia verde
-    sobre os outros 88%: portão que não olha é pior que portão que não existe, porque
-    o verde continua saindo.
+    Medido no primeiro projeto real construído com o kit: 300 de 341 citações de ID
+    estavam ENTRE CRASES — a casa escreve `D-13`, não D-13. Como a checagem 10 filtrava
+    por `sem_codigo`, ela enxergava 12% das citações e imprimia verde sobre os outros 88%.
+    É a mesma classe de defeito que o comentário da checagem 13 já nomeava ("checagem que
+    emudece é pior que checagem que não existe"): a lição estava escrita neste arquivo e
+    não tinha sido aplicada duas checagens acima.
     """
     return re.sub(r"```.*?```", "", texto, flags=re.S)
-
-
-def medida(texto):
-    """Tamanho do CONTEÚDO, sem o padding de alinhamento das tabelas (`A-13`/`D-50`).
-
-    Medido em 2026-08-12: ao salvar o `c_decisions.md`, um formatador de Markdown alinhou
-    as colunas e somou **2.048 caracteres de padding puro** — 17% do arquivo, sem uma
-    palavra nova. O arquivo saltou de 11.470 para 13.806 e o portão passou a REPROVAR num
-    commit que só respondia uma questão; foi preciso desalinhar tudo à mão para voltar.
-
-    Orçamento que conta espaço de alinhamento mede o FORMATADOR do editor, não o texto —
-    e some ou volta conforme quem salvou por último. Aqui as células viram `a|b|c` antes
-    de contar, então o mesmo conteúdo mede igual em qualquer editor.
-
-    Só mede; NUNCA reescreve o arquivo. O alinhamento continua livre para quem edita.
-    """
-    linhas = []
-    for linha in texto.split("\n"):
-        if linha.lstrip().startswith("|"):
-            linha = re.sub(r" *\| *", "|", linha.strip())
-        linhas.append(linha)
-    return len("\n".join(linhas))
 
 
 # Notas do repositório inteiro: o padrão deixa CLAUDE.md e README.md fora do vault,
@@ -227,126 +384,89 @@ corpo = {p: p.read_text(encoding="utf-8") for p in notas}
 # 1. Orçamento do contexto-fonte (regra 1)
 ctx = raiz / CONTEXTO
 texto_ctx = corpo.get(ctx, "")
-n_ctx = medida(texto_ctx)
 if not ctx.exists():
     falhas.append(f"{CONTEXTO} não encontrado — é onde o padrão do repositório põe o contexto-fonte.")
-elif n_ctx > 4000:
+elif medida(texto_ctx) > TETOS[CONTEXTO]:
     falhas.append(
-        f"{CONTEXTO} com {n_ctx} caracteres (orçamento: 4.000). "
+        f"{CONTEXTO} com {medida(texto_ctx)} caracteres (orçamento: {mil(TETOS[CONTEXTO])}). "
         f"Corte: detalhe -> a_context/<tema>.md, decisão -> {DECISOES}, datado -> d_history/a_changelog.md."
     )
-elif n_ctx > 3600:
-    # Avisar a 90% em vez de só reprovar a 100%: quando o teto estoura, quem escreve
-    # está no meio de uma sessão de trabalho e vai cortar o que estiver à mão — não o
-    # que devia sair. O aviso dá a chance de mover um tema com calma, antes da parede.
+elif medida(texto_ctx) > TETOS[CONTEXTO] * PERTO:
+    # O aviso dá a chance de mover um tema com calma, antes da parede (ver PERTO).
     avisos.append(
-        f"{CONTEXTO} com {n_ctx}/4.000 caracteres ({100*n_ctx//4000}%) — "
+        f"{CONTEXTO} com {medida(texto_ctx)}/{mil(TETOS[CONTEXTO])} caracteres "
+        f"({100*medida(texto_ctx)//TETOS[CONTEXTO]}%) — "
         "mova um tema para a_context/<tema>.md agora, não na sessão em que estourar."
     )
 
-# 2. Registros inchados (projeto longo). São DOIS desde `D-50`, com tetos separados:
-#    decisão permanente envelhece devagar e arquiva; achado de QA ABERTO não arquiva nunca.
-#    Somar os dois num teto só fazia o segundo comer o orçamento do primeiro.
-qa_reg = raiz / QA_REG
-texto_qa = corpo.get(qa_reg, "")
-n_qa = medida(texto_qa)
-if texto_qa and n_qa > 8000:
-    falhas.append(
-        f"{QA_REG} acima de 8.000 caracteres — feche ou arquive achados em "
-        "e_qa/decisions_archive.md (IDs preservados) e deixe um ponteiro."
-    )
-elif texto_qa and n_qa > 6400:
-    avisos.append(
-        f"{QA_REG} com {n_qa}/8.000 caracteres ({100*n_qa//8000}%) — "
-        "achado FECHADO vira ponteiro; achado aberto fica, e por isso o corte tem de ser nos fechados."
-    )
-
+# 2. Registro de decisões inchado (projeto longo)
 dec = raiz / DECISOES
 texto_dec = corpo.get(dec, "")
-n_dec = medida(texto_dec)
-if texto_dec and n_dec > 20000:
+if texto_dec and medida(texto_dec) > TETOS[DECISOES]:
     falhas.append(
-        f"{DECISOES} acima de 20.000 caracteres — arquive SUPERSEDIDAS/rejeitadas antigas "
-        "em e_qa/decisions_archive.md (IDs preservados) e deixe um ponteiro. Se o corte de "
-        "`D-43` estiver esgotado, o teto é que precisa de decisão nova (`D-82`)."
+        f"{DECISOES} acima de {mil(TETOS[DECISOES])} caracteres — arquive SUPERSEDIDAS/rejeitadas "
+        "antigas em e_qa/decisions_archive.md (IDs preservados) e deixe um ponteiro."
     )
-elif texto_dec and n_dec > 18000:
+elif texto_dec and medida(texto_dec) > TETOS[DECISOES] * PERTO:
     # O README declarava esta fraqueza com todas as letras: "o arquivamento é manual e
     # ninguém lembra". Portão que só roda quando alguém lembra não é portão — foi o
     # argumento do QA-04, e valia contra o próprio kit. O script não arquiva (a decisão
     # é do dono); ele avisa antes da parede e já aponta os candidatos.
-    # `D-63`: as candidatas saem do critério de `D-43` — sai da tabela quem NENHUM `.md` vivo
-    # cita. Listar "as mais antigas" mandava arquivar linha que `D-43` proíbe retirar: o aviso
-    # ensinava a violar a regra que ele deveria proteger, e quem obedecesse reprovaria depois.
-    # `D-69`: teto 12.000 -> 16.000 e aviso 10.800 -> 14.400 (mesmos 90% de `D-63`). Medido em
-    # 2026-08-19, com o registro em 11.997: o pool de `D-43` era ZERO linhas, e as duas saídas
-    # de arquivamento que sobravam rendiam 788 e 821 — menos que as 3 decisões que o portão
-    # de `A-16` exige. Quando o pool é vazio, o aviso abaixo imprime isso em vez de mentir.
-    # `D-82`: teto 16.000 -> 20.000 e aviso 14.400 -> 18.000 (90%). Medido em 2026-08-20, com
-    # o registro em 15.982: os TRÊS pools em zero ao mesmo tempo — `D-43` (4ª vez), duplicata
-    # (gasta por `D-74`) e o critério de `D-74` (nada delegado, nada a cortar). Nem o veredito
-    # de `A-21` cabia nos 18 que sobravam. É rejeição adiada: quem para a corrida é `D-83`.
-    vivos = "\n".join(txt for cam, txt in corpo.items()
-                      if cam.name not in (Path(DECISOES).name, Path(ARQUIVO_MORTO).name)
-                      and "d_history" not in cam.parts)
-    velhas = [i for i in re.findall(r"^\|\s*(D-\d+)\s*\|", texto_dec, re.M)
-              if not re.search(rf"\b{i}\b", vivos)]
-    amostra = ", ".join(velhas[:5]) if velhas else (
-        "NENHUMA — todo D-NN vivo é citado por algum .md, então o corte de `D-43` está esgotado "
-        "e o que resta é rever o teto")
+    if CANDIDATAS == "nao_citadas":
+        # Sai da tabela quem NENHUM `.md` vivo cita. Recorte de "vivo": tudo menos o
+        # proprio registro, o arquivo morto e o historico datado - os tres citam por
+        # oficio, e contá-los faria todo ID parecer vivo para sempre.
+        _vivos = "\n".join(
+            txt for cam, txt in corpo.items()
+            if cam.name not in (Path(DECISOES).name, Path(ARQUIVO_MORTO).name)
+            and "d_history" not in cam.parts
+        )
+        velhas = [i for i in re.findall(r"^\|\s*(D-\d+)\s*\|", texto_dec, re.M)
+                  if not re.search(rf"\b{i}\b", _vivos)]
+        # Pool vazio e informacao, nao ausencia de informacao: dizer "as mais antigas"
+        # aqui mandaria arquivar linha que o proprio criterio proibe retirar.
+        amostra = ", ".join(velhas[:5]) if velhas else (
+            "NENHUMA — todo D-NN vivo e citado por algum .md, entao este corte esta "
+            "esgotado e o peso nao esta mais em linha morta")
+    else:
+        velhas = re.findall(r"^\|\s*(D-\d+)\s*\|[^|]*\|\s*(?:ADOTADO|REJEITADO)", texto_dec, re.M)
+        amostra = ", ".join(velhas[:5]) if velhas else "as mais antigas"
     avisos.append(
-        f"{DECISOES} com {n_dec}/20.000 caracteres ({100*n_dec//20000}%) — "
-        f"arquive o que `D-43` libera em e_qa/decisions_archive.md, preservando os IDs. Candidatas: {amostra}."
+        f"{DECISOES} com {medida(texto_dec)}/{mil(TETOS[DECISOES])} caracteres "
+        f"({100*medida(texto_dec)//TETOS[DECISOES]}%) — "
+        f"arquive as antigas em e_qa/decisions_archive.md, preservando os IDs. Candidatas: {amostra}."
     )
 
-# 16. Linha de registro acima de 400 caracteres medidos (`D-83`).
-# Por que por LINHA, e não só por arquivo: o teto do arquivo só morde quando já é tarde, e
-# quem está no meio de uma sessão corta o que estiver à mão — não o que devia sair. O custo
-# real está na linha que carrega a ÍNTEGRA da evidência em vez de delegá-la a `e_qa/<slug>.md`.
-# Medido no próprio registro (`A-21` §3): 141 (`D-67`), 175 (`D-68`), 238 (`D-81`) quando
-# delega; 922 (`D-73`), 978 (`D-75`) quando não delega. É também o que refaz o pool de corte
-# de `D-74`: sem delegação, o registro nunca mais tem o que arquivar.
-LINHA_MAX = 400
-# Isenção CONGELADA, não janela móvel. Estas linhas já estavam vivas quando `D-83` foi
-# adotado e o registro é append-only (`D-43`) — reescrevê-las é proibido pela própria regra.
-# Checagem que nasce vermelha em linha que ninguém pode consertar ensina a ignorar o script
-# (`A-21` §2.2). A tupla fica visível no diff: ID novo aqui é decisão do dono, não descuido.
-# Medidas em 2026-08-20, contra o disco DEPOIS do corte de `D-74` no QA — por isso nasceram
-# 14 e não as 18 da tabela do §2.2, que ainda contava `QA-22`/`QA-23`/`QA-25`/`QA-26`, já
-# arquivados naquela mesma sessão. Linha arquivada não é linha viva, e não se isenta.
-# Caíram para 12 no mesmo dia, pela mesma regra: `QA-24` e `QA-28` fecharam e foram para
-# [[decisions_archive]] na sessão que desempatou `QA-28`, e a tupla acompanha o corte.
-# Caíram para 5 em 2026-08-21, por `D-91`: 7 das 8 ADOTADAS gordas delegaram a íntegra à nota de
-# destino e passaram a caber nos 400 — isenção existe para linha que ninguém PODE consertar, e
-# essas passaram a poder. Sobram duas, e as duas por motivo escrito, não por inércia:
-#   `D-76` (479) é REJEITADA — a coluna de evidência dela É a lista-morta que a fase de evolução
-#     varre sem abrir o arquivo, e delegá-la cega a fase por 480 caracteres (`A-16` (i) já pagou).
-#   `D-75` (978) não cabe: só a coluna de DECISÃO dela mede 400, então nenhum ponteiro a salva.
-#     Encurtá-la é reescrever a decisão, e `D-91` supersede o append-only só na EVIDÊNCIA.
-ISENTAS_LINHA_MAX = (
-    "D-75", "D-76",
-    "QA-20", "QA-21", "QA-27",
-)
-longas = []
-for nome_reg, texto_reg in ((DECISOES, texto_dec), (QA_REG, texto_qa)):
-    for linha in texto_reg.split("\n"):
-        achado = re.match(r"\|\s*((?:QA|Q|D)-\d+)\s*\|", linha.strip())
-        if not achado or achado.group(1) in ISENTAS_LINHA_MAX:
-            continue
-        # `medida()`, NUNCA `len()`: o padding de alinhamento das tabelas é do formatador
-        # do editor, não do texto (`D-50`) — e reprovaria linha correta por causa dele.
-        n_linha = medida(linha)
-        if n_linha > LINHA_MAX:
-            longas.append(f"{achado.group(1)} ({n_linha}) em {nome_reg}")
-if longas:
-    falhas.append(
-        f"Linha de registro acima de {LINHA_MAX} caracteres medidos (`D-83`): {', '.join(longas)}. "
-        "Mova a evidência para e_qa/<slug>.md e deixe o PONTEIRO na linha — como `D-67`, `D-68` e `D-79`. "
-        "Nada de prosa comprimida: o que sai da linha entra na nota, inteiro."
-    )
+# 18. Linha de registro acima do limite declarado (`linha_max` na CONFIG).
+#     Inerte em projeto que nao declara a chave - o kit nao tem opiniao sobre o tamanho da
+#     linha de ninguem. Quem declara, declara junto a lista CONGELADA de isentas, porque
+#     registro append-only tem linhas que ninguem PODE consertar e checagem que nasce
+#     vermelha nelas ensina a ignorar o script.
+#     A regua e a MESMA dos orcamentos (`medida`): duas reguas no mesmo arquivo fariam a
+#     linha caber e o arquivo estourar, ou o contrario, sem que nenhum numero explicasse.
+if LINHA_MAX:
+    longas = []
+    for _nome_reg in (DECISOES, *REGISTROS_EXTRAS):
+        for linha in corpo.get(raiz / _nome_reg, "").split("\n"):
+            achado = re.match(r"\|\s*((?:QA|Q|D)-\d+)\s*\|", linha.strip())
+            if not achado or achado.group(1) in ISENTAS_LINHA:
+                continue
+            n_linha = medida(linha)
+            if n_linha > LINHA_MAX:
+                longas.append(f"{achado.group(1)} ({n_linha}) em {_nome_reg}")
+    if longas:
+        falhas.append(
+            f"Linha de registro acima de {LINHA_MAX} caracteres medidos "
+            f"(`linha_max` em {CONFIG}): {', '.join(longas)}. Mova a evidencia para uma nota "
+            "e deixe o PONTEIRO na linha. Nada de prosa comprimida: o que sai da linha entra "
+            "na nota, inteiro. Linha que ninguem pode reescrever entra em `linha_max.isentas`, "
+            "com o motivo no D-NN que a isentou."
+        )
 
 # 3. Fonte única (regra 6) — o mesmo nome em dois lugares é estado duplicado
-for nome in (Path(BACKLOG).name, Path(CONTEXTO).name, Path(DECISOES).name, Path(QA_REG).name):
+# Registro extra declarado em `.kit-config.json` entra aqui: se ele é fonte de ID,
+# duas cópias dele são duas verdades — o mesmo motivo dos três de casa.
+for nome in {Path(a).name for a in (BACKLOG, CONTEXTO, DECISOES, *REGISTROS_EXTRAS)}:
     achados = visiveis(nome)
     if len(achados) > 1:
         caminhos = ", ".join(str(p.relative_to(raiz)) for p in achados)
@@ -372,6 +492,76 @@ if texto_bl:
                 f"{BACKLOG}: {len(em_andamento)} itens 'Em andamento', limite declarado é {limite} "
                 "— termine, despromova, ou suba o limite no cabeçalho se o time cresceu."
             )
+
+
+def cards_do_backlog(texto):
+    """Cards como BLOCOS, não como linhas: um card vai do seu marcador até o próximo
+    marcador ou até o fim da seção. O card de uma linha é o caso comum, mas o de várias
+    aparece assim que o dono escreve o procedimento de conferência dentro dele — e foi
+    justamente o card gordo que dominou a medição (6.142 caracteres num só).
+    Cópia deliberada em `arquivar.py`, pelo motivo já escrito lá para `sem_bloco_de_codigo`:
+    o kit não tem módulo compartilhado, e um import entre scripts avulsos quebraria o
+    `check.py` rodando de dentro de um projeto, onde o layout é outro."""
+    marcas = [m.start() for m in re.finditer(r"^- \[[ xX]\]", texto, re.M)]
+    for ini, fim in zip(marcas, marcas[1:] + [len(texto)]):
+        bloco = texto[ini:fim]
+        secao = re.search(r"^## ", bloco, re.M)
+        yield bloco[:secao.start()] if secao else bloco
+
+
+# 15. Orçamento do BACKLOG. Era o único dos registros SEM teto — e é o mais caro dos três,
+#     porque o CLAUDE.md o põe como leitura de ABERTURA de toda sessão de trabalho,
+#     enquanto o DECISIONS só é lido inteiro em sessão de evolução.
+#     Medido no primeiro projeto real construído com o kit: 191.591 caracteres, 48x o teto
+#     do CONTEXT, dos quais 173.818 (91%) eram os 72 cards JÁ FECHADOS que sessão nenhuma
+#     precisa — um deles, sozinho, maior que o CONTEXT inteiro. (O número medido por LINHA
+#     dava 143.765; a diferença de 30.053 é o corpo dos cards de várias linhas, e é por
+#     isso que `cards_do_backlog` conta bloco. Comentário que cita um número que a função
+#     ao lado não mede é a mentira mais fácil de escrever neste arquivo.)
+#     O DECISIONS arquiva, o QA
+#     arquiva; este nunca soltava nada, e ninguém percebia porque nada o media. O teto de
+#     4.000 do CONTEXT era cobrado com rigor de duas casas (3.998/4.000) ao lado deste
+#     arquivo crescendo livre: economia medida no lugar errado ainda é economia por medir.
+#     O teto é o mesmo do DECISIONS de propósito. Este arquivo é lido ao menos tão
+#     frequentemente quanto aquele, e um segundo número arbitrário seria mais um número a
+#     defender. Saída pronta antes da parede: `python scripts/arquivar.py --backlog`.
+#
+#     LACUNA DECLARADA, e ela é do tamanho do teto: arquivar TODOS os 72 cards fechados
+#     daquele projeto levou 191.591 -> 25.359, ou seja, ainda o DOBRO do teto. O resto não
+#     é card: são 7.586 de ponteiros (105 por card arquivado, e crescem sem fim) e 13.991
+#     de prosa de seção — cabeçalho, "Pedidos do dono", "Ideias". O arquivador não toca
+#     nisso e não deve tocar: é texto do dono, não item de trabalho.
+#     O teto NÃO foi afrouxado para caber. Afrouxar teto quando ele aperta é exatamente o
+#     que aconteceu com o DECISIONS naquele projeto — 12.000 -> 16.000 -> 20.000, com o
+#     arquivamento esgotado no fim — e repetir isso aqui seria trocar um portão por um
+#     aviso. Fica declarado que um projeto naquele porte precisa também podar seção, e que
+#     o ponteiro que cresce sem fim é problema em aberto, não problema resolvido.
+if texto_bl:
+    fechados = [b for b in cards_do_backlog(texto_bl) if re.match(r"^- \[[xX]\]", b)]
+    peso = sum(medida(b) for b in fechados)
+    # A saída tem de ser VERDADEIRA. Medido no primeiro projeto real: depois de arquivar
+    # 86% do backlog, o portão continuava mandando "arquive" e o arquivador respondia
+    # "nenhum card arquivável" — o peso tinha passado para ponteiro, card aberto e prosa,
+    # que ele não poda. Portão que manda fazer o que não funciona é portão sem saída, e
+    # portão sem saída ensina --no-verify: é a doença que este kit persegue, cometida aqui.
+    saida = ("Arquive: `python scripts/arquivar.py --backlog --aplicar` deixa o ID e o "
+             "`**Módulo:**` na linha e manda a íntegra para e_qa/backlog_archive.md. "
+             "Se ele responder 'nenhum card arquivável', o peso NÃO está em card fechado: "
+             "está em card aberto (é trabalho — entregue ou despromova), em prosa de seção "
+             "(texto seu) ou nos ponteiros já arquivados. Aí as saídas são podar à mão ou "
+             "subir o teto em `.kit-config.json` com o D-NN que a FALHA 16 cobra.")
+    if medida(texto_bl) > TETOS[BACKLOG]:
+        falhas.append(
+            f"{BACKLOG} com {medida(texto_bl)} caracteres (orçamento: {mil(TETOS[BACKLOG])}) — "
+            f"{len(fechados)} card(s) fechado(s) ocupam {peso} deles. {saida}"
+        )
+    elif medida(texto_bl) > TETOS[BACKLOG] * PERTO:
+        avisos.append(
+            f"{BACKLOG} com {medida(texto_bl)}/{mil(TETOS[BACKLOG])} caracteres "
+            f"({100*medida(texto_bl)//TETOS[BACKLOG]}%) — "
+            f"{len(fechados)} card(s) fechado(s) pesam {peso}. Arquive agora, "
+            "não na sessão em que estourar. " + saida
+        )
 
 # 5. Cruft óbvio
 cruft = [p for pat in ("*.bak", "*.tmp", "*.orig", ".fuse_hidden*") for p in visiveis(pat, topo)]
@@ -586,7 +776,7 @@ if not gi.exists():
 else:
     # QA-15: só as linhas EFETIVAS. Um .gitignore que apenas COMENTA os padrões
     # ("# nunca commite .env, *.pem…") satisfazia a checagem por substring sem ignorar
-    # nada — o arquivo passava no portão explicando o que deveria fazer.
+    # nada — regra satisfeita pelo TEXTO, não pelo EFEITO. Mesma espécie do QA-14.
     texto_gi = "\n".join(l for l in gi.read_text(encoding="utf-8").splitlines()
                          if l.strip() and not l.lstrip().startswith("#"))
     faltando = [p for p in (".env", "*.pem", "*.key", "id_rsa", "credentials.json", "*.p12") if p not in texto_gi]
@@ -594,54 +784,83 @@ else:
         falhas.append(".gitignore sem cobertura mínima de segredo — faltam: " + ", ".join(faltando))
 
 # 10 e 11. Integridade dos IDs rastreáveis (regra 4).
-# Desde `D-50` os IDs nascem em DOIS arquivos, e a unicidade passa a valer sobre a UNIÃO —
-# não por arquivo. O motivo é o próprio risco da divisão: uma linha copiada para o registro
-# novo e esquecida no antigo define o mesmo ID duas vezes, e sem esta checagem os dois
-# arquivos ficariam individualmente válidos enquanto o par mente.
-REGISTROS = ((DECISOES, dec, texto_dec), (QA_REG, qa_reg, texto_qa))
-if texto_dec or texto_qa:
-    ocorrencias = {}
-    for rotulo, _, texto in REGISTROS:
-        for i in re.findall(r"^\|\s*((?:D|Q|QA)-\d+)\s*\|", texto, re.M):
-            ocorrencias.setdefault(i, []).append(rotulo)
-    definidos = set(ocorrencias)
-    # QA-16: o ID que saiu da tabela para o ARQUIVO MORTO continua EXISTINDO — `D-43`
-    # tira a linha da tabela e a íntegra vai para lá, com o ID preservado. Sem isto, a
-    # convenção de arquivamento do próprio kit fabrica "ID inexistente" a cada corte de
-    # orçamento: medido, 22 fantasmas legitimamente arquivados reprovando todo commit.
-    #
-    # `arquivados` NÃO entra em `definidos`, de propósito: a checagem 11 (ID duplicado)
-    # tem de continuar olhando só as tabelas VIVAS — senão a convenção `ADOTADO ·
-    # ARQUIVADO`, que deixa a linha na tabela com a íntegra no arquivo morto, vira
-    # duplicata falsa e reprova o repositório por estar correto.
+if texto_dec:
+    # `.kit-config.json` pode declarar registros extras: num projeto real os `QA-NN` saíram
+    # do DECISIONS para `a_context/d_qa.md`, e sem isto TODOS eles viravam "ID fantasma" —
+    # o que empurrava o dono a editar este script, criando o fork que a configuração existe
+    # para acabar. Um ID nasce em QUALQUER registro declarado.
+    tabelas = {DECISOES: texto_dec}
+    tabelas.update({r: corpo.get(raiz / r, "") for r in REGISTROS_EXTRAS})
+    definidos = {i for t in tabelas.values()
+                 for i in re.findall(r"^\|\s*((?:D|Q|QA)-\d+)\s*\|", t, re.M)}
+    # QA-16: ID arquivado continua sendo ID REAL — é o que "ID preservado, nada revertido"
+    # significa. Sem isto, a correção do QA-14 é inutilizável em qualquer projeto que já
+    # tenha arquivado: medido no primeiro projeto real, 22 IDs legitimamente retirados da
+    # tabela viravam fantasma e o portão passaria a reprovar TODO commit.
+    # Aqui não se procura linha de tabela: no arquivo-morto o ID vem entre crases
+    # (`| `D-05` | 2026-08-06 | …`), então qualquer ocorrência dele naquele arquivo vale
+    # como definição. E de propósito NÃO entra em `definidos`: a checagem 11 (ID duplicado)
+    # tem de continuar olhando só a tabela viva, senão a convenção `ARQUIVADO` — linha que
+    # FICA na tabela com a íntegra lá — viraria duplicata falsa.
     morto = raiz / ARQUIVO_MORTO
     arquivados = set(re.findall(r"\b((?:D|Q|QA)-\d+)\b", corpo.get(morto, ""))) if morto.exists() else set()
-    repetidos = sorted(i for i, onde in ocorrencias.items() if len(onde) > 1)
+    # Duplicata é por REGISTRO e também ENTRE registros: o mesmo QA-07 em dois cadernos é
+    # o pior caso, porque as duas linhas divergem e nenhuma das duas se sabe cópia.
+    ocorrencias = Counter(i for t in tabelas.values()
+                          for i in re.findall(r"^\|\s*((?:D|Q|QA)-\d+)\s*\|", t, re.M))
+    repetidos = [i for i, n in ocorrencias.items() if n > 1]
     if repetidos:
-        detalhe = ", ".join(f"{i} (em {', '.join(sorted(set(ocorrencias[i])))})" for i in repetidos)
-        falhas.append(
-            f"ID duplicado: {detalhe} — cada ID é único e append-only, "
-            "inclusive ENTRE os dois registros."
-        )
+        onde = ", ".join(sorted(tabelas))
+        falhas.append(f"ID duplicado em {onde}: " + ", ".join(sorted(repetidos)) + " — cada ID é único e append-only.")
     citados = {}
-    registros_em_disco = {caminho for _, caminho, _ in REGISTROS}
+    citados_log = {}
     for nota in notas:
-        # d_history/, e_qa/ e as lições herdadas citam IDs de OUTROS projetos:
-        # ficam fora da checagem de existência. Os dois registros também: neles o ID é
-        # definido, e um define o do outro (o ponteiro de `D-50`, o cabeçalho do QA).
+        # e_qa/, docs/ e as lições herdadas citam IDs de OUTROS projetos: ficam fora da
+        # checagem de existência. O CHANGELOG do próprio projeto NÃO é esse caso — ele
+        # cita os IDs de casa, e tratá-lo como "histórico de terceiro" abriu um buraco
+        # medido: no primeiro projeto real, `D-64` foi prometido numa entrada do changelog,
+        # nunca entrou na tabela, e o portão imprimiu verde por 8 dias. Quem pegou foi uma
+        # sessão seguinte, no olho — exatamente o trabalho que a checagem 10 existe para
+        # tirar do olho.
+        # Entra como AVISO e não como falha por uma razão de desenho, não de gosto: o
+        # changelog é append-only, então reprovar nele é reprovar num arquivo que a regra
+        # proíbe editar. Portão sem saída ensina a usar --no-verify, que é pior que o furo.
         rel_nota = nota.relative_to(topo)
-        if nota in registros_em_disco or PASTAS_HISTORICAS & set(rel_nota.parts) or nota.stem == "d_agent_learnings":
+        registros_de_id = {dec} | {raiz / r for r in REGISTROS_EXTRAS}
+        if nota in registros_de_id or nota.stem == "d_agent_learnings":
             continue
-        # QA-14: aqui o filtro é `sem_bloco_de_codigo`, não `sem_codigo`. A casa cita ID
-        # ENTRE CRASES (`D-13`), e a crase simples apagava 88% das citações antes de olhar.
+        historica = bool(PASTAS_HISTORICAS & set(rel_nota.parts))
+        # `raiz / CHANGELOG` e não a string: `rel_nota` é relativo ao TOPO do repositório,
+        # e num projeto o vault mora em <TAG>_Project_DOCs/ — comparar com a constante,
+        # que é relativa ao vault, nunca casava e o aviso nascia mudo. Pego rodando esta
+        # checagem contra o projeto real de onde o defeito veio; num kit, onde topo == raiz,
+        # a comparação errada teria passado no teste e ido para produção calada.
+        if historica and nota != raiz / CHANGELOG:
+            continue
+        alvo = citados_log if historica else citados
         for i in set(re.findall(r"\b((?:D|Q|QA)-\d+)\b", sem_bloco_de_codigo(corpo[nota]))):
-            citados.setdefault(i, set()).add(rel_nota.as_posix())
-    fantasmas = {i: v for i, v in citados.items()
-                 if i not in definidos and i not in arquivados
-                 and not re.fullmatch(r"(D|Q|QA)-0*(0|NN)", i)}
+            alvo.setdefault(i, set()).add(rel_nota.as_posix())
+
+    def fantasmas_de(mapa):
+        return {i: v for i, v in mapa.items()
+                if i not in definidos and i not in arquivados
+                and not re.fullmatch(r"(D|Q|QA)-0*(0|NN)", i)}
+
+    fantasmas = fantasmas_de(citados)
     if fantasmas:
         detalhe = "; ".join(f"{i} (em {', '.join(sorted(v))})" for i, v in sorted(fantasmas.items())[:6])
-        falhas.append(f"ID citado que não existe em {DECISOES}, {QA_REG} nem em {ARQUIVO_MORTO}: {detalhe}")
+        falhas.append(f"ID citado que não existe em {DECISOES} nem em {ARQUIVO_MORTO}: {detalhe}")
+    # Só o que o changelog cita e mais NINGUÉM vivo cita: o que aparece nos dois lugares já
+    # reprovou acima, e repetir seria cobrar duas vezes o mesmo defeito.
+    prometidos = {i for i in fantasmas_de(citados_log) if i not in citados}
+    if prometidos:
+        avisos.append(
+            f"ID prometido no {CHANGELOG} e nunca registrado: "
+            + ", ".join(sorted(prometidos)[:6])
+            + f" — registre a linha no {DECISOES}, ou some uma entrada nova dizendo que o "
+              "ID ficou vago de propósito. Nunca recicle o número, e nunca edite a entrada "
+              "antiga: o changelog é append-only, a correção é linha NOVA."
+        )
 
 # 12. "Em andamento" tem de bater entre BACKLOG e CONTEXT (regra 6, fonte única).
 # 13. Cobertura módulo <-> tarefa. Metade FORMAL do que a skill artifact-consistency faz
@@ -699,7 +918,7 @@ if sem_fm:
 # kit — "doc fora do mapa nunca é lido" — e nada a cobrava: o arquivo existia, custava
 # manutenção e ninguém o abria. Aqui a máquina JULGA; escrever o mapa continua sendo do
 # dono, porque o CONTEXT é a verdade dele e script não escreve na verdade de ninguém.
-NUCLEO_CONTEXTO = {"a_context_source", "b_plan", "c_decisions", "d_qa", "README"}
+NUCLEO_CONTEXTO = {"a_context_source", "b_plan", "c_decisions", "README"}
 if texto_ctx:
     fora = sorted(p.stem for p in (raiz / "a_context").glob("*.md")
                   if p.stem not in NUCLEO_CONTEXTO and p.stem not in texto_ctx)
@@ -710,141 +929,247 @@ if texto_ctx:
             "justifica lê-lo, ou sai do repositório."
         )
 
-# --- Coerência: o que o CONTEXT DECLARA × o que os arquivos SÃO ---------------------
-# Os três avisos abaixo cobram o que nenhuma checagem anterior olhava: o CONTEXT pode
-# estar internamente perfeito e mentir sobre o disco. Nenhum reprova — o dono pode estar
-# no meio da escrita — e todos só LEEM: a verdade continua sendo dele.
-
-# 1. Ocupação declarada × arquivo. Medido em 12/08: o CONTEXT declarava o registro em
-# 8.926 e o arquivo media 9.076 — a linha de estado ficou atrás de uma escrita posterior
-# e só apareceu numa conferência manual, por acaso. Quem abre a sessão decide o que
-# cortar por ESSE número; número velho manda cortar cedo demais ou tarde demais.
-# A chave do dicionário é o ORÇAMENTO, não o nome do arquivo: é o denominador que diz
-# de qual registro a linha fala, sem depender de como ela foi escrita.
-ORCAMENTOS = {4000: (CONTEXTO, texto_ctx), 20000: (DECISOES, texto_dec), 8000: (QA_REG, texto_qa)}
-if texto_ctx:
-    ja_avisado = set()
-    # `**10.998**/16.000` e `10.998/16.000` são a mesma frase: o negrito sai antes de contar.
-    for bruto_dec, bruto_teto in re.findall(r"(\d[\d.]*)\s*/\s*(\d[\d.]*)", texto_ctx.replace("*", "")):
-        teto = int(bruto_teto.replace(".", ""))
-        if teto not in ORCAMENTOS or teto in ja_avisado:
-            continue  # "suíte 385/385" não é orçamento: o denominador é que qualifica
-        nome_alvo, texto_alvo = ORCAMENTOS[teto]
-        if not texto_alvo:
-            continue
-        # `medida()`, NUNCA `len()`: o teto deste projeto ignora o padding de alinhamento
-        # das tabelas (`D-50`), e comparar com `len()` acusaria divergência em arquivo
-        # correto — aviso falso ensina a ignorar aviso.
-        real = medida(texto_alvo)
-        declarado = int(bruto_dec.replace(".", ""))
-        if declarado != real:
-            ja_avisado.add(teto)
-            avisos.append(
-                f"{CONTEXTO} declara {nome_alvo} em {declarado}/{teto}, mas o arquivo mede "
-                f"{real} ({real - declarado:+d}) — quem lê o CONTEXT decide o corte por este "
-                "número; corrija a linha de estado (o disco é a verdade)."
-            )
-
-# 2. Questão do dono aberta que o CONTEXT não lista. A fila de decisões do DONO mora no
-# DECISIONS, e quem abre a sessão lê o CONTEXT: questão que não aparece lá não é
-# perguntada, e o projeto espera meses por uma resposta que ninguém pediu — sem nenhum
-# sintoma, porque a questão CONTINUA registrada, no arquivo que a sessão não carrega.
-# As `Q-NN` não se mudaram em `D-50`: este bloco lê o DECISIONS, e é o único dos três
-# que lê (ver o de achado grave, que teve de mudar de arquivo).
-if texto_dec and texto_ctx:
-    mudas = []
-    for linha in texto_dec.splitlines():
-        m = re.match(r"^\|\s*(Q-\d+)\s*\|", linha)
-        # Fora da fila se a linha diz RESPONDIDA ou se a questão está riscada (`~~…~~`) —
-        # as duas convenções vivas no registro, e as duas significam a mesma coisa.
-        if not m or re.search(r"RESPONDIDA|~~", linha, re.I):
-            continue
-        if m.group(1) not in texto_ctx:
-            mudas.append(m.group(1))
-    if mudas:
-        avisos.append(
-            "Questão do dono aberta e AUSENTE do CONTEXT: " + ", ".join(dict.fromkeys(mudas))
-            + f" — ela mora em {DECISOES}, que a sessão não abre por conta própria; fora da "
-            "linha 'Questões abertas' do CONTEXT, ninguém a pergunta ao dono."
-        )
-
-# 3. Achado grave ABERTO há mais de 14 dias. `CRÍTICO`/`ALTO` que ninguém fecha vira
-# paisagem: continua no registro, para de ser lido, e o portão segue verde porque achado
-# aberto é estado legítimo. O prazo é o que torna "legítimo" uma coisa datada.
-# Este bloco lê o QA_REG, não o DECISIONS: desde `D-50` é lá que os `QA-NN` moram, e
-# procurar a tabela no arquivo errado faria a checagem reclamar para sempre.
-PRAZO_ACHADO = 14
-GRAVE = ("CRÍTICO", "CRITICO", "ALTO")
-
-
-def celulas_md(linha):
-    """Células de uma linha de tabela. Separa por barra NÃO escapada: a célula pode
-    conter `\\|` (wikilink com apelido, `[[d_qa\\|QA]]`), e um `split("|")` cru
-    desalinharia as colunas justamente nas linhas mais bem documentadas."""
-    return [c.strip() for c in re.split(r"(?<!\\)\|", linha.strip())[1:-1]]
-
-
-if texto_qa:
-    linhas_qa = texto_qa.splitlines()
-    cabecalho = next((celulas_md(l) for l in linhas_qa if re.match(r"^\|\s*#\s*\|", l)), [])
-    # As colunas vêm do CABEÇALHO, não de posição fixa: acrescentar uma coluna à tabela
-    # é edição legítima, e uma posição cravada faria a checagem ler a coluna errada em
-    # silêncio — que é o defeito, não a coluna a mais.
-    i_data, i_sev, i_fech = (
-        next((i for i, c in enumerate(cabecalho) if chave in c.lower()), None)
-        for chave in ("data", "sev", "fechado")
-    )
-    if None in (i_data, i_sev, i_fech):
-        avisos.append(
-            f"{QA_REG}: tabela sem a coluna Data, Sev. ou 'Fechado em' — o aviso de achado "
-            "grave vencido NÃO rodou. Checagem que emudece é pior que checagem ausente, "
-            "porque o verde continua saindo."
-        )
-    else:
-        vencidos = []
-        for linha in linhas_qa:
-            if not re.match(r"^\|\s*QA-\d+\s*\|", linha):
-                continue
-            cel = celulas_md(linha)
-            if len(cel) <= max(i_data, i_sev, i_fech):
-                continue
-            fechado = cel[i_fech].strip("_* ")
-            if fechado and "aberto" not in fechado.lower():
-                continue  # `✔ T-15 2026-08-08` é linha fechada; `_(aberto)_` e vazio, não
-            if not any(g in cel[i_sev].upper() for g in GRAVE):
-                continue
-            m = re.search(r"\d{4}-\d{2}-\d{2}", cel[i_data])
-            if not m:
-                continue
-            try:
-                dias = (date.today() - date.fromisoformat(m.group(0))).days
-            except ValueError:
-                continue
-            if dias > PRAZO_ACHADO:
-                vencidos.append(f"{cel[0]} ({cel[i_sev].split('·')[0].strip()}, {dias} dias)")
-        if vencidos:
-            avisos.append(
-                f"Achado grave aberto há mais de {PRAZO_ACHADO} dias: " + ", ".join(vencidos)
-                + " — feche, rebaixe a severidade com o motivo, ou vire tarefa no BACKLOG. "
-                "Severidade que não expira deixa de significar urgência."
-            )
-
-# 4. Sessão sem skill declarada no changelog. Qual agente conduziu a sessão é o dado que
-# torna o histórico auditável: sem ele, "o que essa sessão seguiu?" só se responde
-# relendo o diff, e a retrospectiva não consegue comparar sessão com sessão. Campo NOVO —
-# as entradas antigas vão falar, e a resposta certa é adotá-lo da próxima em diante,
-# nunca reescrever o histórico para calar o aviso.
-ENTRADAS_CONFERIDAS = 3
+# Instrumentação da sessão: QUAL skill rodou.
+# Sem este campo, "qual dos agentes paga o próprio custo" só se responde por arqueologia
+# de git — foi exatamente onde a primeira avaliação de campo do kit parou, e a conclusão
+# ficou em [suposto] por falta de um dado que custa uma linha para existir.
+# O changelog é o lugar certo justamente porque NENHUMA sessão o carrega: o dado custa
+# zero contexto e fica onde a sessão já escreve de qualquer jeito.
+# Aviso, não falha: projeto que já existia não vai reescrever o histórico para adotar isto.
 texto_cl = corpo.get(raiz / CHANGELOG, "")
 if texto_cl:
-    entradas = re.split(r"^## ", texto_cl, flags=re.M)[1:ENTRADAS_CONFERIDAS + 1]
-    sem_skill = [e.splitlines()[0].strip()[:44] for e in entradas if not re.search(r"\*\*Skill", e)]
-    if sem_skill:
+    entradas = re.findall(r"^## \[(\d{4}-\d{2}-\d{2})\][^\n]*\n(.*?)(?=^## |\Z)",
+                          texto_cl, re.S | re.M)[:3]
+    catalogo = {q.parent.name for q in (raiz / SKILLS).glob("*/SKILL.md")}
+    problemas = []
+    for data_e, bloco_e in entradas:
+        m = re.search(r"\*\*Skill:\*\*\s*`?([a-z0-9][a-z0-9-]*)`?", bloco_e)
+        if not m:
+            problemas.append(f"{data_e} (sem '**Skill:**')")
+        elif catalogo and m.group(1) not in catalogo and m.group(1) != "nenhuma":
+            problemas.append(f"{data_e} (skill '{m.group(1)}' não existe em {SKILLS}/)")
+    if problemas:
         avisos.append(
-            f"{len(sem_skill)} das {len(entradas)} entradas mais recentes de {CHANGELOG} sem "
-            "`- **Skill:** <nome>`: " + " · ".join(sem_skill)
-            + " — adote o campo a partir da próxima entrada; não reescreva o histórico."
+            "Sessão sem skill declarada no changelog: " + " · ".join(problemas)
+            + " — sem este campo ninguém sabe qual agente rodou, e medir o kit vira "
+            "arqueologia. Formato: uma linha `- **Skill:** <nome>` na entrada."
         )
+
+# Skill que o PLANO declarou responsável por um módulo e que nunca rodou. Medido no
+# primeiro projeto real: de 24 skills, só 10 dispararam — e QUATRO das que nunca rodaram
+# tinham o assunto acontecendo no projeto. A mais gritante: existe uma checagem neste
+# arquivo que se declara "a checagem que a skill guardrails-review exige"; a checagem
+# rodava, a skill nunca. O problema não era falta de skill, era falta de ROTEAMENTO.
+# Isto é mecânico de propósito — lê `**Skill responsável:**` do PLANO contra `**Skill:**`
+# do changelog. Adivinhar por assunto seria julgar semântica, e script não julga semântica.
+texto_plano_sk = corpo.get(raiz / PLANO, "")
+texto_log_sk = corpo.get(raiz / CHANGELOG, "")
+if texto_plano_sk and texto_log_sk:
+    rodaram = {s.lower() for s in re.findall(r"\*\*Skill:\*\*\s*`?([a-z0-9][a-z0-9-]*)", texto_log_sk)}
+    orfas = {}
+    for mod, skill in re.findall(
+            r"^#{2,4}\s+(M\d+)\s*[—–:.-].*?\*\*Skill respons[áa]vel:?\*\*:?\s*(.+?)$",
+            texto_plano_sk, re.S | re.M):
+        # A declaração costuma vir como wikilink: `[[b_process/skills/testing/SKILL|testes]]`.
+        # O nome que vale é o da PASTA, que é o mesmo que o changelog escreve.
+        m = re.search(r"skills/([a-z0-9][a-z0-9-]*)/", skill) or re.search(r"`([a-z0-9-]+)`", skill)
+        if not m or skill.lstrip().startswith("<") or "…" in skill:
+            continue
+        if m.group(1).lower() not in rodaram:
+            orfas.setdefault(m.group(1), []).append(mod)
+    if orfas:
+        avisos.append(
+            "Skill declarada responsável no PLANO e que nunca rodou: "
+            + " · ".join(f"`{s}` ({', '.join(ms)})" for s, ms in sorted(orfas.items()))
+            + " — ou ela roda numa sessão, ou o PLANO passa a declarar quem realmente faz "
+            "o trabalho. Skill que ninguém alcança é peso morto vestido de cobertura."
+        )
+
+# Número que um script calcula não se mantém à mão. O kit já aprendeu isto uma vez — a
+# frase de cobertura do README dizia 188/18 quando o real era 277/23 — e a correção valeu
+# só para AQUELE número. Aqui a lição vira classe: ocupação declarada no CONTEXT sobre um
+# arquivo que este script mede é conferida contra o arquivo.
+# 16. Teto elevado sem registro — a tese do kit, cobrada contra o próprio kit.
+# Medido no primeiro projeto real: o teto do DECISIONS subiu de 12.000 para 20.000 dentro
+# do projeto, o arquivo bateu em 91% do teto NOVO, e não há uma linha em lugar nenhum
+# dizendo quem subiu, quando ou por quê. O portão continuava verde: ele cobrava o número
+# que a própria vítima tinha acabado de escolher.
+# O script NÃO proíbe subir — a decisão é do dono, e projeto grande às vezes precisa. Ele
+# proíbe subir CALADO: a elevação vira uma linha no DECISIONS, com data e motivo, que a
+# sessão de evolução vai encontrar quando perguntar "por que este arquivo está enorme?".
+def _registrado_no_decisions(*termos) -> bool:
+    """Uma linha de D-NN que cite todos os termos. Procura no DECISIONS e nos registros
+    extras, porque num projeto que moveu as tabelas de casa a decisão mora com elas."""
+    fontes = [texto_dec] + [corpo.get(raiz / r, "") for r in REGISTROS_EXTRAS]
+    return any(
+        re.search(r"D-\d+", linha) and all(t.lower() in linha.lower() for t in termos)
+        for fonte in fontes for linha in fonte.splitlines()
+    )
+
+
+for _alvo, _novo in TETOS.items():
+    _padrao = TETOS_PADRAO.get(_alvo)
+    if _padrao is not None and _novo <= _padrao:
+        continue
+    if _padrao is None:
+        # Registro que o kit não previu (o terceiro caderno). Nasce da mesma decisão que
+        # eleva um teto — o desenho de dois não coube — e por isso paga o mesmo pedágio.
+        # Pelo TALO (`d_qa`), não pelo nome com extensão: a casa cita registro por wikilink
+        # — `[[d_qa|QA]]` —, e foi exatamente assim que a decisão real apareceu no primeiro
+        # projeto. Exigir "d_qa.md" reprovava um projeto que TINHA registrado a decisão.
+        # Mesma lição do QA-14: a checagem casa com o jeito que a casa escreve, ou é cega.
+        if not _registrado_no_decisions(Path(_alvo).stem):
+            falhas.append(
+                f"{CONFIG} declara orçamento para {_alvo}, que não é registro do kit, e nenhum "
+                f"D-NN menciona esse arquivo — registro novo é decisão de projeto, não detalhe "
+                f"de configuração. Registre: `| D-NN | {date.today().isoformat()} | ADOTADO | "
+                f"{Path(_alvo).name} como registro próprio, teto {mil(_novo)} | <o que não coube> |`."
+            )
+        continue
+    if not _registrado_no_decisions("teto", str(_novo)) and not _registrado_no_decisions("teto", mil(_novo)):
+        falhas.append(
+            f"teto de {_alvo} elevado para {mil(_novo)} (padrão do kit: {mil(_padrao)}) sem "
+            f"registro no {DECISOES} — teto que sobe em silêncio não é teto, é lembrete. "
+            f"Registre a elevação: `| D-NN | {date.today().isoformat()} | ADOTADO | "
+            f"teto de {_alvo} para {mil(_novo)} | <o que não coube e por que arquivar não resolveu> |`."
+        )
+
+# Orçamento dos registros que o kit não conhece: mesma régua dos três de casa (reprova no
+# teto, avisa em 90%), aplicada a qualquer caminho declarado em `tetos`.
+for _arq, _teto in TETOS.items():
+    if _arq in TETOS_PADRAO:
+        continue
+    _texto_extra = corpo.get(raiz / _arq, "")
+    if not _texto_extra:
+        continue
+    if medida(_texto_extra) > _teto:
+        falhas.append(
+            f"{_arq} com {medida(_texto_extra)} caracteres (orçamento declarado: {mil(_teto)}) — "
+            "feche, arquive ou promova a ponteiro o que já não é trabalho vivo."
+        )
+    elif medida(_texto_extra) > _teto * PERTO:
+        avisos.append(
+            f"{_arq} com {medida(_texto_extra)}/{mil(_teto)} caracteres "
+            f"({100*medida(_texto_extra)//_teto}%) — arquive agora, não na sessão em que estourar."
+        )
+
+# Todo arquivo com teto entra aqui, inclusive os declarados pelo projeto: a ocupação
+# escrita à mão no CONTEXT é conferida contra o arquivo, seja qual for o registro.
+#
+# LISTA por teto, não par: DECISIONS e BACKLOG têm o MESMO teto padrão (12.000), e um dicionário
+# indexado pelo número fazia um sobrescrever o outro em silêncio — o aviso então comparava o
+# número declarado com o arquivo errado e acusava divergência onde não havia. Pego pelo teste
+# `test_ocupacao_declarada_certa_cala`; é a espécie do QA-14 (checagem que fala sobre outra
+# coisa) na sua forma mais fácil de cometer: generalizar um dicionário sem olhar as colisões.
+ORCAMENTOS = {}
+for arq, teto in TETOS.items():
+    ORCAMENTOS.setdefault(teto, []).append((arq, corpo.get(raiz / arq, "")))
+if texto_ctx:
+    divergentes = []
+    for bruto_n, bruto_teto in re.findall(r"(\d[\d.]*)\s*/\s*(\d[\d.]*)", texto_ctx):
+        try:
+            declarado, teto = int(bruto_n.replace(".", "")), int(bruto_teto.replace(".", ""))
+        except ValueError:
+            continue
+        candidatos = [(n, x) for n, x in ORCAMENTOS.get(teto, []) if x]
+        if not candidatos:
+            continue
+        # Basta bater com UM arquivo daquele teto: "2.164/12.000" pode ser o DECISIONS ou o
+        # BACKLOG, e o CONTEXT não diz qual. Acusar sem saber é aviso falso.
+        if any(declarado == medida(x) for _, x in candidatos):
+            continue
+        nome = " ou ".join(n for n, _ in candidatos)
+        tamanhos = " ou ".join(str(medida(x)) for _, x in candidatos)
+        divergentes.append(f"diz {nome} em {declarado}/{teto}, o arquivo tem {tamanhos}")
+    if divergentes:
+        avisos.append(
+            f"{CONTEXTO} " + " · ".join(divergentes)
+            + " — número que o script calcula não se mantém à mão; atualize ao reescrever o Estado atual."
+        )
+
+# A fila do dono só existe se ele a VÊ. O CONTEXT é o único arquivo que toda sessão carrega:
+# questão aberta que não aparece lá fica esperando alguém abrir o DECISIONS por conta própria.
+# Medido no primeiro projeto real: três Q-NN abertas, duas com prazo estourado, e o achado
+# que registrou o estouro foi feito à mão numa sessão que por acaso olhou.
+if texto_dec and texto_ctx:
+    abertas = [m.group(1) for m in re.finditer(r"^\|\s*(Q-\d+)\s*\|(.*)$", texto_dec, re.M)
+               if "RESPONDIDA" not in m.group(2).upper() and "~~" not in m.group(2)
+               and "<" not in m.group(2)]
+    linha_q = re.search(r"\*\*Quest(?:ões|oes) abertas[^:]*:\*\*\s*(.+)", texto_ctx)
+    if abertas and linha_q and "<" not in linha_q.group(1):
+        ausentes = [q for q in abertas if q not in linha_q.group(1)]
+        if ausentes:
+            avisos.append(
+                "Questão do dono aberta no " + DECISOES + " e ausente do CONTEXT: "
+                + ", ".join(ausentes) + " — o CONTEXT é o único arquivo que toda sessão lê; "
+                "fora dele a pergunta não é feita a ninguém."
+            )
+
+# Achado que envelhece aberto. O registro é append-only na CRIAÇÃO e não tinha disciplina de
+# EXPIRAÇÃO: no projeto medido, o único QA crítico aberto descrevia uma condição já resolvida.
+# Só julga se a tabela tiver a coluna — e, quando não tiver, DIZ que não julgou, em vez de
+# emudecer (a doença do QA-14).
+def prazo_de(sev):
+    """Prazo POR GRAVIDADE, e não um prazo só. Antes era 14 dias para CRÍTICO/ALTO e nada
+    para o resto — e a medição do primeiro projeto real mostrou que isso cobrava justamente
+    o nível que não enrosca: os 8 CRÍTICOS e os 4 ALTOS estavam TODOS fechados, e o que
+    apodrecia eram 5 MÉDIOS parados 13-15 dias, sem prazo nenhum.
+    Os números vêm do porte a que o kit se propõe — projeto curto ou médio, de 2 a 8
+    semanas. Nessa escala, 14 dias para um CRÍTICO é um quarto do projeto.
+    BAIXO não vence, e isso é decisão, não esquecimento: metade dos achados abertos daquele
+    projeto era BAIXO, e um aviso que passa a cobrar o que ninguém vai fazer vira ruído —
+    o gêmeo da doença que este arquivo já persegue, porque aviso que vira ruído deixa de
+    ser lido, e checagem que ninguém lê emudeceu do mesmo jeito."""
+    s = sev.upper()
+    if "CRÍT" in s or "CRIT" in s or "ALTO" in s:
+        return 7
+    if "MÉD" in s or "MED" in s:
+        return 15
+    return None
+
+
+# O registro de QA pode ter saído do DECISIONS para arquivo próprio — o primeiro projeto
+# real fez isso, e uma checagem que só olha a casa antiga não é rigorosa, é cega. Procure,
+# não presuma: relatar zero achado vencido num registro que nem foi lido é a leitura mais
+# elogiosa possível, e a mais falsa.
+fontes_qa = [t for t in [texto_dec] + [corpo[p] for p in notas
+                                       if p.parent == raiz / "a_context"
+                                       and re.search(r"qa", p.stem, re.I)] if t]
+com_coluna = [t for t in fontes_qa if re.search(r"^\|\s*#\s*\|.*Fechado", t, re.M | re.I)]
+if com_coluna:
+    velhos = []
+    for texto_fonte in com_coluna:
+        for linha in texto_fonte.splitlines():
+            if not re.match(r"^\|\s*`?QA-\d+`?\s*\|", linha):
+                continue
+            celulas = [c.strip().strip("`") for c in linha.strip().strip("|").split("|")]
+            if len(celulas) < 5:
+                continue
+            ident, quando_txt, sev, fechado = celulas[0], celulas[1], celulas[2], celulas[-1]
+            if fechado and "ABERTO" not in fechado.upper():
+                continue
+            prazo = prazo_de(sev)
+            if prazo is None:
+                continue
+            try:
+                idade = (date.today() - date.fromisoformat(quando_txt[:10])).days
+            except ValueError:
+                continue
+            if idade > prazo:
+                velhos.append(f"{ident} ({sev}, {idade} dias, prazo {prazo})")
+    if velhos:
+        avisos.append(
+            "Achado vencido: " + ", ".join(velhos)
+            + " — o prazo é 7 dias para CRÍTICO/ALTO e 15 para MÉDIO (BAIXO não vence). "
+            "Ou fecha com data, ou vira card no BACKLOG, ou o dono rebaixa a gravidade. "
+            "Registro append-only precisa de disciplina de expiração, senão a linha "
+            "descreve um mundo que já acabou."
+        )
+elif fontes_qa:
+    avisos.append(
+        "Tabela de QA sem a coluna 'Fechado em' — a checagem de achado vencido NÃO rodou. "
+        "Dito em voz alta de propósito: checagem que emudece é pior que checagem que não existe."
+    )
 
 placeholders = re.findall(r"<[A-Za-zÀ-ú][^<>\n]{2,60}>", texto_ctx)
 if placeholders:
@@ -853,7 +1178,7 @@ if placeholders:
         f"{CONTEXTO} ainda tem {len(placeholders)} placeholder(s) (ex.: {amostra}). "
         "Rode a Fase 0 (b_process/skills/context-bootstrap) antes de pedir código."
     )
-for nome in (PLANO, DECISOES, QA_REG, BACKLOG):
+for nome in (PLANO, DECISOES, BACKLOG):
     arq = raiz / nome
     if arq.exists() and re.search(r"^status:\s*rascunho\s*$", arq.read_text(encoding="utf-8"), re.M):
         avisos.append(f"{nome} ainda está em 'status: rascunho' (template não preenchido).")

@@ -26,12 +26,12 @@ data: 2026-08-08
 ## Como cada um reprova
 
 **`tsc --noEmit && npm run build`** é o portão mais barato e o mais fácil de fingir: ele só cobre o
-que o `include` do `tsconfig.json` alcança. Hoje não alcança o `vite.config.ts` — é o `QA-04`, e
-enquanto ele estiver aberto este critério passa verde sobre um arquivo que não leu.
+que o `include` do `tsconfig.json` alcança. Até `T-34` não alcançava o `vite.config.ts` — era o
+`QA-04`, hoje **fechado**: o arquivo entra no `tsc`, e o critério deixou de passar verde sem ler.
 
 **Bundle < 8 MB** é o gatilho de revisão de `D-02`: estourar não é "otimizar depois", é reabrir a
-escolha de engine. O número tem de sair da saída do build, nunca de estimativa — e hoje a medição
-soma toda entrada `isEntry`, inclusive página que o jogador nunca abre (`QA-06`).
+escolha de engine. O número tem de sair da saída do build, nunca de estimativa — e desde
+`T-36`/`D-93` a medição é só o grafo de `index.html`, não toda entrada `isEntry` (`QA-06` **fechado**).
 
 **Disputa completa 2x com o mesmo resultado** é o que prova que o motor é determinístico e que o
 gerador com semente de M1 não vazou para lugar nenhum. Rodar uma vez não é o critério: o critério é

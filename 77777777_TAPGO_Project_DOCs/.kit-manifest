@@ -12,7 +12,8 @@
 ca3d163bab055381  .obsidian/hotkeys.json
 8d6721ac59b27ef4  .obsidian/templates.json
 c54bf3a340037a03  CLAUDE.md
-3981fb242e525725  INDEX.md
+9e6b3d2587749c6f  INDEX.md
+#  Impressão do que o KIT escreveu. Não edite: é o que protege as suas
 353ccec97977fcdb  LICENSE
 5d8cb7a8a18ec8db  README.md
 1b8cf99bae649695  a_context/README.md
@@ -25,6 +26,7 @@ e45755551427f241  b_process/b_checklist.md
 ea03fcd388a3ca5c  b_process/d_agent_learnings.md
 8a5e1d4006226572  b_process/e_repository_standard.md
 21b6da70b6124057  b_process/f_glossary_and_primer.md
+a86eb6ac1c4aee0c  b_process/g_primeiros_passos.md
 e0a9af23a5045c4c  b_process/profiles/a_generic.md
 ccbade9ce3a7fa00  b_process/profiles/b_web_nextjs.md
 14489d88a46ac532  b_process/profiles/c_data_python.md
@@ -58,8 +60,13 @@ bfdf0d26e6870c30  b_process/templates/a_decision.md
 add3f44cf072fbaf  b_process/templates/b_qa_finding.md
 e0cf8b250758feaa  b_process/templates/c_session_closing.md
 be2a0e41704f1a42  c_technical_docs/a_obsidian_guide.md
+#  customizações de serem sobrescritas por `new_project.py --upgrade`.
 884d143b37fb7b2e  d_history/a_changelog.md
 f7eb18cd01a7c89f  e_qa/README.md
-604fe5f355fc681c  scripts/check.py
-c9c826da5f44289a  scripts/install_hook.py
-c434dee41cade2ce  scripts/task.py
+b1cabc73571f3cfc  scripts/arquivar.py
+87f43fd0474d8e69  scripts/check.py
+d506d51dd723d4cd  scripts/escopo_hook.py
+1b41fdf330560399  scripts/evidencia.py
+aaf51e14c4aad5ca  scripts/install_hook.py
+f600e4615c432ae3  scripts/portao_hook.py
+eb900edc57b2bb6b  scripts/task.py

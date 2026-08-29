@@ -93,10 +93,119 @@ def topo_do_repo(inicio: Path) -> Path | None:
     return Path(saida).resolve()
 
 
+# As travas que vivem em `.claude/settings.json`. Uma entrada por trava, e não um `if` por
+# trava: a segunda (o pulo do portão) nasceu como cópia da primeira, e cópia é onde as duas
+# começam a divergir em silêncio.
+TRAVAS = {
+    "--escopo": {
+        "script": "escopo_hook.py",
+        "matcher": "Edit|Write|NotebookEdit|MultiEdit",
+        "nome": "trava de escopo",
+        "efeito": [
+            "   A partir de agora, escrita fora da pasta do módulo em andamento é recusada.",
+            "   Ela só age quando há UMA tarefa em andamento, ela declara **Módulo:**, e o",
+            "   módulo declara **Pasta:** no PLANO. Em qualquer outra situação, libera e diz por quê.",
+        ],
+    },
+    "--portao": {
+        "script": "portao_hook.py",
+        "matcher": "Bash",
+        "nome": "trava do pulo",
+        "efeito": [
+            "   A partir de agora, `git commit --no-verify` sem motivo declarado é recusado.",
+            "   Pular continua permitido — em silêncio, não: a mensagem precisa trazer",
+            "   'SEM-PORTAO: <motivo>', e `task.py evidencia` passa a contar os pulos.",
+        ],
+    },
+}
+
+
+def trava_de_agente(aqui: Path, topo: Path, remover: bool, flag: str) -> int:
+    """Liga (ou desliga) uma trava do Claude Code em `.claude/settings.json`.
+
+    É o único ponto do kit que fala com um agente específico, e por isso mora aqui e não
+    dentro do `check.py`: o portão de higiene continua sendo Python puro rodando em git, em
+    CI e na mão. Quem não usa Claude Code perde estas travas e mais nada.
+    """
+    import json
+    trava = TRAVAS[flag]
+    cfg = topo / ".claude" / "settings.json"
+    dados = {}
+    if cfg.exists():
+        try:
+            dados = json.loads(cfg.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            print(f"ERRO: {cfg} não é JSON válido. Revise-o à mão antes de instalar a trava.")
+            return 1
+    try:
+        rel = (aqui / trava["script"]).relative_to(topo).as_posix()
+    except ValueError:
+        print(f"ERRO: {trava['script']} está fora do repositório em {topo}.")
+        return 1
+
+    # O comando NÃO pode ser um caminho relativo. Ele é resolvido contra o diretório de
+    # trabalho do agente, não contra o repositório — e no momento em que a sessão passa a
+    # trabalhar em OUTRA pasta, o caminho aponta para um arquivo que não existe, o hook
+    # morre, e o Claude Code trata a morte do hook como BLOQUEIO. Medido em uso: com a
+    # trava do pulo instalada assim, uma sessão que mudou de projeto ficou sem executar
+    # nenhum comando. Hook que bloqueia por bug próprio é o pior caso do kit, e estava aqui.
+    #
+    # Três exigências, e a linha abaixo atende as três:
+    #   1. achar o script com o cwd em qualquer lugar -> CLAUDE_PROJECT_DIR, e o caminho
+    #      absoluto da instalação como reserva;
+    #   2. FALHAR ABERTO se o script não estiver lá (outra máquina, outro clone, arquivo
+    #      removido) -> sai 0 em silêncio, em vez de travar o trabalho;
+    #   3. viajar no git — por isso a variável de ambiente vem PRIMEIRO: quem clonar em
+    #      outra máquina continua protegido sem reinstalar nada.
+    base = topo.as_posix()
+    comando = (
+        'python -c "import os,sys,runpy;'
+        + "b=os.environ.get('CLAUDE_PROJECT_DIR') or r'" + base + "';"
+        + "p=os.path.join(b,'" + rel + "');"
+        + "sys.exit(0) if not os.path.exists(p) else runpy.run_path(p,run_name='__main__')\""
+    )
+    # A entrada é reconhecida pelo NOME DO SCRIPT, não pelo comando inteiro: o comando
+    # carrega um caminho absoluto que muda de máquina para máquina, e comparar o comando
+    # inteiro faria `--remover` não achar a própria instalação num clone.
+    assinatura = trava["script"]
+    ganchos = dados.setdefault("hooks", {}).setdefault("PreToolUse", [])
+    # Reconhece a entrada pelo COMANDO e não por índice: o dono pode ter outros hooks, e
+    # mexer no que não é nosso é como se apaga trabalho alheio sem perceber.
+    nossos = [g for g in ganchos
+              if any(assinatura in (h.get("command") or "") for h in g.get("hooks", []))]
+    if remover:
+        if not nossos:
+            print(f"Nada a remover (a {trava['nome']} não está instalada).")
+            return 0
+        dados["hooks"]["PreToolUse"] = [g for g in ganchos if g not in nossos]
+        cfg.write_text(json.dumps(dados, ensure_ascii=False, indent=2), encoding="utf-8")
+        print(f"OK: {trava['nome']} removida de {cfg}.")
+        return 0
+    if nossos:
+        print(f"A {trava['nome']} já está instalada em {cfg}.")
+        return 0
+
+    ganchos.append({"matcher": trava["matcher"],
+                    "hooks": [{"type": "command", "command": comando}]})
+    cfg.parent.mkdir(parents=True, exist_ok=True)
+    cfg.write_text(json.dumps(dados, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"OK: {trava['nome']} instalada em {cfg}.")
+    for linha in trava["efeito"]:
+        print(linha)
+    print(f"   Desligar: python scripts/install_hook.py {flag} --remover")
+    return 0
+
+
 def main() -> int:
     aqui = Path(__file__).resolve().parent          # .../scripts
     raiz = aqui.parent                              # a pasta de documentação (ou o kit)
     topo = topo_do_repo(raiz)
+    for flag in TRAVAS:
+        if flag in sys.argv:
+            if topo is None:
+                print("ERRO: não é um repositório git. Rode `git init` primeiro.")
+                return 1
+            return trava_de_agente(aqui, topo, "--remover" in sys.argv, flag)
     hooks = dir_hooks(raiz)
     if hooks is None or topo is None:
         print("ERRO: não é um repositório git (ou o git não está no PATH). Rode `git init` primeiro.")

@@ -7,6 +7,15 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-28] — `QA-35` FECHADO: a caixa de `A-30`, o `Próximo:` que apontava card fechado, e o portão que ainda falava de `QA-04`/`QA-06`
+
+- **Skill:** delivery-review (consistência de documentos; nenhuma linha de produção mudou).
+- **`F-01`/`QA-35`:** a caixa de `A-30` em `b_process/c_backlog.md` passa a `- [x]`. **Nenhuma palavra do texto do card mudou** — era exatamente o que o `QA-35` pedia. O backlog fica com **zero** caixa `- [ ]` de `A-NN`: nenhuma ação do dono pendente.
+- **`F-02`:** no "Estado atual" do CONTEXT, `Próximo:` apontava `A-30`, que estava fechada desde 2026-08-21. Passa a `T-17` — o único card aberto do quadro (`P-3`/`P-4`/`P-8` seguem sem compromisso, esperando `D-NN` do dono).
+- **`F-04`:** a mesma linha dizia `BACKLOG 19.3k`; o `check.py` mede **19.786**. Passa a `19.8k`. Estado numérico errado na fonte única é o defeito nº 1 desta fase — e o número tem de sair do script, não de memória.
+- **`a_context/portao_de_aceite.md`:** os dois parágrafos de "Como cada um reprova" ainda tratavam `QA-04` e `QA-06` como abertos. `QA-04` fechou em `T-34` (o `vite.config.ts` entra no `tsc`) e `QA-06` em `T-36`/`D-93` (o bundle medido é só o grafo de `index.html`). Reescritos os dois — o portão descrevia uma falha que não existe há duas tarefas.
+- **Sem `D-NN` novo, de propósito:** corrigir marca e número não é decisão, e o registro está a 285 caracteres do teto.
+
 ## [2026-08-28] — `A-40` PASSOU: o link truncado nos dois aparelhos, e `T-38` fica COM CAMPO
 
 - **Skill:** guardrails-review, sessão de evolução. **Zero byte de código alterado** — esta sessão só registra o que o dono mediu na máquina real.
