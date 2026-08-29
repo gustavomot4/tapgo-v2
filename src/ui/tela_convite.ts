@@ -370,9 +370,11 @@ export const telaConvite =
         ]),
       ]),
       // A ordem das cobranças NÃO é prometida aqui. Quem a anuncia é a tela da cobrança, lendo
-      // `state().turn` de M5 — é o portão de `QA-15`, e ele vale para esta tela também: no dia
-      // em que o sorteio do `online` for semeado pelo `roomId`, uma promessa escrita aqui viraria
-      // mentira sem que ninguém tocasse neste arquivo.
+      // `state().turn` de M5 — é o portão de `QA-15`, e ele vale para esta tela também. O dia que
+      // o comentário antigo dava como futuro chegou em 2026-08-29: `D-98` semeia o sorteio do
+      // `online` pelo `roomId`, e nenhum texto desta tela precisou mudar por isso. Uma promessa
+      // escrita aqui teria virado mentira sozinha, sem que ninguém tocasse neste arquivo — é por
+      // isso que ela nunca foi escrita, e que o teste varre `src/ui/` para que siga assim.
       //
       // A frase mudou de novo em `D-90`, e agora ela é a mesma verdade nos dois aparelhos: cada
       // um escolheu o seu, e o que falta chega pelo fio. O ramo do convidado sem `t=` continua

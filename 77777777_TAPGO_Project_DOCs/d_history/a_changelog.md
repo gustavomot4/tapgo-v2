@@ -7,6 +7,14 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-29] — M7: o comentário de `tela_convite.ts` falava do sorteio do `online` no futuro (`D-98`)
+
+- **Skill:** frontend-uiux. Módulo tocado: **M7** (`src/ui/tela_convite.ts`), só comentário — nenhuma linha de render, nenhum texto de tela, nenhum byte a mais no bundle.
+- **O que estava errado:** o bloco acima da frase de `.lacuna` justificava o portão de `QA-15` com uma hipótese — "no dia em que o sorteio do `online` for semeado pelo `roomId`". Esse dia foi hoje: `D-98` o entregou. O comentário continuava correto na conclusão e falso na data, que é o modo mais caro de um comentário envelhecer: quem o lesse concluiria que o `online` ainda começa fixo.
+- **O que ficou no lugar:** a mesma conclusão, com o fato datado — `D-98` semeia pelo `roomId` desde 2026-08-29, e **nenhum texto desta tela precisou mudar por causa disso**. É a prova do portão, não mais a previsão dele: a promessa que não foi escrita é o motivo de a tela não ter virado mentira sozinha.
+- **Portão:** o teste textual de `QA-15` (varredura de disco sobre `src/ui/`, com caso negativo) segue verde com o texto novo — ele proíbe "A/você/humano ... cobra primeiro" e a constante `FIRST`, e o comentário reescrito não os usa. Suíte **668/668**, `tsc` limpo.
+- **Nada mais de M7 falava de ordem fixa:** `grep` por `Q-11` e pelas variações de "segue em `'A'`" em `src/ui/` = **0**.
+
 ## [2026-08-29] — `T-17` fecha: no `online`, quem cobra primeiro sai do `roomId` (`D-98`/`QA-39`)
 
 - **Skill:** backend-domain. Módulos tocados: **M5** (`src/session/index.ts`) e os testes de M5. M2 não mudou uma linha — `createMatch(first)` já recebia o resultado desde 2026-08-12.
