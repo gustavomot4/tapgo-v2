@@ -7,6 +7,16 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-29] — CONTEXT a 92% do teto: a linha "Pronto" volta a ser estado, e `QA-38` fecha (`D-74`/`D-97`)
+
+- **Skill:** artifact-consistency. Nenhum byte em `src/`; só os quatro artefatos e os temas de `a_context/`.
+- **O aviso que disparou:** `a_context/a_context_source.md` media **3.699/4.000 (92%)**, e o `check.py` avisa em 90% justamente para o corte não ser feito na sessão em que estoura — quando quem escreve corta o que está à mão, não o que devia sair.
+- **O que saiu da linha "Pronto", por `D-74`:** a rastreabilidade (`T-17` nos três modos com `D-98`/`A-41`, `T-24`..`T-33`, `T-31`, `T-38`). **Nenhum ID se mudou de casa: os quatro já estavam em [[estado_modulos]]** — era duplicação, e a página ganhou o registro da segunda leva. Ficou no CONTEXT só o estado: `M1..M9` e a medição, `E-1..E-6` fechadas, suíte **668/668**, o ar **é `HEAD`**.
+- **O que mais saiu, e por quê:** o parêntese "a v1 é baseline morto: reescrita total, nenhum código reaproveitado" foi para [[entrega_e6]], que é onde mora registro histórico da entrega. Era prosa histórica ocupando uma linha de estado numérico — e a linha "Pronto" sozinha não comprava folga: rendia 89,7%, contra os 90% do próprio aviso.
+- **`QA-38` FECHADO.** `[[d_qa]]` entrou no Mapa de leitura do CONTEXT com a condição que justifica lê-lo — "ao registrar, fechar ou consultar um `QA-NN`". Era o único tema de `a_context/` fora do Mapa, e doc fora do mapa nunca é lido.
+- **`QA-40` aberto (achado de carona, regra 4):** as três ocupações declaradas por `D-97` estavam velhas — registro dizia 15.6k contra **16.5k** medidos, BACKLOG 13.5k contra **12.3k**, QA 3.4k contra **4.6k**. Nada as cobrava: a checagem de ocupação declarada do `check.py` casa `n/teto` em dígitos, e o `20k`/`8k` escrito à mão não casa. Os números foram reescritos pela medida do disco; o portão que impede a próxima defasagem é que fica aberto.
+- **Portão:** `python scripts/check.py` sem aviso de orçamento acima de 90% e sem aviso de tema fora do Mapa. CONTEXT em **3.527/4.000 (88%)**, 473 caracteres de folga até o teto e 73 até o aviso.
+
 ## [2026-08-29] — `A-41`: o sorteio do `online` passou no campo, e `T-17` fecha inteiro (`D-98`)
 
 - **Skill:** nenhuma — passada de campo do dono (`D-89`), registrada pela sessão frontend-uiux que a precedeu no mesmo dia.

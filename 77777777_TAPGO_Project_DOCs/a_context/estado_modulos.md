@@ -12,6 +12,11 @@ status: atual
 >
 > **Estado numérico continua morando só no CONTEXT** (versão, bundle, contagem da suíte), como o
 > [[CLAUDE]] exige. Esta página cita tarefa e módulo, nunca métrica.
+>
+> **Segunda leva, em 2026-08-29 (mesmo `D-74`):** a linha "Pronto" tinha voltado a carregar a
+> rastreabilidade — `T-17` nos três modos (`D-98`/`A-41`), `T-24`..`T-33`, `T-31` e `T-38` — e o
+> CONTEXT estava em **92%** do teto. Nenhum ID se mudou: os quatro já estavam nesta página, era
+> duplicação. Lá ficou o estado (`M1..M9`, `E-1..E-6`, suíte, o ar **é `HEAD`**); aqui, quem fechou o quê.
 
 | Módulo | O que entrega | Fechado por |
 |---|---|---|

@@ -12,6 +12,10 @@ data: 2026-08-19
 >
 > **Nenhum número vivo mora aqui.** Bundle, contagem da suíte e versão são do CONTEXT; abaixo eles
 > aparecem como o valor **lido no dia da entrega**, que é registro histórico e não fonte.
+>
+> **A v1 é baseline morto** (veio do [[a_context_source|CONTEXT]] em 2026-08-29, mesmo motivo de
+> `D-74`): a v2 é reescrita total, **nenhum código reaproveitado**. O CONTEXT diz qual é a versão
+> viva; por que a anterior não conta como herança está aqui.
 
 ## O portão de E-6 ([[b_plan|PLANO]]) — 3 itens
 
