@@ -115,6 +115,32 @@ let papel: Papel = 'host';
 let rodando = false;
 
 /**
+ * `QA-10`/`D-96` — o motivo pelo qual M6 recusou a base, ou `null` enquanto ela não foi recusada.
+ *
+ * Enquanto for `null` a página mede; depois de preenchido, **este aparelho não mede mais nada**:
+ * "Tentativa" fica desabilitado e a mensagem escrita em `#estado` é a última da tela. É a saída
+ * (c) de `QA-10`, e o que ela compra não está neste aparelho — está no outro. Com `?m=` truncado,
+ * a base do convidado é inválida e a do anfitrião não é: `joinRoom` só lança de um lado, e o outro
+ * queima os 20 s de `CONNECT_TIMEOUT_MS` a cada toque, registrando falha de rede que nunca houve.
+ * Como o procedimento é tocar nos DOIS ao mesmo tempo, desabilitar aqui é o que impede o toque lá.
+ */
+let baseRecusada: string | null = null;
+
+/**
+ * Tentativas descartadas por configuração: as que o canal **nunca chegou a abrir** (`D-96`, (b)).
+ *
+ * Fica fora de `Contador` de propósito — não é por modo. O que a torna inválida é o formato da
+ * base, que não muda quando o TURN entra ou sai; somá-la a um dos dois contadores seria contar
+ * erro de operador como medição de uma configuração de rede.
+ *
+ * **Nunca entra em `tentativas` nem em `falhas`.** É esta separação que `QA-10` pediu: sem ela, o
+ * convidado com base truncada devolvia `0/9 = 0,0%` — o número mais crível e mais falso que este
+ * projeto pagou. Com ela, devolve `0/0` e diz **por que**: `0/0` porque descartei é outra coisa
+ * que `0/0` porque ninguém tocou, e a tela precisa distinguir as duas.
+ */
+let descartadas = 0;
+
+/**
  * Índice da rotação: **qual sala** a próxima tentativa usa, e nada mais (`QA-12`).
  *
  * Era `contadores[modo].tentativas` — o mesmo número servia de estatística e de endereço. Duas
@@ -154,6 +180,44 @@ function iceAtual(): IceConfig | undefined {
 const modoAtual = (): Modo => (iceAtual() === undefined ? 'semTurn' : 'comTurn');
 
 /**
+ * Recusa a base, com o motivo que veio de M6 (`D-96`).
+ *
+ * Escreve em `#estado` e **conta o descarte**, nas duas portas por onde uma base inválida pode
+ * aparecer: a checagem de entrada e o `catch` de `tentativa()`. A mensagem daqui é a que tem de
+ * sobreviver ao turno — quem a apagava era `rodarUma()`, e é lá que está o conserto.
+ */
+function recusarBase(e: unknown): void {
+  baseRecusada = String(e);
+  descartadas += 1;
+  $('estado').textContent = `erro de configuração: ${baseRecusada}`;
+}
+
+/**
+ * A base é recusada ANTES da primeira tentativa, e não depois dela (`D-96`, saída (c)).
+ *
+ * **O gatilho é a exceção que `joinRoom` já lança** — nenhum formato de ID mora aqui. Conhecer o
+ * `ROOM_ID_RE` de M6 custaria abrir a porta congelada de `D-13` (o preço que reprovou `D-39` e
+ * `D-40`) ou duplicar a constante, e constante duplicada é constante que diverge: no dia em que
+ * M6 apertar o formato, a cópia daqui aceitaria o que o módulo recusa.
+ *
+ * **O preço declarado:** com base válida isto abre e fecha um canal na entrada da página. É o
+ * mesmo preço que o anfitrião já paga desde sempre no botão "Sortear sala" (`hostRoom` e o
+ * `close()` na linha seguinte), sobre exatamente a mesma sala — `idDaTentativa(base, 0)` é a
+ * própria base. Vale porque o que ele evita são 180 s de espera humana **no outro aparelho**.
+ *
+ * Roda só no convidado: a base do anfitrião não vem de link colado, vem de `hostRoom`, que a
+ * sorteou. O `catch` de `tentativa()` continua de pé como rede de segurança dos dois lados.
+ */
+function conferirBase(): void {
+  if (base === '') return;
+  try {
+    joinRoom(idDaTentativa(base, indice)).close();
+  } catch (e) {
+    recusarBase(e);
+  }
+}
+
+/**
  * Uma tentativa: abre o canal, espera `'connected'` ou `'failed'`, fecha e registra.
  *
  * O veredito é o do próprio M6 — inclusive o timeout de 20 s. Reimplementar o relógio aqui
@@ -173,7 +237,7 @@ const modoAtual = (): Modo => (iceAtual() === undefined ? 'semTurn' : 'comTurn')
 function tentativa(
   id: string,
   ice: IceConfig | undefined,
-): Promise<{ ok: boolean; ms: number; leitura: LeituraDoPar }> {
+): Promise<{ ok: boolean; ms: number; leitura: LeituraDoPar; abriu: boolean }> {
   return new Promise((resolve) => {
     const t0 = performance.now();
     let canal: Channel;
@@ -199,20 +263,23 @@ function tentativa(
           ? await lerParInsistindo(observador?.pcs ?? [], dormir)
           : { par: null, motivo: 'tentativa falhou: não há par para ler', observadas: 0, vivas: 0 };
         canal.close();
-        resolve({ ok, ms, leitura });
+        resolve({ ok, ms, leitura, abriu: true });
       })();
     };
 
     try {
       canal = joinRoom(id, ice);
     } catch (e) {
-      // ID malformado ou contexto inseguro: é falha de configuração, não de rede. Some da
-      // medição como falha, mas com o motivo na tela — número sujo é pior que número ausente.
-      $('estado').textContent = `erro de configuração: ${String(e)}`;
+      // ID malformado ou contexto inseguro: é falha de configuração, não de rede — e desde
+      // `D-96` ela **não é mais uma falha**. Quem separa as duas é `abriu`, e é um booleano, e
+      // não a string do motivo: motivo é texto de M6, e casar texto de outro módulo quebra na
+      // primeira vez que alguém melhorar a mensagem de lá.
+      recusarBase(e);
       resolve({
         ok: false,
         ms: 0,
         leitura: { par: null, motivo: 'canal nunca abriu', observadas: 0, vivas: 0 },
+        abriu: false,
       });
       return;
     }
@@ -225,7 +292,7 @@ function tentativa(
 }
 
 async function rodarUma(): Promise<void> {
-  if (rodando || base === '') return;
+  if (rodando || base === '' || baseRecusada !== null) return;
   rodando = true;
   pintar();
 
@@ -234,7 +301,18 @@ async function rodarUma(): Promise<void> {
   const id = idDaTentativa(base, indice);
   $('estado').textContent = `tentativa #${indice} (${modo === 'semTurn' ? 'sem TURN' : 'com TURN'}) — aguardando até ${CONNECT_TIMEOUT_MS / 1000} s…`;
 
-  const { ok, ms, leitura } = await tentativa(id, iceAtual());
+  const { ok, ms, leitura, abriu } = await tentativa(id, iceAtual());
+
+  if (!abriu) {
+    // `D-96`: o canal nunca abriu. Nada aqui anda — nem o denominador, nem o índice, nem o par
+    // exibido —, porque nada aconteceu: nenhuma sala foi usada e nenhuma rede foi exercitada.
+    // E `#estado` **não** é reescrito: a mensagem que `recusarBase` acabou de pôr na tela é a
+    // que o operador tem de ler. Era exatamente esta linha, `falhou após 0 ms`, que apagava o
+    // motivo no mesmo turno e tornava falsa a premissa que o comentário do `catch` alegava.
+    rodando = false;
+    pintar();
+    return;
+  }
 
   ultimaLeitura = leitura;
   ultimoParIndice = indice;
@@ -306,6 +384,13 @@ function resumo(): string {
     `timeout de M6: ${CONNECT_TIMEOUT_MS} ms · papel deste aparelho: ${papel} · índice: ${indice}`,
     l('SEM TURN            ', contadores.semTurn),
     l('CONFIG QUE VAI AO AR', contadores.comTurn),
+    // `D-96`, (b): a linha aparece SEMPRE, inclusive zerada. É ela que faz `0/0` deixar de ser
+    // ambíguo no texto que vira registro — `0/0` com descarte é base recusada, `0/0` sem descarte
+    // é aparelho em que ninguém tocou, e ausente não é zero.
+    `DESCARTADAS por configuração (fora de toda taxa): ${descartadas}`,
+    ...(baseRecusada === null
+      ? []
+      : [`BASE RECUSADA por M6 — este aparelho não mediu nada: ${baseRecusada}`]),
     '',
     ...abertura('SEM TURN', contadores.semTurn),
     ...abertura('CONFIG QUE VAI AO AR', contadores.comTurn),
@@ -346,8 +431,17 @@ function pintar(): void {
   $('sinc').textContent =
     base === ''
       ? 'sala ainda não sorteada'
-      : `${rodando ? 'agora' : 'próxima'}: ${rotuloDaTentativa(base, indice)} · ` +
-        `${modoAtual() === 'semTurn' ? 'sem TURN' : 'com TURN'}`;
+      : baseRecusada !== null
+        ? 'base recusada — não há próxima tentativa neste aparelho'
+        : `${rodando ? 'agora' : 'próxima'}: ${rotuloDaTentativa(base, indice)} · ` +
+          `${modoAtual() === 'semTurn' ? 'sem TURN' : 'com TURN'}`;
+
+  // `D-96`, (b): o descarte é número de tela, não só de texto colável. Fica junto do placar
+  // porque é o que explica um placar em `0/0` — e o guarda de `QA-09` acima é cego a esta
+  // truncatura (6 caracteres da rotação coincidem em 20 de 30 índices).
+  $('descartes').textContent =
+    `descartadas por configuração: ${descartadas}` +
+    (baseRecusada === null ? '' : ' · base recusada: nenhuma tentativa é possível neste aparelho');
 
   // `T-16`: o par da última tentativa, com o endereço INTEIRO — esta linha não sai do aparelho, e
   // é ela que os dois celulares comparam para saber o que a tentativa provou. O veredito vem
@@ -376,7 +470,7 @@ function pintar(): void {
   $('classes').innerHTML =
     abre('sem TURN', contadores.semTurn) + abre('vai ao ar', contadores.comTurn);
 
-  $<HTMLButtonElement>('tentar').disabled = rodando || base === '';
+  $<HTMLButtonElement>('tentar').disabled = rodando || base === '' || baseRecusada !== null;
   $<HTMLTextAreaElement>('resumo').value = resumo();
 }
 
@@ -422,6 +516,7 @@ function montar(): void {
         Aperte nos dois aparelhos ao mesmo tempo. Uma tentativa por vez, dos dois lados.
       </p>
       <table><tbody id="placar"></tbody></table>
+      <div id="descartes" class="aviso"></div>
       <div id="par" class="mono"></div>
       <div id="classe"></div>
       <div id="classes"></div>
@@ -448,6 +543,10 @@ function montar(): void {
   if (papel === 'guest') {
     $('salaBox').innerHTML =
       `<p>Este aparelho <strong>entra</strong> na sala:</p><p class="mono">${base}</p>`;
+    // `D-96`, saída (c): a base colada é conferida AQUI, antes de o operador poder tocar em
+    // "Tentativa" — é isso que faz o outro aparelho não queimar 20 s por toque, já que o
+    // procedimento manda tocar nos dois ao mesmo tempo.
+    conferirBase();
   } else {
     $('salaBox').innerHTML = `
       <p>Este aparelho <strong>abre</strong> a sala.</p>
