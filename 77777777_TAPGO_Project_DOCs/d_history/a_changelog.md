@@ -7,6 +7,15 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-29] — `QA-40` fecha: a checagem de ocupação declarada aprende a ler o `k` (`D-99`)
+
+- **Skill:** guardrails-review. Nenhum byte em `src/`; só `scripts/check.py` e os registros.
+- **O defeito:** a checagem casava `(\d[\d.]*)\s*/\s*(\d[\d.]*)` — dígito dos dois lados. A linha "Bloqueado/pendente" escreve `**16.5k**/20k`, com ênfase entre o número e a barra e `k` no lugar dos três zeros: **nenhum par casava**, e os três números de `D-97` podiam envelhecer sem um aviso. Foi exatamente o que aconteceu (registro em 15.6k contra 16.5k reais, quase mil caracteres de defasagem).
+- **A saída, e por que não a outra (`D-99`):** das duas que `QA-40` deixava abertas — o CONTEXT escrever o teto em dígitos, ou a checagem entender o `k` —, vale a segunda. `16.544/20.000` é exato, e exato num número que o script recalcula a cada edição deixaria o aviso vermelho a cada vírgula escrita no DECISIONS; aviso falso ensina a ignorar aviso, que é regra do próprio kit.
+- **Como ficou:** a ênfase sai do texto antes do casamento (só para esta varredura — o CONTEXT segue escrito como o dono escreve), e o sufixo `k` é lido como número **arredondado**, que traz a própria tolerância: meia casa da precisão ESCRITA. `16.5k` declara uma casa, logo vale ±50; `20k` declara zero casas e vale 20.000 exato para achar o arquivo daquele teto. Sem `k`, nada muda — o ponto segue separador de milhar e a comparação segue exata.
+- **Portão (verde nos dois sentidos):** `python scripts/check.py` **sem divergência** nos valores de hoje (registro **16.9k**/20k · BACKLOG **12.3k**/20k · QA **4.6k**/8k) e **acusando** os três, um a um, quando o número é editado à mão: `16.1k` -> "diz ... em 16100/20000, o arquivo tem 16931", `12.9k` -> 12900 contra 12331, `5.2k` -> 5200 contra 4609.
+- **Limite declarado (não é novo):** DECISIONS e BACKLOG compartilham o teto de 20.000, e a checagem aprova se o número bater com **um** dos dois — trocar os dois números entre si segue silencioso. É o desenho que o comentário do script já justifica ("acusar sem saber é aviso falso"), e não mudou aqui.
+
 ## [2026-08-29] — CONTEXT a 92% do teto: a linha "Pronto" volta a ser estado, e `QA-38` fecha (`D-74`/`D-97`)
 
 - **Skill:** artifact-consistency. Nenhum byte em `src/`; só os quatro artefatos e os temas de `a_context/`.

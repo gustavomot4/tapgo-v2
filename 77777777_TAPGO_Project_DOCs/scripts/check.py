@@ -1061,14 +1061,39 @@ for _arq, _teto in TETOS.items():
 # número declarado com o arquivo errado e acusava divergência onde não havia. Pego pelo teste
 # `test_ocupacao_declarada_certa_cala`; é a espécie do QA-14 (checagem que fala sobre outra
 # coisa) na sua forma mais fácil de cometer: generalizar um dicionário sem olhar as colisões.
+#
+# A casa escreve `**16.5k**/20k`, não `16.544/20.000` — e a versão que só casava dígito era
+# cega exatamente para a linha que existe para ser conferida: os três números de `D-97`
+# envelheceram quase mil caracteres sem um aviso (QA-40). Duas coisas mudam por isso.
+# A ênfase sai antes do casamento, porque `**16.5k**/20k` não é outro formato, é o mesmo
+# número em negrito. E o sufixo `k` é lido como o que ele é: um número ARREDONDADO, que
+# carrega a própria tolerância. `16.5k` declara uma casa decimal, logo vale a faixa de
+# ±50; cobrar o dígito exato de um número que ninguém escreveu exato deixaria o aviso
+# vermelho a cada vírgula editada no registro, e aviso falso ensina a ignorar aviso — a
+# regra do próprio kit. Sem `k` nada muda: o ponto segue separador de milhar, e a
+# comparação segue exata.
+def _ocupacao(bruto: str, sufixo: str):
+    """'12.000' -> (12000, 0) · '16.5k' -> (16500, 50) · '20k' -> (20000, 500).
+    Devolve (valor, tolerância): a tolerância é meia casa da precisão ESCRITA, nunca
+    uma folga escolhida a gosto."""
+    if not sufixo:
+        return int(bruto.replace(".", "")), 0
+    casas = min(len(bruto.partition(".")[2]), 3)
+    return round(float(bruto) * 1000), 10 ** (3 - casas) // 2
+
+
 ORCAMENTOS = {}
 for arq, teto in TETOS.items():
     ORCAMENTOS.setdefault(teto, []).append((arq, corpo.get(raiz / arq, "")))
 if texto_ctx:
     divergentes = []
-    for bruto_n, bruto_teto in re.findall(r"(\d[\d.]*)\s*/\s*(\d[\d.]*)", texto_ctx):
+    # O `*` sai do texto só para esta varredura: o CONTEXT segue escrito como o dono escreve.
+    for bruto_n, k_n, bruto_teto, k_teto in re.findall(
+        r"(\d[\d.]*)([kK]?)\s*/\s*(\d[\d.]*)([kK]?)", texto_ctx.replace("*", "")
+    ):
         try:
-            declarado, teto = int(bruto_n.replace(".", "")), int(bruto_teto.replace(".", ""))
+            declarado, folga = _ocupacao(bruto_n, k_n)
+            teto, _ = _ocupacao(bruto_teto, k_teto)
         except ValueError:
             continue
         candidatos = [(n, x) for n, x in ORCAMENTOS.get(teto, []) if x]
@@ -1076,7 +1101,7 @@ if texto_ctx:
             continue
         # Basta bater com UM arquivo daquele teto: "2.164/12.000" pode ser o DECISIONS ou o
         # BACKLOG, e o CONTEXT não diz qual. Acusar sem saber é aviso falso.
-        if any(declarado == medida(x) for _, x in candidatos):
+        if any(abs(declarado - medida(x)) <= folga for _, x in candidatos):
             continue
         nome = " ou ".join(n for n, _ in candidatos)
         tamanhos = " ou ".join(str(medida(x)) for _, x in candidatos)
