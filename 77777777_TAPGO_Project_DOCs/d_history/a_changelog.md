@@ -7,6 +7,15 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-29] — `QA-43` fecha: o `check.py` passa a medir "vivo" com a régua do `arquivar.py` (`D-101`)
+
+- **Skill:** debugging-diagnosis. Escopo: `scripts/check.py` e a prova nova `e_qa/test_qa43.py`. **Nada em `src/`** — `scripts/` não entra no bundle, não há rebuild nem bump.
+- **Linha-base registrada ANTES de editar**, como o §5 de [[qa43_uma_regua_so]] exige: pool do aviso `NENHUMA` contra as três candidatas do `arquivar.py` (`D-84`, `D-86`, `D-95`). O aviso de 90% não acende no vault real (o registro está em 89%), então a reprodução foi a de `QA-27` — cópia no scratchpad com o teto baixado, o `.kit-config.json` de verdade intocado (baixá-lo moveria a variável que o portão mede).
+- **As três frentes de `D-101`, aplicadas:** (1) `_vivos` adota o recorte de `HISTORICAS` do `arquivar.py` — fora `d_history`/`e_qa`/`docs`, fora `d_agent_learnings`, e o texto passa por `sem_bloco_de_codigo`; (2) o ramo `mais_antigas`, que é o **padrão do kit**, deixa de casar `REJEITADO` e, com pool vazio, imprime NENHUMA em vez de "as mais antigas"; (3) o comentário de `check.py:306-312` deixa de prometer um remédio que só um dos dois ramos entregava.
+- **Portão, depois:** pool do aviso `D-84, D-86, D-95` — **idêntico** à saída do `arquivar.py` sem flag, sem sobra nem falta. `python scripts/check.py` exit 0 com os **mesmos dois** avisos velhos (`D-64`, `microservice-sync`); `python e_qa/test_qa27.py` OK.
+- **A trava que substitui o `_comum.py` rejeitado:** `e_qa/test_qa43.py` monta um vault sintético em que cada linha ADOTADA exerce uma divergência de recorte (citada só pelo destino de arquivamento, só dentro de bloco cercado, só pelo `d_agent_learnings`, só por `docs/`), roda os **dois** programas e reprova se as listas diferirem — mais um caso para o ramo padrão. **Falha na versão anterior** (`5ebeaa6`): o `check.py` velho devolvia `D-91` contra as cinco do `arquivar.py`, e o ramo padrão oferecia `D-90`/`D-91`, as duas REJEITADAS.
+- **Efeito colateral desejado:** quando o registro passar de 90%, o aviso deixa de dizer "esgotado" e passa a oferecer 1.169 caracteres de trabalho real — em vez de mandar o dono ao teto que `D-97` reprovou.
+
 ## [2026-08-29] — `D-101` abre `QA-43`: uma régua só para "vivo", e ela é a saída do `arquivar.py`
 
 - **Skill:** evolution-auditor. **Nenhum byte de código** — a skill decide, não implementa. Auditoria inteira (lista-morta, P(passar), custo, portão) em [[qa43_uma_regua_so]].

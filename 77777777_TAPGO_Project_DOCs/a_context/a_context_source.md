@@ -30,9 +30,9 @@ Partida de ~1 minuto: contra a CPU, contra alguém no mesmo aparelho, ou **por l
 - **Pronto:** M1..M9 e a medição, **E-1..E-6 fechadas**; suíte **668/668**; o ar **é `HEAD`**.
 - **Bundle:** **414.974 B** (5,2% de 8 MB) lido de `dist/`, só o grafo de `index.html` (`D-93`/`T-36`); 278.646 B são os 32 SVGs de `T-19`; Phaser e Trystero fora, por `import()` (`D-27`)
 - **Em andamento (máx 1):** _(vazio)_
-- **Próximo:** `D-101` decidido e **não implementado** — o `check.py` alinhado ao `arquivar.py` (portão em [[qa43_uma_regua_so]]); nenhum card aberto
+- **Próximo:** `QA-42` — o `README.md:30` e a ajuda do `task.py` oferecem scripts do KIT que não vieram; nenhum card aberto
 - **Bloqueado/pendente:** _(nada)_ — `D-97`: registro **17.7k**/20k · BACKLOG **12.3k**/20k · QA **5.9k**/8k; subir teto segue REPROVADO (`D-99`/`D-101` cobram os três)
-- **Questões abertas:** Q-08, Q-09, Q-13 · **QA abertos:** QA-07, QA-17, QA-34, QA-42, QA-43 · respondidas e fechados: [[decisions_archive]]
+- **Questões abertas:** Q-08, Q-09, Q-13 · **QA abertos:** QA-07, QA-17, QA-34, QA-42 · respondidas e fechados: [[decisions_archive]]
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)
 - [[portao_de_aceite]] — **antes de fechar tarefa, declarar etapa fechada ou entregar**

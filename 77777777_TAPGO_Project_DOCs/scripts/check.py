@@ -304,11 +304,13 @@ elif _lm is not None:
     )
 
 # `candidatas`: qual criterio o aviso do DECISIONS usa para apontar o que arquivar.
-# "mais_antigas" e o padrao do kit. "nao_citadas" sai do criterio do projeto que decidiu
-# que deixa a tabela quem NENHUM `.md` vivo cita - e existe porque o padrao, num projeto que
-# preserva as REJEITADAS de proposito, aponta justamente para elas: a lista-morta que a fase
-# de evolucao varre sem abrir o arquivo. Aviso que manda apagar a memoria de rejeicao ensina
-# a re-propor o que ja morreu, que e o oposto do que o registro existe para fazer.
+# "mais_antigas" e o padrao do kit; "nao_citadas" sai do criterio do projeto que decidiu que
+# deixa a tabela quem NENHUM `.md` vivo cita. Desde `D-101` os DOIS ramos obedecem a mesma
+# regua: o aviso so oferece o que `python scripts/arquivar.py`, rodado sem flag, retiraria -
+# e sem flag ele nunca retira REJEITADA. Ate `D-101` o padrao apontava justamente para elas,
+# a lista-morta que a fase de evolucao varre sem abrir o arquivo; aviso que manda apagar a
+# memoria de rejeicao ensina a re-propor o que ja morreu, que e o oposto do que o registro
+# existe para fazer.
 CANDIDATAS = _cfg.get("candidatas", "mais_antigas")
 if CANDIDATAS not in CANDIDATAS_VALIDAS:
     falhas.append(
@@ -337,6 +339,14 @@ IGNORAR = {".git", ".venv", "venv", "node_modules", ".obsidian", "__pycache__",
            ".pytest_cache", ".mypy_cache", ".ruff_cache", ".next", "dist", "build"}
 # Notas que existem para serem lidas soltas: não são órfãs por não serem linkadas.
 ORFA_OK = {"README", "INDEX", "CLAUDE", "AGENTS"}
+# Pastas que NÃO contam como "alguém cita" no aviso do registro: citam por ofício (o
+# histórico datado, a evidência de `e_qa/`, os `docs/`) ou são DESTINO de arquivamento —
+# contá-las faz arquivo morto ressuscitar linha. Cópia deliberada do `HISTORICAS` do
+# `arquivar.py`, pelo motivo já escrito para `sem_bloco_de_codigo`: o kit não tem módulo
+# compartilhado, e acoplar os dois scripts quebraria o `check.py` copiado sozinho. O que
+# impede a terceira régua não é este comentário — é `e_qa/test_qa43.py`, que roda os dois
+# programas sobre o mesmo vault e reprova se as listas divergirem (`D-101`/`QA-43`).
+HISTORICAS_VIVOS = {"d_history", "e_qa", "docs"}
 # Acima disto o arquivo não é varrido (e o pulo é declarado como aviso, nunca silencioso).
 LIMITE_BYTES = 1_000_000
 
@@ -419,13 +429,21 @@ elif texto_dec and medida(texto_dec) > TETOS[DECISOES] * PERTO:
     # argumento do QA-04, e valia contra o próprio kit. O script não arquiva (a decisão
     # é do dono); ele avisa antes da parede e já aponta os candidatos.
     if CANDIDATAS == "nao_citadas":
-        # Sai da tabela quem NENHUM `.md` vivo cita. Recorte de "vivo": tudo menos o
-        # proprio registro, o arquivo morto e o historico datado - os tres citam por
-        # oficio, e contá-los faria todo ID parecer vivo para sempre.
+        # Sai da tabela quem NENHUM `.md` vivo cita. O recorte de "vivo" e o MESMO do
+        # `arquivar.py` (`notas_vivas` + `sem_bloco_de_codigo`), por `D-101`: fora o
+        # proprio registro, fora `d_history`/`e_qa`/`docs`, fora o `d_agent_learnings`,
+        # e sem o bloco cercado. Ate `QA-43` este ramo contava `e_qa/` inteiro - e o
+        # `e_qa/backlog_archive.md`, que e DESTINO de arquivamento, sozinho segurava
+        # sete linhas como "vivas". Arquivo morto ressuscitando linha e o oposto do que
+        # `D-43` mede, e o efeito nao era cosmetico: o pool ia a ZERO e o aviso, em vez
+        # de um numero menor, imprimia a instrucao OPOSTA ("este corte esta esgotado"),
+        # mandando o dono para o teto - a saida que `D-97` acabara de reprovar.
         _vivos = "\n".join(
-            txt for cam, txt in corpo.items()
-            if cam.name not in (Path(DECISOES).name, Path(ARQUIVO_MORTO).name)
-            and "d_history" not in cam.parts
+            sem_bloco_de_codigo(txt) for cam, txt in corpo.items()
+            if cam.name != Path(DECISOES).name
+            and cam.stem != "d_agent_learnings"
+            and not (HISTORICAS_VIVOS & set(
+                cam.relative_to(raiz).parts if raiz in cam.parents else ()))
         )
         # REJEITADA nao entra no pool, citada ou nao: desde `D-74` ela e a lista-morta
         # que a fase de evolucao varre sem abrir o arquivo, e aviso que manda apaga-la
@@ -443,8 +461,16 @@ elif texto_dec and medida(texto_dec) > TETOS[DECISOES] * PERTO:
             "NENHUMA — todo D-NN vivo e citado por algum .md, entao este corte esta "
             "esgotado e o peso nao esta mais em linha morta")
     else:
-        velhas = re.findall(r"^\|\s*(D-\d+)\s*\|[^|]*\|\s*(?:ADOTADO|REJEITADO)", texto_dec, re.M)
-        amostra = ", ".join(velhas[:5]) if velhas else "as mais antigas"
+        # `REJEITADO` saiu do casamento por `D-101`. Este e o ramo PADRAO do kit - o que
+        # roda em quem nunca abriu o `.kit-config.json` - e ele oferecia por escrito a
+        # linha que o `arquivar.py`, sem `--incluir-rejeitadas`, se recusa a retirar em
+        # QUALQUER projeto. Mesma ferramenta, mesmo `D-74`, padroes opostos.
+        velhas = re.findall(r"^\|\s*(D-\d+)\s*\|[^|]*\|\s*ADOTADO", texto_dec, re.M)
+        # Pool vazio e informacao, nao ausencia dela: "as mais antigas" apontaria para as
+        # REJEITADAS que a linha acima acabou de excluir.
+        amostra = ", ".join(velhas[:5]) if velhas else (
+            "NENHUMA — so restam linhas que o arquivamento nao retira sem flag; "
+            "rode python scripts/arquivar.py antes de concluir que a alavanca e o teto")
     avisos.append(
         f"{DECISOES} com {medida(texto_dec)}/{mil(TETOS[DECISOES])} caracteres "
         f"({100*medida(texto_dec)//TETOS[DECISOES]}%) — "
