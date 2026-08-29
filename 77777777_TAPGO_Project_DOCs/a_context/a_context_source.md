@@ -32,7 +32,7 @@ Partida de ~1 minuto: contra a CPU, contra alguém no mesmo aparelho, ou **por l
 - **Em andamento (máx 1):** _(vazio)_
 - **Próximo:** `A-40` (campo de `T-38`) e `A-30` · `D-83` **FECHADO — 10 de 10**
 - **Bloqueado/pendente:** registro **19.7k/20.000 — 285 livres, o próximo `D-NN` NÃO cabe**; subir o teto segue REPROVADO · BACKLOG **19.3k** · QA 7.3k
-- **Questões abertas:** Q-08, Q-09, Q-13 (**Q-15/Q-16 fechadas** por `D-84`/`D-88`) · **QA abertos:** QA-07, QA-17, QA-27, QA-29, QA-34, QA-35 (**QA-04/QA-05/QA-06/QA-10/QA-21/QA-32/QA-33/QA-36 fechados**) (**QA-20 fechado** por `T-29`) · respondidas e fechados: [[decisions_archive]]
+- **Questões abertas:** Q-08, Q-09, Q-13 (**Q-15/Q-16 fechadas** por `D-84`/`D-88`) · **QA abertos:** QA-07, QA-17, QA-27, QA-29, QA-34, QA-35, QA-37 (**QA-04/QA-05/QA-06/QA-10/QA-20/QA-21/QA-32/QA-33/QA-36 fechados**) · respondidas e fechados: [[decisions_archive]]
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)
 - [[portao_de_aceite]] — **antes de fechar tarefa, declarar etapa fechada ou entregar**
