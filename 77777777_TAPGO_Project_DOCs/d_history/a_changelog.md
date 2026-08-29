@@ -7,6 +7,18 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-29] — `D-101` abre `QA-43`: uma régua só para "vivo", e ela é a saída do `arquivar.py`
+
+- **Skill:** evolution-auditor. **Nenhum byte de código** — a skill decide, não implementa. Auditoria inteira (lista-morta, P(passar), custo, portão) em [[qa43_uma_regua_so]].
+- **O critério único, e é uma frase:** o aviso do `check.py` só pode oferecer o que `python scripts/arquivar.py`, **rodado sem flag**, retiraria. Ela decide as três frentes de uma vez — o recorte de "vivo" (`HISTORICAS` + `d_agent_learnings` + descarte de bloco cercado), o corte de status (REJEITADA fora nos **dois** ramos de `candidatas`, não só no `nao_citadas` que `QA-27` consertou) e o texto do pool vazio (NENHUMA, nunca "as mais antigas", que aponta para linha que a ferramenta se recusa a tirar).
+- **STEP 0, medido em `5ebeaa6` antes de a nota existir:** no mesmo vault e no mesmo instante, o pool do ramo `nao_citadas` do `check.py` é **0** e as candidatas do `arquivar.py` são **3** (`D-84`, `D-86`, `D-95`, 1.169 caracteres). Com o recorte alinhado, o `check.py` devolve **exatamente** essas três — sem sobra nem falta.
+- **Por que não é cosmético:** o registro estava em **17.851/20.000 = 89,25%** e o aviso acende em 90% — uma linha editada. Ao acender, ele não daria um número menor: daria a instrução oposta (*"este corte está esgotado e o peso não está mais em linha morta"*), mandando o dono ao teto — a alavanca reprovada duas vezes e contra a qual `D-97` decidiu na véspera. **Já aconteceu no papel:** a entrada de 2026-08-08 deste changelog tirou essa conclusão do pool errado.
+- **Divergência nova, não estava no relatório de `QA-43`:** o `arquivar.py` descarta bloco cercado (`sem_bloco_de_codigo`) antes de contar citação, e o `_vivos` do `check.py` não. **Efeito medido hoje: 0** — os três IDs são os mesmos com e sem o filtro. Entra no critério por ser da mesma família e custar zero; não justifica nada.
+- **Duas saídas REJEITADAS na mesma sessão:** um `scripts/_comum.py` importado pelos dois (acopla scripts que hoje rodam avulsos — `check.py` copiado sozinho passaria a quebrar) e uma checagem nova no `check.py` comparando os dois pools (mexeria na contagem de **38** de `D-100`). A trava que fica no lugar delas é um **teste**, ao lado de `e_qa/test_qa27.py`, rodando os dois scripts sobre o mesmo vault sintético.
+- **A armadilha de `QA-37` foi conferida, não presumida:** esta sessão escreveu `D-84`/`D-86`/`D-95` em `e_qa/qa43_uma_regua_so.md`, e `e_qa/` é justamente o que o `check.py` conta como vivo **hoje**. Não moveu número nenhum — o pool de hoje já era 0, e `python scripts/arquivar.py` depois de tudo escrito segue em **3 candidatas, 1.169 caracteres**, idênticas. A linha-base do portão sobreviveu ao registro do achado.
+- **Portão desta sessão:** `python scripts/check.py` verde (exit 0, os dois avisos velhos: `D-64` e `microservice-sync`) e `python e_qa/test_qa27.py` OK (exit 0) — os dois **sem** tocar em `scripts/`. O portão da implementação, escrito antes do experimento, está no §5 da nota.
+- **`QA-43` continua aberto de propósito:** decidido, falta implementar. Fechá-lo é a sessão seguinte.
+
 ## [2026-08-29] — `QA-27` fecha: o aviso de 90% do `check.py` para de oferecer a lista-morta
 
 - **Skill:** debugging-diagnosis. Escopo autorizado: `scripts/check.py`, o arquivo que a linha de `QA-27` nomeia desde 2026-08-20. Um conserto, uma sessão.
