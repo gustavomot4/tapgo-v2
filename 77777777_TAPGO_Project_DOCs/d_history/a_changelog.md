@@ -7,6 +7,16 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-29] — `QA-29` fecha: os três textos do portão passam a dizer o número contado (`D-100`)
+
+- **Skill:** guardrails-review. Nenhum byte em `src/`; só `README.md`, o docstring de `scripts/check.py` e os registros.
+- **O defeito:** o portão era declarado em **três** lugares com **três** números. `README.md:25` dizia 33 julgados (16 falhas · 17 avisos), `README.md:70` dizia "14 falhas · 12 avisos", e o docstring do `check.py` já listava outra coisa — ele cresceu em `D-99` e nas sessões anteriores, e os dois textos do README não acompanharam.
+- **A contagem medida no código:** **18 FALHAS** (as numeradas 1..18 no docstring, todas achadas no corpo do script — a 14 mora dentro da seção 6, a 10 e a 11 dividem um bloco) e **20 AVISOS** (cada `avisos.append` mapeado; os três da varredura de histórico são um só, e o "tabela de QA sem coluna Fechado em" é o outro braço do "achado vencido", como o docstring já os tratava). Total **38**, contra 284 itens de checklist (118 no CHECKLIST + 166 nas skills, recontados) — **13%**, não 12%.
+- **O que ficou FORA da contagem, declarado (`D-100`):** a validação do próprio `.kit-config.json` (JSON quebrado, chave desconhecida, teto não-inteiro, `linha_max` malformado, `candidatas` inválida). Ela reprova o commit, mas julga o **contrato do arquivo de configuração**, não um item de checklist do kit. O critério está escrito nos dois lugares: número sem régua é o que já envelheceu duas vezes aqui (188/18, depois 33).
+- **Correção de honestidade, na mesma frase:** o README dizia que estes números eram "**cobrados por `scripts/test_check.py`**". Esse arquivo **nunca existiu nesta instalação** (`git log --all -- '*/scripts/test_check.py'` volta vazio) — é do repositório do kit. A frase agora diz que nada cobra o número aqui, e que quem mexer nas checagens acerta o README na mesma sessão.
+- **Registrado, não consertado (regra 4):** `QA-41` — o bloco `scripts/` do README (linha 70) lista `test_check.py` e `new_project.py`, que não existem, e omite `arquivar.py`, `evidencia.py`, `escopo_hook.py` e `portao_hook.py`, que existem.
+- **Portão:** `python scripts/check.py` verde (exit 0, só os dois avisos velhos: `D-64` prometido no changelog e `microservice-sync` sem sessão), e os três textos dizendo **18 falhas · 20 avisos = 38**.
+
 ## [2026-08-29] — `QA-40` fecha: a checagem de ocupação declarada aprende a ler o `k` (`D-99`)
 
 - **Skill:** guardrails-review. Nenhum byte em `src/`; só `scripts/check.py` e os registros.

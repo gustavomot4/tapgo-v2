@@ -9,7 +9,7 @@ Os caminhos seguem o padrão do repositório (b_process/e_repository_standard.md
 documentação em a_context/ b_process/ c_technical_docs/ d_history/ e_qa/.
 Mudou o padrão? O bloco de constantes no topo é o único lugar a mexer.
 
-FALHAS (código 1)
+FALHAS (código 1) — 18 checagens
   1. Orçamento do contexto-fonte        7. Wikilink sem destino
   2. Registro de decisões inchado       8. Segredo versionado (árvore + histórico)
   3. Fonte única (contexto/plano/dec.)  9. .gitignore sem cobertura mínima de segredo
@@ -23,7 +23,7 @@ FALHAS (código 1)
                                        17. Registro declarado em .kit-config.json acima do teto
                                        18. Linha de registro acima do limite declarado
 
-AVISOS (não reprovam; com --avisos-reprovam, reprovam)
+AVISOS — 20 checagens (não reprovam; com --avisos-reprovam, reprovam)
   frontmatter ausente · placeholders · templates em rascunho · nota órfã ·
   arquivo grande não varrido · varredura de histórico que não rodou ·
   portão automático (pre-commit) não instalado · módulo do PLANO sem tarefa ·
@@ -36,9 +36,15 @@ AVISOS (não reprovam; com --avisos-reprovam, reprovam)
   ID prometido no CHANGELOG e nunca registrado ·
   skill declarada responsável no PLANO que nunca rodou
 
-O README declara quantos itens de checklist existem e quantos esta máquina julga.
-Esse número é cobrado por `test_check.py` — a frase mais honesta do kit não pode
-ser a que envelhece em silêncio.
+O README declara quantos itens de checklist existem e quantos esta máquina julga:
+38 = as 18 FALHAS + os 20 AVISOS listados acima. Nada cobra esse número neste projeto
+(`scripts/test_check.py` é do repositório do kit e não veio na instalação), então quem
+mexer nas listas acima acerta o README na mesma sessão — a frase mais honesta do kit
+não pode ser a que envelhece em silêncio.
+
+Fora da contagem, de propósito: a validação do próprio `.kit-config.json` (JSON quebrado,
+chave desconhecida, teto não-inteiro). Ela reprova, mas julga o CONTRATO do arquivo de
+configuração, não um item de checklist do kit.
 
 Marque uma linha com `checar:ignore` para isentá-la da varredura de segredo
 (use só quando o valor for comprovadamente falso — a marca fica visível no diff).

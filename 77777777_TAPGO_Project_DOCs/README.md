@@ -22,7 +22,7 @@ Nenhuma ferramenta serve para tudo, e o kit fica mais útil quando você sabe on
 | Multi-repo / monorepo grande | Não | o kit assume um repositório e um `CONTEXT` |
 | CI/CD, revisão por pares | Não cobre | o único automatismo é o pre-commit de `scripts/check.py` |
 
-**A limitação honesta mais importante:** o kit tem **284** itens de checklist (118 no [[b_checklist|CHECKLIST]] + 166 nos `b_process/skills/`); `scripts/check.py` julga **33** deles (16 reprovam o commit, 17 avisam) — cerca de 12%. Estes números são **cobrados por `scripts/test_check.py`**: a frase mais honesta do kit não pode ser a que envelhece em silêncio (ela já tinha envelhecido uma vez, dizendo 188/18). O resto depende de você rodar a seção certa do [[b_checklist|CHECKLIST]]. Isto é um kit de disciplina com algumas travas automáticas — não um sistema que impede erro.
+**A limitação honesta mais importante:** o kit tem **284** itens de checklist (118 no [[b_checklist|CHECKLIST]] + 166 nos `b_process/skills/`); `scripts/check.py` julga **38** deles (18 reprovam o commit, 20 avisam) — cerca de 13%. Os 38 são as duas listas do docstring do `check.py`, contadas ali (fora delas, de propósito: a validação do próprio `.kit-config.json`, que reprova mas julga o contrato do arquivo de configuração). **Nada cobra este número neste projeto** — `scripts/test_check.py` é do repositório do kit e não veio na instalação —, então quem mexer nas checagens acerta esta linha na mesma sessão: a frase mais honesta do kit não pode ser a que envelhece em silêncio (ela já envelheceu duas vezes, dizendo 188/18 e depois 33). O resto depende de você rodar a seção certa do [[b_checklist|CHECKLIST]]. Isto é um kit de disciplina com algumas travas automáticas — não um sistema que impede erro.
 
 **A segunda:** a varredura de segredo é uma rede de arrasto, não uma garantia. Ela cobre 11 famílias de padrão e foi medida contra 8 formatos reais de vazamento (8/8, 0 falsos-positivos em 12 iscas) — mas um segredo em formato que ela não conhece passa. Ver *a auditoria (fica no kit)*, que mediu a versão anterior detectando **0 de 8**.
 
@@ -67,7 +67,7 @@ LICENSE           MIT
 .github/workflows portão rodando em Linux e Windows a cada push
 scripts/
   task.py         ponto de entrada único: check · check-all · test · hook
-  check.py        o portão de higiene (14 falhas · 12 avisos)
+  check.py        o portão de higiene (18 falhas · 20 avisos)
   test_check.py   testes de regressão dos scripts — só stdlib
   install_hook.py instala o pre-commit
   new_project.py  cria projeto novo · `--upgrade` atualiza o processo de um existente
