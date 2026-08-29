@@ -7,6 +7,18 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-29] — `QA-27` NÃO fecha: o defeito está no `check.py`, e o `arquivar.py` já honrava `D-74`
+
+- **Skill:** guardrails-review. **Nenhum byte de código** — passagem adversarial dirigida, relatório em [[c_qa_pass01_report_260829_1125]]. A sessão não consertou nada, por decisão de escopo declarada abaixo.
+- **A premissa do pedido não se sustenta:** o pedido mandava alinhar `scripts/arquivar.py` ao critério de `D-74`, dizendo que ele oferece REJEITADA como candidata. Ele não oferece — o guarda `if "REJEIT" in status and not INCLUIR_REJEITADAS` já está lá, com o porquê no docstring. O portão pedido passa **hoje, sem alteração**: `python scripts/arquivar.py` preserva as 10 REJEITADAS e propõe só `D-84`, `D-86`, `D-95` (todas ADOTADO); `--incluir-rejeitadas` volta a listar as 11.
+- **Onde `QA-27` mora de verdade:** em `scripts/check.py:425-434`, o ramo `CANDIDATAS == "nao_citadas"` — exatamente o arquivo que a linha de `QA-27` em [[d_qa|QA]] já nomeava desde 2026-08-20. Ele lista quem nenhum `.md` vivo cita **sem nenhum guarda de `REJEITADO`**.
+- **Reprodução, numa cópia do vault (original intocado):** teto de `c_decisions.md` baixado para 18.000 (para acender o aviso de 90%; a medida real é 17.327) e as menções a `D-92` retiradas de `e_qa/registro_no_teto.md`, sua **única** citação viva. Observado: `Candidatas: D-92` — uma REJEITADA. Sem esse segundo passo o aviso imprime `NENHUMA`, que é a "proteção por acidente de citação" que a própria coluna Correção de `QA-27` denunciava.
+- **Medida do acidente:** das 10 REJEITADAS vivas, **8 só escapam do `check.py` porque uma nota de `e_qa/` as menciona** — e `e_qa/` é justamente o que o `arquivar.py` exclui do critério. `D-92` pende de **uma** citação.
+- **Agravante documental:** o comentário de `check.py:306-312` declara que `nao_citadas` existe porque o padrão `mais_antigas` "aponta justamente para elas". O remédio anunciado não remedia, e o padrão é pior por escrita explícita: `check.py:438` casa `(?:ADOTADO|REJEITADO)`.
+- **Registrado, não consertado (regra 4):** `QA-43` — uma régua em cada script para o mesmo `D-43`. O `check.py` conta `e_qa/` como citação viva, inclusive `e_qa/backlog_archive.md`, que se declara "Somente leitura" e sozinho mantém sete REJEITADAS "vivas"; o `arquivar.py` exclui a pasta inteira. Alinhar as duas é `D-NN`, não conserto: muda o aviso em todo projeto do kit.
+- **Por que a sessão parou (regra 2 do `CLAUDE.md`):** o escopo aberto foi `arquivar.py`, que está correto. O conserto é no `check.py`, o portão de toda sessão — outro módulo, outra autorização. O conserto em si é de uma linha: filtrar `velhas` por status no ramo `nao_citadas`.
+- **Portão:** `python scripts/arquivar.py` sem REJEITADA e `--incluir-rejeitadas` com elas (os dois já passavam); `python scripts/check.py` verde (exit 0, os dois avisos velhos: `D-64` e `microservice-sync`); `--historico-completo` e `git grep` por segredo limpos.
+
 ## [2026-08-29] — `QA-41` fecha: o bloco `scripts/` do README passa a listar os arquivos que existem
 
 - **Skill:** artifact-consistency. Nenhum byte em `src/` nem em `scripts/`; só `README.md` e os registros.
