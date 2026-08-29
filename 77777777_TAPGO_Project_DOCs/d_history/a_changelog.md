@@ -7,6 +7,16 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-28] — `QA-37` FECHADO: a varredura de citações passa a enxergar o `CLAUDE.md` da raiz
+
+- **Skill:** debugging-diagnosis, a pedido do dono na mesma sessão em que `QA-37` foi aberto — a `guardrails-review` não conserta, e trocar de sessão para uma linha de `scripts/` custaria a releitura de contexto inteira. **Sem card `T-NN`, de propósito:** o BACKLOG está em 96% e `QA-37` já é o ID que rastreia.
+- **O conserto:** a varredura virou `notas_vivas(vault)`, que continua fazendo `vault.rglob("*.md")` e agora soma `pai.glob("*.md")` — os `.md` do nível de cima. Duas restrições escritas no docstring: **só se o pai tiver `.git`** (sem o guarda, um projeto cujo `a_context/` fica na própria raiz sairia varrendo a pasta de trabalho do dono) e **`glob`, não `rglob`** (descer ali arrastaria `node_modules/`, e uma dependência que escrevesse "D-42" no changelog dela salvaria a `D-42` deste projeto).
+- **Portão, em inteiros, medido pelo MESMO comando** (`python scripts/arquivar.py`), com o "antes" gerado a partir do próprio arquivo sem as três linhas do conserto: candidatas **12 -> 11**, citadas por arquivo vivo **34 -> 35**, economia estimada **4.611 -> 4.220** caracteres — os **391** da linha de `D-89`. E o alvo, direto: `D-89` aparece na lista de candidatas **1 -> 0** vezes.
+- **A armadilha que quase transformou o portão em teatro, e é o achado mais útil do dia:** a linha de `QA-37` em [[d_qa]] **cita `D-89`** para explicar o defeito — e `d_qa.md` é um `.md` vivo do vault. Registrar o achado fez `D-89` passar a ser "citado" e derrubou as candidatas para 11 **sem conserto nenhum**. As duas medições acima foram feitas com `d_qa.md` na versão de `HEAD~1`, restaurada em seguida (`git status` limpo no arquivo), porque de outro modo o número mediria a nota, não o código.
+- **Escopo:** `scripts/arquivar.py` só. Zero byte de `src/`; suíte não rodada por não haver o que regredir.
+- **Verificado e NÃO registrado:** o `check.py` ancora no vault pelo mesmo `achar_vault()`, então também não lê o `CLAUDE.md`. Fica sem `QA-NN` por falta de reprodução: lá o efeito seria um `[[wikilink]]` quebrado na raiz, e o `CLAUDE.md` deste projeto usa caminhos (`a_context/...`), não wikilinks. Se algum dia usar, o achado nasce com reprodução.
+- **Orçamentos:** CONTEXT **3.979 -> 3.978/4.000**; QA **7.362 -> 7.357/8.000**; registro **19.715** e BACKLOG **19.257** intocados. O caminho para os ~4,2k do registro está aberto e **não foi percorrido** — arquivar é ato deliberado do dono.
+
 ## [2026-08-28] — `QA-37`: o arquivamento não enxerga o `CLAUDE.md`, e os dois orçamentos medidos antes de gastar
 
 - **Skill:** guardrails-review, sessão de evolução. **Zero byte de código alterado.** `A-40` **segue aberta**: o resultado de campo não chegou nesta sessão, e portão de campo sem os dois inteiros do dono não se registra (regra 5 — lacuna declarada fica declarada).
