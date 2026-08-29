@@ -104,7 +104,7 @@ hoje. Isto não mata a ideia — mas diz que a sala de 8 precisa de **medição 
 3. **Autoridade do bot** — em qual aparelho o bot roda e em que nível, respeitando o teto de 70%
    de `D-10`. Bot rodando no aparelho de um jogador é vantagem de informação, não é neutro.
 4. **Extensão das portas de M5/M6** — reabre `D-13`, logo é `D-NN` do dono, não decisão de sessão.
-5. **`Q-11` continua no caminho** — como M7 recebe o `roomId` já trava a tela de convite hoje.
+5. ~~**`Q-11` continua no caminho**~~ — respondida por `D-73`: M7 sorteia o `roomId` com `newRoomId` e o passa aos dois aparelhos, e desde `D-98` é ele que semeia o sorteio de quem cobra primeiro no `online`. A sala de 8 herda esse ID como o único valor comum a todos — não como decisão a tomar de novo.
 
 **Invariante que a sala de 8 não pode violar:** o torneio funciona **sem rede nenhuma** (ver
 "Invariante de arquitetura" acima). A sala de 8 é camada opcional sobre o torneio offline —

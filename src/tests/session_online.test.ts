@@ -13,7 +13,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Como em `session.test.ts`: o que se importa de M5 é a porta. `Move` vem de M6 porque a rede
 // falsa injeta jogada crua — é o papel do duplo, não da tela.
-import { CONNECT_TIMEOUT_MS, createSession } from '../session/index';
+import { CONNECT_TIMEOUT_MS, createSession, newRoomId } from '../session/index';
 import type { LinkStatus, MatchState, Session, SessionConfig } from '../session/index';
 import { setSignalingLoader } from '../net/index';
 import type { Move } from '../net/index';
@@ -133,6 +133,19 @@ async function ate(cond: () => boolean, oque: string, voltas = 20): Promise<void
 const BR = 'BR';
 const AR = 'AR';
 
+/**
+ * Duas salas FIXAS, e o lado que cada uma sorteia (`D-98`: o `roomId` é a semente do `online`).
+ *
+ * Elas são literais de propósito. Com `newRoomId()` a cada teste, metade das execuções começaria
+ * com `'B'` e as asserções de roteiro abaixo — que comparam com uma disputa de referência jogada
+ * no modo `local` — passariam a falhar em dias alternados: teste intermitente, não portão. O
+ * sorteio em si é medido no seu próprio caso, sobre milhares de salas.
+ *
+ * Os dois IDs têm a forma que `joinRoom` exige (26 caracteres do Crockford base32 de M6).
+ */
+const SALA_PRIMEIRO_A = 'H352T699HKN8EV9C0C6CT6SYR8';
+const SALA_PRIMEIRO_B = '5DNMP4HF7T4BG0CEY0VGA6TA4N';
+
 function cfgOnline(seed: number, localSide: Side, roomId?: string): SessionConfig {
   const base = { mode: 'online' as const, seed, teams: { A: BR, B: AR }, localSide };
   // `exactOptionalPropertyTypes` está ligado: montar condicionalmente, nunca atribuir undefined.
@@ -172,18 +185,22 @@ function nova(cfg: SessionConfig): Session {
 /**
  * Dois aparelhos na mesma sala, já conectados.
  *
- * O `roomId` é lido **da rede falsa**, e não da sessão anfitriã, porque a porta congelada de M5
- * não devolve o ID que M6 sorteou — é a lacuna registrada em `Q-11`. O teste contorna olhando o
- * duplo; a tela, em produção, não tem esse recurso, e é por isso que a lacuna está declarada.
+ * Os DOIS entram por `roomId`, que é como M7 cria a sessão desde `D-73` — e, desde `D-98`, é
+ * também o que faz os dois sortearem o MESMO primeiro cobrador. O helper deixou de ler o ID da
+ * rede falsa (o contorno que a lacuna `Q-11` exigia) porque agora quem manda o ID é o chamador,
+ * exatamente como a tela de convite manda.
  */
-async function doisAparelhos(seed: number): Promise<{
+async function doisAparelhos(
+  seed: number,
+  sala: string = SALA_PRIMEIRO_A,
+): Promise<{
   a: Session;
   b: Session;
   linkA: LinkStatus[];
   linkB: LinkStatus[];
   salaB: SalaFake;
 }> {
-  const a = nova(cfgOnline(seed, 'A'));
+  const a = nova(cfgOnline(seed, 'A', sala));
   const linkA: LinkStatus[] = [];
   a.subscribe((_s, l) => linkA.push(l));
 
@@ -214,9 +231,8 @@ async function doisAparelhos(seed: number): Promise<{
  * `'B'` nos dois. É a única diferença para `doisAparelhos` — mesma sala, mesmo `seed`, e o
  * `localSide` repetido.
  *
- * Quem abre a sala aqui é o primeiro aparelho (`roomId` ausente ⇒ `hostRoom`), pelo mesmo motivo
- * de `doisAparelhos`: a porta congelada de M5 não devolve o ID que M6 sorteou (`Q-11`). Isso não
- * muda o que está sob teste — o que faz o par ser espelhado é o `localSide`, não quem hospedou.
+ * Os dois entram pelo mesmo `roomId`, como em `doisAparelhos`. Isso não muda o que está sob
+ * teste — o que faz o par ser espelhado é o `localSide` repetido, não quem hospedou.
  *
  * **Desde `T-31` (`D-90`) este helper devolve o par JÁ DESFEITO**, e é de propósito: os dois
  * anunciam a seleção ao conectar, o anúncio de um chega assinado com o lado do outro, e a
@@ -230,7 +246,7 @@ async function parEspelhado(seed: number): Promise<{
   link1: LinkStatus[];
   link2: LinkStatus[];
 }> {
-  const b1 = nova(cfgOnline(seed, 'B'));
+  const b1 = nova(cfgOnline(seed, 'B', SALA_PRIMEIRO_A));
   const link1: LinkStatus[] = [];
   b1.subscribe((_s, l) => link1.push(l));
 
@@ -249,7 +265,7 @@ async function parEspelhado(seed: number): Promise<{
   );
 
   // As duas primeiras previsões que o dono mediu em campo em 2026-08-20, antes de qualquer
-  // código: com `first = 'A'` (o `online` não sorteia — ver `Q-11`) e `localSide = 'B'` nos dois,
+  // código: com `first = 'A'` (aqui pela sala escolhida, `D-98`) e `localSide = 'B'` nos dois,
   // `turn !== localSide` dos dois lados, logo os DOIS ficam de defesa e nenhum cobra. A terceira
   // — que o toque acontece e a jogada SAI — é a pré-condição da guarda, e é o que os testes
   // abaixo exercitam.
@@ -305,12 +321,12 @@ afterEach(async () => {
 describe('T-13 — o modo online produz o MESMO MatchState que cpu e local', () => {
   it('a disputa inteira coincide, cobrança a cobrança, nos dois aparelhos', async () => {
     // As três sementes têm uma condição a mais desde `T-17`: precisam ser sementes cujo sorteio de
-    // quem cobra primeiro dê `'A'` no modo `local`. O motivo é a lacuna `Q-11`: `local` sorteia
-    // (`D-48`) e `online` ainda não pode, porque os dois aparelhos não compartilham semente, então
-    // `online` segue começando em `'A'`. Com uma semente que sorteasse `'B'`, a referência e os
-    // dois aparelhos divergiriam na 1ª cobrança — e a divergência seria a lacuna, não um defeito
-    // do transporte, que é justamente o que este teste existe para medir. `12345` sorteia `'B'` e
-    // por isso saiu; `99991` entrou no lugar. Quando `Q-11` for respondida, esta restrição cai.
+    // quem cobra primeiro dê `'A'` no modo `local`. A razão não é mais lacuna nenhuma — é que os
+    // dois sorteios têm sementes DIFERENTES por desenho (`D-98`): `local` sorteia com `cfg.seed`
+    // e `online` com o `roomId`. Para as duas disputas serem comparáveis cobrança a cobrança,
+    // este caso combina os dois lados: sementes que dão `'A'` no `local`, e `SALA_PRIMEIRO_A` no
+    // `online`. `12345` sorteia `'B'` no `local` e por isso saiu; `99991` entrou no lugar. O caso
+    // simétrico — sala que sorteia `'B'` — é medido logo abaixo, no portão do próprio sorteio.
     for (const seed of [0, 7, 99_991]) {
       salas.length = 0;
 
@@ -343,7 +359,7 @@ describe('T-13 — o modo online produz o MESMO MatchState que cpu e local', () 
       // aponta a lacuna certa em vez de deixar a divergência parecer defeito do transporte.
       expect(
         esperado.kicks[0]?.side,
-        `seed ${seed}: o sorteio de local deu 'B', e online ainda não sorteia (Q-11) — troque a semente ou responda Q-11`,
+        `seed ${seed}: o sorteio de local deu 'B' e a sala deste caso dá 'A' — troque a semente`,
       ).toBe('A');
 
       // 2) A MESMA sequência de zonas, agora com os dois lados em aparelhos diferentes.
@@ -360,25 +376,113 @@ describe('T-13 — o modo online produz o MESMO MatchState que cpu e local', () 
     }
   });
 
-  it('T-17: o modo online NÃO sorteia quem cobra primeiro — lacuna de Q-11, conferida', async () => {
-    // Protege a lacuna dos DOIS lados. Fazer `online` sortear com `cfg.seed` reprovaria aqui, e
-    // com razão: as sementes dos dois aparelhos são independentes (cada tela chama `createSession`
-    // com a sua), então cada um começaria com um cobrador diferente e as duas disputas divergiriam
-    // na 1ª cobrança — trocar um lado fixo por uma disputa quebrada. Enquanto `Q-11` estiver
-    // aberta, `'A'` começa, e é o mesmo comportamento que `T-13` entregou.
-    for (const seed of [0, 1, 7, 12_345]) {
+  it('T-17/D-98: os dois aparelhos sorteiam o MESMO lado, e é o lado da sala', async () => {
+    // O portão do sorteio no `online`, dos dois lados. As sementes de `cfg.seed` são DIFERENTES
+    // em cada aparelho de propósito: em produção cada tela chama `createSession` com a sua, e é
+    // exatamente por isso que `cfg.seed` não podia semear este sorteio — semeá-lo com ela faria
+    // cada aparelho começar com um cobrador e divergir na 1ª cobrança. O que os dois têm em comum
+    // é o `roomId`, e é ele que decide (`D-98`).
+    for (const [sala, esperado] of [
+      [SALA_PRIMEIRO_A, 'A'],
+      [SALA_PRIMEIRO_B, 'B'],
+    ] as const) {
+      for (const [seedA, seedB] of [
+        [0, 1],
+        [7, 12_345],
+        [99_991, 3],
+      ] as const) {
+        salas.length = 0;
+
+        const a = nova(cfgOnline(seedA, 'A', sala));
+        await ate(() => salas.length === 1, 'a sala do anfitrião abrir');
+        const b = nova(cfgOnline(seedB, 'B', sala));
+        await ate(() => salas.length === 2, 'a sala do convidado abrir');
+
+        const onde = `sala ${sala.slice(0, 4)}…, sementes ${seedA}/${seedB}`;
+        expect(a.state().turn, `${onde}: o anfitrião não tirou o lado da sala`).toBe(esperado);
+        expect(b.state().turn, `${onde}: o convidado não tirou o lado da sala`).toBe(esperado);
+        expect(a.state().turn, `${onde}: os dois aparelhos divergiram`).toBe(b.state().turn);
+
+        a.dispose();
+        b.dispose();
+        await respirar();
+      }
+    }
+  });
+
+  it('T-17/D-98: a mesma sala dá sempre o mesmo primeiro cobrador', async () => {
+    // "Mesma semente = mesmo primeiro cobrador", que no `online` quer dizer mesma SALA. Sem isto,
+    // reabrir o mesmo link depois de um `'failed'` (`D-75`) poderia recomeçar com o outro cobrador
+    // enquanto o aparelho do outro lado seguisse com o antigo.
+    for (const sala of [SALA_PRIMEIRO_A, SALA_PRIMEIRO_B]) {
       salas.length = 0;
-      const { a, b } = await doisAparelhos(seed);
-
-      expect(a.state().turn, `semente ${seed}: o anfitrião sorteou no modo online`).toBe('A');
-      expect(b.state().turn, `semente ${seed}: o convidado sorteou no modo online`).toBe('A');
-
-      // O que a lacuna garante e o sorteio ainda não pode garantir: os dois aparelhos concordam.
-      expect(a.state().turn).toBe(b.state().turn);
-      a.dispose();
-      b.dispose();
+      const primeira = nova(cfgOnline(1, 'A', sala)).state().turn;
+      for (let i = 0; i < 5; i += 1) {
+        expect(nova(cfgOnline(i * 977, 'B', sala)).state().turn, `sala ${sala}: repetição ${i}`).toBe(
+          primeira,
+        );
+      }
+      for (const v of vivas) v.dispose();
+      vivas.length = 0;
       await respirar();
     }
+  });
+
+  it('T-17/D-98: numa sala que sorteia B, a ordem fica em B até o fim das alternadas', async () => {
+    // A não-alternância (`D-48`) é regra de M2, e `session.test.ts` já a confere em `cpu`/`local`.
+    // Aqui ela é conferida pelo caminho do `online`, e com o sorteio dando o lado que NÃO é o
+    // padrão antigo: se algum dia alguém devolver o `'A'` fixo a esta camada, este caso reprova
+    // na primeira linha, e não numa asserção de placar 12 cobranças depois.
+    const { a, b } = await doisAparelhos(31, SALA_PRIMEIRO_B);
+    expect(a.state().turn, 'a sala que sorteia B não começou em B').toBe('B');
+
+    // 10 defesas = 0x0 ao fim da fase regular: o caminho garantido até as alternadas, sem sorte.
+    for (let k = 0; k < 10; k += 1) {
+      cobrar(a, b, 'L', 'L');
+      await respirar();
+    }
+    expect(a.state().phase).toBe('suddenDeath');
+    expect(a.state().turn, 'a alternada não começou com o sorteado').toBe('B');
+
+    // Primeira rodada alternada: gol de quem cobra primeiro, defesa do outro → decide.
+    cobrar(a, b, 'L', 'R');
+    await respirar();
+    cobrar(a, b, 'L', 'L');
+    await respirar();
+
+    const fim = a.state();
+    expect(fim.phase).toBe('finished');
+    expect(fim.kicks.length).toBe(12);
+    expect(fim.winner, 'quem cobrou primeiro na alternada fez o gol').toBe('B');
+    fim.kicks.forEach((k, i) => {
+      expect(k.side, `cobrança ${i}`).toBe(i % 2 === 0 ? 'B' : 'A');
+    });
+    expect(b.state(), 'os dois aparelhos divergiram').toEqual(fim);
+  });
+
+  it('T-17/D-98: sobre milhares de salas, nenhum lado passa do esperado', async () => {
+    // Uniformidade. Um `roomId` que caísse quase sempre no mesmo lado devolveria em silêncio o
+    // defeito que `D-48` removeu — um lado cobrando primeiro quase sempre —, e nenhum dos casos
+    // acima veria isso: eles medem duas salas fixas. Aqui são milhares, sorteadas por `newRoomId`,
+    // que é a mesma função que a tela de convite chama.
+    //
+    // A faixa é 4 desvios-padrão da binomial (σ = √(n)/2 ≈ 22 em 2.000): larga o bastante para
+    // não piscar sozinha, estreita o bastante para reprovar viés de 2 pontos percentuais.
+    const N = 2_000;
+    let ladoA = 0;
+    for (let i = 0; i < N; i += 1) {
+      salas.length = 0;
+      const s = createSession(cfgOnline(i, 'A', newRoomId()));
+      if (s.state().turn === 'A') ladoA += 1;
+      s.dispose();
+    }
+
+    const desvio = Math.abs(ladoA - N / 2);
+    expect(desvio, `${ladoA} salas em 'A' de ${N} — sorteio enviesado`).toBeLessThanOrEqual(
+      4 * (Math.sqrt(N) / 2),
+    );
+    expect(ladoA, 'nenhuma sala caiu em B').toBeGreaterThan(0);
+    expect(ladoA, 'nenhuma sala caiu em A').toBeLessThan(N);
   });
 
   it('a ordem em que as duas escolhas chegam não muda o resultado', async () => {
@@ -840,7 +944,7 @@ describe('D-80 — reentrada de sessão zerada dentro dos 20 s termina a disputa
     const esperado: MatchState = referencia.state();
     referencia.dispose();
     expect(esperado.phase, 'a referência não terminou').toBe('finished');
-    expect(esperado.kicks[0]?.side, 'semente com sorteio B — ver a lacuna Q-11').toBe('A');
+    expect(esperado.kicks[0]?.side, "semente com sorteio 'B' — a sala deste caso dá 'A'").toBe('A');
 
     const { a, b, linkA } = await doisAparelhos(seed);
     const salaA = salas[0];
@@ -891,7 +995,10 @@ describe('D-90 — a seleção do outro aparelho chega pelo `Pick`, não pelo li
     vistoA: Array<Record<Side, string | null>>;
     vistoB: Array<Record<Side, string | null>>;
   }> {
-    const a = nova(cfgEscolhendo(seed, 'A'));
+    // Como em `doisAparelhos`: os DOIS entram pelo mesmo `roomId` (`D-73`), que desde `D-98` é
+    // também a semente do sorteio de quem cobra primeiro. Com o anfitrião sem `roomId`, os dois
+    // sortearam de fontes diferentes e divergiam em metade das execuções — teste intermitente.
+    const a = nova(cfgEscolhendo(seed, 'A', SALA_PRIMEIRO_A));
     const vistoA: Array<Record<Side, string | null>> = [];
     a.subscribe((_s, _l, t) => vistoA.push(t));
 

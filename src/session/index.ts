@@ -24,18 +24,18 @@
  *
  * **Quem cobra primeiro (`T-17` / `D-48`)** — esta camada sorteia, com o `Rng` semeado de M1, e
  * passa o resultado a `createMatch(first)`. M2 não sorteia (ficaria impura) e M7 não sorteia (a
- * tela não é fonte de acaso). Vale em `cpu` e `local`; em `online` a lacuna é `Q-11` — ver a
- * justificativa completa na declaração de `first`, dentro de `createSession`.
+ * tela não é fonte de acaso). Vale nos três modos: em `cpu` e `local` a semente é `cfg.seed`; no
+ * `online` é o `roomId` (`D-98`) — ver a justificativa na declaração de `first`.
  *
  * **Como o anfitrião publica o `roomId` (`Q-11`, respondida por `D-73`):** ele não sai daqui —
  * ele ENTRA. M7 sorteia com `newRoomId`, reexportado logo abaixo, monta o link e passa o ID em
  * `cfg.roomId` nos dois aparelhos. A porta congelada de `D-13` segue com quatro métodos, e o
- * quinto que devolveria o ID não foi comprado. O que `D-73` **não** fechou é o sorteio de quem
- * cobra primeiro no `online`: ele exigiria M5 semear o sorteio pelo `roomId`, o que é mudança de
- * regra desta camada e não de uma linha de export — segue em `'A'`, declarado abaixo em `first`.
+ * quinto que devolveria o ID não foi comprado. `D-98` pega carona nisso: o ID que os DOIS
+ * aparelhos já têm em comum vira a semente do sorteio do `online` — sem byte novo no fio, sem
+ * método novo na porta e sem tocar `SessionConfig`.
  */
 
-import type { CountryCode, Side, Zone } from '../core/index';
+import type { CountryCode, Rng, Side, Zone } from '../core/index';
 import { createRng } from '../core/index';
 import { createMatch, play } from '../engine/index';
 import type { MatchState } from '../engine/index';
@@ -121,6 +121,28 @@ function isZone(value: unknown): value is Zone {
 }
 
 /**
+ * A semente compartilhada do `online` (`D-98`): o `roomId` virado inteiro de 32 bits.
+ *
+ * Os dois aparelhos precisam tirar o MESMO primeiro cobrador, e `cfg.seed` não serve para isso —
+ * é um por aparelho, sorteado localmente. O único valor que os dois já têm em comum é o ID da
+ * sala, que desde `D-73` chega em `cfg.roomId` nos dois. Derivá-lo aqui não custa byte no fio
+ * nem método na porta congelada de `D-13`: é função pura sobre um dado que já existe.
+ *
+ * O algoritmo é FNV-1a de 32 bits, escrito à mão pela razão de M1 (biblioteca a mais é peso no
+ * bundle). Ele não precisa ser criptográfico — quem precisa disso é `newRoomId`, e é ele que
+ * sorteia o ID com `crypto`. Aqui só se pede que IDs vizinhos caiam em sementes espalhadas, e
+ * o `>>> 0` no fim garante inteiro seguro para `createRng`, que recusa qualquer outra coisa.
+ */
+function seedFromRoomId(roomId: string): number {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < roomId.length; i += 1) {
+    hash ^= roomId.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return hash >>> 0;
+}
+
+/**
  * Recusa configuração torta ANTES de existir sessão.
  *
  * Falhar na criação é mais barato que falhar na terceira cobrança: aqui o dono vê a linha
@@ -200,38 +222,47 @@ export function createSession(cfg: SessionConfig): Session {
    */
   const remoteSide: Side = localSide === 'A' ? 'B' : 'A';
 
-  // O ÚNICO gerador da sessão, e a única fonte de acaso desta camada. Nasce nos três modos: em
-  // `cpu` e `local` ele sorteia quem cobra primeiro (`D-48`, abaixo) e em `cpu` ainda alimenta a
-  // CPU; em `online` nasce sem ser lido, para que a mesma configuração produza a mesma validação
-  // nos três e o teste de equivalência compare sessões criadas do mesmo jeito.
+  // O gerador da sessão, semeado por `cfg.seed`. Nasce nos três modos: em `cpu` e `local` ele
+  // sorteia quem cobra primeiro (`D-48`, abaixo) e em `cpu` ainda alimenta a CPU; em `online`
+  // nasce sem ser lido — lá o sorteio corre num gerador próprio, semeado pelo `roomId` (`D-98`),
+  // e é isso que mantém a mesma configuração produzindo a mesma validação nos três modos.
   const rng = createRng(cfg.seed);
 
   /**
    * Quem cobra primeiro (`D-48` / `T-17`) — sorteio, não mais a constante `'A'` de M2.
    *
-   * Três coisas que esta linha decide e que valem estar escritas:
+   * Quatro coisas que estas linhas decidem e que valem estar escritas:
    *
-   * 1. **O gerador é o `Rng` de M1, nunca o nativo do JS.** O nativo aqui derrubaria de uma vez o
-   *    portão de M1 (uma única chamada nativa em todo o `src/`, conferida por teste que varre os
-   *    arquivos) e o aceite "roda 2x com o mesmo resultado": a mesma semente passaria a produzir
-   *    disputas diferentes. Note que o nome da função nativa não está escrito em lugar nenhum
-   *    deste arquivo de propósito — a varredura conta ocorrências no texto, comentário incluído.
-   * 2. **É a PRIMEIRA leitura do gerador da sessão**, antes de qualquer `pick` da CPU. Por isso
-   *    `cpu` e `local` tiram o MESMO primeiro cobrador para a mesma semente, que é o que deixa o
-   *    teste de equivalência entre modos continuar comparando disputas comparáveis. Mover esta
-   *    linha para depois do primeiro `pick` quebraria a equivalência sem quebrar nenhum tipo.
-   * 3. **O modo `online` não sorteia, e isso é lacuna declarada, não esquecimento.** Os dois
-   *    aparelhos precisariam tirar o MESMO lado, e hoje não têm semente em comum: `cfg.seed` é de
-   *    quem chama, um por aparelho. O valor que os dois já compartilham é o `roomId`, que desde
-   *    `D-73` chega em `cfg.roomId` nos DOIS aparelhos — semeá-lo por ele é possível hoje, e é
-   *    mudança de regra desta camada, não a linha de export que `T-21` comprou. Sortear com
-   *    sementes independentes faria
-   *    os dois aparelhos começarem com cobradores diferentes e divergirem na primeira cobrança:
-   *    seria trocar um lado fixo por uma disputa quebrada. Enquanto ninguém decidir semear pelo
-   *    `roomId`, `online` segue com `'A'` — o mesmo comportamento que `T-13` entregou e testou, e
-   *    a tela de convite (`T-21`) o diz em voz alta: quem convida cobra primeiro.
+   * 1. **O gerador é o `Rng` de M1, nunca o nativo do JS** — nos dois ramos. O nativo aqui
+   *    derrubaria de uma vez o portão de M1 (uma única chamada nativa em todo o `src/`, conferida
+   *    por teste que varre os arquivos) e o aceite "roda 2x com o mesmo resultado": a mesma
+   *    semente passaria a produzir disputas diferentes. Note que o nome da função nativa não está
+   *    escrito em lugar nenhum deste arquivo de propósito — a varredura conta ocorrências no
+   *    texto, comentário incluído.
+   * 2. **Em `cpu` e `local` é a PRIMEIRA leitura do gerador da sessão**, antes de qualquer `pick`
+   *    da CPU. Por isso os dois tiram o MESMO primeiro cobrador para a mesma semente, que é o que
+   *    deixa o teste de equivalência entre modos continuar comparando disputas comparáveis. Mover
+   *    esta leitura para depois do primeiro `pick` quebraria a equivalência sem quebrar tipo.
+   * 3. **No `online` a semente é o `roomId`** (`D-98`), num gerador próprio: é o único valor que
+   *    os dois aparelhos comprovadamente compartilham, e o sorteio precisa dar o MESMO lado nos
+   *    dois — sementes independentes fariam cada um começar com um cobrador e divergir já na
+   *    primeira cobrança, que é trocar um lado fixo por uma disputa quebrada. O gerador da sessão
+   *    segue sem ser lido no `online`, de propósito: se ele entrasse aqui, `cfg.seed` (um por
+   *    aparelho) voltaria a decidir o resultado.
+   * 4. **`online` sem `roomId` continua em `'A'`, e isso é lacuna declarada, não esquecimento.**
+   *    É o ramo que `D-73` deixou de pé sem virar contrato: nele M6 sorteia um ID que a porta
+   *    congelada não devolve, então ninguém consegue convidar ninguém para essa sala — sem peer,
+   *    não há segundo aparelho de quem divergir. Inventar uma semente a partir de `cfg.seed`
+   *    aqui seria o "ausente virou zero" que o kit proíbe. M7 sempre passa `roomId` (`D-73`).
    */
-  const first: Side = mode === 'online' ? 'A' : rng.int(2) === 0 ? 'A' : 'B';
+  const primeiroDe = (gerador: Rng): Side => (gerador.int(2) === 0 ? 'A' : 'B');
+
+  const first: Side =
+    mode !== 'online'
+      ? primeiroDe(rng)
+      : cfg.roomId === undefined
+        ? 'A'
+        : primeiroDe(createRng(seedFromRoomId(cfg.roomId)));
 
   const cpu: Cpu | null =
     mode === 'cpu' && cfg.level !== undefined ? createCpu(cfg.level, rng) : null;

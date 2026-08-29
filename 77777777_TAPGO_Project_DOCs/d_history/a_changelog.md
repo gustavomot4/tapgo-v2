@@ -7,6 +7,16 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-29] — `T-17` fecha: no `online`, quem cobra primeiro sai do `roomId` (`D-98`/`QA-39`)
+
+- **Skill:** backend-domain. Módulos tocados: **M5** (`src/session/index.ts`) e os testes de M5. M2 não mudou uma linha — `createMatch(first)` já recebia o resultado desde 2026-08-12.
+- **A regra (`D-98`):** o `online` deixa de começar sempre em `'A'` e passa a sortear com um gerador de M1 semeado pelo **`roomId`** (`seedFromRoomId`, FNV-1a de 32 bits). É o único valor que os dois aparelhos comprovadamente compartilham; `cfg.seed` é um por aparelho, e semeá-lo com ela faria cada lado começar com um cobrador e divergir na 1ª cobrança. Zero byte novo no fio, zero método novo na porta de `D-13`, `SessionConfig` intacto.
+- **`online` sem `roomId` segue em `'A'`, declarado:** é o ramo que `D-73` deixou de pé sem virar contrato — M6 sorteia um ID que a porta não devolve, ninguém consegue convidar ninguém para essa sala, logo não há segundo aparelho de quem divergir. Inventar semente a partir de `cfg.seed` ali seria "ausente virou zero".
+- **Portão:** 9.975 `'A'` em 20.000 salas fora da suíte (4σ sobre 2.000 dentro dela), mesma sala = mesmo cobrador, os dois aparelhos concordando com `cfg.seed` DIFERENTES em sala de `'A'` e em sala de `'B'`, ordem constante até o fim das alternadas numa disputa que começa em `'B'`, `grep` do gerador nativo em `src/` = **1**. Suíte **668/668** (eram 665), `tsc` limpo, 3 rodadas.
+- **Testes consertados, não de carona:** o par da rede falsa entrava assimétrico (anfitrião sem `roomId`, convidado com o da rede falsa). Com o sorteio valendo, isso divergia em metade das execuções — os helpers passaram a mandar o mesmo ID aos dois, que é o que a tela de convite faz desde `D-73`.
+- **`QA-39` fechado junto:** `b_plan.md`, `online_p2p.md` e o card do BACKLOG tratavam `Q-11` como aberta e travando o `online`; `D-73` a respondeu em 2026-08-19. Os três foram reescritos.
+- **Falta o campo:** `A-41` — ler a frase "X cobra primeiro" em DOIS aparelhos reais e conferir que é a mesma, com links novos até ver o sorteio cair no convidado.
+
 ## [2026-08-29] — `D-97`: os QUATRO orçamentos caem por arquivamento, e nenhum teto sobe
 
 - **Skill:** delivery-review (consistência de documentos; nenhuma linha de produção mudou).
