@@ -427,8 +427,16 @@ elif texto_dec and medida(texto_dec) > TETOS[DECISOES] * PERTO:
             if cam.name not in (Path(DECISOES).name, Path(ARQUIVO_MORTO).name)
             and "d_history" not in cam.parts
         )
-        velhas = [i for i in re.findall(r"^\|\s*(D-\d+)\s*\|", texto_dec, re.M)
-                  if not re.search(rf"\b{i}\b", _vivos)]
+        # REJEITADA nao entra no pool, citada ou nao: desde `D-74` ela e a lista-morta
+        # que a fase de evolucao varre sem abrir o arquivo, e aviso que manda apaga-la
+        # ensina a re-propor o que ja morreu. Ate `QA-27` so a citacao acidental de uma
+        # nota de `e_qa/` a segurava aqui - protecao por acaso, nao por criterio. O corte
+        # e o mesmo do `arquivar.py` ("REJEIT" no 3o campo), de proposito: dois criterios
+        # para a mesma linha e como o portao e a ferramenta discordarem em silencio.
+        velhas = [i for i, status in re.findall(
+                      r"^\|\s*(D-\d+)\s*\|[^|]*\|([^|]*)\|", texto_dec, re.M)
+                  if "REJEIT" not in status.upper()
+                  and not re.search(rf"\b{i}\b", _vivos)]
         # Pool vazio e informacao, nao ausencia de informacao: dizer "as mais antigas"
         # aqui mandaria arquivar linha que o proprio criterio proibe retirar.
         amostra = ", ".join(velhas[:5]) if velhas else (

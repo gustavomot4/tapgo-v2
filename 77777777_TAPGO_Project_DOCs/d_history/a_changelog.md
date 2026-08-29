@@ -7,6 +7,17 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-29] — `QA-27` fecha: o aviso de 90% do `check.py` para de oferecer a lista-morta
+
+- **Skill:** debugging-diagnosis. Escopo autorizado: `scripts/check.py`, o arquivo que a linha de `QA-27` nomeia desde 2026-08-20. Um conserto, uma sessão.
+- **Reprodução refeita antes de tocar no código** (cópia do vault no scratchpad, original intocado): teto de `c_decisions.md` a 18.000 para acender o aviso de 90% (a medida real é 17.327) e as menções a `D-92` retiradas de `e_qa/registro_no_teto.md` — mais, desta vez, do próprio relatório [[c_qa_pass01_report_260829_1125]], que ao ser escrito virou a segunda citação viva de `D-92` e escondia o defeito atrás do mesmo acidente de citação que ele denuncia.
+- **Observado (versão anterior):** `Candidatas: D-92` — REJEITADA, a lista-morta que `D-74` manda preservar. **Prova liga/desliga no mesmo estado:** `arquivar.py` imprime `REJEITADAS preservadas: … D-92` e não a oferece; `check.py` a oferecia. Mesmo vault, mesmo critério, duas respostas.
+- **Causa:** o ramo `CANDIDATAS == "nao_citadas"` filtrava a tabela **só** por citação (`scripts/check.py:425-434`), sem ler o 3º campo. Sem guarda de status, a única coisa que segurava uma REJEITADA era alguém tê-la mencionado — proteção por acaso.
+- **Correção mínima:** o `re.findall` do ramo passa a capturar o status junto do ID e descarta `"REJEIT"`, o mesmo corte que o `arquivar.py` já fazia. Nada mais mudou: o ramo `mais_antigas` (padrão do kit) segue como estava.
+- **Regressão:** `python e_qa/test_qa27.py` — vault sintético com uma REJEITADA e uma ADOTADA, ambas não citadas. **Falha (exit 1) no `check.py` de `b608cfb`** (oferecia `D-90, D-91`) e **passa (exit 0) na versão nova** (`D-91`).
+- **`QA-43` continua aberto e NÃO foi consertado de carona:** alinhar o `_vivos` do `check.py` ao `HISTORICAS` do `arquivar.py` muda o que o aviso oferece em qualquer projeto do kit — é `D-NN`, não conserto.
+- **Portão:** `python scripts/check.py` verde (exit 0, os dois avisos velhos: `D-64` e `microservice-sync`); `python e_qa/test_qa27.py` OK; reprodução no scratchpad passa a imprimir `NENHUMA`.
+
 ## [2026-08-29] — `QA-27` NÃO fecha: o defeito está no `check.py`, e o `arquivar.py` já honrava `D-74`
 
 - **Skill:** guardrails-review. **Nenhum byte de código** — passagem adversarial dirigida, relatório em [[c_qa_pass01_report_260829_1125]]. A sessão não consertou nada, por decisão de escopo declarada abaixo.
