@@ -33,11 +33,12 @@ sorteio) · `A-17` (o torneio) · `A-18` (a página no ar) · `A-19` (os três c
 de M7/online, vinda do [[a_context_source|CONTEXT]] em 2026-08-29 por `D-97`: `A-27`..`A-32` e
 `A-35`..`A-37` (as telas de `T-24`..`T-33`, com campo) · `A-38` (`T-30`/`T-32`/`T-33` **no ar**) ·
 `A-39` (`T-31` inteira e confirmada, nos 2 aparelhos) · `A-40` (`T-38`, com a de medição já rodando
-`D-96`). O ar **é `HEAD`**: o jogo por `A-38`, a medição por `A-40`.
+`D-96`) · `A-41` (o sorteio do `online`, nos 2 aparelhos). O ar **é `HEAD`**: o jogo por `A-38`, a medição por `A-40`.
 
 **`T-17`** (o sorteio de quem cobra primeiro, `D-48`) está nos **três** modos desde 2026-08-29.
 Em `cpu` e `local` a semente é `cfg.seed`; no `online` é o **`roomId`** (`D-98`), o único valor que
-os dois aparelhos compartilham — `D-73` já o entregava aos dois. Falta só o campo: `A-41`.
+os dois aparelhos compartilham — `D-73` já o entregava aos dois. **Com campo** desde 2026-08-29
+(`A-41`): as duas telas anunciaram o mesmo cobrador, e o sorteio caiu nos dois lados.
 
 > O PLANO congelado é `D-13`, e mora no [[b_plan|PLANO]]. Mudança de rumo é `D-NN` novo, nunca
 > edição do plano — é a regra do próprio `D-13`.

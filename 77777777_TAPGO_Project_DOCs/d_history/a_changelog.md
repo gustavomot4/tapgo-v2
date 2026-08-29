@@ -7,6 +7,15 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-29] — `A-41`: o sorteio do `online` passou no campo, e `T-17` fecha inteiro (`D-98`)
+
+- **Skill:** nenhuma — passada de campo do dono (`D-89`), registrada pela sessão frontend-uiux que a precedeu no mesmo dia.
+- **Quem rodou:** o dono, em dois aparelhos reais. O sandbox não tem como fazer isto — o card mede a frase anunciada no topo de DUAS telas, e aqui não existe um segundo aparelho para convidar.
+- **Resultado:** as duas telas anunciaram o MESMO primeiro cobrador, e o sorteio caiu nos **dois lados** em links diferentes. É a metade do portão que separa "sorteia de verdade" de "voltou a ser sempre quem convida" — sem ela, `D-98` estaria comprovado só em laboratório (9.975 `'A'` em 20.000 salas) e nunca no fio.
+- **`T-17` fecha nos três modos, com campo.** Era o último card aberto do quadro: `cpu`/`local` desde 2026-08-12 (`D-48`), `online` desde hoje (`D-98`), campo hoje (`A-41`).
+- **Lacuna declarada:** a contagem de links não foi anotada, então não há número para comparar com o "~4 esperado / 6 no mesmo lado é achado" do card. Não reprova — o portão pede os dois lados vistos, e eles foram —, e nenhum `QA-NN` foi aberto por isso: não houve sequência suspeita a registrar.
+- **O quadro ficou sem card aberto.** Nenhum `T-NN` e nenhum `A-NN` de pé; o que abrir é escolha do dono.
+
 ## [2026-08-29] — M7: o comentário de `tela_convite.ts` falava do sorteio do `online` no futuro (`D-98`)
 
 - **Skill:** frontend-uiux. Módulo tocado: **M7** (`src/ui/tela_convite.ts`), só comentário — nenhuma linha de render, nenhum texto de tela, nenhum byte a mais no bundle.
