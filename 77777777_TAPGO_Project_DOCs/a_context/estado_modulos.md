@@ -29,7 +29,11 @@ status: atual
 **Etapas:** `E-1`..`E-6` fechadas — a prova de cada critério está em [[entrega_e6]].
 
 **Cards de conferência no aparelho já fechados:** `A-08` (os 17/17 de E-4) · `A-14` (o painel do
-sorteio) · `A-17` (o torneio) · `A-18` (a página no ar) · `A-19` (os três comandos verdes).
+sorteio) · `A-17` (o torneio) · `A-18` (a página no ar) · `A-19` (os três comandos verdes) · e a leva
+de M7/online, vinda do [[a_context_source|CONTEXT]] em 2026-08-29 por `D-97`: `A-27`..`A-32` e
+`A-35`..`A-37` (as telas de `T-24`..`T-33`, com campo) · `A-38` (`T-30`/`T-32`/`T-33` **no ar**) ·
+`A-39` (`T-31` inteira e confirmada, nos 2 aparelhos) · `A-40` (`T-38`, com a de medição já rodando
+`D-96`). O ar **é `HEAD`**: o jogo por `A-38`, a medição por `A-40`.
 
 **`T-17`** (o sorteio de quem cobra primeiro, `D-48`) está em `cpu` e `local`. No `online` ele
 segue em `'A'`: semeá-lo pelo `roomId` — hoje possível, porque `D-73` o entrega aos dois aparelhos —

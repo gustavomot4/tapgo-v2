@@ -7,6 +7,18 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-08-29] — `D-97`: os QUATRO orçamentos caem por arquivamento, e nenhum teto sobe
+
+- **Skill:** delivery-review (consistência de documentos; nenhuma linha de produção mudou).
+- **O pedido eram três orçamentos; o `check.py` acusava quatro.** Além de `c_decisions.md` (98%), `c_backlog.md` (98%) e `d_qa.md` (92%), o próprio `a_context_source.md` estava em **3.919/4.000 (97%)** — e o portão da sessão era "nenhum aviso de orçamento acima de 90%".
+- **`a_context/c_decisions.md`: 19.715 -> 15.605.** `python scripts/arquivar.py --aplicar` retirou os 11 `D-NN` que nenhum `.md` vivo cita (`D-44` `D-45` `D-49` `D-63` `D-70` `D-75` `D-77` `D-80` `D-87` `D-91` `D-94`), critério de `D-43`. As REJEITADAS ficaram inteiras: são a lista-morta de `D-74`.
+- **`b_process/c_backlog.md`: 19.786 -> 13.495.** `--backlog --aplicar` transformou 4 cards fechados (`A-40`, `A-30`, `T-38`, `T-37`) em ponteiro com ID e `**Módulo:**` preservados.
+- **`a_context/d_qa.md`: 7.398 -> 3.438.** Os 10 `QA-NN` FECHADOS (`QA-05` `QA-10` `QA-20` `QA-21` `QA-31` `QA-32` `QA-33` `QA-35` `QA-36` `QA-37`) saíram íntegros para `e_qa/decisions_archive.md`, pela regra que o cabeçalho já declarava desde `D-74`. Ficam os 5 abertos.
+- **`a_context/a_context_source.md`: 3.919 -> 3.578.** A leva de cards de conferência (`A-27`..`A-32`, `A-35`..`A-40`) saiu da linha "Pronto" para [[estado_modulos]] — o mesmo destino que `D-74` já dera ao histórico de módulos. Nenhum ID sumiu.
+- **`QA-38` (BAIXO, aberto):** o `d_qa.md` é o único tema de `a_context/` fora do Mapa de leitura do CONTEXT — aviso de pé desde `D-50`. Registrado, não consertado: a linha custa orçamento do arquivo que esta sessão acabou de encolher (regra 4).
+- **Nenhum teto subiu.** `D-94` teve de comprar essa saída para o BACKLOG ontem; hoje nenhum dos quatro precisou. Números em `e_qa/d97_tres_orcamentos.md`.
+- **Decisões:** D-97.
+
 ## [2026-08-28] — `QA-35` FECHADO: a caixa de `A-30`, o `Próximo:` que apontava card fechado, e o portão que ainda falava de `QA-04`/`QA-06`
 
 - **Skill:** delivery-review (consistência de documentos; nenhuma linha de produção mudou).

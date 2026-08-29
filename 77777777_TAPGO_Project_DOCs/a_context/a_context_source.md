@@ -27,12 +27,12 @@ Partida de ~1 minuto: contra a CPU, contra alguém no mesmo aparelho, ou **por l
 
 ## Estado atual (formato fixo — 1 linha por item, SEM prosa corrida)
 - **Versão:** v2.0.0 — entregue em 2026-08-19 (a v1 é baseline morto: reescrita total, nenhum código reaproveitado)
-- **Pronto:** M1..M9 e a medição, **E-1..E-6 fechadas**; suíte **665/665**; `T-24`..`T-33` e **`T-38`** **COM CAMPO** (`A-27`..`A-32`, `A-35`..`A-37`, `A-39`, **`A-40`**), e `T-30`/`T-32`/`T-33` **NO AR** (`A-38`); **`T-31` INTEIRA e CONFIRMADA** (`A-39`: 2 aparelhos); o ar **é `HEAD`** — jogo por `A-38`, e a de medição já roda `D-96` (`A-40`). Módulo a módulo: [[estado_modulos]]
-- **Bundle:** **414.805 B** (5,2% de 8 MB) lido de `dist/` — desde `D-93`/`T-36` só o grafo de `index.html` (`QA-06` fechado); 278.646 B são os 32 SVGs de T-19; Phaser e Trystero fora, por `import()` (D-27)
+- **Pronto:** M1..M9 e a medição, **E-1..E-6 fechadas**; suíte **665/665**; `T-24`..`T-33`, `T-31` e `T-38` **COM CAMPO**, e o ar **é `HEAD`**. Módulo, card e aparelho: [[estado_modulos]]
+- **Bundle:** **414.805 B** (5,2% de 8 MB) lido de `dist/`, só o grafo de `index.html` (`D-93`/`T-36`); 278.646 B são os 32 SVGs de `T-19`; Phaser e Trystero fora, por `import()` (`D-27`)
 - **Em andamento (máx 1):** _(vazio)_
 - **Próximo:** `T-17` · `D-83` **FECHADO — 10 de 10**
-- **Bloqueado/pendente:** registro **19.7k/20.000 — 285 livres, o próximo `D-NN` NÃO cabe**; subir o teto segue REPROVADO · BACKLOG **19.8k** · QA 7.3k
-- **Questões abertas:** Q-08, Q-09, Q-13 (**Q-15/Q-16 fechadas** por `D-84`/`D-88`) · **QA abertos:** QA-07, QA-17, QA-27, QA-29, QA-34 (**QA-04/QA-05/QA-06/QA-10/QA-20/QA-21/QA-32/QA-33/QA-35/QA-36/QA-37 fechados**) · respondidas e fechados: [[decisions_archive]]
+- **Bloqueado/pendente:** _(nada)_ — `D-97`: registro **15.6k**/20k · BACKLOG **13.5k**/20k · QA **3.4k**/8k; subir teto segue REPROVADO
+- **Questões abertas:** Q-08, Q-09, Q-13 · **QA abertos:** QA-07, QA-17, QA-27, QA-29, QA-34 e **QA-38** · respondidas e fechados: [[decisions_archive]]
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)
 - [[portao_de_aceite]] — **antes de fechar tarefa, declarar etapa fechada ou entregar**
