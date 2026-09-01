@@ -72,6 +72,7 @@ status: atual
 | D-108 | 2026-09-01 | ADOTADO | `Q-17`: a versão sobe para **2.0.1** — patch, porque desde a v2.0.0 entraram só correções e portões | Escolha do dono: `D-103` mudou o comportamento da CPU, mas como correção do que `D-10` já prescrevia, não como recurso novo. `D-104`..`D-107` e `T-39` são portão e comentário. A versão mora só no `package.json` e não aparece em tela nenhuma (`D-106`) |
 | D-109 | 2026-09-01 | ADOTADO | A linha guarda o que se lê para **decidir hoje**; o como-se-chegou-aqui sai íntegro para quem já é dono dele — REJEITADA sem a coluna de evidência (forma de `D-06`..`D-08`), CONTEXT sem o relato do card | Gastas as DUAS últimas candidatas de `D-43`,, o registro para em **18.033**, 33 acima do aviso. Não é poda: nada encolhe. Portão em [[d109_o_que_a_linha_guarda]] |
 | D-110 | 2026-09-01 | REJEITADO · ARQUIVADO | Estender `D-109` às ADOTADAS que já delegam a evidência a uma nota, deixando só o ponteiro |  |
+| D-111 | 2026-09-01 | ADOTADO | `P-3` saída **(c)**: o chaveamento sai por `chaveamento(state)` — função na porta de M8 sobre o **retrato**, não 6º método em `Tournament`; M7 recebe `Disputa[]` pronto e não interpreta campo (`D-68` de pé) | As 64 são **derivadas**, não guardadas: a saída (a) copiaria a derivação de M8 para `src/ui/`. Medida e as 2 mortas em [[p3_leitor_do_chaveamento]] |
 > **Gatilhos de revisão** (`D-43`): moram no tema que cada um mede — `D-01` em [[online_p2p]], `D-02` em [[stack]].
 
 ## Questões abertas (Q-NN — decisões do DONO, não do agente)

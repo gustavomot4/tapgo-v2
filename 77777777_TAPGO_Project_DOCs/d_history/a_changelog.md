@@ -7,6 +7,14 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-09-01] — `P-3` vira `T-40`: o chaveamento inteiro sai por uma função de leitura em M8, não por método novo nem por M7 lendo o retrato (`D-111`)
+
+- **Skill:** planner — sessão de planejamento. Escopo: `a_context/`, `b_process/`, `e_qa/`, `d_history/`. **Nenhuma linha de `src/`**: o card foi desenhado, não implementado — então suíte e `tsc` não são portão desta sessão.
+- **`D-111` (ADOTADO):** `P-3` sai pela saída **(c)** — `chaveamento(state)` e o tipo `Disputa` na porta de M8, função de leitura sobre o **retrato**. Não é o 6º método em `Tournament` (saída b, que mexeria na porta congelada de `D-13`/`D-58`) nem M7 interpretando `TournamentState` (saída a, que mataria `D-68`).
+- **O que decidiu:** as 64 disputas são **derivadas**, não guardadas — `disputaEm` em `src/tournament/index.ts:228` as reconstrói de `entrants`/`groupOrder`/`results`. A saída (a), descrita em 2026-08-20 como "barato em código", copiaria essa derivação para `src/ui/`. Medida e as 2 mortas em [[p3_leitor_do_chaveamento]].
+- **Escolha do dono na mesma sessão:** o placar ausente das disputas do jogador continua sendo `—`, como `D-67` já faz. Não abriu `D-NN` próprio porque não muda nada, e `Q-13` segue dele.
+- **Card `T-40`** no BACKLOG, com o portão no contrato de M8 do PLANO: pureza (`consumed` não muda), comprimento **48 → 56 → 64**, `winner` casando com `group()`/`champion()`, `goals: null` só nas do jogador, e a opacidade de `D-68` virando `grep` sobre `src/ui/` — cinco checagens, todas legíveis por `vitest` sem tela montada.
+
 ## [2026-09-01] — `D-109`: a linha guarda o que se decide hoje; o resto vai para quem já é dono dele — e `D-64` finalmente existe
 
 - **Skill:** evolution-auditor — sessão de evolução. Escopo: `a_context/`, `e_qa/`, `d_history/`. **Nenhuma linha de `src/` ou de `scripts/`**, então suíte e `tsc` não são portão desta sessão.

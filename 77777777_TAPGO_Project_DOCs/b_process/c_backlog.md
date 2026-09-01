@@ -67,6 +67,11 @@ status: atual
 - [x] T-29 — as 32 cores nacionais na camisa ✔ COM CAMPO em 2026-08-21… · **Módulo:** M7 · íntegra em [[backlog_archive]]
 - [x] A-15 — dividir o registro pela terceira vez, ou subir o teto: A-13… · íntegra em [[backlog_archive]]
 - [x] T-31 — no online, cada aparelho escolhe a PRÓPRIA seleção (pedido… · **Módulo:** M6 · íntegra em [[backlog_archive]]
+- [ ] **T-40 — ver o chaveamento inteiro (`P-3`/`D-111`)** · **Módulo:** M8 (a leitura) **+ M7** (a tela)
+  - **Entrega:** `chaveamento(state)` e o tipo `Disputa` na porta de M8, mais a tela de M7 que os desenha — as 48 de grupo por rodada e o mata-mata por fase, com vencedor e placar de cada uma.
+  - **Portão:** o do contrato de M8 no [[b_plan|PLANO]], §"Portão de `chaveamento(state)` (`D-111`)" — pureza (`consumed` não muda), comprimento **48 → 56 → 64**, `winner` casando com `group()`/`champion()` na mesma semente, `goals: null` **só** nas disputas do jogador, e `grep -rnE "\.(entrants|groupOrder|results|goalsA|goalsB)\b" src/ui/` em **zero**. Os cinco rodam em `vitest`; nenhum precisa de tela montada.
+  - **Limite declarado:** as disputas do jogador não têm placar (`Q-13` segue do dono) — a tela mostra `—`, como `D-67` já faz na tabela do grupo. Inventar `0` reprova.
+  - **O que o portão NÃO alcança:** se o chaveamento cabe e se lê em 360x640. Isso é `A-NN` do dono no aparelho — `vitest` roda em Node, sem `document`.
 - [x] T-33 — cor e legibilidade dos símbolos de papel sobre as linhas do… · **Módulo:** M7 · íntegra em [[backlog_archive]]
 
 ## Em andamento (máx 1 — espelha "Em andamento" do [[a_context_source|CONTEXT]])
@@ -106,7 +111,7 @@ _(vazio)_
 
 - **P-1** desktop e a tela esticada - **VIROU `T-27`**, feito 2026-08-20
 - **P-2** pontos na tabela da Cup - **VIROU `T-25`**, feito 2026-08-20
-- **P-3** ver o chaveamento inteiro - **ABERTO**: `D-NN` do dono, M7 interpreta `TournamentState` ou 6o metodo em M8
+- **P-3** ver o chaveamento inteiro - **VIROU `T-40`** (`D-111`, saida (c)): nem uma coisa nem outra - funcao de leitura na porta de M8
 - **P-4** emocao (torcida, taca, trilha) - **ABERTO**: reabre `D-65`, `D-NN` do dono
 - **P-5** moeda do sorteio animada - **VIROU `T-26`**, feito 2026-08-20
 - **P-6** papel lido numa olhada - (a) **VIROU `T-28`**, feito; (b) **VIROU `T-29`, parado em `Q-16`** - a medicao derrubou a premissa
