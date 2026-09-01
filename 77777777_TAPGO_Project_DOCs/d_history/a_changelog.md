@@ -7,6 +7,16 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-09-01] — a ordem `pick` → `observe` de M5 vira teste, e não mais só comentário (`D-104`)
+
+- **Skill:** testing. Escopo: `src/tests/` e só ele — `src/session/index.ts` **não mudou** (a inversão foi feita, medida e revertida; `git diff` do módulo vazio). Suíte **678/678**.
+- **O que faltava:** `D-103` tornou a ordem escolher-antes-de-observar obrigatória, e o fechamento de `QA-44` deixou o teste de fora por ser escopo do dono. Até hoje quem a defendia era um comentário.
+- **O teste:** `src/tests/session_ordem.test.ts` roda uma disputa `cpu` (semente 7, difícil, roteiro fixo de 10 zonas) e a compara com DOIS oráculos construídos com a `createCpu` de verdade e `Rng` semeado igual — um na ordem certa, outro na invertida. Assere que M5 casa com o primeiro e **difere** do segundo; um `expect` anterior reprova se o roteiro deixar de desempatar as duas ordens, para o caso nunca virar decoração.
+- **Liga/desliga medido:** com as duas linhas de M5 trocadas, **1 falha / 677 verdes** — só o teste novo cai, confirmando a folga que `QA-44` tinha achado. Revertido: **678/678**.
+- **Não coberto, declarado:** M8 (`src/tournament/index.ts`) tem a mesma ordem e segue presa só por comentário — é outro módulo, e a sessão foi escopada em M5 (regra 2).
+- **Registro:** `D-104`. `QA-44` continua FECHADO — este é o item opcional dele, agora feito.
+- **Portão:** `npm test` 678/678, `npx tsc --noEmit` limpo, `python scripts/check.py` exit 0.
+
 ## [2026-09-01] — `QA-44` fecha: os comentários de M5 e M8 param de dizer que a ordem é indiferente
 
 - **Skill:** backend-domain. Escopo: os comentários de `src/session/index.ts` (§`D-26`) e `src/tournament/index.ts`, e **só eles** — **nenhuma linha de código mudou** nos dois arquivos (`git diff` só toca linhas `//`). Suíte **677/677**.
