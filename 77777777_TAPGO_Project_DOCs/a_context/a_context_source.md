@@ -30,9 +30,9 @@ Partida de ~1 minuto: contra a CPU, contra alguém no mesmo aparelho, ou **por l
 - **Pronto:** M1..M9 e a medição, **E-1..E-6 fechadas**; suíte **677/677**; `HEAD` está **à frente do ar** (`D-103`).
 - **Bundle:** **414.974 B** (5,2% de 8 MB) lido de `dist/`, só o grafo de `index.html` (`D-93`/`T-36`); 278.646 B são os 32 SVGs de `T-19`; Phaser e Trystero fora, por `import()` (`D-27`)
 - **Em andamento (máx 1):** _(vazio)_
-- **Próximo:** `QA-44` (comentário de M5/M8 que `D-103` venceu) ou `Q-09`, que é a metade que falta de `QA-07`; nenhum card aberto
+- **Próximo:** `Q-09`, que é a metade que falta de `QA-07` (resposta do dono); nenhum card aberto
 - **Bloqueado/pendente:** publicar `D-103` (o ar ainda é v2.0.0) — `D-97`: registro **17.0k**/20k · BACKLOG **12.3k**/20k · QA **6.5k**/8k; subir teto segue REPROVADO (`D-99`/`D-101`)
-- **Questões abertas:** Q-09, Q-13 · **QA abertos:** QA-07 (parcial), QA-17, QA-44 · respondidas e fechados: [[decisions_archive]]
+- **Questões abertas:** Q-09, Q-13 · **QA abertos:** QA-07 (parcial), QA-17 · respondidas e fechados: [[decisions_archive]]
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)
 - [[portao_de_aceite]] — **antes de fechar tarefa, declarar etapa fechada ou entregar**

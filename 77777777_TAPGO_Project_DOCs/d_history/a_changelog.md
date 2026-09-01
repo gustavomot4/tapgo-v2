@@ -7,6 +7,16 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-09-01] — `QA-44` fecha: os comentários de M5 e M8 param de dizer que a ordem é indiferente
+
+- **Skill:** backend-domain. Escopo: os comentários de `src/session/index.ts` (§`D-26`) e `src/tournament/index.ts`, e **só eles** — **nenhuma linha de código mudou** nos dois arquivos (`git diff` só toca linhas `//`). Suíte **677/677**.
+- **O que estava errado:** os dois textos foram escritos com `Q-08` aberta e diziam que a ordem escolher-antes-de-observar era indiferente, fixada só por precaução "se `Q-08` for respondida ao contrário". `D-103` respondeu pela saída (C), que é exatamente esse contrário.
+- **Por que virou carga:** com `pick(role)` lendo o histograma do ADVERSÁRIO, inverter as duas linhas faria a CPU no gol ler o chute que o humano acabou de dar e defender a zona exata dele, com peso de até 70% no difícil — vidência, não dificuldade. Tabela das duas ordens em [[qa44_ordem_virou_carga]].
+- **Correção:** os dois comentários passam a dizer que a ordem é **obrigatória** por causa de `D-103`, e ambos registram que nenhum teste prende a inversão (`QA-44`) — a garantia é a ordem escrita, e quem a mexer tem de saber disso.
+- **Não feito, e por quê:** o teste que reprova a inversão. A própria nota de `QA-44` o deixa como decisão de escopo do dono, não do achado (regra 6).
+- **Registro:** `QA-44` FECHADO em [[d_qa|QA]]; nenhum `D-NN` novo — não houve escolha nova, só o texto alcançando `D-103`.
+- **Portão:** `npm test` 677/677, `python scripts/check.py` exit 0.
+
 ## [2026-09-01] — `Q-08` respondida pela saída (C): a CPU passa a ler o histograma do ADVERSÁRIO (`D-103`)
 
 - **Skill:** backend-domain. Escopo: `src/cpu/index.ts` e `src/tests/cpu.test.ts`, e **só eles** — M5 e M8 não mudam uma linha de código. Suíte **668 → 677/677**, `tsc --noEmit` limpo.

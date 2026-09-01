@@ -690,13 +690,11 @@ export function createSession(cfg: SessionConfig): Session {
         const dela: Role = meu === 'shooter' ? 'keeper' : 'shooter';
 
         // ── `D-26`: a CPU escolhe ANTES de observar a escolha desta cobrança ──────────────
-        // Com o comportamento que T-07 entregou (`pick(role)` lê o histograma do MESMO papel,
-        // `Q-08`), a ordem é indiferente: os dois histogramas são disjuntos dentro de uma
-        // cobrança. A ordem está fixada assim mesmo porque, se `Q-08` for respondida ao
-        // contrário — o goleiro passando a ler o histograma `shooter` —, observar primeiro
-        // faria a CPU ler o chute que o humano acabou de dar, nesta mesma cobrança. Isso é
-        // vidência, não dificuldade. Escolhendo antes, M5 fica imune à resposta de `Q-08` e
-        // o significado de `pick` continua sendo o que T-07 escreveu.
+        // Esta ordem é OBRIGATÓRIA, não uma preferência. `D-103` respondeu `Q-08` pela saída
+        // (C): `pick(role)` lê o histograma do papel ADVERSÁRIO. Observar primeiro faria a CPU
+        // no gol ler o chute que o humano acabou de dar, nesta mesma cobrança, e defender a
+        // zona exata dele — vidência, não dificuldade. Invertendo estas duas linhas o jogo
+        // continua rodando e a suíte continua verde (`QA-44`): a garantia é esta ordem.
         const daCpu = cpu.pick(dela);
         cpu.observe(meu, zone);
 

@@ -378,8 +378,9 @@ function montar(
       }
       const goleiro = outro(cobrador);
 
-      // Escolhem ANTES de observar, como M5 faz (`D-26`): observar primeiro deixaria o goleiro
-      // ler o chute desta mesma cobrança se `Q-08` for respondida ao contrário.
+      // Escolhem ANTES de observar, como M5 faz (`D-26`). Depois de `D-103` (`Q-08` saída C,
+      // cada papel lê o histograma do ADVERSÁRIO) a ordem é obrigatória: observar primeiro
+      // deixaria o goleiro ler o chute desta mesma cobrança. Nenhum teste prende isto (`QA-44`).
       const chute = cpus[cobrador].pick('shooter');
       const defesa = cpus[goleiro].pick('keeper');
       cpus[cobrador].observe('keeper', defesa);
