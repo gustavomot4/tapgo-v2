@@ -506,3 +506,47 @@ só nesta página). Ficam vivos os cinco abertos: `QA-07`, `QA-17`, `QA-27`, `QA
 | D-84 | 2026-08-20 | ADOTADO | `Q-15` pela saída (b): 15 s por cobrança no `online`, e no estouro o próprio aparelho sorteia a zona com `createRng(newSeed())` e a manda como jogada normal — só M7, zero byte em `src/net`, `D-13` intacto | Dois relógios sem árbitro divergem se cada um RESOLVER a cobrança; jogada sorteada não tem o que divergir. Campo em dois aparelhos: `A-27` |
 | D-86 | 2026-08-20 | ADOTADO | `T-27`/`P-1`+`P-7`: acima de 1024px a largura da folha é declarada pela TELA — `.tela--largo` 1040px em 2 colunas, `.tela--disputa` 760px, o resto 460px —, não por teto global | 4 cartões por linha contra 2, e as seleções caem de 2.719 para 1.590 px de altura em 1280x800, sem rolagem lateral. Direções, medidas e armadilhas em [[t27_desktop_duas_colunas]] |
 | D-95 | 2026-08-28 | ADOTADO | `QA-05`/`T-37`: o portão de marca de M7 vira **teste** (`marca.test.ts`), com a lista-morta montada em tempo de execução e em fonte única (`lista_morta.ts`) | Portão só no terminal do dono media o arquivo que o defendia: `grep` devolvia **6**, todas de teste. Medido 6 -> **0**, e termo plantado em `src/` REPROVA — sem a 2ª metade o card fecharia com teste vazio |
+
+## Retiradas da tabela em 2026-09-01 (`D-109`) — evidência das REJEITADAS
+> A linha continua VIVA em `c_decisions.md`, como `REJEITADO · ARQUIVADO` com a decisão curta:
+> é a lista-morta de `D-74`. O que saiu de lá é a coluna de evidência, íntegra, e é esta.
+
+| # | Data | Status | Decisão (curta) | Evidência (número-chave + link) |
+|---|---|---|---|---|
+| D-39 | 2026-08-08 | REJEITADO | `hostRoom(ice?, roomId?)` — saída (a) de `QA-08` | Compra o que `D-38` dá de graça, pagando com precedente em porta congelada — e `Q-09`/`Q-11` esperam esse precedente |
+| D-40 | 2026-08-08 | REJEITADO | Exportar `createChannel` — saída (b) de `QA-08` | `createChannel` não valida `roomId`: exportá-lo permite abrir sala sem o portão do defeito 6 |
+| D-41 | 2026-08-08 | REJEITADO | Uma sala para a medição inteira — saída (c) de `QA-08` | `leave()` é assíncrono: peer da tentativa anterior pode virar `'connected'` sem conexão nova, enviesando a taxa PARA CIMA — [[m6_transporte_notas]] |
+| D-76 | 2026-08-20 | REJEITADO | Subir `CONNECT_TIMEOUT_MS` de 20 s para caber a espera humana — a saída óbvia de `QA-22` | Não move o mecanismo: o relógio arma na criação do canal, então qualquer teto novo é só uma parede mais longe se M7 criar a sessão antes de o convidado abrir o link. E paga com a falha honesta de `D-47` (até ~1 em 6) levando minutos para aparecer, mais 1 constante, 2 asserts (`net.test.ts:257`, `session_online.test.ts:429`) e 10 menções de "20 s" em 5 arquivos |
+| D-78 | 2026-08-20 | REJEITADO | Matar o rearme de `D-31` em `onPeerLeave` (`net/index.ts:390`) — a saída barata de `QA-25`, que fecha a janela sem tocar M5 nem M7 | Medido em campo em `A-22`: aparelho ~5 s em modo avião e a disputa **seguiu**; sem o rearme, essa recuperação vira derrota. Cobra o caso comum para pegar o raro |
+| D-79 | 2026-08-20 | REJEITADO | Identificador de sessão no fio para M6 distinguir reconexão de sessão nova — 2º tipo de payload contra o `isMove` de `D-32` | É o argumento de `D-39`: compra o que o fio já dá de graça, agora que `seq=0` × `kicks.length>0` deixou de ser palpite (6 testes, [[qa25_reentrada_na_janela]]). E nem cobre cliente modificado, que mentiria no identificador |
+| D-92 | 2026-08-21 | REJEITADO | `registro_no_teto` §5.3: card fechado do backlog deixa de segurar linha de `D-NN` | Pool medido HOJE pela própria regra: **ZERO** — quem segura `D-44`/`D-85`/`D-87` é a nota que propõe o corte, e sem ela são 960 brutos e ~590 líquidos contra as 3 decisões a 374 (**1.122**) do portão de `A-16`. `D-91` gastou a carona que ela pedia; números em [[registro_no_teto]] |
+
+## Retiradas da tabela em 2026-09-01 (`D-43`/`D-97`) — as duas últimas não citadas
+> Íntegra preservada. ID nunca reciclado, nada revertido. Pool do `arquivar.py` sem flag na data.
+
+| # | Data | Status | Decisão (curta) | Evidência (número-chave + link) |
+|---|---|---|---|---|
+| D-104 | 2026-09-01 | ADOTADO | A ordem `pick` → `observe` de M5, obrigatória desde `D-103`, passa a ser presa por teste: `session_ordem.test.ts` corre a disputa contra DOIS oráculos de M3 semeados igual, um por ordem | Comentário não reprova: com as linhas trocadas a suíte antiga ficava **677/677 verde** — a folga de `QA-44`. Agora: invertido **1 falha**, certo **678/678** |
+| D-105 | 2026-09-01 | ADOTADO | A mesma ordem `pick` → `observe` de `D-104`, agora presa em M8: `tournament_ordem.test.ts` compara as disputas SIMULADAS com dois oráculos de M2+M3 semeados igual, um por ordem | Em M8 os dois lados são CPU, então a inversão é o goleiro ler o chute DESTA cobrança. Invertido: **1 falha**; certo **679/679** |
+
+## `D-64` — registrado em 2026-09-01, sete meses depois de falado (`D-109`)
+> O changelog de **2026-08-13** (`QA-19` + `QA-18` + `QA-16`) prometeu este ID à regra global
+> `[hidden] { display: none !important }` e a linha nunca entrou na tabela. A sessão de `T-20`, no
+> mesmo dia, viu o buraco e **deixou-o intacto para o dono decidir** — tomou `D-65` e seguiu.
+>
+> O `check.py` avisa desde então, e o aviso é o certo: a decisão foi **tomada e executada**, só não
+> foi escrita. Registrar aqui, e não na tabela viva, é a aplicação de `D-109` e do critério de
+> `D-43`: nenhum `.md` vivo cita `D-64` — ele entraria na tabela já como candidata a arquivamento,
+> gastando orçamento no caminho. **O ID fica preservado e nunca reciclado**; a entrada antiga do
+> changelog não foi tocada, porque ele é append-only.
+
+| # | Data | Status | Decisão (curta) | Evidência (número-chave + link) |
+|---|---|---|---|---|
+| `D-64` | 2026-08-13 | ADOTADO · registrado retroativamente em 2026-09-01 | `QA-16`: esconder é regra **global** — `[hidden] { display: none !important }` no topo da folha —, e não linha por classe; o `.sorteio[hidden]` de `T-17b` sai por redundante | A linha por classe é a lista que ninguém mantém: além das 3 telas de `.aviso`, `.campo__sem-canvas` tinha o mesmo defeito e não estava contado. Portão que teste lê: **nenhuma OUTRA regra declara `display` com `!important`** — 3 sabotagens, 4 reprovações |
+
+## `D-110` — íntegra da rejeição de 2026-09-01
+> Linha viva em `c_decisions.md` como `REJEITADO · ARQUIVADO`, pela forma de `D-109`.
+
+| # | Data | Status | Decisão (curta) | Evidência (número-chave + link) |
+|---|---|---|---|---|
+| `D-110` | 2026-09-01 | REJEITADO | Estender `D-109` às ADOTADAS que já delegam a evidência a uma nota: esvaziar a coluna e deixar só o ponteiro | Pool grande (**14** linhas, ~**4.000** caracteres) e mesmo assim não passa: o cabeçalho da tabela declara o contrato da coluna — "Evidência (**número-chave** + link)" —, e a proposta guarda o link jogando fora o número-chave. A assimetria de `D-109` inverte de lado: o número de uma ADOTADA é lido para **aplicar** a decisão, em toda sessão que toca o módulo, não numa fase só. Trocaria um aviso de orçamento por uma abertura de arquivo por sessão. Íntegra em [[d109_o_que_a_linha_guarda]] §5 |

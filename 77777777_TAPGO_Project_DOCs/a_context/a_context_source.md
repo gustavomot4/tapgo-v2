@@ -26,12 +26,12 @@ Partida de ~1 minuto: contra a CPU, contra alguém no mesmo aparelho, ou **por l
 - **Limites da stack e quem roda o quê:** ver [[stack]].
 
 ## Estado atual (formato fixo — 1 linha por item, SEM prosa corrida)
-- **Versão:** **v2.0.1** (`D-108`) — patch sobre a v2.0.0 de 2026-08-19: só correções e portões; já no ar (`A-42`)
-- **Pronto:** M1..M9 e a medição, **E-1..E-6 fechadas**; suíte **679/679**; `D-103` **confirmado no ar** por `A-42` — goleiro em 18 esq / 5 meio / 2 dir, corte de `D-106` em 9; `Q-09` respondida por `D-107`, com o gatilho dela virado portão do CI por `T-39`
-- **Bundle:** **415.252 B** (5,19% de 8 MB) lido do `dist/` **que foi ao ar**, só o grafo de `index.html` (`D-93`/`T-36`) — medida de 2026-09-01, já com `D-103`
+- **Versão:** **v2.0.1** (`D-108`) — já no ar (`A-42`)
+- **Pronto:** M1..M9 e a medição, **E-1..E-6 fechadas**; suíte **679/679**; `D-103` **no ar**, confirmado por `A-42` — contagens em [[estado_modulos]]
+- **Bundle:** **415.252 B** (5,19% de 8 MB) do `dist/` **que foi ao ar**, só o grafo de `index.html` (`D-93`) — 2026-09-01
 - **Em andamento (máx 1):** _(vazio)_
-- **Próximo:** aliviar registro (**93%**) e CONTEXT (**93%**) por `D-97`; nada do dono trava
-- **Bloqueado/pendente:** nada do dono em aberto — `D-97`: registro **18.7k**/20k (**93%**) · BACKLOG **10.9k**/20k, aliviado pelo arquivamento de A-41/A-42/T-17/T-39 · QA **6.5k**/8k; subir teto segue REPROVADO (`D-99`/`D-101`)
+- **Próximo:** fila do dono — `Q-13`, `QA-17`, `P-3`, `P-4`; nenhuma tarefa de agente em aberto
+- **Bloqueado/pendente:** `D-97`/`D-109`: registro **17.4k**/20k (**86%**) · CONTEXT **3.5k**/4k · BACKLOG **10.9k**/20k · QA **6.5k**/8k; subir teto segue REPROVADO (`D-99`/`D-101`)
 - **Questões abertas:** Q-13 · **QA abertos:** QA-17 · respondidas e fechados: [[decisions_archive]]
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)

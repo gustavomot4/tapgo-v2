@@ -45,5 +45,13 @@ Em `cpu` e `local` a semente é `cfg.seed`; no `online` é o **`roomId`** (`D-98
 os dois aparelhos compartilham — `D-73` já o entregava aos dois. **Com campo** desde 2026-08-29
 (`A-41`): as duas telas anunciaram o mesmo cobrador, e o sorteio caiu nos dois lados.
 
+**`A-42`** (2026-09-01) confirmou **`D-103` no ar**, e o portão foi de **comportamento**, não de
+versão (`D-106`: nenhuma tela imprime a versão). Nas 20 cobranças do dono o goleiro da CPU mergulhou
+**18 à esquerda, 5 no meio, 2 à direita** — corte em **9** à esquerda, com `≥ 9` à direita
+REPROVANDO. `D-104` e `D-105` não têm face na tela: quem os cobra é o passo `suíte` do workflow.
+
+**`Q-09`** foi respondida por **`D-107`** (a porta de M5 não muda; a derivação de `kicks.length` é a
+resposta) e o gatilho dela virou **portão do CI** por `T-39`.
+
 > O PLANO congelado é `D-13`, e mora no [[b_plan|PLANO]]. Mudança de rumo é `D-NN` novo, nunca
 > edição do plano — é a regra do próprio `D-13`.
