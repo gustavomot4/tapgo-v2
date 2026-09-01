@@ -693,8 +693,8 @@ export function createSession(cfg: SessionConfig): Session {
         // Esta ordem é OBRIGATÓRIA, não uma preferência. `D-103` respondeu `Q-08` pela saída
         // (C): `pick(role)` lê o histograma do papel ADVERSÁRIO. Observar primeiro faria a CPU
         // no gol ler o chute que o humano acabou de dar, nesta mesma cobrança, e defender a
-        // zona exata dele — vidência, não dificuldade. Invertendo estas duas linhas o jogo
-        // continua rodando e a suíte continua verde (`QA-44`): a garantia é esta ordem.
+        // zona exata dele — vidência, não dificuldade. `D-104` prende isto por teste
+        // (`src/tests/session_ordem.test.ts`): invertidas, estas linhas dão 1 falha (`QA-44`).
         const daCpu = cpu.pick(dela);
         cpu.observe(meu, zone);
 

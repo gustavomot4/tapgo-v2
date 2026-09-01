@@ -7,6 +7,13 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-09-01] — os dois comentários param de dizer que nenhum teste prende a ordem (`D-104`/`D-105`)
+
+- **Skill:** backend-domain. Escopo: linhas `//` de `src/session/index.ts` e `src/tournament/index.ts` — `git diff` sem nenhuma linha de código. Suíte **679/679**.
+- **O que estava falso:** `D-104` e `D-105` prenderam a ordem `pick` → `observe` por teste, mas os comentários dos dois módulos seguiam descrevendo o mundo anterior: M8 dizia "Nenhum teste prende isto (`QA-44`)" e M5 dizia que invertendo as linhas "a suíte continua verde".
+- **O que passaram a dizer:** cada um nomeia o `D-NN` que o prende, o arquivo de teste (`src/tests/session_ordem.test.ts`, `src/tests/tournament_ordem.test.ts`) e o resultado medido da inversão — 1 falha.
+- **Portão:** `git diff` só de comentário, `npm test` 679/679, `python scripts/check.py` exit 0.
+
 ## [2026-09-01] — a ordem `pick` → `observe` de M8 vira teste, fechando a lacuna que `D-104` declarou (`D-105`)
 
 - **Skill:** testing. Escopo: `src/tests/` e só ele — `src/tournament/index.ts` **não mudou** (a inversão foi feita, medida e revertida; `git diff` do módulo vazio). Suíte **679/679**.

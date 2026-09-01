@@ -380,7 +380,8 @@ function montar(
 
       // Escolhem ANTES de observar, como M5 faz (`D-26`). Depois de `D-103` (`Q-08` saída C,
       // cada papel lê o histograma do ADVERSÁRIO) a ordem é obrigatória: observar primeiro
-      // deixaria o goleiro ler o chute desta mesma cobrança. Nenhum teste prende isto (`QA-44`).
+      // deixaria o goleiro ler o chute desta mesma cobrança. `D-105` prende isto por teste
+      // (`src/tests/tournament_ordem.test.ts`): invertidas, estas linhas dão 1 falha (`QA-44`).
       const chute = cpus[cobrador].pick('shooter');
       const defesa = cpus[goleiro].pick('keeper');
       cpus[cobrador].observe('keeper', defesa);
