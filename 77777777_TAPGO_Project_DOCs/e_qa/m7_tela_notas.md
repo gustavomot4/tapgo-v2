@@ -83,8 +83,12 @@ com a régua das checagens de camada do CI:
 grep -rlE "from '[^']*session" src/ --include=*.ts | grep -v "^src/ui/\|^src/tests/" | wc -l
 ```
 
-Esperado: **0**. Quem transforma isto em portão é `T-39`; até lá o gatilho é este parágrafo, e o
-número dele é de 2026-09-01.
+Esperado: **0**. Desde `T-39` (2026-09-01) isto é **portão do CI**, dentro das "checagens de
+camada" do `.github/workflows/pages.yml`: acima de 0 o passo reprova, nomeia os arquivos e diz que
+`Q-09` reabre como `D-NN` novo. O passo foi visto reprovando com um importador plantado fora de
+`src/ui/` e `src/tests/`, e voltando a passar depois de removido — grep nunca visto reprovando é
+decoração. Os comentários de `src/` que citavam a questão apontam para cá em vez de repetir o
+raciocínio.
 
 ### O que a derivação **não** faz (inalterado)
 

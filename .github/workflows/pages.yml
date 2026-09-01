@@ -77,6 +77,19 @@ jobs:
           echo "imports de motor em src/ui/: $m (esperado: 0)"
           [ "$m" -eq 0 ] || { echo "::error::camada de M7 violada: a tela importa o motor"; exit 1; }
 
+          # M5: o gatilho de `D-107` (`Q-09`), medido em vez de lembrado. `D-107` congelou a porta
+          # de M5 — `pending(): Side | null` REJEITADA, a derivação de src/ui/derivacao.ts é a
+          # resposta — e essa decisão vale ENQUANTO os únicos importadores de src/session/ forem
+          # src/ui/ e src/tests/. Um segundo consumidor derruba a razão 2 da decisão, e aí a
+          # saída volta à mesa como `D-NN` novo. A régua é a do registro (e_qa/m7_tela_notas.md).
+          q=$(grep -rlE "from '[^']*session" src/ --include=*.ts | grep -v "^src/ui/\|^src/tests/" | wc -l)
+          echo "importadores de src/session/ fora de src/ui/ e src/tests/: $q (esperado: 0)"
+          [ "$q" -eq 0 ] || {
+            echo "::error::gatilho de D-107 disparou: $q importador(es) de src/session/ fora de src/ui/ e src/tests/ — Q-09 reabre como D-NN novo (reexaminar pending(): Side | null). Ver 77777777_TAPGO_Project_DOCs/e_qa/m7_tela_notas.md"
+            grep -rlE "from '[^']*session" src/ --include=*.ts | grep -v "^src/ui/\|^src/tests/"
+            exit 1
+          }
+
       # Imprime o número do bundle lido de dist/ e reprova sozinho no teto de 8 MB (D-02).
       - name: build
         run: npm run build

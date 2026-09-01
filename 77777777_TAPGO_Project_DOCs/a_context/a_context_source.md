@@ -27,11 +27,11 @@ Partida de ~1 minuto: contra a CPU, contra alguém no mesmo aparelho, ou **por l
 
 ## Estado atual (formato fixo — 1 linha por item, SEM prosa corrida)
 - **Versão:** v2.0.0 — entregue em 2026-08-19
-- **Pronto:** M1..M9 e a medição, **E-1..E-6 fechadas**; suíte **679/679**; `D-103` **confirmado no ar** por `A-42` — goleiro em 18 esq / 5 meio / 2 dir, corte de `D-106` em 9; `Q-09` respondida por `D-107`
+- **Pronto:** M1..M9 e a medição, **E-1..E-6 fechadas**; suíte **679/679**; `D-103` **confirmado no ar** por `A-42` — goleiro em 18 esq / 5 meio / 2 dir, corte de `D-106` em 9; `Q-09` respondida por `D-107`, com o gatilho dela virado portão do CI por `T-39`
 - **Bundle:** **415.252 B** (5,19% de 8 MB) lido do `dist/` **que foi ao ar**, só o grafo de `index.html` (`D-93`/`T-36`) — medida de 2026-09-01, já com `D-103`
 - **Em andamento (máx 1):** _(vazio)_
-- **Próximo:** `T-39` (os comentários de `Q-09` param de dizer "aberta" e o gatilho de `D-107` vira grep no CI) e `Q-17`, que é do dono; nada trava
-- **Bloqueado/pendente:** nada do dono em aberto — `D-97`: registro **18.6k**/20k · BACKLOG **19.4k**/20k (**97%**, arquivar é do dono) · QA **6.5k**/8k; subir teto segue REPROVADO (`D-99`/`D-101`)
+- **Próximo:** `Q-17`, que é do dono (subir de `2.0.0`, régua de numeração); nada trava e nada em andamento
+- **Bloqueado/pendente:** nada do dono em aberto — `D-97`: registro **18.6k**/20k (**92%**) · BACKLOG **10.9k**/20k, aliviado pelo arquivamento de A-41/A-42/T-17/T-39 · QA **6.5k**/8k; subir teto segue REPROVADO (`D-99`/`D-101`)
 - **Questões abertas:** Q-13, Q-17 · **QA abertos:** QA-17 · respondidas e fechados: [[decisions_archive]]
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)

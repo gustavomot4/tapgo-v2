@@ -750,8 +750,10 @@ export function createSession(cfg: SessionConfig): Session {
       if (pending === null) {
         pending = zone;
         // Notifica mesmo sem cobrança nova: é assim que M7 percebe que há escolha pendente,
-        // comparando `kicks.length` com o que renderizou por último. Ver `Q-09` — a porta
-        // congelada não expõe de quem é a vez de escolher, e isso é decisão do dono.
+        // comparando `kicks.length` com o que renderizou por último. A porta congelada não
+        // expõe de quem é a vez, e a derivação de `src/ui/derivacao.ts` é a resposta de
+        // `Q-09` adotada por `D-107` — não uma lacuna esperando `pending()`, que foi rejeitada.
+        // Razões e gatilho: `77777777_TAPGO_Project_DOCs/e_qa/m7_tela_notas.md`.
         notify();
         return;
       }

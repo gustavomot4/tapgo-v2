@@ -162,8 +162,8 @@ describe('portão de camada de M7 (D-01)', () => {
   });
 });
 
-// ── Q-09: a derivação de quem escolhe ──────────────────────────────────────────────────────
-describe('derivação da vez (Q-09)', () => {
+// ── Q-09/D-107: a derivação de quem escolhe — é ela a resposta ─────────────────────────────
+describe('derivação da vez (Q-09/D-107)', () => {
   /** Liga a derivação a uma sessão de verdade — é assim que a tela a usa. */
   function comSessao(modo: 'cpu' | 'local', ladoLocal: Side, nivel?: Level) {
     const derivacao = criarDerivacao(modo, ladoLocal);

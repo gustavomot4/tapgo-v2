@@ -6,7 +6,8 @@
  * ## O que esta tela NÃO sabe
  * Regra de disputa nenhuma. Não soma placar, não decide gol, não decide fim: tudo isso chega
  * pronto no `MatchState` que M5 entrega. A única coisa derivada aqui é de quem é a vez de
- * escolher no modo `local` — a derivação de `Q-09`, que mora em `derivacao.ts` e é testada.
+ * escolher no modo `local` — a derivação que `D-107` adotou como resposta de `Q-09`, que mora
+ * em `derivacao.ts` e é testada.
  *
  * ## Modo `local`: a zona escolhida não aparece na tela
  * Os dois jogadores olham o mesmo aparelho. Se a tela destacasse a zona do chute enquanto o

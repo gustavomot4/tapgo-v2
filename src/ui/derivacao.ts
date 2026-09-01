@@ -4,26 +4,29 @@
  * Contrato: `77777777_TAPGO_Project_DOCs/a_context/b_plan.md` → "M7 — Tela (Phaser)".
  *
  * Módulo **puro**: nenhum DOM, nenhuma `Session`, nenhum Phaser. É o que deixa a única regra
- * derivada desta camada ser testada sem navegador — e ela precisa de teste, porque é a
- * derivação de `Q-09`.
+ * derivada desta camada ser testada sem navegador — e ela precisa de teste, porque é ela que
+ * responde de quem é a vez.
  *
- * ## Por que existe derivação (Q-09)
+ * ## Por que existe derivação (`Q-09`, respondida por `D-107`)
  * A porta congelada de M5 não expõe de quem é a escolha pendente: `Session.choose()` tem a mesma
  * assinatura nos três modos e `match.turn` só vira depois do `play()`. No modo `local` os dois
  * jogadores estão no MESMO aparelho, então a tela precisa saber se o próximo toque é o chute de
  * quem cobra ou a defesa do outro lado.
  *
- * A derivação é a que `Q-09` prescreve e que o teste de T-09 fixou: **notificação com o mesmo
- * `kicks.length` da anterior significa escolha pendente**. Duas notificações por cobrança em
- * `local` (a primeira sem cobrança nova), uma só em `cpu`.
+ * A derivação é a que o teste de T-09 fixou: **notificação com o mesmo `kicks.length` da anterior
+ * significa escolha pendente**. Duas notificações por cobrança em `local` (a primeira sem
+ * cobrança nova), uma só em `cpu`.
  *
  * **No `online` a regra do `local` não vale, e por isso ele NÃO entra nesse ramo** (`T-21`): lá
  * chegam notificações com o mesmo `kicks.length` que não são vez de ninguém — a própria escolha
  * esperando o peer, e cada troca de status do canal. Tratá-las como "pendente" mandaria o
  * aparelho do jogador passar o aparelho para o adversário, que está em outra cidade.
  *
- * Resolver de vez é `pending(): Side | null` na `Session` — contrato congelado, logo `D-NN` do
- * dono. Enquanto `Q-09` estiver aberta, é aqui que a lacuna mora, declarada e testada.
+ * **Isto não é lacuna: é a resposta.** `D-107` REJEITOU `pending(): Side | null` na `Session` e
+ * decidiu que esta derivação é a saída definitiva — as três razões e o gatilho que a revisaria
+ * estão em `77777777_TAPGO_Project_DOCs/e_qa/m7_tela_notas.md`, e o gatilho é portão do CI
+ * (`T-39`): um importador de `src/session/` fora de `src/ui/` e `src/tests/` reabre a questão
+ * como `D-NN` novo.
  *
  * ## O que a derivação NÃO faz
  * Não guarda a zona escolhida. No modo `local` o goleiro está olhando a mesma tela do batedor:

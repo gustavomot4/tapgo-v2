@@ -370,7 +370,7 @@ describe('M5 — assinatura e notificação', () => {
     expect(espiao.mock.calls.length).toBe(antes);
   });
 
-  it('o modo local notifica a escolha pendente — é assim que M7 a percebe (Q-09)', () => {
+  it('o modo local notifica a escolha pendente — é assim que M7 a percebe (Q-09/D-107)', () => {
     const s = createSession(cfgLocal(2));
     const vistos: number[] = [];
     s.subscribe((estado: MatchState) => vistos.push(estado.kicks.length));
@@ -379,7 +379,7 @@ describe('M5 — assinatura e notificação', () => {
     s.choose('C'); // resolve a cobrança
 
     // Duas notificações, e a primeira com o MESMO número de cobranças da anterior: é a
-    // derivação que M7 vai usar até `Q-09` ser respondida.
+    // derivação que M7 usa, e que `D-107` adotou como resposta definitiva de `Q-09`.
     expect(vistos).toEqual([0, 1]);
   });
 

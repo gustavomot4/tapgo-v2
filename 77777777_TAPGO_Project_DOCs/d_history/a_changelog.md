@@ -7,6 +7,17 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-09-01] — `T-39`: os comentários de `Q-09` param de mentir, e o gatilho de `D-107` vira portão do CI
+
+- **Skill:** frontend-uiux. Escopo: `src/ui/derivacao.ts`, `src/ui/tela_cobranca.ts`, `src/session/index.ts`, `src/tests/session.test.ts`, `src/tests/ui.test.ts`, `.github/workflows/pages.yml`, `e_qa/m7_tela_notas.md`. **Só comentário e CI — nenhuma linha de lógica.**
+- **Por que:** régua de `D-105` — comentário que declara lacuna vira dívida no minuto em que a lacuna fecha. `derivacao.ts` ainda dizia "resolver de vez é `pending()`" e "enquanto `Q-09` estiver aberta, é aqui que a lacuna mora": verdadeiro até 2026-09-01, falso depois de `D-107`.
+- **Fazer 1:** as 7 linhas que restam citando `Q-09` em `src/` citam `D-107` junto, e nenhuma diz que a questão está aberta ou que é do dono. `derivacao.ts` perdeu os parágrafos de lacuna e aponta `e_qa/m7_tela_notas.md` em vez de repetir as três razões.
+- **Fazer 2:** passo novo dentro das "checagens de camada" do `pages.yml` — `grep -rlE "from '[^']*session" src/ --include=*.ts | grep -v "^src/ui/\|^src/tests/" | wc -l` tem de dar **0**; acima disso o CI reprova, **nomeia os arquivos** e diz que `Q-09` reabre como `D-NN` novo.
+- **Portão (2), o que prova os outros — liga/desliga rodado com o corpo do passo extraído do próprio YAML:** com `src/gatilho_plantado.ts` importando `./session/index`, saída `1 (esperado: 0)`, `::error::gatilho de D-107 disparou` e **exit 1**; arquivo removido, `0 (esperado: 0)` e **exit 0**. Grep nunca visto reprovando é decoração.
+- **Portão (3):** `tsc --noEmit` verde, suíte **679/679**, build verde, bundle inicial **415.252 B** — igual ao de antes, que é a evidência de que nenhuma lógica entrou.
+- **Nenhum `D-NN`/`Q-NN`/`QA-NN` novo:** o card era execução de `D-107`, e nada ambíguo apareceu.
+- **Lacuna declarada:** o liga/desliga rodou no sandbox Linux desta sessão, não no GitHub Actions — o CI real é do dono, no próximo push.
+
 ## [2026-09-01] — `Q-09` respondida: a porta de M5 não muda, e a derivação vira a resposta (`D-107`)
 
 - **Skill:** planner. Escopo: `a_context/c_decisions.md`, `a_context/d_qa.md`, `a_context/a_context_source.md`, `b_process/c_backlog.md`, `e_qa/m7_tela_notas.md`, `e_qa/m5_sessao_notas.md`, `e_qa/questoes_abertas_notas.md`. **Nenhuma linha de código.**
