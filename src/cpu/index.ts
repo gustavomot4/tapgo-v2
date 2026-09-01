@@ -23,7 +23,11 @@ export type Role = 'shooter' | 'keeper';
 export interface Cpu {
   /** Registra o que o HUMANO escolheu, no papel dele. */
   observe(role: Role, zone: Zone): void;
-  /** Devolve o que a CPU escolhe, no papel dela. Consome exatamente 1 valor do `Rng`. */
+  /**
+   * Devolve o que a CPU escolhe, no papel dela. Consome exatamente 1 valor do `Rng`.
+   *
+   * Lê o histograma do papel ADVERSÁRIO, não o do próprio papel (`D-103`, `Q-08` saída C).
+   */
   pick(role: Role): Zone;
 }
 
@@ -178,6 +182,38 @@ export function zoneDistributionPpm(
   return dist;
 }
 
+/**
+ * Histograma que a CPU usa quando ela COBRA (`D-103`, `Q-08` saída C).
+ *
+ * Quem cobra não quer a zona onde o humano mais DEFENDE — quer as outras. O complemento
+ * `total − c[z]` vira "onde ele menos defende", e a mistura de `D-10` segue idêntica depois:
+ * mesmo peso por nível, mesmo teto, mesmo corte. Por isso `zoneDistributionPpm` não muda.
+ *
+ * Exportada pelo mesmo motivo que ela: é o que deixa o caminho de quem cobra ser conferido
+ * por igualdade exata, e não só pela frequência medida.
+ *
+ * Duas consequências que viram teste:
+ * - Vazio continua vazio (`total = 0` ⇒ tudo zero), então a primeira cobrança segue uniforme.
+ * - `c'[z]/total' = (total − c[z]) / (2·total) <= 1/2`, então quem cobra nunca passa de
+ *   `0,7·0,5 + 0,3/3 = 45%` numa zona. O teto de 70% não é alcançável deste lado — ele
+ *   continua cobrado assim mesmo, porque teto que só vale onde já é folgado não é teto.
+ */
+export function complementCounts(
+  counts: Readonly<Record<Zone, number>>,
+): Record<Zone, number> {
+  const c: Triple = [counts.L, counts.C, counts.R];
+  for (const n of c) {
+    if (!Number.isInteger(n) || n < 0) {
+      throw new RangeError(
+        `complementCounts: contagem deve ser inteiro >= 0; recebido ${String(n)}`,
+      );
+    }
+  }
+
+  const total = c[0] + c[1] + c[2];
+  return { L: total - c[0], C: total - c[1], R: total - c[2] };
+}
+
 /** Sorteia uma zona. Consome exatamente 1 valor do `Rng` — a conta do determinismo. */
 function sortear(dist: Triple, rng: Rng): Zone {
   const r = rng.int(SCALE);
@@ -209,9 +245,9 @@ export function createCpu(level: Level, rng: Rng): Cpu {
     throw new TypeError('createCpu: rng deve ser um Rng de M1 (com int(maxExclusive))');
   }
 
-  // Os DOIS histogramas do contrato, um por papel. A distribuição de quem cobra não é a de
-  // quem defende; um histograma só leria as duas como uma e a CPU responderia a um padrão
-  // que o jogador nunca teve. Em memória, escopo da instância: somem no reload da página.
+  // Os DOIS histogramas do contrato, um por papel do HUMANO. A distribuição de quem cobra
+  // não é a de quem defende; um histograma só leria as duas como uma e a CPU responderia a
+  // um padrão que o jogador nunca teve. Em memória, escopo da instância: somem no reload.
   // Persistir isto no navegador é proibido — é estado de partida, não dado do aparelho (`D-10`).
   const historico: Record<Role, Record<Zone, number>> = {
     shooter: { L: 0, C: 0, R: 0 },
@@ -227,7 +263,21 @@ export function createCpu(level: Level, rng: Rng): Cpu {
 
     pick(role: Role): Zone {
       assertRole(role, 'pick');
-      return sortear(zoneDistributionPpm(level, historico[role]), rng);
+
+      // ── `Q-08` saída (C), `D-103` ────────────────────────────────────────────────────
+      // Cada papel lê o histograma do papel ADVERSÁRIO — é o único que prevê aquilo que a
+      // CPU precisa adivinhar. Ler o próprio papel (o que T-07 escreveu) ponderava um
+      // histórico que não diz nada sobre o outro lado: o nível "difícil" enviesava o
+      // sorteio sem comprar acerto.
+      //
+      // E os dois lados não são simétricos. Quem DEFENDE quer se APROXIMAR das zonas que o
+      // humano mais chuta. Quem COBRA quer se AFASTAR das que ele mais defende — por isso o
+      // complemento, e não a mesma leitura invertida de lado. Aproximar nos dois faria a
+      // CPU chutar em cima do goleiro, pior que o nível fácil.
+      const lidos =
+        role === 'keeper' ? historico.shooter : complementCounts(historico.keeper);
+
+      return sortear(zoneDistributionPpm(level, lidos), rng);
     },
   };
 }

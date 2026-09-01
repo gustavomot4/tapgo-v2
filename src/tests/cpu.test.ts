@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { createRng, type Rng } from '../core/index';
 import {
   CEILING_PPM,
+  complementCounts,
   createCpu,
   zoneDistributionPpm,
   type Cpu,
@@ -35,6 +36,28 @@ function cpuViciada(level: Level, role: Role, zone: Zone, n: number, rng: Rng): 
   const cpu = createCpu(level, rng);
   for (let i = 0; i < n; i += 1) cpu.observe(role, zone);
   return cpu;
+}
+
+/** O papel do outro lado da cobrança. */
+function outroPapel(role: Role): Role {
+  return role === 'shooter' ? 'keeper' : 'shooter';
+}
+
+/**
+ * CPU que vai jogar em `role` e cujo ADVERSÁRIO humano repetiu `zone` `n` vezes.
+ *
+ * Existe por causa de `D-103` (`Q-08` saída C): `pick(role)` lê o histograma do papel
+ * adversário, então semear o próprio papel — o que a suíte de `T-07` fazia — deixaria de
+ * medir o que o teste diz medir e passaria a medir o ramo uniforme.
+ */
+function cpuContraHumanoViciado(
+  level: Level,
+  role: Role,
+  zone: Zone,
+  n: number,
+  rng: Rng,
+): Cpu {
+  return cpuViciada(level, outroPapel(role), zone, n, rng);
 }
 
 /**
@@ -115,6 +138,63 @@ describe('M3 · teto absoluto de 70% (D-10) — exato, sem tolerância', () => {
       CEILING_PPM,
     );
   });
+
+  // ── O caminho de quem COBRA (`D-103`) ────────────────────────────────────────────────
+  // A varredura acima cobre a mistura. Depois de `Q-08`, quem cobra passa por MAIS uma
+  // etapa antes dela — o complemento —, e teto conferido só antes da etapa nova não é teto.
+
+  it('nenhuma zona passa do teto no caminho de quem cobra, em 3 níveis × 1.000 histogramas', () => {
+    for (const level of NIVEIS) {
+      for (let l = 0; l < 10; l += 1) {
+        for (let c = 0; c < 10; c += 1) {
+          for (let r = 0; r < 10; r += 1) {
+            const dist = zoneDistributionPpm(level, complementCounts(counts(l, c, r)));
+
+            expect(Math.max(...dist)).toBeLessThanOrEqual(CEILING_PPM);
+            expect(dist[0] + dist[1] + dist[2]).toBe(1_000_000);
+            for (const p of dist) expect(Number.isInteger(p)).toBe(true);
+          }
+        }
+      }
+    }
+  });
+
+  it('quem cobra nunca passa de 45%: o complemento não alcança o teto, e isso é medido', () => {
+    // `c'[z]/total' = (total − c[z])/(2·total) <= 1/2` ⇒ p <= 0,7·0,5 + 0,3/3 = 45%.
+    // O +1 é a unidade de resto que o arredondamento pode empurrar para a maior zona.
+    for (const level of NIVEIS) {
+      for (let l = 0; l < 10; l += 1) {
+        for (let c = 0; c < 10; c += 1) {
+          for (let r = 0; r < 10; r += 1) {
+            const dist = zoneDistributionPpm(level, complementCounts(counts(l, c, r)));
+            expect(Math.max(...dist)).toBeLessThanOrEqual(450_001);
+          }
+        }
+      }
+    }
+  });
+
+  it('o complemento é `total − c[z]`, e o histórico vazio continua vazio', () => {
+    expect(complementCounts(counts(10, 0, 0))).toEqual(counts(0, 10, 10));
+    expect(complementCounts(counts(0, 0, 0))).toEqual(counts(0, 0, 0));
+    expect(complementCounts(counts(5, 3, 2))).toEqual(counts(5, 7, 8));
+    // Empatado entra empatado: sem preferência inventada onde o humano não teve nenhuma.
+    expect(complementCounts(counts(4, 4, 4))).toEqual(counts(8, 8, 8));
+  });
+
+  it('histórico vazio ⇒ quem cobra também sorteia uniforme, em qualquer nível', () => {
+    for (const level of NIVEIS) {
+      expect(zoneDistributionPpm(level, complementCounts(counts(0, 0, 0)))).toEqual([
+        333_334, 333_333, 333_333,
+      ]);
+    }
+  });
+
+  it('complemento recusa contagem que não seja inteiro >= 0', () => {
+    expect(() => complementCounts(counts(-1, 0, 0))).toThrow(RangeError);
+    expect(() => complementCounts(counts(1.5, 0, 0))).toThrow(RangeError);
+    expect(() => complementCounts(counts(Number.NaN, 0, 0))).toThrow(RangeError);
+  });
 });
 
 describe('M3 · teto de 70% medido por frequência, em cada papel', () => {
@@ -124,31 +204,48 @@ describe('M3 · teto de 70% medido por frequência, em cada papel', () => {
 
   it.each(PAPEIS)('%s: repetindo a mesma zona, a CPU nunca a acerta acima de 70%%', (role) => {
     for (const level of NIVEIS) {
-      const cpu = cpuViciada(level, role, 'L', 200, createRng(11));
+      const cpu = cpuContraHumanoViciado(level, role, 'L', 200, createRng(11));
       const f = frequencias(cpu, role, N);
 
-      expect(f.L).toBeLessThanOrEqual(0.7 + margem4Sigma(N, 0.7));
+      for (const z of ZONAS) expect(f[z]).toBeLessThanOrEqual(0.7 + margem4Sigma(N, 0.7));
     }
   });
 
-  it.each(PAPEIS)('%s: no difícil a frequência medida encosta em 70%%, e não em 80%%', (role) => {
-    const cpu = cpuViciada('hard', role, 'C', 200, createRng(12));
-    const f = frequencias(cpu, role, N);
+  it('keeper: no difícil a frequência medida encosta em 70%, e não em 80%', () => {
+    // Quem defende se APROXIMA da zona mais chutada pelo humano (`D-103`): é este lado que
+    // alcança o teto, e é aqui que a armadilha 0,70 + 0,30/3 = 0,80 do contrato é cobrada.
+    const cpu = cpuContraHumanoViciado('hard', 'keeper', 'C', 200, createRng(12));
+    const f = frequencias(cpu, 'keeper', N);
 
     // 0,80 fica a ~53 desvios daqui: a armadilha do contrato reprova sem ambiguidade.
     expect(Math.abs(f.C - 0.7)).toBeLessThanOrEqual(margem4Sigma(N, 0.7));
   });
 
-  it('o fácil ignora o histórico e continua uniforme (é a v1, de propósito)', () => {
-    const cpu = cpuViciada('easy', 'shooter', 'R', 500, createRng(13));
+  it('shooter: no difícil a CPU FOGE da zona mais defendida — 10%, não 70%', () => {
+    // O outro lado de `D-103`, e o motivo de a saída (C) não ser o swap de índice: com o
+    // complemento, o humano que sempre defende C vê a CPU chutar C de menos, não de mais.
+    // Se este teste medir ~0,70 em `f.C`, o complemento sumiu e a CPU voltou a chutar em
+    // cima do goleiro — que é exatamente o defeito da saída (B).
+    const cpu = cpuContraHumanoViciado('hard', 'shooter', 'C', 200, createRng(12));
     const f = frequencias(cpu, 'shooter', N);
 
-    expect(Math.abs(f.R - 1 / 3)).toBeLessThanOrEqual(margem4Sigma(N, 1 / 3));
+    // complemento [200,0,200] sobre total' = 400 ⇒ C = 0,3/3 = 0,10; L = R = 0,7·0,5 + 0,10.
+    expect(Math.abs(f.C - 0.1)).toBeLessThanOrEqual(margem4Sigma(N, 0.1));
+    expect(Math.abs(f.L - 0.45)).toBeLessThanOrEqual(margem4Sigma(N, 0.45));
+    expect(Math.abs(f.R - 0.45)).toBeLessThanOrEqual(margem4Sigma(N, 0.45));
   });
 
-  it('o médio fica entre o fácil e o difícil, medido', () => {
+  it.each(PAPEIS)('%s: o fácil ignora o histórico e continua uniforme (é a v1)', (role) => {
+    const cpu = cpuContraHumanoViciado('easy', role, 'R', 500, createRng(13));
+    const f = frequencias(cpu, role, N);
+
+    for (const z of ZONAS) expect(Math.abs(f[z] - 1 / 3)).toBeLessThanOrEqual(margem4Sigma(N, 1 / 3));
+  });
+
+  it('keeper: o médio fica entre o fácil e o difícil, medido', () => {
     const medir = (level: Level): number =>
-      frequencias(cpuViciada(level, 'shooter', 'L', 200, createRng(14)), 'shooter', N).L;
+      frequencias(cpuContraHumanoViciado(level, 'keeper', 'L', 200, createRng(14)), 'keeper', N)
+        .L;
 
     const facil = medir('easy');
     const medio = medir('medium');
@@ -158,32 +255,65 @@ describe('M3 · teto de 70% medido por frequência, em cada papel', () => {
     expect(dificil).toBeGreaterThan(medio);
     expect(dificil).toBeLessThanOrEqual(0.7 + margem4Sigma(N, 0.7));
   });
+
+  it('shooter: o médio fica entre o fácil e o difícil — para BAIXO, que é fugir mais', () => {
+    // Mesma escada, sentido oposto: subir o nível afasta mais quem cobra da zona defendida.
+    // Se as duas escadas apontassem para o mesmo lado, um dos papéis estaria lendo errado.
+    const medir = (level: Level): number =>
+      frequencias(
+        cpuContraHumanoViciado(level, 'shooter', 'L', 200, createRng(14)),
+        'shooter',
+        N,
+      ).L;
+
+    const facil = medir('easy');
+    const medio = medir('medium');
+    const dificil = medir('hard');
+
+    expect(medio).toBeLessThan(facil);
+    expect(dificil).toBeLessThan(medio);
+    expect(dificil).toBeGreaterThanOrEqual(0);
+  });
 });
 
-describe('M3 · dois histogramas — o histórico de um papel não desloca o outro', () => {
-  it('encher shooter de L não muda a distribuição de pick(keeper)', () => {
-    const semear = (encher: boolean): Record<Zone, number> => {
-      const cpu = createCpu('hard', createRng(99));
-      if (encher) for (let i = 0; i < 300; i += 1) cpu.observe('shooter', 'L');
-      return frequencias(cpu, 'keeper', 30_000);
-    };
+describe('M3 · dois histogramas — cada papel lê o do ADVERSÁRIO, e só ele (D-103)', () => {
+  // Este bloco é o que `Q-08` virou de cabeça para baixo. Até `D-103` ele cobrava o oposto
+  // ("encher shooter não muda pick(keeper)"), porque `pick` lia o próprio papel. Agora
+  // encher `shooter` TEM de mover `pick('keeper')` — é a entrada dele —, e continua não
+  // podendo mover `pick('shooter')`. Trocar a leitura sem trocar estes testes deixaria a
+  // suíte verde sobre a semântica velha.
+  const semear = (
+    seed: number,
+    papelHumano: Role | null,
+    zone: Zone,
+    papelCpu: Role,
+  ): Record<Zone, number> => {
+    const cpu = createCpu('hard', createRng(seed));
+    if (papelHumano !== null) {
+      for (let i = 0; i < 300; i += 1) cpu.observe(papelHumano, zone);
+    }
+    return frequencias(cpu, papelCpu, 30_000);
+  };
 
+  it('encher shooter de L MUDA a distribuição de pick(keeper)', () => {
+    expect(semear(99, 'shooter', 'L', 'keeper')).not.toEqual(semear(99, null, 'L', 'keeper'));
+  });
+
+  it('encher shooter de L não muda a distribuição de pick(shooter)', () => {
     // Mesma semente e mesmo número de sorteios: se os histogramas se misturassem, as duas
     // séries divergiriam. Igualdade exata, porque o sorteio é determinístico.
-    expect(semear(true)).toEqual(semear(false));
+    expect(semear(99, 'shooter', 'L', 'shooter')).toEqual(semear(99, null, 'L', 'shooter'));
   });
 
-  it('encher keeper de R não muda a distribuição de pick(shooter)', () => {
-    const semear = (encher: boolean): Record<Zone, number> => {
-      const cpu = createCpu('hard', createRng(98));
-      if (encher) for (let i = 0; i < 300; i += 1) cpu.observe('keeper', 'R');
-      return frequencias(cpu, 'shooter', 30_000);
-    };
-
-    expect(semear(true)).toEqual(semear(false));
+  it('encher keeper de R MUDA a distribuição de pick(shooter)', () => {
+    expect(semear(98, 'keeper', 'R', 'shooter')).not.toEqual(semear(98, null, 'R', 'shooter'));
   });
 
-  it('os dois papéis viciados em zonas opostas mantêm cada teto no seu lugar', () => {
+  it('encher keeper de R não muda a distribuição de pick(keeper)', () => {
+    expect(semear(98, 'keeper', 'R', 'keeper')).toEqual(semear(98, null, 'R', 'keeper'));
+  });
+
+  it('humano que sempre chuta L e sempre defende R: a CPU cobre o L e foge do R', () => {
     const cpu = createCpu('hard', createRng(97));
     for (let i = 0; i < 200; i += 1) {
       cpu.observe('shooter', 'L');
@@ -192,10 +322,12 @@ describe('M3 · dois histogramas — o histórico de um papel não desloca o out
 
     const fShooter = frequencias(cpu, 'shooter', 40_000);
     const fKeeper = frequencias(cpu, 'keeper', 40_000);
-    const margem = margem4Sigma(40_000, 0.7);
 
-    expect(Math.abs(fShooter.L - 0.7)).toBeLessThanOrEqual(margem);
-    expect(Math.abs(fKeeper.R - 0.7)).toBeLessThanOrEqual(margem);
+    // Defendendo: encosta no teto sobre a zona mais chutada.
+    expect(Math.abs(fKeeper.L - 0.7)).toBeLessThanOrEqual(margem4Sigma(40_000, 0.7));
+    // Cobrando: complemento de [0,0,200] = [200,200,0] ⇒ R cai a 10%, L e C ficam em 45%.
+    expect(Math.abs(fShooter.R - 0.1)).toBeLessThanOrEqual(margem4Sigma(40_000, 0.1));
+    expect(fShooter.L + fShooter.C).toBeGreaterThan(fShooter.R);
   });
 });
 

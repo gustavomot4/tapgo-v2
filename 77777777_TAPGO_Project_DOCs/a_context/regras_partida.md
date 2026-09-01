@@ -48,8 +48,21 @@ A CPU pondera o histórico de zonas do jogador **na sessão**, em 3 níveis:
 | Médio | 50% | 50% |
 | Difícil | 70% | 30% |
 
+**Qual histórico cada papel lê (`D-103`, `Q-08` saída C).** A CPU lê o histograma do papel
+**adversário** — o único que prevê o que ela precisa adivinhar —, e os dois lados não são simétricos:
+
+| A CPU está | Lê o histórico de | E faz |
+|---|---|---|
+| no gol | onde o humano **chuta** | **aproxima-se** da zona mais chutada |
+| cobrando | onde o humano **defende** | **afasta-se** da mais defendida (complemento `total − c[z]`) |
+
+Ler o próprio papel — o que a v2.0.0 fazia — ponderava um histórico que não diz nada sobre o outro
+lado: o nível "difícil" enviesava o sorteio sem comprar acerto. E inverter só o índice, sem o
+complemento, faria a CPU chutar **em cima** do goleiro, pior que o nível fácil.
+
 Invariantes da CPU (viram teste):
 - **Teto absoluto de 70%.** Nenhum nível, nenhuma progressão e nenhum torneio passam disso: o jogador sempre consegue enganar a CPU.
+- **Quem cobra para em 45%,** não em 70%: o complemento nunca concentra mais que metade da massa, então `0,7·0,5 + 0,3/3 = 45%` é o máximo desse lado. O teto de 70% segue cobrado nele assim mesmo — teto que só vale onde já é folgado não é teto.
 - Histórico vive **em memória**, escopo da sessão; zera ao recarregar. Nada em `localStorage` — não é dado do aparelho, é estado de partida.
 - Sorteio usa a semente do motor. Mesma semente + mesmas entradas = mesmas escolhas da CPU.
 - Com histórico vazio (primeira cobrança), a distribuição é uniforme em qualquer nível.

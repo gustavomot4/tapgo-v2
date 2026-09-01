@@ -7,6 +7,18 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-09-01] — `Q-08` respondida pela saída (C): a CPU passa a ler o histograma do ADVERSÁRIO (`D-103`)
+
+- **Skill:** backend-domain. Escopo: `src/cpu/index.ts` e `src/tests/cpu.test.ts`, e **só eles** — M5 e M8 não mudam uma linha de código. Suíte **668 → 677/677**, `tsc --noEmit` limpo.
+- **A resposta do dono:** saída **(C)**, assimétrica. Quem defende se APROXIMA da zona mais chutada pelo humano; quem cobra se AFASTA da mais defendida, via complemento `total − c[z]`.
+- **Por que não foi o swap de índice** que a nota de `Q-08` orçava como "o índice em `pick`, mais nada": trocar o índice move os DOIS papéis, e o lado que cobra passaria a mirar a zona onde o humano mais defende — chutar em cima do goleiro, pior que o nível fácil. O custo real é o complemento, não o índice.
+- **Correção:** `complementCounts()` novo e exportado; `pick(role)` lê `historico.shooter` quando defende e `complementCounts(historico.keeper)` quando cobra. `zoneDistributionPpm` **não muda** — o complemento entra antes dela, então peso por nível, teto e corte seguem os mesmos.
+- **Invariante novo, medido:** quem cobra nunca passa de **45%** numa zona, porque `(total − c[z])/(2·total) <= 1/2` ⇒ `0,7·0,5 + 0,3/3`. O teto de 70% continua cobrado nesse lado assim mesmo — teto que só vale onde já é folgado não é teto.
+- **Testes que inverteram de propósito:** o bloco de isolamento cobrava "encher `shooter` não muda `pick(keeper)`" e agora cobra o oposto (`MUDA`), mais as duas escadas de nível em sentidos opostos — a de quem defende sobe, a de quem cobra desce. A varredura 3 níveis × 1.000 histogramas passou a rodar **duas** vezes: na mistura e no caminho do complemento.
+- **Achado, não consertado (regra 2):** `QA-44` — os comentários de `session/index.ts` (§`D-26`) e `tournament/index.ts` dizem que a ordem escolher-antes-de-observar é indiferente até `Q-08` ser respondida "ao contrário". Foi. A ordem virou carga e nenhum teste a prende; íntegra em [[qa44_ordem_virou_carga]].
+- **Registro:** `D-103` criado (`D-102` já estava em uso pelo commit anterior); `Q-08` sai da tabela de questões abertas com o ID preservado; `QA-07` vira **PARCIAL** — segue aberto só por `Q-09`.
+- **Portão:** `npm test` 677/677, `npm run typecheck` limpo, `python scripts/check.py` exit 0 com os **mesmos dois** avisos velhos (`D-64`, `microservice-sync`).
+
 ## [2026-09-01] — `QA-34` fecha: o teste do gramado passa a ler as faixas de `cena.ts`
 
 - **Skill:** debugging-diagnosis. Escopo: `src/tests/ui.test.ts`, e **só ele** — `cena.ts` não muda uma cor, então não há rebuild nem bump. Suíte **668/668**, `tsc --noEmit` limpo.

@@ -8,7 +8,7 @@ status: atual
 > **Teto: 2 frases por linha.** Evidência longa vira nota em `e_qa/<slug>.md` ou tema em `a_context/`.
 > **Registre as rejeições.** A lista de rejeitados é o que impede a IA de re-propor o que já morreu.
 > **`ARQUIVADO`:** íntegra em [[decisions_archive]] — o ponteiro é este, e não se repete por linha. Desde `D-74` só as REJEITADAS guardam linha viva com esse status: são a lista-morta que a fase de evolução varre sem abrir o arquivo.
-> **Retirados da tabela** (ID preservado, nada revertido): `D-01`..`D-05` · `D-09`..`D-38` · `D-67`..`D-69` · `D-74` · `Q-01`..`Q-07` `Q-10`..`Q-12` `Q-14`..`Q-16`.
+> **Retirados da tabela** (ID preservado, nada revertido): `D-01`..`D-05` · `D-09`..`D-38` · `D-67`..`D-69` · `D-74` · `Q-01`..`Q-07` `Q-08` (respondida por `D-103`) `Q-10`..`Q-12` `Q-14`..`Q-16`.
 > **Retirados em 2026-08-29** (`D-97`, mesmo critério de `D-43`): `D-44` `D-45` `D-49` `D-63` `D-70` `D-75` `D-77` `D-80` `D-87` `D-91` `D-94` — íntegra em [[decisions_archive]].
 > **Achados de QA moram em [[d_qa|QA]]** desde `D-50` — este arquivo não define mais `QA-NN`.
 
@@ -67,11 +67,11 @@ status: atual
 | D-100 | 2026-08-29 | ADOTADO | `QA-29`: o portão vale **38** checagens — as duas listas do docstring do `check.py` (18 FALHAS + 20 AVISOS); a validação do `.kit-config.json` fica FORA, declarada na própria contagem | Ela reprova, mas julga o contrato do arquivo de config, não um item de checklist. Critério escrito no docstring e no README: número sem régua é o que envelheceu duas vezes (188/18, 33) |
 | D-101 | 2026-08-29 | ADOTADO | `QA-43`, critério único: o aviso do `check.py` só oferece o que `arquivar.py` **sem flag** retiraria — mesmo recorte de vivo, REJEITADA fora nos **dois** ramos, vazio imprime NENHUMA | Medido: pool **0** no `check.py` contra as **3** do `arquivar.py`; a 89% do teto ele diria "esgotado" e mandaria à alavanca que `D-97` reprovou. Portão e as mortas em [[qa43_uma_regua_so]] |
 | D-102 | 2026-08-29 | ADOTADO | `QA-42`: script ausente pode ser **nomeado**, nunca **oferecido** — só vale a menção que declara, na linha, que ele é do KIT e não veio | Diferença simétrica `README`+`task.py` × `git ls-files scripts/` vazia; trava em `e_qa/test_qa42.py` |
+| D-103 | 2026-09-01 | ADOTADO · SUPERSEDE D-10 no que `pick` LÊ | `Q-08` saída **(C)**: cada papel lê o histograma do ADVERSÁRIO — quem defende se aproxima da zona mais chutada, quem cobra se AFASTA da mais defendida (complemento `total − c[z]`) | Ler o próprio papel enviesava sem comprar acerto, e o swap puro faria a CPU chutar no goleiro. Suíte **677**; quem cobra para em **45%**, sob o teto |
 > **Gatilhos de revisão** (`D-43`): moram no tema que cada um mede — `D-01` em [[online_p2p]], `D-02` em [[stack]].
 
 ## Questões abertas (Q-NN — decisões do DONO, não do agente)
 | # | Questão | Decidir quando |
 |---|---|---|
 | Q-09 | No modo `local`, de quem é a escolha pendente, se a porta congelada de M5 não a expõe? | antes de T-10 (**prazo vencido — `QA-07`**); hoje M7 deriva de `kicks.length` e a saída definitiva está em [[questoes_abertas_notas]] |
-| Q-08 | `pick(role)` lê o histograma do **mesmo** papel — é essa a intenção, ou quem defende deveria ler o histograma `shooter` do humano? | antes de E-3 (**prazo vencido — `QA-07`**); as duas leituras e o custo de inverter em [[questoes_abertas_notas]] |
 | Q-13 | Mudar `report(winner)` para trazer o placar é porta congelada (`D-13`/`D-58`) | segue do dono; `T-14` fechou com `D-67`, que mostra a ausência em vez de inventar zero |
