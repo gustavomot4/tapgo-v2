@@ -242,6 +242,9 @@ export const telaTorneio: Tela = (raiz: HTMLElement, ctx: Contexto) => {
 
   tela.append(
     el('div', { classe: 'grupo empurra' }, [
+      // `T-40`: a chave inteira é LEITURA, e por isso ela fica aqui embaixo e não no caminho
+      // principal — quem abriu a tela veio jogar a próxima disputa, que continua a 1 toque.
+      botao('Ver o chaveamento', 'botao botao--discreto', () => ctx.ir({ nome: 'chaveamento' })),
       // A saída não destrutiva vem PRIMEIRO: quem só quer jogar uma disputa avulsa não precisa
       // passar perto do botão que apaga o torneio.
       botao('Voltar ao início', 'botao botao--discreto', () => ctx.ir({ nome: 'inicio' })),

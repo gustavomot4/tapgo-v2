@@ -1368,6 +1368,110 @@
   text-transform: uppercase;
 }
 
+/* ── O chaveamento inteiro (`T-40`) ─────────────────────────────────────────────────────── */
+
+/*
+ * A lista das 64. Um cartão por disputa, e os dois lados EMPILHADOS — não lado a lado.
+ *
+ * Em 360px de largura dois nomes de seleção na mesma linha (`Costa do Marfim` é o mais longo do
+ * catálogo) só cabem cortando os dois; empilhados, cada nome tem a largura inteira e o número de
+ * gols fica na mesma coluna nas duas linhas, que é o que deixa o placar ser lido de relance. É a
+ * mesma conta que `.tabela__celula-nome` já tinha feito, e a resposta continua sendo dar ao nome
+ * a largura que sobra em vez de espremer a linha.
+ */
+.chave {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chave__disputa {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  background: linear-gradient(180deg, var(--superficie-alta), var(--superficie));
+  box-shadow: var(--sombra), var(--realce);
+}
+
+/* A que ninguém jogou ainda tem a borda TRACEJADA, e não opacidade menor: apagar o texto é
+   perder contraste, e o portão desta folha pede 4.5:1 inclusive no que está "em espera". */
+.chave__disputa[data-estado='a-jogar'] {
+  border-style: dashed;
+  background: var(--superficie);
+  box-shadow: none;
+}
+
+.chave__grupo {
+  color: var(--texto-apagado);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.chave__lado {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+
+  /* 26px em vez dos 34 de sempre: são 128 marcas numa tela só, e a bandeira aqui acompanha o
+     nome — ela não é o assunto, como é na tela de seleções. */
+  --marca-tam: 26px;
+}
+
+.chave__nome {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* O vencedor: peso, cor E o "✓". Cor sozinha não distingue linha para quem não a enxerga, e a
+   palavra "venceu" entra em `.so-leitor` para quem ouve a tela. */
+.chave__lado[data-vencedor='sim'] .chave__nome {
+  color: var(--acento);
+  font-weight: 700;
+}
+
+.chave__marcador {
+  flex: 0 0 auto;
+  color: var(--acento);
+  font-weight: 700;
+}
+
+/* `margin-left: auto` empurra o número para a direita e `tabular-nums` o mantém na mesma coluna
+   nas duas linhas — sem isso o `2` e o `—` dançam, e o placar deixa de ser lido de relance. */
+.chave__gols {
+  flex: 0 0 auto;
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+/*
+ * Só para quem ouve a tela.
+ *
+ * Não é `display: none` nem `visibility: hidden` — os dois somem também do leitor de tela, que é
+ * exatamente quem precisa deste texto. O retângulo de 1px com `clip-path` é o que tira do olho
+ * sem tirar da árvore de acessibilidade.
+ */
+.so-leitor {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 /* ── Movimento de entrada ───────────────────────────────────────────────────────────────── */
 
 /*

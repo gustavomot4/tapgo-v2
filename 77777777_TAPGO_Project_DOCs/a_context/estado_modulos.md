@@ -26,8 +26,8 @@ status: atual
 | M4 | Catálogo das 32 seleções e as bandeiras | `T-08` + `T-18` + `T-19` — alterado por `D-51`..`D-62` |
 | M5 | Sessão: `cpu`, `local` e `online` | `T-09` + `T-13` (o `online`) + `T-21` (a linha de `newRoomId`, `D-73`) + `T-17` (o sorteio nos três modos, `D-98`) + `T-23` (par espelhado vira falha honesta, `D-81`) + `T-31` (`teams` com `null`, 3º arg de `subscribe` e o prazo do anúncio, `D-90`) |
 | M6 | Transporte P2P | `T-11` + `T-31` (`Pick` no fio pelos mesmos 4 métodos, `D-90`) |
-| M7 | Telas (DOM) e a cobrança em Phaser | `T-10` + `T-17b` + `T-20` + `T-14` (as 3 telas do torneio) + `T-21` (o convite e o `online` na cobrança) + `T-24` (o prazo de 15 s no `online`) + `T-25` (a coluna "Pts" na tabela) + `T-32` (a série de revanches em `cpu` e `local`) + `T-31` (uma grade no `online`, "escolhendo…" e `t=` com um código, `D-90`) |
-| M8 | Torneio: grupos, mata-mata, retrato | `T-12` — alterado por `D-57` |
+| M7 | Telas (DOM) e a cobrança em Phaser | `T-10` + `T-17b` + `T-20` + `T-14` (as 3 telas do torneio) + `T-21` (o convite e o `online` na cobrança) + `T-24` (o prazo de 15 s no `online`) + `T-25` (a coluna "Pts" na tabela) + `T-32` (a série de revanches em `cpu` e `local`) + `T-31` (uma grade no `online`, "escolhendo…" e `t=` com um código, `D-90`) + `T-40` (a tela do chaveamento inteiro e a derivação pura de `chave.ts`, `D-111`) |
+| M8 | Torneio: grupos, mata-mata, retrato | `T-12` — alterado por `D-57`; `chaveamento(state)` e o tipo `Disputa` por `T-40` (`D-111`/`D-112`) |
 | M9 | Build, portões e publicação | `T-05` (esqueleto) + `T-34` (`vite.config.ts` dentro do `tsc`, `QA-04`) + `T-36` (o medidor caminha só o grafo de `index.html`, `QA-06`/`D-93`) |
 | medição | O experimento de campo de E-4 | `T-15` + `T-16` + `T-38` (a base inválida recusada antes da 1ª tentativa e as descartadas em contador próprio, `D-96`/`QA-10` — campo em `A-40`) |
 

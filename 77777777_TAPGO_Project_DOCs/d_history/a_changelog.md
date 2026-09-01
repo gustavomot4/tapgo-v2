@@ -7,6 +7,17 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-09-01] — `T-40`, metade M7: a tela do chaveamento, e `T-40` fecha inteira
+
+- **Skill:** frontend-uiux — sessão de implementação. Escopo: `src/ui/` e um arquivo de teste novo. **Nenhuma linha de `src/tournament/`**: a metade M8 já estava fechada, e a tela só a lê.
+- **A tela:** `src/ui/tela_chaveamento.ts`, rota `chaveamento` — as 48 de grupo por rodada e o mata-mata por fase, cada disputa com os dois lados empilhados, vencedor marcado e placar. Entra por "Ver o chaveamento" na tela do torneio e na do campeão; a do campeão **não** passa por `encerrar`, então olhar a chave não apaga o torneio.
+- **A derivação de M7 é pura:** `src/ui/chave.ts` — `secoes()` agrupa por fase na ordem da fila (nada é reordenado nem inventado) e `estadoDaDisputa()` separa os três casos que mostram o MESMO traço: `'a-jogar'` (`D-112`), `'sem-placar'` (a do jogador, `D-67`/`Q-13`) e `'jogada'`. Sem DOM, testável em Node — mesmo arranjo de `derivacao.ts`.
+- **O que a tela não faz:** não mostra confronto "a definir". A lista tem o que M8 já decidiu — 48, 56 ou 64 — e o resumo do topo diz o denominador ("N de 64 disputas definidas"), senão 48 linhas pareceriam a competição inteira.
+- **Acessibilidade:** o vencedor leva `✓` **e** a palavra "venceu" em `.so-leitor` (classe nova, visualmente oculta) — cor sozinha não distingue linha para quem não a enxerga; o traço de ausente entra por `aria-label` com a frase certa para cada um dos dois casos; a que ninguém jogou tem borda **tracejada**, não opacidade menor, para não perder contraste.
+- **Números:** suíte **731/731 → 749/749** (18 casos novos em `src/tests/ui_chaveamento.test.ts`), `tsc --noEmit` limpo, `dist/` inicial em **420.390 B** (5,25% do teto de 8 MB) contra os 415.252 B do que está no ar. Varreduras em zero: `D-68` sobre `src/ui/` e o portão de camada de M7.
+- **O teste reprovou a suposição, e ela era minha:** "no torneio recém-criado todas estão por jogar" é **falso** — M8 já simula as disputas que vêm antes da primeira do jogador. O caso virou a asserção certa: por jogar existe, `'sem-placar'` não.
+- **NÃO alcançado pelo portão, e virou `A-43`:** se o chaveamento cabe e se lê em 360x640. `vitest` roda em Node, sem `document`.
+
 ## [2026-09-01] — `T-40`, metade M8: o chaveamento inteiro sai por `chaveamento(state)`, e as cinco checagens de `D-111` viram teste
 
 - **Skill:** backend-domain — sessão de implementação. Escopo: `src/tournament/index.ts` e um arquivo de teste novo. **Nenhuma linha de `src/ui/`**: a tela de M7 é a outra metade de `T-40` e não foi aberta.

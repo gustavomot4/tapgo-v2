@@ -8,6 +8,18 @@ status: atual
 > Todo card com portão: como se sabe que terminou.
 
 ## Ações do dono (máquina real)
+- [ ] **A-43 — o chaveamento no celular real: conte as disputas que a tela lista, e as rolagens de lado (`T-40`/`D-111`)**
+  - **Por que é do dono:** `vitest` roda em Node, sem `document` — o sandbox não monta tela nenhuma.
+    Se as 64 cabem e se leem em 360x640 é medição de aparelho, e o card de `T-40` já declarava isso.
+  - **O que fazer:** abrir a TAP GO Cup no celular e tocar "Ver o chaveamento" na tela do torneio;
+    jogar até a fase de grupos fechar e voltar lá; no fim, entrar pelo botão da tela do campeão.
+  - **Portão (dois inteiros, e o primeiro é o que `D-111` moveu):** o número do topo ("N de 64
+    disputas definidas") tem de ser **48** antes de a classificação fechar, **56** depois dela e
+    **64** com o campeão — e a lista tem de ter exatamente essas linhas, contadas na tela e não no
+    teste · **rolagem horizontal: 0** em 360x640, nas três leituras.
+  - **Olhar também:** a disputa que ninguém jogou aparece com borda tracejada e `—` nos dois lados;
+    a sua aparece com o vencedor marcado e `—` no lugar dos gols (`D-67`) — **nenhum `0`** em
+    nenhuma das duas.
 - [x] A-42 — o ar já carrega a CPU de D-103? conte os mergulhos do… · íntegra em [[backlog_archive]]
 - [x] A-41 — o MESMO primeiro cobrador nos dois aparelhos (T-17/D-98) · íntegra em [[backlog_archive]]
 - [x] A-40 — o link truncado nos DOIS aparelhos: conte os segundos que o… · íntegra em [[backlog_archive]]
@@ -67,14 +79,19 @@ status: atual
 - [x] T-29 — as 32 cores nacionais na camisa ✔ COM CAMPO em 2026-08-21… · **Módulo:** M7 · íntegra em [[backlog_archive]]
 - [x] A-15 — dividir o registro pela terceira vez, ou subir o teto: A-13… · íntegra em [[backlog_archive]]
 - [x] T-31 — no online, cada aparelho escolhe a PRÓPRIA seleção (pedido… · **Módulo:** M6 · íntegra em [[backlog_archive]]
-- [ ] **T-40 — ver o chaveamento inteiro (`P-3`/`D-111`)** · **Módulo:** M8 (a leitura) **+ M7** (a tela)
-  - **Entrega:** `chaveamento(state)` e o tipo `Disputa` na porta de M8, mais a tela de M7 que os desenha — as 48 de grupo por rodada e o mata-mata por fase, com vencedor e placar de cada uma.
-  - **Portão:** o do contrato de M8 no [[b_plan|PLANO]], §"Portão de `chaveamento(state)` (`D-111`)" — pureza (`consumed` não muda), comprimento **48 → 56 → 64**, `winner` casando com `group()`/`champion()` na mesma semente, `goals: null` **só** nas disputas do jogador, e `grep -rnE "\.(entrants|groupOrder|results|goalsA|goalsB)\b" src/ui/` em **zero**. Os cinco rodam em `vitest`; nenhum precisa de tela montada.
-  - **METADE M8 FECHADA em 2026-09-01:** `chaveamento(state)`, o tipo `Disputa` e as cinco
-    checagens em `src/tests/tournament_chaveamento.test.ts` (44 casos). `D-112` fixou o `goals`
-    da disputa ainda não jogada. **Falta a tela de M7** — é o que mantém o card aberto.
-  - **Limite declarado:** as disputas do jogador não têm placar (`Q-13` segue do dono) — a tela mostra `—`, como `D-67` já faz na tabela do grupo. Inventar `0` reprova.
-  - **O que o portão NÃO alcança:** se o chaveamento cabe e se lê em 360x640. Isso é `A-NN` do dono no aparelho — `vitest` roda em Node, sem `document`.
+- [x] **T-40 — ver o chaveamento inteiro (`P-3`/`D-111`)** ✔ **as duas metades fechadas em 2026-09-01** · **Módulo:** M8 (a leitura) **+ M7** (a tela)
+  - **Entregue:** `chaveamento(state)` e o tipo `Disputa` na porta de M8 (com as 5 checagens de
+    `src/tests/tournament_chaveamento.test.ts`), mais a tela de M7 — `src/ui/tela_chaveamento.ts`,
+    rota `chaveamento`, com entrada na tela do torneio e na do campeão. As 48 de grupo saem por
+    rodada e o mata-mata por fase, com vencedor e placar de cada uma.
+  - **A derivação de M7 é pura e testada:** `src/ui/chave.ts` (agrupar por fase, e os 3 estados de
+    uma disputa) com `src/tests/ui_chaveamento.test.ts` — 18 casos, sem `document`.
+  - **Portão:** verde. Suíte **749/749**, `tsc --noEmit` limpo, e as varreduras de disco em zero —
+    `grep -rnE "\.(entrants|groupOrder|results|goalsA|goalsB)" src/ui/` (`D-68`) e o portão de
+    camada de M7. Placar ausente é `—` nos dois casos (`D-67` e `D-112`), nunca `0`.
+  - **O que o portão NÃO alcança, e virou `A-43`:** se o chaveamento cabe e se lê em 360x640.
+    `vitest` roda em Node, sem tela.
+
 - [x] T-33 — cor e legibilidade dos símbolos de papel sobre as linhas do… · **Módulo:** M7 · íntegra em [[backlog_archive]]
 
 ## Em andamento (máx 1 — espelha "Em andamento" do [[a_context_source|CONTEXT]])
@@ -114,7 +131,7 @@ _(vazio)_
 
 - **P-1** desktop e a tela esticada - **VIROU `T-27`**, feito 2026-08-20
 - **P-2** pontos na tabela da Cup - **VIROU `T-25`**, feito 2026-08-20
-- **P-3** ver o chaveamento inteiro - **VIROU `T-40`** (`D-111`, saida (c)): nem uma coisa nem outra - funcao de leitura na porta de M8
+- **P-3** ver o chaveamento inteiro - **VIROU `T-40`** (`D-111`, saida (c)), **feito 2026-09-01**: funcao de leitura na porta de M8 + a tela de M7
 - **P-4** emocao (torcida, taca, trilha) - **ABERTO**: reabre `D-65`, `D-NN` do dono
 - **P-5** moeda do sorteio animada - **VIROU `T-26`**, feito 2026-08-20
 - **P-6** papel lido numa olhada - (a) **VIROU `T-28`**, feito; (b) **VIROU `T-29`, parado em `Q-16`** - a medicao derrubou a premissa

@@ -81,6 +81,10 @@ export const telaCampeao: Tela = (raiz: HTMLElement, ctx: Contexto) => {
     }),
     el('div', { classe: 'grupo empurra' }, [
       novo,
+      // `T-40`: o chaveamento é a última coisa que dá para olhar antes de o torneio ser
+      // encerrado — e por isso ele NÃO passa por `encerrar`. Sair por aqui não apaga nada; quem
+      // apaga são os dois botões vizinhos, e é a diferença que o nome de cada um diz.
+      botao('Ver o chaveamento', 'botao botao--discreto', () => ctx.ir({ nome: 'chaveamento' })),
       botao('Voltar ao início', 'botao botao--discreto', () => encerrar('inicio')),
     ]),
   );

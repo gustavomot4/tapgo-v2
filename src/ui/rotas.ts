@@ -135,6 +135,8 @@ export type Rota =
   | { readonly nome: 'fim'; readonly partida: Partida; readonly estado: MatchState }
   | { readonly nome: 'torneio_novo' }
   | { readonly nome: 'torneio' }
+  /** O chaveamento inteiro, só de leitura (`T-40`/`D-111`). Não altera o torneio. */
+  | { readonly nome: 'chaveamento' }
   | { readonly nome: 'campeao' };
 
 export interface Contexto {

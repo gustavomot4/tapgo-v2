@@ -29,6 +29,7 @@ import { telaCobranca } from './tela_cobranca';
 import { telaConvite } from './tela_convite';
 import { telaFim } from './tela_fim';
 import { telaTorneio } from './tela_torneio';
+import { telaChaveamento } from './tela_chaveamento';
 import { telaTorneioNovo } from './tela_torneio_novo';
 import { telaCampeao } from './tela_campeao';
 import { gravarTorneio, limparTorneio, restaurarTorneio } from './torneio_salvo';
@@ -42,6 +43,7 @@ function escolherTela(rota: Rota): Tela {
   if (rota.nome === 'cobranca') return telaCobranca(rota.partida, rota.sessao ?? null);
   if (rota.nome === 'torneio_novo') return telaTorneioNovo;
   if (rota.nome === 'torneio') return telaTorneio;
+  if (rota.nome === 'chaveamento') return telaChaveamento;
   if (rota.nome === 'campeao') return telaCampeao;
   return telaFim(rota.partida, rota.estado);
 }

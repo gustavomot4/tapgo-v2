@@ -252,6 +252,63 @@ export const NOTA_SEM_GOLS =
 /** O que o leitor de tela ouve no lugar do traço — "menos" não diria nada a ninguém. */
 export const ROTULO_SEM_GOLS = 'sem gols registrados';
 
+/* ─────────────────── O chaveamento inteiro (`T-40` / `P-3` / `D-111`) ─────────────────── */
+
+/**
+ * Quantas disputas o torneio tem, do primeiro dia à final (`D-53`: 48 + 15 + 1).
+ *
+ * É número do FORMATO, não medição — por isso é constante e não conta de lista. Mora aqui
+ * porque é a tela que o escreve ("48 de 64 definidas"), e M8 não o exporta: lá ele é detalhe de
+ * implementação da fila, e exportá-lo seria porta nova por conveniência de rótulo.
+ */
+export const DISPUTAS_DO_TORNEIO = 64;
+
+/** A letra do grupo, de `Disputa.group` (0..7). Fora da faixa devolve o número, nunca `undefined`. */
+export function nomeGrupo(grupo: number): string {
+  const letra = 'ABCDEFGH'[grupo];
+  if (letra === undefined) return `Grupo ${String(grupo + 1)}`;
+  return `Grupo ${letra}`;
+}
+
+/**
+ * Os gols de um lado da disputa — ou o traço de ausente (`D-67`/`D-112`).
+ *
+ * **Nunca `0` no lugar de ausente**, e são dois os casos em que ele falta: a disputa do jogador,
+ * que volta por `report(winner)` sem placar, e a que ainda não foi jogada. Quem os distingue
+ * para o leitor de tela é `estadoDaDisputa` em `chave.ts`; o traço na tela é o mesmo.
+ */
+export function golsDaDisputa(gols: Readonly<Record<Side, number>> | null, lado: Side): string {
+  if (gols === null) return GOLS_AUSENTES;
+  return String(gols[lado]);
+}
+
+/** O que o leitor de tela ouve no traço de uma disputa que ninguém jogou ainda. */
+export const ROTULO_A_JOGAR = 'ainda não jogada';
+
+/** Rótulo de vencedor. Existe porque o destaque não pode ser só a cor da linha. */
+export const ROTULO_VENCEU = 'venceu';
+
+/**
+ * Quantas disputas a tela está mostrando, e de quantas — dito sem esconder o que falta.
+ *
+ * A lista de `chaveamento(state)` tem **48** enquanto a fase de grupos não fecha, **56** depois
+ * dela e **64** com o campeão (`D-111`). Escrever só "48 disputas" faria a tela parecer completa;
+ * o denominador é o que diz que o torneio continua.
+ */
+export function resumoDoChaveamento(definidas: number): string {
+  return `${String(definidas)} de ${String(DISPUTAS_DO_TORNEIO)} disputas definidas`;
+}
+
+/** Por que o mata-mata ainda não está na tela. Some quando as 64 estão definidas. */
+export const NOTA_CHAVE_PARCIAL =
+  'As fases seguintes aparecem quando as anteriores terminarem: enquanto o par depende de um ' +
+  'resultado, ele não existe ainda — e a tela não inventa confronto.';
+
+/** A nota de `Q-13`/`D-67` na linguagem desta tela: aqui a ausência é de uma disputa, não de uma coluna. */
+export const NOTA_CHAVE_SEM_PLACAR =
+  'As disputas que você joga entram sem placar: o que volta para a competição é o vencedor, e o ' +
+  'placar não. Elas mostram — no lugar dos gols.';
+
 /**
  * O que aconteceu com a seleção do jogador, dito sem inventar a fase da eliminação.
  *

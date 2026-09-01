@@ -27,11 +27,11 @@ Partida de ~1 minuto: contra a CPU, contra alguém no mesmo aparelho, ou **por l
 
 ## Estado atual (formato fixo — 1 linha por item, SEM prosa corrida)
 - **Versão:** **v2.0.1** (`D-108`) — já no ar (`A-42`)
-- **Pronto:** M1..M9 e a medição, **E-1..E-6 fechadas**; suíte **723/723**; `D-103` **no ar**, confirmado por `A-42` — contagens em [[estado_modulos]]
-- **Bundle:** **415.252 B** (5,19% de 8 MB) do `dist/` **que foi ao ar**, só o grafo de `index.html` (`D-93`) — 2026-09-01
-- **Em andamento (máx 1):** `T-40` — metade M8 fechada (`D-112`); falta a tela de M7
-- **Próximo:** `T-40` — a tela de M7 que desenha as 64 (`frontend-uiux`), nada trava; depois, fila do dono: `Q-13`, `QA-17`, `P-4`, `P-8`
-- **Bloqueado/pendente:** `D-97`/`D-109`: registro **18.1k**/20k (**90%**) · CONTEXT **3.6k**/4k · BACKLOG **12.2k**/20k · QA **6.5k**/8k; subir teto segue REPROVADO (`D-99`/`D-101`)
+- **Pronto:** M1..M9 e a medição, **E-1..E-6 fechadas**; suíte **749/749**; `T-40` fechada nas duas metades (`D-111`/`D-112`) — contagens em [[estado_modulos]]
+- **Bundle:** **415.252 B** (5,19% de 8 MB) do `dist/` **que foi ao ar**, só o grafo de `index.html` (`D-93`) — 2026-09-01; o build local com a tela de `T-40` lê **420.390 B** (5,25%), ainda não publicado
+- **Em andamento (máx 1):** _(vazio)_
+- **Próximo:** `A-43` — o chaveamento em 360x640 no aparelho do dono (o sandbox não monta tela); depois, fila do dono: `Q-13`, `QA-17`, `P-4`, `P-8`
+- **Bloqueado/pendente:** `D-97`/`D-109`: registro **18.1k**/20k (**90%**) · CONTEXT **3.7k**/4k · BACKLOG **13.1k**/20k · QA **6.5k**/8k; subir teto segue REPROVADO (`D-99`/`D-101`)
 - **Questões abertas:** Q-13 · **QA abertos:** QA-17 · respondidas e fechados: [[decisions_archive]]
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)
