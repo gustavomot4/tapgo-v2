@@ -7,6 +7,14 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-09-01] — `A-42` passos 1 e 2 fecham: o ar alcança `HEAD` e o bundle novo entra no CONTEXT (`D-103`/`D-106`)
+
+- **Skill:** delivery-review. Escopo: `a_context/a_context_source.md`, `b_process/c_backlog.md`. Nenhuma linha de código.
+- **O ar deixou de estar atrás:** `origin/main` = `f593437` e `git rev-list --count origin/main..HEAD` devolve **0**. A execução `pages` **33521988499** fechou verde às 14:51 UTC, com o portão inteiro antes do deploy.
+- **O bundle novo, lido no ar:** **415.252 B** (5,19% de 8 MB), saída de `src/scripts/bundle-size.mjs` no passo `build` daquela execução. São **+278 B** sobre os 414.974 B de 2026-08-29 — o `complementCounts` que `D-103` somou a `src/cpu/index.ts`, que é arquivo do grafo de `index.html` e por isso conta (`D-93`).
+- **O que NÃO foi decidido:** o portão de comportamento de `D-106` não foi aplicado. As três contagens de mergulho do goleiro (esquerda/meio/direita nas 20 cobranças) não chegaram, e o sandbox não as produz — **lacuna declarada**, card aberto, nenhum `QA-NN` e nenhum veredito escrito.
+- **Portão:** `python scripts/check.py` exit 0.
+
 ## [2026-09-01] — o card de publicação de `D-103`..`D-105` nasce, e o portão dele mede comportamento (`D-106`/`A-42`/`Q-17`)
 
 - **Skill:** planner. Escopo: `b_process/c_backlog.md`, `a_context/c_decisions.md`, `a_context/a_context_source.md`. Nenhuma linha de código.

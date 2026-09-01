@@ -27,11 +27,11 @@ Partida de ~1 minuto: contra a CPU, contra alguém no mesmo aparelho, ou **por l
 
 ## Estado atual (formato fixo — 1 linha por item, SEM prosa corrida)
 - **Versão:** v2.0.0 — entregue em 2026-08-19
-- **Pronto:** M1..M9 e a medição, **E-1..E-6 fechadas**; suíte **679/679**; `HEAD` está **à frente do ar** por 2 commits só de comentário (`D-103` foi ao ar em `9c925ff`)
-- **Bundle:** **414.974 B** (5,2% de 8 MB) lido de `dist/`, só o grafo de `index.html` (`D-93`/`T-36`) — **medida de 2026-08-29, anterior a `D-103`**; o novo sai de `A-42`
+- **Pronto:** M1..M9 e a medição, **E-1..E-6 fechadas**; suíte **679/679**; o **código** alcançou o ar em `f593437` (execução `pages` 33521988499 verde, 2026-09-01); à frente só documento
+- **Bundle:** **415.252 B** (5,19% de 8 MB) lido do `dist/` **que foi ao ar**, só o grafo de `index.html` (`D-93`/`T-36`) — medida de 2026-09-01, já com `D-103` (`A-42` passo 2)
 - **Em andamento (máx 1):** _(vazio)_
-- **Próximo:** `A-42` — confirma `D-103` no ar pelos mergulhos do goleiro (`D-106`); depois `Q-09` e `Q-17`
-- **Bloqueado/pendente:** `A-42` (do dono) — `D-97`: registro **18.3k**/20k · BACKLOG **16.1k**/20k · QA **6.5k**/8k; subir teto segue REPROVADO (`D-99`/`D-101`)
+- **Próximo:** `A-42` — só falta o passo 3: os mergulhos do goleiro (`D-106`); depois `Q-09` e `Q-17`
+- **Bloqueado/pendente:** `A-42` (do dono) — `D-97`: registro **18.3k**/20k · BACKLOG **17.0k**/20k · QA **6.5k**/8k; subir teto segue REPROVADO (`D-99`/`D-101`)
 - **Questões abertas:** Q-09, Q-13, Q-17 · **QA abertos:** QA-07 (parcial), QA-17 · respondidas e fechados: [[decisions_archive]]
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)
