@@ -78,4 +78,4 @@ status: atual
 |---|---|---|
 | Q-09 | No modo `local`, de quem é a escolha pendente, se a porta congelada de M5 não a expõe? | antes de T-10 (**prazo vencido — `QA-07`**); hoje M7 deriva de `kicks.length` e a saída definitiva está em [[questoes_abertas_notas]] |
 | Q-13 | Mudar `report(winner)` para trazer o placar é porta congelada (`D-13`/`D-58`) | segue do dono; `T-14` fechou com `D-67`, que mostra a ausência em vez de inventar zero |
-| Q-17 | Subir a versão de `2.0.0` agora que `D-103` mudou o comportamento da CPU, e por qual régua? | com `A-42`; nada trava, porque a versão não aparece em tela nenhuma e nenhum `D-NN` fixa régua de numeração |
+| Q-17 | Subir a versão de `2.0.0` agora que `D-103` mudou o comportamento da CPU, e por qual régua? | **destravada**: `A-42` aprovou em 2026-09-01 e o ar carrega `D-103`; segue do dono, porque nenhum `D-NN` fixa régua de numeração e a versão não aparece em tela nenhuma |

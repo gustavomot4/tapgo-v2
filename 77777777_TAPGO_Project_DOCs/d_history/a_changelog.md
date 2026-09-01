@@ -7,6 +7,15 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-09-01] — `A-42` APROVA: o ar carrega a CPU de `D-103`, medido pelos mergulhos do goleiro (`D-106`)
+
+- **Skill:** delivery-review. Escopo: `b_process/c_backlog.md`, `a_context/a_context_source.md`, `a_context/c_decisions.md`. Nenhuma linha de código.
+- **O inteiro:** com o dono chutando sempre na esquerda e defendendo sempre na direita, o goleiro da CPU mergulhou **18 esquerda / 5 meio / 2 direita**. `esquerda ≥ 9` **APROVA**; `direita 2` mata a hipótese velha, em que o goleiro leria as DEFESAS do dono.
+- **O denominador foi 25, não 20:** o dono jogou 5 disputas inteiras. A soma `= 20` do card não separa "escapou da contagem" de "jogou a mais" — e não muda o veredito: em qualquer recorte de 20 das 25 a esquerda fica em pelo menos **13**, acima do corte.
+- **Segunda confirmação, vinda do relato:** os mergulhos fora da esquerda saíram quase todos na PRIMEIRA cobrança de cada disputa. É o que o código faz — histograma vazio devolve uniforme 1/3 em qualquer nível (`src/cpu/index.ts`, ramo `total === 0`). Sobram **18 de 20** nas demais, 90% contra os 80% previstos por `0,7 + 0,3/3`. **Lacuna declarada:** a sequência cobrança a cobrança não foi anotada, então isto é leitura do relato, não medição.
+- **`Q-17` destravada:** subir de `2.0.0` volta a ser só régua de numeração, e segue do dono.
+- **Portão:** `python scripts/check.py --historico-completo` exit 0. Nenhum `QA-NN` aberto — nada reprovou.
+
 ## [2026-09-01] — `A-42` passos 1 e 2 fecham: o ar alcança `HEAD` e o bundle novo entra no CONTEXT (`D-103`/`D-106`)
 
 - **Skill:** delivery-review. Escopo: `a_context/a_context_source.md`, `b_process/c_backlog.md`. Nenhuma linha de código.
