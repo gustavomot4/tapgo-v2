@@ -7,6 +7,16 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-09-01] — o card de publicação de `D-103`..`D-105` nasce, e o portão dele mede comportamento (`D-106`/`A-42`/`Q-17`)
+
+- **Skill:** planner. Escopo: `b_process/c_backlog.md`, `a_context/c_decisions.md`, `a_context/a_context_source.md`. Nenhuma linha de código.
+- **O achado que trocou o verbo do card:** `origin/main` já está em `9c925ff`, que contém `63ff3b7` — a CPU de `D-103` —, e o workflow publica a cada `push` em `main`. Faltam ao ar só `8afabb1` e `dab9371`, os dois de comentário e documento. O card empurra e **confirma**; não publica `dist/` à mão.
+- **Por que o portão não pode ser a versão (`D-106`):** nenhuma tela do jogo imprime `2.0.0` — a varredura de `src/ui/` e `src/index.html` só acha comentário e chave de `localStorage`. Um portão que mandasse ler a versão no ar não teria onde ler.
+- **O inteiro de `A-42`:** 20 cobranças do dono, chutando sempre na esquerda e defendendo sempre na direita; conta-se em qual zona o goleiro da CPU mergulha. `D-103` faz ele ler o que o dono CHUTA, o código anterior lia o que ele DEFENDE. Corte em **9 de 20** (18 de 40 na desempate), com separação medida de 97,2% contra 0,5% em 20.000 séries.
+- **O bundle do CONTEXT ficou marcado como velho:** os 414.974 B saíram de um `dist/` de 2026-08-29, anterior a `D-103`. O número novo sai do passo `build` da execução de `pages`.
+- **`Q-17` aberta:** subir a versão de `2.0.0` é régua de numeração, e não há `D-NN` que a fixe — é do dono.
+- **Portão:** `python scripts/check.py` exit 0, com os avisos velhos (`D-64`, `microservice-sync`) e o registro em 91%.
+
 ## [2026-09-01] — os dois comentários param de dizer que nenhum teste prende a ordem (`D-104`/`D-105`)
 
 - **Skill:** backend-domain. Escopo: linhas `//` de `src/session/index.ts` e `src/tournament/index.ts` — `git diff` sem nenhuma linha de código. Suíte **679/679**.

@@ -70,6 +70,7 @@ status: atual
 | D-103 | 2026-09-01 | ADOTADO · SUPERSEDE D-10 no que `pick` LÊ | `Q-08` saída **(C)**: cada papel lê o histograma do ADVERSÁRIO — quem defende se aproxima da zona mais chutada, quem cobra se AFASTA da mais defendida (complemento `total − c[z]`) | Ler o próprio papel enviesava sem comprar acerto, e o swap puro faria a CPU chutar no goleiro. Suíte **677**; quem cobra para em **45%**, sob o teto |
 | D-104 | 2026-09-01 | ADOTADO | A ordem `pick` → `observe` de M5, obrigatória desde `D-103`, passa a ser presa por teste: `session_ordem.test.ts` corre a disputa contra DOIS oráculos de M3 semeados igual, um por ordem | Comentário não reprova: com as linhas trocadas a suíte antiga ficava **677/677 verde** — a folga de `QA-44`. Agora: invertido **1 falha**, certo **678/678** |
 | D-105 | 2026-09-01 | ADOTADO | A mesma ordem `pick` → `observe` de `D-104`, agora presa em M8: `tournament_ordem.test.ts` compara as disputas SIMULADAS com dois oráculos de M2+M3 semeados igual, um por ordem | Em M8 os dois lados são CPU, então a inversão é o goleiro ler o chute DESTA cobrança. Invertido: **1 falha**; certo **679/679** |
+| D-106 | 2026-09-01 | ADOTADO | O portão que confirma `D-103` no ar mede **comportamento**, não versão: `A-42` conta em qual zona o goleiro da CPU mergulha nas 20 cobranças do dono, e corta em **9** | Nenhuma tela imprime a versão (varredura de `src/ui/` e `src/index.html`), então "confira a versão no ar" não teria onde ser lido. Separação medida em 20.000 séries por hipótese: **97,2%** contra **0,5%** |
 > **Gatilhos de revisão** (`D-43`): moram no tema que cada um mede — `D-01` em [[online_p2p]], `D-02` em [[stack]].
 
 ## Questões abertas (Q-NN — decisões do DONO, não do agente)
@@ -77,3 +78,4 @@ status: atual
 |---|---|---|
 | Q-09 | No modo `local`, de quem é a escolha pendente, se a porta congelada de M5 não a expõe? | antes de T-10 (**prazo vencido — `QA-07`**); hoje M7 deriva de `kicks.length` e a saída definitiva está em [[questoes_abertas_notas]] |
 | Q-13 | Mudar `report(winner)` para trazer o placar é porta congelada (`D-13`/`D-58`) | segue do dono; `T-14` fechou com `D-67`, que mostra a ausência em vez de inventar zero |
+| Q-17 | Subir a versão de `2.0.0` agora que `D-103` mudou o comportamento da CPU, e por qual régua? | com `A-42`; nada trava, porque a versão não aparece em tela nenhuma e nenhum `D-NN` fixa régua de numeração |
