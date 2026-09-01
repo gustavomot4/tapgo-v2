@@ -8,7 +8,7 @@ status: atual
 > **Teto: 2 frases por linha.** Evidência longa vira nota em `e_qa/<slug>.md` ou tema em `a_context/`.
 > **Registre as rejeições.** A lista de rejeitados é o que impede a IA de re-propor o que já morreu.
 > **`ARQUIVADO`:** íntegra em [[decisions_archive]] — o ponteiro é este, e não se repete por linha. Desde `D-74` só as REJEITADAS guardam linha viva com esse status: são a lista-morta que a fase de evolução varre sem abrir o arquivo.
-> **Retirados da tabela** (ID preservado, nada revertido): `D-01`..`D-05` · `D-09`..`D-38` · `D-67`..`D-69` · `D-74` · `Q-01`..`Q-07` `Q-08` (respondida por `D-103`) `Q-09` (respondida por `D-107`) `Q-10`..`Q-12` `Q-14`..`Q-16`.
+> **Retirados da tabela** (ID preservado, nada revertido): `D-01`..`D-05` · `D-09`..`D-38` · `D-67`..`D-69` · `D-74` · `Q-01`..`Q-07` `Q-08` (respondida por `D-103`) `Q-09` (respondida por `D-107`) `Q-10`..`Q-12` `Q-14`..`Q-16` `Q-17` (respondida por `D-108`).
 > **Retirados em 2026-08-29** (`D-97`, mesmo critério de `D-43`): `D-44` `D-45` `D-49` `D-63` `D-70` `D-75` `D-77` `D-80` `D-87` `D-91` `D-94` — íntegra em [[decisions_archive]].
 > **Achados de QA moram em [[d_qa|QA]]** desde `D-50` — este arquivo não define mais `QA-NN`.
 
@@ -72,10 +72,10 @@ status: atual
 | D-105 | 2026-09-01 | ADOTADO | A mesma ordem `pick` → `observe` de `D-104`, agora presa em M8: `tournament_ordem.test.ts` compara as disputas SIMULADAS com dois oráculos de M2+M3 semeados igual, um por ordem | Em M8 os dois lados são CPU, então a inversão é o goleiro ler o chute DESTA cobrança. Invertido: **1 falha**; certo **679/679** |
 | D-106 | 2026-09-01 | ADOTADO | O portão que confirma `D-103` no ar mede **comportamento**, não versão: `A-42` conta em qual zona o goleiro da CPU mergulha nas 20 cobranças do dono, e corta em **9** | Nenhuma tela imprime a versão (varredura de `src/ui/` e `src/index.html`), então "confira a versão no ar" não teria onde ser lido. Separação medida em 20.000 séries por hipótese: **97,2%** contra **0,5%** |
 | D-107 | 2026-09-01 | ADOTADO | `Q-09`: a porta de M5 **não muda** — `pending()` fica REJEITADA e a derivação de `kicks.length` em `src/ui/derivacao.ts` é a resposta; gatilho em [[m7_tela_notas]] | Precedente de `D-39`, que cita `Q-09`: compraria com porta congelada (`D-13`) o que já existe testado. **Zero** consumidor fora de M7; cobriria só metade — no `online` a mesma `kicks.length` não é pendência |
+| D-108 | 2026-09-01 | ADOTADO | `Q-17`: a versão sobe para **2.0.1** — patch, porque desde a v2.0.0 entraram só correções e portões | Escolha do dono: `D-103` mudou o comportamento da CPU, mas como correção do que `D-10` já prescrevia, não como recurso novo. `D-104`..`D-107` e `T-39` são portão e comentário. A versão mora só no `package.json` e não aparece em tela nenhuma (`D-106`) |
 > **Gatilhos de revisão** (`D-43`): moram no tema que cada um mede — `D-01` em [[online_p2p]], `D-02` em [[stack]].
 
 ## Questões abertas (Q-NN — decisões do DONO, não do agente)
 | # | Questão | Decidir quando |
 |---|---|---|
 | Q-13 | Mudar `report(winner)` para trazer o placar é porta congelada (`D-13`/`D-58`) | segue do dono; `T-14` fechou com `D-67`, que mostra a ausência em vez de inventar zero |
-| Q-17 | Subir a versão de `2.0.0` agora que `D-103` mudou o comportamento da CPU, e por qual régua? | **destravada**: `A-42` aprovou em 2026-09-01 e o ar carrega `D-103`; segue do dono, porque nenhum `D-NN` fixa régua de numeração e a versão não aparece em tela nenhuma |

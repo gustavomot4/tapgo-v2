@@ -7,6 +7,14 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-09-01] — `Q-17` respondida: a versão vai a **2.0.1**, porque desde a entrega só entraram correções e portões (`D-108`)
+
+- **Skill:** frontend-uiux (a resposta do dono chegou dentro da sessão de `T-39`; registrá-la coube aqui, sem sessão nova). Escopo: `package.json`, `a_context/c_decisions.md`, `a_context/a_context_source.md`. **Nenhuma linha de código.**
+- **A decisão (`D-108`), do dono:** **2.0.1** — patch. `D-103` mudou o comportamento da CPU, mas como **correção** do que `D-10` já prescrevia, não como recurso novo; `D-104`..`D-107` e `T-39` são portão e comentário. Nada aqui é recurso, logo não é `2.1.0`.
+- **Onde a versão mora:** só no `package.json`. Ela não aparece em tela nenhuma — é o que `D-106` já tinha medido ao mandar `A-42` confirmar `D-103` por **comportamento**, e não por número de versão.
+- **`Q-17` sai da tabela de abertas** e entra na linha de retiradas, respondida por `D-108`. Sobra `Q-13`; nada do dono em aberto.
+- **Portão:** `python scripts/check.py` exit 0, zero FALHAS. **Aviso a tratar:** registro em **19.3k**/20k (**96%**) — a linha nova de `D-108` estreitou o que já estava apertado, e o arquivamento de `D-104`/`D-105` passa a ser o próximo passo, não uma sugestão.
+
 ## [2026-09-01] — `T-39`: os comentários de `Q-09` param de mentir, e o gatilho de `D-107` vira portão do CI
 
 - **Skill:** frontend-uiux. Escopo: `src/ui/derivacao.ts`, `src/ui/tela_cobranca.ts`, `src/session/index.ts`, `src/tests/session.test.ts`, `src/tests/ui.test.ts`, `.github/workflows/pages.yml`, `e_qa/m7_tela_notas.md`. **Só comentário e CI — nenhuma linha de lógica.**

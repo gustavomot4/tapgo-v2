@@ -499,6 +499,10 @@ só nesta página). Ficam vivos os cinco abertos: `QA-07`, `QA-17`, `QA-27`, `QA
 ## Retiradas da tabela em 2026-09-01
 > Íntegra preservada. ID nunca reciclado, nada revertido.
 
+| # | Questão | Decidir quando |
+|---|---|---|
+| Q-17 | ~~Subir a versão de `2.0.0` agora que `D-103` mudou o comportamento da CPU, e por qual régua?~~ | **RESPONDIDA 2026-09-01 → `D-108`** — **2.0.1**, patch: desde a v2.0.0 entraram só correções e portões. Estava destravada desde `A-42`, e a régua era do dono porque nenhum `D-NN` a fixa e a versão não aparece em tela nenhuma |
+
 | D-84 | 2026-08-20 | ADOTADO | `Q-15` pela saída (b): 15 s por cobrança no `online`, e no estouro o próprio aparelho sorteia a zona com `createRng(newSeed())` e a manda como jogada normal — só M7, zero byte em `src/net`, `D-13` intacto | Dois relógios sem árbitro divergem se cada um RESOLVER a cobrança; jogada sorteada não tem o que divergir. Campo em dois aparelhos: `A-27` |
 | D-86 | 2026-08-20 | ADOTADO | `T-27`/`P-1`+`P-7`: acima de 1024px a largura da folha é declarada pela TELA — `.tela--largo` 1040px em 2 colunas, `.tela--disputa` 760px, o resto 460px —, não por teto global | 4 cartões por linha contra 2, e as seleções caem de 2.719 para 1.590 px de altura em 1280x800, sem rolagem lateral. Direções, medidas e armadilhas em [[t27_desktop_duas_colunas]] |
 | D-95 | 2026-08-28 | ADOTADO | `QA-05`/`T-37`: o portão de marca de M7 vira **teste** (`marca.test.ts`), com a lista-morta montada em tempo de execução e em fonte única (`lista_morta.ts`) | Portão só no terminal do dono media o arquivo que o defendia: `grep` devolvia **6**, todas de teste. Medido 6 -> **0**, e termo plantado em `src/` REPROVA — sem a 2ª metade o card fecharia com teste vazio |
