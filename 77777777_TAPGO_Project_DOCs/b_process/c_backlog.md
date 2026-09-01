@@ -70,6 +70,9 @@ status: atual
 - [ ] **T-40 — ver o chaveamento inteiro (`P-3`/`D-111`)** · **Módulo:** M8 (a leitura) **+ M7** (a tela)
   - **Entrega:** `chaveamento(state)` e o tipo `Disputa` na porta de M8, mais a tela de M7 que os desenha — as 48 de grupo por rodada e o mata-mata por fase, com vencedor e placar de cada uma.
   - **Portão:** o do contrato de M8 no [[b_plan|PLANO]], §"Portão de `chaveamento(state)` (`D-111`)" — pureza (`consumed` não muda), comprimento **48 → 56 → 64**, `winner` casando com `group()`/`champion()` na mesma semente, `goals: null` **só** nas disputas do jogador, e `grep -rnE "\.(entrants|groupOrder|results|goalsA|goalsB)\b" src/ui/` em **zero**. Os cinco rodam em `vitest`; nenhum precisa de tela montada.
+  - **METADE M8 FECHADA em 2026-09-01:** `chaveamento(state)`, o tipo `Disputa` e as cinco
+    checagens em `src/tests/tournament_chaveamento.test.ts` (44 casos). `D-112` fixou o `goals`
+    da disputa ainda não jogada. **Falta a tela de M7** — é o que mantém o card aberto.
   - **Limite declarado:** as disputas do jogador não têm placar (`Q-13` segue do dono) — a tela mostra `—`, como `D-67` já faz na tabela do grupo. Inventar `0` reprova.
   - **O que o portão NÃO alcança:** se o chaveamento cabe e se lê em 360x640. Isso é `A-NN` do dono no aparelho — `vitest` roda em Node, sem `document`.
 - [x] T-33 — cor e legibilidade dos símbolos de papel sobre as linhas do… · **Módulo:** M7 · íntegra em [[backlog_archive]]

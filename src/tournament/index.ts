@@ -65,6 +65,30 @@ export interface TournamentState {
   readonly played: number;
 }
 
+/**
+ * Uma disputa do chaveamento, **como M7 lê** (`D-111`).
+ *
+ * É o que sai de `chaveamento(state)`: par, fase e resultado já mastigados. M7 não interpreta
+ * campo de `TournamentState` para montar isto — o retrato segue opaco (`D-68`), e o portão de
+ * camada varre `src/ui/` para provar que ninguém reintroduziu a leitura pela porta dos fundos.
+ */
+export interface Disputa {
+  readonly stage: Stage;
+  readonly round: number;
+  /** 0..7 na fase de grupos; `-1` no mata-mata. */
+  readonly group: number;
+  readonly teams: Record<Side, CountryCode>;
+  /** `null` = ainda não jogada. */
+  readonly winner: Side | null;
+  /**
+   * `null` = placar **AUSENTE** (`D-67`/`Q-13`), nunca `0`.
+   *
+   * Ausente nas disputas do jogador — `report(winner)` carrega o vencedor e nada mais (porta
+   * congelada, `D-58`) — e nas que ainda não foram jogadas. Nas simuladas o placar é real.
+   */
+  readonly goals: Record<Side, number> | null;
+}
+
 export interface Tournament {
   current(): { teams: Record<Side, CountryCode>; stage: Stage; round: number } | null;
   report(winner: Side): void; // só a disputa DO JOGADOR entra por aqui
@@ -172,12 +196,114 @@ function assertEntrants(entrants: readonly CountryCode[], human: CountryCode, on
 
 /* ─────────────────────────────── o motor do torneio ─────────────────────────────── */
 
-interface Disputa {
+/**
+ * O par de uma posição da fila, **sem resultado**.
+ *
+ * Não é o `Disputa` da porta (`D-111`), que carrega vencedor e placar: este é só o que a fila
+ * decide sozinha. O nome interno mudou quando a porta ganhou o dela — dois tipos com o mesmo
+ * nome no mesmo arquivo escondem qual dos dois um par de olhos está lendo.
+ */
+interface Confronto {
   readonly teams: Record<Side, CountryCode>;
   readonly stage: Stage;
   readonly round: number;
   /** Índice do grupo (0..7) na fase de grupos; `-1` no mata-mata. */
   readonly grupo: number;
+}
+
+/**
+ * O par da posição `i` da fila (0..63), **derivado** do estado cru.
+ *
+ * A fila não é guardada: os grupos saem do sorteio já gravado em `entrants` (ver `fila.ts`), e
+ * cada rodada do mata-mata sai dos resultados da anterior. É o que faz o retrato caber em
+ * "código de país e inteiro" sem perder uma disputa sequer.
+ *
+ * **É função de topo, e não método do fecho de `montar`, desde `D-111`:** `chaveamento(state)`
+ * lê o retrato sem construir torneio, e precisa da MESMA derivação que a linha do tempo usa.
+ * Duas cópias da regra dariam duas fontes de verdade — e o portão de `D-111` cobra justamente
+ * que o `winner` de cada disputa lida bata com `group()` e `champion()` da mesma semente.
+ *
+ * Não toca gerador, não escreve em nada: as três listas entram como leitura.
+ *
+ * @throws RangeError se `i` está fora da fila.
+ * @throws Error se o mata-mata é pedido antes de a fase de grupos fechar.
+ */
+function confrontoEm(
+  entrants: readonly CountryCode[],
+  groupOrder: readonly CountryCode[],
+  results: readonly number[],
+  i: number,
+): Confronto {
+  if (!Number.isInteger(i) || i < 0 || i >= DISPUTAS) {
+    throw new RangeError(`M8: posição ${String(i)} fora da fila de ${String(DISPUTAS)}`);
+  }
+
+  if (i < DISPUTAS_DE_GRUPO) {
+    const par = disputaDeGrupo(entrants, i);
+    return { teams: { A: par.a, B: par.b }, stage: 'groups', round: par.round, grupo: par.grupo };
+  }
+
+  if (groupOrder.length !== ENTRANTS) {
+    throw new Error('M8: mata-mata pedido antes de a fase de grupos fechar — defeito de M8');
+  }
+
+  const classificado = (g: number, posicao: number): CountryCode =>
+    em(groupOrder, g * POR_GRUPO + posicao);
+  const vencedorDe = (k: number): CountryCode => {
+    const d = confrontoEm(entrants, groupOrder, results, k);
+    return em(results, k) === 0 ? d.teams.A : d.teams.B;
+  };
+  const perdedorDe = (k: number): CountryCode => {
+    const d = confrontoEm(entrants, groupOrder, results, k);
+    return em(results, k) === 0 ? d.teams.B : d.teams.A;
+  };
+
+  if (i < INICIO_QUARTAS) {
+    const cruz = em(CRUZAMENTO, i - DISPUTAS_DE_GRUPO);
+    return {
+      teams: { A: classificado(em(cruz, 0), 0), B: classificado(em(cruz, 1), 1) },
+      stage: 'r16',
+      round: 4,
+      grupo: -1,
+    };
+  }
+  if (i < INICIO_SEMIS) {
+    const k = i - INICIO_QUARTAS;
+    return {
+      teams: {
+        A: vencedorDe(DISPUTAS_DE_GRUPO + 2 * k),
+        B: vencedorDe(DISPUTAS_DE_GRUPO + 2 * k + 1),
+      },
+      stage: 'quarter',
+      round: 5,
+      grupo: -1,
+    };
+  }
+  if (i < POSICAO_TERCEIRO) {
+    const k = i - INICIO_SEMIS;
+    return {
+      teams: { A: vencedorDe(INICIO_QUARTAS + 2 * k), B: vencedorDe(INICIO_QUARTAS + 2 * k + 1) },
+      stage: 'semi',
+      round: 6,
+      grupo: -1,
+    };
+  }
+  if (i === POSICAO_TERCEIRO) {
+    // A disputa de 3º lugar vem ANTES da final na fila, como no esporte — e por isso as duas
+    // têm `round` distinto. `stage` é o que dá o nome da fase (`D-58`).
+    return {
+      teams: { A: perdedorDe(INICIO_SEMIS), B: perdedorDe(INICIO_SEMIS + 1) },
+      stage: 'third',
+      round: 7,
+      grupo: -1,
+    };
+  }
+  return {
+    teams: { A: vencedorDe(INICIO_SEMIS), B: vencedorDe(INICIO_SEMIS + 1) },
+    stage: 'final',
+    round: 8,
+    grupo: -1,
+  };
 }
 
 interface Cru {
@@ -207,7 +333,7 @@ function montar(
   let disputasContadas = results.length;
 
   /** A disputa do jogador esperando `report()`. Derivada, nunca serializada. */
-  let pendente: Disputa | null = null;
+  let pendente: Confronto | null = null;
 
   const classificado = (g: number, posicao: number): CountryCode =>
     em(groupOrder, g * POR_GRUPO + posicao);
@@ -222,75 +348,9 @@ function montar(
     return em(results, i) === 0 ? d.teams.B : d.teams.A;
   }
 
-  /**
-   * A disputa da posição `i` da fila (0..63).
-   *
-   * A fila é **derivada**, não guardada: os grupos saem do sorteio já gravado em `entrants`
-   * (ver `fila.ts`), e cada rodada do mata-mata sai dos resultados da anterior. É o que faz o
-   * retrato caber em "código de país e inteiro" sem perder uma disputa sequer.
-   */
-  function disputaEm(i: number): Disputa {
-    if (!Number.isInteger(i) || i < 0 || i >= DISPUTAS) {
-      throw new RangeError(`M8: posição ${String(i)} fora da fila de ${String(DISPUTAS)}`);
-    }
-
-    if (i < DISPUTAS_DE_GRUPO) {
-      const par = disputaDeGrupo(entrants, i);
-      return {
-        teams: { A: par.a, B: par.b },
-        stage: 'groups',
-        round: par.round,
-        grupo: par.grupo,
-      };
-    }
-
-    if (groupOrder.length !== ENTRANTS) {
-      throw new Error('M8: mata-mata pedido antes de a fase de grupos fechar — defeito de M8');
-    }
-
-    if (i < INICIO_QUARTAS) {
-      const cruz = em(CRUZAMENTO, i - DISPUTAS_DE_GRUPO);
-      return {
-        teams: { A: classificado(em(cruz, 0), 0), B: classificado(em(cruz, 1), 1) },
-        stage: 'r16',
-        round: 4,
-        grupo: -1,
-      };
-    }
-    if (i < INICIO_SEMIS) {
-      const k = i - INICIO_QUARTAS;
-      return {
-        teams: { A: vencedorDe(DISPUTAS_DE_GRUPO + 2 * k), B: vencedorDe(DISPUTAS_DE_GRUPO + 2 * k + 1) },
-        stage: 'quarter',
-        round: 5,
-        grupo: -1,
-      };
-    }
-    if (i < POSICAO_TERCEIRO) {
-      const k = i - INICIO_SEMIS;
-      return {
-        teams: { A: vencedorDe(INICIO_QUARTAS + 2 * k), B: vencedorDe(INICIO_QUARTAS + 2 * k + 1) },
-        stage: 'semi',
-        round: 6,
-        grupo: -1,
-      };
-    }
-    if (i === POSICAO_TERCEIRO) {
-      // A disputa de 3º lugar vem ANTES da final na fila, como no esporte — e por isso as duas
-      // têm `round` distinto. `stage` é o que dá o nome da fase (`D-58`).
-      return {
-        teams: { A: perdedorDe(INICIO_SEMIS), B: perdedorDe(INICIO_SEMIS + 1) },
-        stage: 'third',
-        round: 7,
-        grupo: -1,
-      };
-    }
-    return {
-      teams: { A: vencedorDe(INICIO_SEMIS), B: vencedorDe(INICIO_SEMIS + 1) },
-      stage: 'final',
-      round: 8,
-      grupo: -1,
-    };
+  /** O par da posição `i` da fila, sobre o estado cru de agora. Ver `confrontoEm`. */
+  function disputaEm(i: number): Confronto {
+    return confrontoEm(entrants, groupOrder, results, i);
   }
 
   /** Todas as disputas de grupo já resolvidas, na forma que a tabela consome. */
@@ -556,9 +616,9 @@ export function createTournament(cfg: TournamentConfig): Tournament {
 }
 
 /** Recusa retrato que não fecha consigo mesmo. */
-function assertState(s: TournamentState): void {
+function assertState(s: TournamentState, onde: string): void {
   const erro = (motivo: string): never => {
-    throw new TypeError(`restoreTournament: ${motivo}`);
+    throw new TypeError(`${onde}: ${motivo}`);
   };
 
   if (s === null || typeof s !== 'object') erro('retrato ausente');
@@ -577,7 +637,7 @@ function assertState(s: TournamentState): void {
     if (!Array.isArray(s[nome])) erro(`${nome} não é lista`);
   }
 
-  assertEntrants(s.entrants, s.human, 'restoreTournament');
+  assertEntrants(s.entrants, s.human, onde);
 
   if (s.results.length > DISPUTAS) {
     erro(`results tem ${String(s.results.length)} disputas (máx ${String(DISPUTAS)})`);
@@ -631,7 +691,7 @@ function assertState(s: TournamentState): void {
  *   diz o que ele faz com o erro: descarta o torneio salvo em silêncio e abre no menu.
  */
 export function restoreTournament(state: TournamentState): Tournament {
-  assertState(state);
+  assertState(state, 'restoreTournament');
 
   const { rng, consumidos } = contador(createRng(state.seed));
   for (let i = 0; i < state.consumed; i += 1) rng.int(2);
@@ -647,4 +707,80 @@ export function restoreTournament(state: TournamentState): Tournament {
     goalsA: [...state.goalsA],
     goalsB: [...state.goalsB],
   });
+}
+
+/* ─────────────────── o chaveamento inteiro, LIDO (`D-111` / `P-3`) ─────────────────── */
+
+/**
+ * Quantas disputas precisam estar registradas para a posição `i` ter par decidido.
+ *
+ * O mata-mata é derivado: as quartas saem dos vencedores das oitavas, as semis das quartas, e a
+ * de 3º lugar e a final saem das duas semis. Enquanto o requisito não é alcançado, o par
+ * **ainda depende de resultado** — e `chaveamento` não inventa par, ela para.
+ *
+ * As oitavas dependem da classificação, não de um resultado a mais: quem cobra isso é o
+ * `groupOrder` fechado, em `chaveamento`.
+ */
+function requisito(i: number): number {
+  if (i < DISPUTAS_DE_GRUPO) return 0;
+  if (i < INICIO_QUARTAS) return DISPUTAS_DE_GRUPO;
+  if (i < INICIO_SEMIS) return DISPUTAS_DE_GRUPO + 2 * (i - INICIO_QUARTAS) + 2;
+  if (i < POSICAO_TERCEIRO) return INICIO_QUARTAS + 2 * (i - INICIO_SEMIS) + 2;
+  return POSICAO_TERCEIRO; // 3º lugar e final: as duas semis
+}
+
+/**
+ * As disputas cujo par M8 já decidiu, na ordem da fila (`D-111`, saída **(c)** de `P-3`).
+ *
+ * **Pura.** Lê o retrato e não devolve nada além da lista: não constrói torneio, não toca o
+ * gerador e não escreve no estado — duas chamadas sobre o mesmo retrato dão listas iguais campo
+ * a campo, e o retrato sai idêntico ao que entrou, `consumed` inclusive. Isso não é detalhe de
+ * implementação: fechar um grupo consome sorteio (o desempate pode chegar ao sorteio, `D-53`),
+ * e uma leitura que fechasse grupo moveria o gerador — a linha do tempo depois do recarregamento
+ * deixaria de bater com a de antes.
+ *
+ * **Só o que já foi decidido entra.** São **48** enquanto a classificação não fechou, **56**
+ * assim que ela fecha, e **64** quando há campeão. Um par de fase que ainda depende de
+ * resultado não aparece com times "a definir": ele não aparece.
+ *
+ * **Por que função na porta, e não 6º método em `Tournament`** (`D-111`): M7 lê o chaveamento a
+ * partir do retrato que ele mesmo gravou, sem ter de reconstruir o torneio; e as 64 continuam
+ * **derivadas** por M8 — a saída rejeitada copiaria a derivação para `src/ui/`.
+ *
+ * @throws TypeError se o retrato não fecha consigo mesmo (mesma conferência de
+ *   `restoreTournament`; ler um retrato corrompido é tão inválido quanto restaurá-lo).
+ */
+export function chaveamento(state: TournamentState): readonly Disputa[] {
+  assertState(state, 'chaveamento');
+
+  const { entrants, groupOrder, results, goalsA, goalsB } = state;
+  const gruposFechados = groupOrder.length === ENTRANTS;
+
+  const saida: Disputa[] = [];
+  for (let i = 0; i < DISPUTAS; i += 1) {
+    if (i >= DISPUTAS_DE_GRUPO && !gruposFechados) break;
+    if (results.length < requisito(i)) break;
+
+    const confronto = confrontoEm(entrants, groupOrder, results, i);
+    const jogada = i < results.length;
+
+    // Ausente não é zero (`D-67`). O placar da disputa do jogador nunca existiu — `report()`
+    // carrega o vencedor e nada mais —, e o da que ainda não foi jogada também não.
+    const golsA = jogada ? em(goalsA, i) : GOLS_DESCONHECIDOS;
+    const golsB = jogada ? em(goalsB, i) : GOLS_DESCONHECIDOS;
+    const conhecido = golsA !== GOLS_DESCONHECIDOS && golsB !== GOLS_DESCONHECIDOS;
+
+    saida.push(
+      Object.freeze({
+        stage: confronto.stage,
+        round: confronto.round,
+        group: confronto.grupo,
+        teams: Object.freeze({ A: confronto.teams.A, B: confronto.teams.B }),
+        winner: jogada ? (em(results, i) === 0 ? 'A' : 'B') : null,
+        goals: conhecido ? Object.freeze({ A: golsA, B: golsB }) : null,
+      }),
+    );
+  }
+
+  return Object.freeze(saida);
 }

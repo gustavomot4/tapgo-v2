@@ -73,6 +73,7 @@ status: atual
 | D-109 | 2026-09-01 | ADOTADO | A linha guarda o que se lê para **decidir hoje**; o como-se-chegou-aqui sai íntegro para quem já é dono dele — REJEITADA sem a coluna de evidência (forma de `D-06`..`D-08`), CONTEXT sem o relato do card | Gastas as DUAS últimas candidatas de `D-43`,, o registro para em **18.033**, 33 acima do aviso. Não é poda: nada encolhe. Portão em [[d109_o_que_a_linha_guarda]] |
 | D-110 | 2026-09-01 | REJEITADO · ARQUIVADO | Estender `D-109` às ADOTADAS que já delegam a evidência a uma nota, deixando só o ponteiro |  |
 | D-111 | 2026-09-01 | ADOTADO | `P-3` saída **(c)**: o chaveamento sai por `chaveamento(state)` — função na porta de M8 sobre o **retrato**, não 6º método em `Tournament`; M7 recebe `Disputa[]` pronto e não interpreta campo (`D-68` de pé) | As 64 são **derivadas**, não guardadas: a saída (a) copiaria a derivação de M8 para `src/ui/`. Medida e as 2 mortas em [[p3_leitor_do_chaveamento]] |
+| D-112 | 2026-09-01 | ADOTADO | O `goals: null` de `D-111` vale também para a disputa **ainda não jogada**: o portão "`null` só nas do jogador" é cobrado entre as JÁ jogadas | Sem isso a leitura inventaria placar para as ~45 de grupo que ainda não aconteceram — o `0` que `D-67` recusa. Preso em `src/tests/tournament_chaveamento.test.ts` |
 > **Gatilhos de revisão** (`D-43`): moram no tema que cada um mede — `D-01` em [[online_p2p]], `D-02` em [[stack]].
 
 ## Questões abertas (Q-NN — decisões do DONO, não do agente)

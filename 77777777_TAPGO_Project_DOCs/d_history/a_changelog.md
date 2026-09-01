@@ -7,6 +7,16 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-09-01] — `T-40`, metade M8: o chaveamento inteiro sai por `chaveamento(state)`, e as cinco checagens de `D-111` viram teste
+
+- **Skill:** backend-domain — sessão de implementação. Escopo: `src/tournament/index.ts` e um arquivo de teste novo. **Nenhuma linha de `src/ui/`**: a tela de M7 é a outra metade de `T-40` e não foi aberta.
+- **Na porta de M8:** o tipo `Disputa` (`stage`, `round`, `group`, `teams`, `winner`, `goals`) e `chaveamento(state)`, função de leitura sobre o retrato — a saída **(c)** de `D-111`, sem tocar os 5 métodos de `Tournament`.
+- **A derivação virou função de topo:** o corpo de `disputaEm` saiu do fecho de `montar` e virou `confrontoEm(entrants, groupOrder, results, i)`, pura. É o que faz a leitura e a linha do tempo usarem a **mesma** regra — duas cópias dariam duas fontes de verdade, que é justamente o que o portão cobra. O tipo interno homônimo virou `Confronto`.
+- **`D-112` (ADOTADO):** `goals` também é `null` na disputa **ainda não jogada**, e o portão "`null` só nas do jogador" passa a ser lido entre as **já jogadas**. Sem isso a leitura teria de inventar placar para as ~45 de grupo que ainda não aconteceram — o `0` que `D-67` recusa.
+- **Portão, os cinco, em `src/tests/tournament_chaveamento.test.ts` (44 casos):** pureza (`consumed` intacto, retrato idêntico, lista congelada) · comprimento **48 → 56 → 64**, com a semente do "recém-fechado" **procurada e não fixada** · a tabela derivada da leitura batendo com `group()` nos 8 grupos e o vencedor da final com `champion()` · `goals` ausente ⇔ o jogador está no par, e o sentinela `-1` não vaza · e a opacidade de `D-68` como varredura de disco de `src/ui/`, com o teste que prova que o padrão ainda pega o que deve.
+- **Números:** suíte **679/679 → 723/723**, `tsc --noEmit` limpo. Mutação de controle (`conhecido = true`) reprova **7** casos — o portão de `goals` morde.
+- **NÃO entregue, de propósito:** a tela. E o que o portão não alcança segue declarado: se o chaveamento **cabe e se lê** em 360x640 é `A-NN` do dono no aparelho, porque `vitest` roda em Node sem `document`.
+
 ## [2026-09-01] — `P-3` vira `T-40`: o chaveamento inteiro sai por uma função de leitura em M8, não por método novo nem por M7 lendo o retrato (`D-111`)
 
 - **Skill:** planner — sessão de planejamento. Escopo: `a_context/`, `b_process/`, `e_qa/`, `d_history/`. **Nenhuma linha de `src/`**: o card foi desenhado, não implementado — então suíte e `tsc` não são portão desta sessão.
