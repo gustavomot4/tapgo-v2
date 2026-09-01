@@ -1,8 +1,13 @@
 ---
 tags: [qa, m7]
-status: aberto
+status: fechado
 ---
 # `QA-34` — o teste do gramado mede um gramado aproximado
+
+> **FECHADO em 2026-09-01.** `src/tests/ui.test.ts` lê as 4 faixas de `cena.ts` (`faixasDoGramado`)
+> e mede em RGB (`distanciaAteRgb`), sem passar pelo `hsl()`. Prova liga/desliga: com a 4ª faixa
+> trocada pelo verde nacional exato (`0x0e6231`), o teste antigo **passava** e o novo reprova com
+> `verde a 0.0 do gramado`. Suíte 668/668.
 
 ## O achado
 

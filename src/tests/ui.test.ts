@@ -741,6 +741,41 @@ describe('a tela lê a bandeira, e o hidden esconde (QA-19 / QA-18 / QA-16)', ()
 // `cena.ts` precisa de Phaser e de canvas, e nenhum dos dois existe aqui. Mas a ARTE não é
 // código de cena: é dado puro em `sprites.ts`, e dado puro tem portão. O que sobra para o
 // aparelho real é se ela fica bonita — não se ela está bem formada.
+/**
+ * As 4 faixas do gramado, lidas de `cena.ts` — **a fonte única da cor do campo** (`QA-34`).
+ *
+ * Varredura de fonte pelo mesmo motivo de `chaveDaCamisa` mais abaixo: `cena.ts` importa Phaser,
+ * e um `import` dele aqui traria o motor inteiro para um teste que roda em Node sem canvas. O que
+ * NÃO é opção é a alternativa antiga — reescrever as quatro cores neste arquivo em HSL
+ * aproximado. Aproximar cria uma segunda referência para a mesma medida, e é exatamente o
+ * defeito que `QA-34` registrou.
+ *
+ * Devolve os inteiros `0xRRGGBB` na ordem em que `cena.ts` pinta. Se o bloco mudar de forma, a
+ * lista volta curta e quem chama reprova — ela nunca degrada em silêncio para "nenhuma faixa".
+ */
+function faixasDoGramado(): number[] {
+  const fonte = readFileSync(fileURLToPath(new URL('../ui/cena.ts', import.meta.url)), 'utf8');
+  const bloco = /const faixas = \[([\s\S]*?)\];/.exec(fonte)?.[1];
+  expect(bloco, 'o bloco `const faixas` sumiu de cena.ts').toBeDefined();
+  return [...(bloco ?? '').matchAll(/cor:\s*(0x[0-9a-fA-F]{6})/g)].map((m) => Number(m[1]));
+}
+
+/**
+ * Distância RGB entre uma cor da tabela (HSL) e uma cor já em `0xRRGGBB`.
+ *
+ * É o `distanciaDeCor` de `sprites.ts` com um lado que não passa por `hsl()` — o gramado nasce
+ * hexadecimal em `cena.ts`, e convertê-lo para HSL só para reconverter é o arredondamento que
+ * `QA-34` estava pagando.
+ */
+function distanciaAteRgb(cor: Cor, rgb: number): number {
+  const a = hsl(cor.h, cor.s, cor.l);
+  return Math.hypot(
+    ((a >> 16) & 255) - ((rgb >> 16) & 255),
+    ((a >> 8) & 255) - ((rgb >> 8) & 255),
+    (a & 255) - (rgb & 255),
+  );
+}
+
 describe('sprites do campo (T-20)', () => {
   const TODOS: Readonly<Record<string, Sprite>> = {
     GOLEIRO_PARADO,
@@ -839,16 +874,22 @@ describe('sprites do campo (T-20)', () => {
 
   it('nenhuma cor nacional some no gramado — as 4 faixas do campo, medidas', () => {
     // O verde é o caso que este teste existe para segurar: no tom médio ele ficava a 29,7 do
-    // gramado, e cinco seleções vestiriam camisa invisível. As faixas são as de `cena.ts`.
-    const GRAMADO: Cor[] = [
-      { h: 128, s: 41, l: 41 },
-      { h: 127, s: 39, l: 45 },
-      { h: 127, s: 36, l: 50 },
-      { h: 126, s: 35, l: 54 },
-    ];
+    // gramado, e cinco seleções vestiriam camisa invisível.
+    //
+    // `QA-34`: as faixas são LIDAS de `cena.ts`, não redeclaradas aqui. A versão anterior
+    // repetia as quatro como HSL aproximado, e aproximação não é a mesma cor depois de `hsl()`
+    // arredondar para 8 bits: a quarta faixa saía a 7,5 do tom real, e o `branco` era medido a
+    // 189,5 do gramado quando a tela põe 194,7. Duas fontes para a mesma medida é o defeito —
+    // que a diferença de hoje seja inofensiva é sorte da tabela atual, não garantia. Trocar a
+    // cor em `cena.ts` agora move ESTE número, e é aqui que a faixa nova reprova se cobrir uma
+    // cor nacional: com a versão antiga, a quarta faixa podia virar o verde nacional EXATO e a
+    // asserção passava mesmo assim.
+    const GRAMADO = faixasDoGramado();
+    expect(GRAMADO, 'as 4 faixas do gramado sumiram de cena.ts').toHaveLength(4);
+
     for (const [nome, cor] of Object.entries(CORES_NACIONAIS)) {
       for (const faixa of GRAMADO) {
-        const d = distanciaDeCor(cor, faixa);
+        const d = distanciaAteRgb(cor, faixa);
         expect(d, `${nome} a ${d.toFixed(1)} do gramado`).toBeGreaterThanOrEqual(DISTANCIA_MINIMA);
       }
     }

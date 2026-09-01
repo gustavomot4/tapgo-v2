@@ -7,6 +7,15 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-09-01] — `QA-34` fecha: o teste do gramado passa a ler as faixas de `cena.ts`
+
+- **Skill:** debugging-diagnosis. Escopo: `src/tests/ui.test.ts`, e **só ele** — `cena.ts` não muda uma cor, então não há rebuild nem bump. Suíte **668/668**, `tsc --noEmit` limpo.
+- **Reprodução, antes de editar:** recalculando as duas referências lado a lado, a tabela de [[qa34_gramado_aproximado]] sai idêntica — `branco` a **194,7** pelo hex real de `cena.ts` e **189,5** pelo HSL redeclarado no teste, diferença **5,2**. A pior faixa é a quarta: `0x5cb765` contra `hsl(126,35,54)` = `0x61b369`, **7,5** de distância RGB entre as duas fontes.
+- **Causa:** o teste redeclarava as 4 faixas como HSL aproximado e media contra essa cópia. `hsl()` arredonda para 8 bits, então a cópia nunca foi a mesma cor da tela — duas referências para a mesma medida, e a coluna "Distância até o gramado" de [[cores_nacionais]] guardava a outra.
+- **Correção, mínima e dentro do escopo:** `faixasDoGramado()` lê o bloco `const faixas` de `cena.ts` do disco — mesmo recurso que `chaveDaCamisa` já usava, porque `cena.ts` importa Phaser e o vitest roda em Node sem canvas — e devolve os quatro `0xRRGGBB`; `distanciaAteRgb(cor, rgb)` mede sem reconverter o gramado por `hsl()`. O `toHaveLength(4)` impede a lista de degradar em silêncio se o bloco mudar de forma.
+- **Prova liga/desliga (regra 9):** com a quarta faixa de `cena.ts` trocada pelo verde nacional exato (`0x0e6231`), o teste **antigo passa** e o novo reprova com `verde a 0.0 do gramado: expected 0 to be greater than or equal to 40`. `cena.ts` foi restaurado por `git checkout` logo em seguida.
+- **Portão:** `npm test` 668/668, `npm run typecheck` limpo, `python scripts/check.py` exit 0 com os **mesmos dois** avisos velhos (`D-64`, `microservice-sync`).
+
 ## [2026-08-29] — `QA-42` fecha: os dois textos param de oferecer script que não veio (`D-102`)
 
 - **Skill:** debugging-diagnosis. Escopo: `README.md`, `scripts/task.py` e a prova nova `e_qa/test_qa42.py`. **Nada em `src/`** — nem `scripts/` nem o README entram no bundle, não há rebuild nem bump.

@@ -30,9 +30,9 @@ Partida de ~1 minuto: contra a CPU, contra alguém no mesmo aparelho, ou **por l
 - **Pronto:** M1..M9 e a medição, **E-1..E-6 fechadas**; suíte **668/668**; o ar **é `HEAD`**.
 - **Bundle:** **414.974 B** (5,2% de 8 MB) lido de `dist/`, só o grafo de `index.html` (`D-93`/`T-36`); 278.646 B são os 32 SVGs de `T-19`; Phaser e Trystero fora, por `import()` (`D-27`)
 - **Em andamento (máx 1):** _(vazio)_
-- **Próximo:** `QA-34` — o teste do gramado redeclara as 4 faixas em HSL aproximado (erro 5,2); medição pronta em [[qa34_gramado_aproximado]]; nenhum card aberto
-- **Bloqueado/pendente:** _(nada)_ — `D-97`: registro **18.0k**/20k · BACKLOG **12.3k**/20k · QA **5.9k**/8k; subir teto segue REPROVADO (`D-99`/`D-101` cobram os três)
-- **Questões abertas:** Q-08, Q-09, Q-13 · **QA abertos:** QA-07, QA-17, QA-34 · respondidas e fechados: [[decisions_archive]]
+- **Próximo:** `QA-07` ou `QA-17` — os dois abertos que restam são de prazo/template, nenhum toca código; nenhum card aberto
+- **Bloqueado/pendente:** _(nada)_ — `D-97`: registro **16.9k**/20k · BACKLOG **12.3k**/20k · QA **6.0k**/8k; subir teto segue REPROVADO (`D-99`/`D-101` cobram os três)
+- **Questões abertas:** Q-08, Q-09, Q-13 · **QA abertos:** QA-07, QA-17 · respondidas e fechados: [[decisions_archive]]
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)
 - [[portao_de_aceite]] — **antes de fechar tarefa, declarar etapa fechada ou entregar**
