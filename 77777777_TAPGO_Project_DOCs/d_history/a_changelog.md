@@ -7,6 +7,17 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-09-01] — a ordem `pick` → `observe` de M8 vira teste, fechando a lacuna que `D-104` declarou (`D-105`)
+
+- **Skill:** testing. Escopo: `src/tests/` e só ele — `src/tournament/index.ts` **não mudou** (a inversão foi feita, medida e revertida; `git diff` do módulo vazio). Suíte **679/679**.
+- **O que faltava:** `D-104` prendeu a ordem em M5 e declarou a lacuna: M8 tem a mesma ordem e seguia presa só por comentário. Este é o outro lado dela.
+- **O teste:** `src/tests/tournament_ordem.test.ts` cria o torneio (as 32 de `D-51`, difícil, semente 7) e lê do `toJSON()` as disputas que M8 simulou ANTES da primeira do jogador. Compara com dois oráculos que rodam `createMatch`/`play`/`createCpu` de verdade sobre um `Rng` de mesma semente, adiantado pelos 31 sorteios do Fisher-Yates de `D-59` — um na ordem certa, outro com o goleiro observando o chute da própria cobrança.
+- **Por que a inversão é outra em M8:** aqui os dois lados são CPU, então não há "observar antes de escolher" simétrico. A inversão que importa é a que o comentário do módulo nomeia: o goleiro lendo o chute DESTA cobrança antes de escolher a defesa. As duas ordens consomem 2 sorteios por cobrança, na mesma ordem — o que muda é só o histograma lido no segundo `pick`.
+- **Liga/desliga medido:** com as quatro linhas de `simular` reordenadas, **1 falha / 678 verdes** — só o teste novo cai. Revertido: **679/679**.
+- **Não coberto, declarado:** só a fatia simulada ANTES da primeira disputa do jogador entra. As simulações posteriores a um `report()` ficam de fora porque reproduzi-las exigiria refazer o chaveamento inteiro no teste — uma segunda fonte da regra de M8, que é justamente o defeito de `QA-34`.
+- **Registro:** `D-105`. `QA-44` continua FECHADO — este era o último item opcional dele.
+- **Portão:** `npm test` 679/679, `npx tsc --noEmit` limpo, `python scripts/check.py` exit 0.
+
 ## [2026-09-01] — a ordem `pick` → `observe` de M5 vira teste, e não mais só comentário (`D-104`)
 
 - **Skill:** testing. Escopo: `src/tests/` e só ele — `src/session/index.ts` **não mudou** (a inversão foi feita, medida e revertida; `git diff` do módulo vazio). Suíte **678/678**.
