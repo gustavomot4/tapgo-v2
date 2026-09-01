@@ -45,19 +45,52 @@ a espera cai no intervalo em que a pessoa já está ocupada escolhendo.
 o que aparece é "Campo simplificado — o jogo continua igual", sem nada técnico na tela. É o que
 impede um pacote que não chegou de derrubar o modo local junto.
 
-## `Q-09` — a derivação que T-10 consumiu, e o que ela ainda não resolve
+## `Q-09` — respondida por `D-107`: a derivação É a resposta, e o gatilho que a revisa
 
-`Q-09` continua **aberta**: resolvê-la de vez é `pending(): Side | null` na `Session`, e a porta de
-M5 está congelada, logo é `D-NN` do dono. T-10 usou a derivação que a própria `Q-09` prescreve e
-que o teste de T-09 fixou — **notificação com o mesmo `kicks.length` da anterior significa escolha
-pendente** — isolada em `src/ui/derivacao.ts`, que é módulo puro e tem teste próprio.
+**Respondida em 2026-09-01 (`D-107`).** A saída que a questão carregava desde 2026-08-08 —
+`pending(): Side | null` na `Session` — fica **REJEITADA**, e a derivação que T-10 consumiu deixa
+de ser lacuna declarada: ela é a resposta. O que a derivação faz continua o mesmo, e o teste de
+T-09 continua sendo quem a prende — **notificação com o mesmo `kicks.length` da anterior significa
+escolha pendente**, isolada em `src/ui/derivacao.ts`, módulo puro com teste próprio.
 
-O que a derivação **não** faz: guardar a zona escolhida. No modo `local` os dois jogadores olham a
-mesma tela, e uma zona destacada enquanto o goleiro escolhe tornaria o modo injogável. A zona fica
-dentro de M5, onde já estava; a tela só recebe "há escolha pendente" e mostra "passe o aparelho".
+### Por que a porta não muda — três razões, na ordem em que pesaram
 
-Quando `Q-09` for respondida, o arquivo a mudar é um só, e o teste dele já descreve o
-comportamento esperado.
+1. **O precedente já existia, e nasceu citando esta questão.** `D-39` recusou `hostRoom(ice?,
+   roomId?)` com a frase "compra o que `D-38` dá de graça, pagando com precedente em porta
+   congelada — e `Q-09`/`Q-11` esperam esse precedente". Quem escreveu `D-39` sabia que a próxima
+   fila era esta. Adotar `pending()` agora não abriria um precedente: **quebraria um**.
+2. **O custo que a questão orçava era de um repositório que não existe mais.** A nota dizia
+   "qualquer outro consumidor de `Session` teria de reimplementá-la" — verdade sobre um consumidor
+   hipotético. Medido em 2026-09-01, os importadores de `src/session/` são **`src/ui/` (10
+   arquivos) e `src/tests/` (4)**, e mais nada; o desenho de M5 no [[b_plan|PLANO]] chama a porta
+   de "o único caminho da tela até o motor", ou seja, o segundo consumidor não está previsto. É a
+   régua de [[d_agent_learnings|LEARNINGS]] de 2026-09-01: estimativa dentro de registro é
+   hipótese a reverificar, não fato herdado.
+3. **A porta cobriria só metade do problema.** `pending()` daria o lado pendente do modo `local`,
+   mas `derivacao.ts` continuaria de pé por causa do `online`: lá chegam notificações com o mesmo
+   `kicks.length` que **não** são vez de ninguém — a própria escolha esperando o peer, e cada
+   troca de `LinkStatus` (`T-21`). Trocar contrato congelado por meia simplificação é o pior dos
+   dois mundos: paga o preço inteiro e deixa o arquivo no lugar.
+
+### O gatilho (`D-43`: mora no que ele mede)
+
+`D-107` não fecha a porta para sempre — fecha enquanto a premissa da razão 2 valer. **Um
+importador de `src/session/` fora de `src/ui/` e de `src/tests/` reabre a questão como `D-NN`
+novo**, e a saída a reexaminar é a mesma `pending(): Side | null`. A variável é contável de fora,
+com a régua das checagens de camada do CI:
+
+```bash
+grep -rlE "from '[^']*session" src/ --include=*.ts | grep -v "^src/ui/\|^src/tests/" | wc -l
+```
+
+Esperado: **0**. Quem transforma isto em portão é `T-39`; até lá o gatilho é este parágrafo, e o
+número dele é de 2026-09-01.
+
+### O que a derivação **não** faz (inalterado)
+
+Guardar a zona escolhida. No modo `local` os dois jogadores olham a mesma tela, e uma zona
+destacada enquanto o goleiro escolhe tornaria o modo injogável. A zona fica dentro de M5, onde já
+estava; a tela só recebe "há escolha pendente" e mostra "passe o aparelho".
 
 ## `D-28` — por que o áudio é gerado por script
 

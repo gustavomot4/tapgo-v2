@@ -27,12 +27,12 @@ Partida de ~1 minuto: contra a CPU, contra alguém no mesmo aparelho, ou **por l
 
 ## Estado atual (formato fixo — 1 linha por item, SEM prosa corrida)
 - **Versão:** v2.0.0 — entregue em 2026-08-19
-- **Pronto:** M1..M9 e a medição, **E-1..E-6 fechadas**; suíte **679/679**; `D-103` **confirmado no ar** por `A-42` — goleiro em 18 esq / 5 meio / 2 dir, corte de `D-106` em 9; à frente só documento
+- **Pronto:** M1..M9 e a medição, **E-1..E-6 fechadas**; suíte **679/679**; `D-103` **confirmado no ar** por `A-42` — goleiro em 18 esq / 5 meio / 2 dir, corte de `D-106` em 9; `Q-09` respondida por `D-107`
 - **Bundle:** **415.252 B** (5,19% de 8 MB) lido do `dist/` **que foi ao ar**, só o grafo de `index.html` (`D-93`/`T-36`) — medida de 2026-09-01, já com `D-103`
 - **Em andamento (máx 1):** _(vazio)_
-- **Próximo:** `Q-17` (subir a versão, agora que `A-42` aprovou) e `Q-09` — as duas são do dono; nada trava
-- **Bloqueado/pendente:** nada do dono em aberto — `D-97`: registro **18.4k**/20k · BACKLOG **17.8k**/20k · QA **6.5k**/8k; subir teto segue REPROVADO (`D-99`/`D-101`)
-- **Questões abertas:** Q-09, Q-13, Q-17 · **QA abertos:** QA-07 (parcial), QA-17 · respondidas e fechados: [[decisions_archive]]
+- **Próximo:** `T-39` (os comentários de `Q-09` param de dizer "aberta" e o gatilho de `D-107` vira grep no CI) e `Q-17`, que é do dono; nada trava
+- **Bloqueado/pendente:** nada do dono em aberto — `D-97`: registro **18.6k**/20k · BACKLOG **19.4k**/20k (**97%**, arquivar é do dono) · QA **6.5k**/8k; subir teto segue REPROVADO (`D-99`/`D-101`)
+- **Questões abertas:** Q-13, Q-17 · **QA abertos:** QA-17 · respondidas e fechados: [[decisions_archive]]
 
 ## Temas de domínio em `a_context/` (o agente lê SOB DEMANDA)
 - [[portao_de_aceite]] — **antes de fechar tarefa, declarar etapa fechada ou entregar**

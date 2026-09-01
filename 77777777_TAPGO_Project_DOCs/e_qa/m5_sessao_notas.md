@@ -83,9 +83,9 @@ escolha fica pendente. M7 deriva o estado comparando `kicks.length` com o que re
 último — igual ⇒ há escolha pendente ⇒ é a vez do goleiro. Há teste fixando essa sequência
 (`[0, 1]` no modo `local` contra `[1, 2]` no modo `cpu`).
 
-A derivação funciona, mas é indireta, e é a tela que paga por ela. Resolver de vez é acrescentar
-algo como `pending(): Side | null` à interface `Session` — e isso é mudar contrato congelado em
-`D-13`, o que é `D-NN` do dono, não escolha do agente. Decidir antes de T-10.
+A derivação funciona, mas é indireta, e é a tela que paga por ela. **Respondida por `D-107` em
+2026-09-01:** a porta não muda e `pending(): Side | null` fica REJEITADA — as três razões e o
+gatilho que reabre a questão estão em [[m7_tela_notas]] (§ `Q-09`), que é onde a derivação mora.
 
 ## `D-35` — o peer some no meio: por que "sem resultado" e não "quem fica vence"
 

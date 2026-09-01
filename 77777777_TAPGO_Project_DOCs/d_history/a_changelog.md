@@ -7,6 +7,16 @@ status: atual
 > O log datado mora AQUI, fora do contexto. **Nenhuma sessão de IA carrega este arquivo** — pode crescer à vontade. O mais recente em cima; resumo curto; o porquê mora em [[c_decisions|DECISIONS]].
 > Este arquivo nasceu zerado por `scripts/new_project.py`. O histórico do kit ficou no kit.
 
+## [2026-09-01] — `Q-09` respondida: a porta de M5 não muda, e a derivação vira a resposta (`D-107`)
+
+- **Skill:** planner. Escopo: `a_context/c_decisions.md`, `a_context/d_qa.md`, `a_context/a_context_source.md`, `b_process/c_backlog.md`, `e_qa/m7_tela_notas.md`, `e_qa/m5_sessao_notas.md`, `e_qa/questoes_abertas_notas.md`. **Nenhuma linha de código.**
+- **A decisão (`D-107`):** `pending(): Side | null` na `Session` fica **REJEITADA**. A derivação de `kicks.length` em `src/ui/derivacao.ts` deixa de ser lacuna declarada e passa a ser a resposta de `Q-09`.
+- **Três razões, na ordem em que pesaram:** (1) o precedente já existia e nasceu citando esta questão — `D-39` recusou reabrir porta congelada dizendo que "`Q-09`/`Q-11` esperam esse precedente"; (2) o custo que a questão orçava ("outro consumidor teria de reimplementá-la") era de um repositório que não existe — medido hoje, os importadores de `src/session/` são `src/ui/` (10 arquivos) e `src/tests/` (4), e mais nada; (3) a porta cobriria só metade — no `online` a mesma `kicks.length` **não** é pendência (`T-21`), então `derivacao.ts` continuaria de pé.
+- **O gatilho, porque a razão 2 tem prazo:** um importador de `src/session/` fora de `src/ui/` e de `src/tests/` reabre a questão como `D-NN` novo. Contável de fora, com a régua das checagens de camada do CI; hoje o número é **0**.
+- **`QA-07` FECHADO:** a metade de `Q-08` caiu com `D-103` ontem, a de `Q-09` cai aqui. Nenhum prazo de decisão vencido em aberto.
+- **Card `T-39` nasce:** os 6 arquivos de `src/` que citam `Q-09` ainda dizem que a questão está aberta — a régua de `D-105`, de ontem — e o gatilho ainda não é portão. Portão do card: liga/desliga do grep novo no CI.
+- **Portão:** `python scripts/check.py` exit 0, zero FALHAS. **Aviso a tratar:** BACKLOG em **19.4k**/20k (97%) — arquivar é do dono.
+
 ## [2026-09-01] — `A-42` APROVA: o ar carrega a CPU de `D-103`, medido pelos mergulhos do goleiro (`D-106`)
 
 - **Skill:** delivery-review. Escopo: `b_process/c_backlog.md`, `a_context/a_context_source.md`, `a_context/c_decisions.md`. Nenhuma linha de código.

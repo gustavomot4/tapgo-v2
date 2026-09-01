@@ -2,7 +2,7 @@
 tags: [notas, questoes-abertas]
 status: atual
 ---
-# Questões abertas — justificativa longa (`Q-03`, `Q-05`, `Q-07`, `Q-08`, `Q-09`, `QA-04`)
+# Questões abertas — justificativa longa (`Q-03`, `Q-05`, `Q-07`, `Q-08`, `QA-04`)
 
 > **Este arquivo não define ID e não responde nada.** As questões continuam **abertas** em
 > `a_context/c_decisions.md`; aqui fica só o porquê que não cabe no teto de 2 frases por linha
@@ -117,28 +117,11 @@ se `Q-08` for respondida ao contrário, está em [[m5_sessao_notas]] (§ `D-26`)
 Custo de inverter: o índice em `pick`, mais nada. Os testes de isolamento de T-07 já existem e
 **passam a falhar de propósito** quando a semântica mudar, que é o comportamento desejado.
 
-## `Q-09` — de quem é a escolha pendente no modo `local`
+## `Q-09` — respondida por `D-107` em 2026-09-01
 
-Texto que estava no registro, na íntegra:
-
-> **Pergunta:** No modo `local`, de quem é a escolha pendente? A porta congelada de M5 não expõe
-> isso e `turn` só vira depois do `play()`
->
-> **Decidir quando:** antes de T-10. T-09 não tocou na porta: M7 deriva comparando `kicks.length`,
-> com teste. Resolver de vez é `pending(): Side | null` na `Session` — contrato congelado, logo
-> `D-NN` do dono. Ver [[m5_sessao_notas]]
-
-**O prazo venceu e a questão continua aberta** — T-10 está feita. Registrado em `QA-07`, pela mesma
-razão de `Q-08`.
-
-O que T-10 fez, e por que isso não fechou a questão: M7 deriva o lado pendente comparando
-`kicks.length`, com teste, e isso é suficiente para a tela. Não é suficiente para a porta — a
-derivação vive na UI, e qualquer outro consumidor de `Session` teria de reimplementá-la. A saída
-definitiva é `pending(): Side | null` na `Session`, que mexe em contrato congelado por `D-13` e por
-isso é `D-NN` do dono, não do agente.
-
-Detalhe em [[m5_sessao_notas]] (§ `Q-09`) e em [[m7_tela_notas]] (§ `Q-09`), que descrevem
-respectivamente a porta e a derivação que a tela consumiu.
+A seção morreu junto com a linha do registro, como o cabeçalho deste arquivo manda. A resposta é
+`D-107` — a porta de M5 não muda, a derivação de `kicks.length` é a resposta —, e a evidência que
+sobreviveu foi para a nota do módulo: [[m7_tela_notas]] (§ `Q-09`), com o gatilho que a reabre.
 
 ## `QA-04` — `vite.config.ts` fora do `tsc --noEmit`
 
